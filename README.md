@@ -12,7 +12,7 @@ This is a collection of all materials of GPU computing course, which includes:
 ## Presentation
 
 #### presentation 1: intro to deep learning and neuron networks [2019-01-20]
-* We had our first discussion on Jan 18, 2019, the outline of our first presentation is in [here](https://docs.google.com/document/d/1Q0GslX0j1lE9mc5EGhLfQAQOoWzfFo_pglrfK4IG5Lk/edit?usp=sharing)
+* We had our first discussion on Jan 18, 2019, the outline of our first presentation (also a little bit about the second one) is in [here](/docs/meeting-note-Jan-20.md)
 * The slides is [here](https://docs.google.com/presentation/d/1mgcXAEhjIjccVH5eulKZUPSqueVNh7CkPg7BI5vt2kY/edit?usp=sharing)
 
 #### presentation 2:
