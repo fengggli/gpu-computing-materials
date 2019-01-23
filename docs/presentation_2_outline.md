@@ -1,16 +1,18 @@
-Presentation 2
-Introduce detailed convolution NN 
-What are they used for?
-Performance
-How convolutions save space
-Layers
-Common structures
-Pooling, padding, bias, other concepts
-ResNet
-Vanishing gradients : Motivation for resnet (gradients get less effective as network depth increases)
-Identify layers should be able to be introduced with no negative consequences, but this is not true in a normal 
-Structure
-Blocks 
-Shortcut or feedforward
-Challenges we might face
-Gpu and other engineering considerations
+## Presentation 2
+
+Sections are:
+
+1. Introduce detailed convolution NN 
+    * What are they used for?
+    * Layers
+    * Common structures
+    * Pooling, padding, bias, other concepts
+
+2. ResNet
+    * Identiy layers should be able to be introduced with no negative consequences, but this is not true in a nornal 
+    * Structure
+        * Blocks 
+        * Shortcut or feedforward
+        * Other shit
+3. Challenges we might face
+4. GPU and other engineering considerations
