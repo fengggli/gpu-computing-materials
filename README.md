@@ -15,7 +15,7 @@ This is a collection of all materials of GPU computing course, which includes:
 * We had our first discussion on Jan 18, 2019, the outline of our first presentation is [here](/docs/presentation_1_outline.md)
 * The slides are [here](https://docs.google.com/presentation/d/1mgcXAEhjIjccVH5eulKZUPSqueVNh7CkPg7BI5vt2kY/edit?usp=sharing)
 
-#### presentation 2 a deeper look at CNN's, ResNET, and implementation details:
+#### presentation: 2 a deeper look at CNN's, ResNET, and implementation details:
 * The second outline is [here](/docs/presentation_2_outline.md)
 * The second presentation slides are [here]()
 
