@@ -11,7 +11,7 @@ This is a collection of all materials of GPU computing course, which includes:
 
 ## Presentation
 
-#### presentation 1: intro to deep learning and neuron networks and backpropagation [2019-01-23]
+#### presentation 1: intro to neural networks, deep learning, and backpropagation [2019-01-23]
 * We had our first discussion on Jan 18, 2019, the outline of our first presentation is [here](/docs/presentation_1_outline.md)
 * The slides are [here](https://docs.google.com/presentation/d/1mgcXAEhjIjccVH5eulKZUPSqueVNh7CkPg7BI5vt2kY/edit?usp=sharing)
 
