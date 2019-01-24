@@ -19,10 +19,6 @@ This is a collection of all materials of GPU computing course, which includes:
 * The second outline is [here](/docs/presentation_2_outline.md)
 * The second presentation slides are [here]()
 
-#### presentation 3:
-* implementation strategy,
-* backpropagation in convolution network
-
 ## Project
 1. I will update my initial resnet implementation very soon. It will use numpy. 
 
