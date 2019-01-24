@@ -16,7 +16,7 @@ This is a collection of all materials of GPU computing course, which includes:
 * The slides are [here](https://docs.google.com/presentation/d/1mgcXAEhjIjccVH5eulKZUPSqueVNh7CkPg7BI5vt2kY/edit?usp=sharing)
 
 #### presentation 2:
-* The second outline is be [here](/docs/presentation_2_outline.md)
+* The second outline is [here](/docs/presentation_2_outline.md)
 
 #### presentation 3:
 * implementation strategy,
