@@ -5,7 +5,7 @@ Sections are:
 1. Introduce detailed convolution NN 
     * What are they used for?
     * why are they used ?
-    * speed considerations
+        * speed considerations
     * Layer construction
         * Common structures
         * weights replaced by "convolutions"
