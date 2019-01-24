@@ -1,5 +1,3 @@
-# Discussion on presentations
-
 ## Presentation 1 (intro)
 
 Sections are: 
