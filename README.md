@@ -3,7 +3,7 @@
 This is a collection of all materials of GPU computing course, which includes:
 1. slides (or link to slides).
 2. Meeting notes.
-3. project code.
+3. Project code.
 
 ## Materials
 1. Please refer to https://fengggli.github.io/dl-docs/ for learning materials for deep learning, I highly recommend the cs231 course from Stanford
@@ -17,12 +17,12 @@ This is a collection of all materials of GPU computing course, which includes:
 
 #### presentation: 2 a deeper look at CNN's, ResNET, and implementation details:
 * The second outline is [here](/docs/presentation_2_outline.md)
-* The second presentation slides are [here]()
+* The second presentation slides are [here](https://docs.google.com/presentation/d/1VNbwYfTrXLckYPZ6NOP41DlI_jujuesP1d6dcbzoBz4/edit?usp=sharing)
 
 ## Project
-1. I will update my initial resnet implementation very soon. It will use numpy. 
 
-#### Kernels
-1. The first kernel we should have is  *an efficient convolution operation*. We can use profiling tools to compare the performance with existing libraries and show which optimization can be applied especially to Resnet nets.
-2. Another focus is how to make the data copy from host to device less frequent. (How to represent the neuron layers in device memory instead)
+[Jan 26]: 
+* We had a disussion on how we can start the project, the notes are [here](/docs/project_discuss_1.md)
 
+[inital]:
+* I will update my initial resnet implementation very soon. It will use numpy.
