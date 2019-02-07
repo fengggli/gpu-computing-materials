@@ -9,7 +9,7 @@ This is a collection of all materials of GPU computing course, which includes:
 1. Please refer to https://fengggli.github.io/dl-docs/ for learning materials for deep learning, I highly recommend the cs231 course from Stanford
 
 
-## Presentation
+## Presentations
 
 #### presentation 1: intro to neural networks, deep learning, and backpropagation [2019-01-23]
 * We had our first discussion on Jan 18, 2019, the outline of our first presentation is [here](/docs/presentation_1_outline.md)
