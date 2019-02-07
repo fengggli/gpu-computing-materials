@@ -1,13 +1,4 @@
-
-
-Presentation plans
-	CNN intro
-		common tasks associated with them
-
-	ResNet Intro
-		CNN or regular
-
-	Implementation details
+https://arxiv.org/pdf/1512.03385.pdf
 
 Paper Outline
 
