@@ -26,3 +26,7 @@ This is a collection of all materials of GPU computing course, which includes:
 
 [inital]:
 * I will update my initial resnet implementation very soon. It will use numpy.
+
+A implementation of a ANN framework for deep neural networks in CUDA
+NOTE : this is using thrust with some custom wrapper classes. 
+https://github.iu.edu/cmgoebel/504_C_GOEBEL_FINAL_PROJ/tree/master/CUDA_N_NET
