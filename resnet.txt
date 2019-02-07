@@ -1,0 +1,162 @@
+
+
+Presentation plans
+	CNN intro
+		common tasks associated with them
+
+	ResNet Intro
+		CNN or regular
+
+	Implementation details
+
+Paper Outline
+
+Abstract
+	- deep networks difficult to train
+	- present something deeper and show training
+	- train on “functions referenced to layer inputs” instead of unreferenced 
+	  functions
+	- show method is easier to optimize, increased accuracy from increased depth
+
+	- significant improvement in visual recognition tasks 
+	- won some awards for top in the world (COCO 2015 & ILSVRC 2015)
+
+1. Introduction
+	- deep networks best for image classification and are well suited because 
+	  they “integrate low/mid/high- level features”
+	
+	- depth is important (16 to 30 layers currency ) 
+	
+	- would like to just add more and more layers but vanishing gradients
+		- can be solved by normalized initialization and intermediate 
+		  normalization layers
+		- however even with special techniques, accuracy saturation occurs
+	
+	- one stupid solution that works for increasing depth is “identity layers” 
+	  just copy data through
+		- increasing depth isn’t really the goal though. We want accuracy 
+	
+	- authors introduce resnet to address degradation problem (pg2 paragraph 1)
+		- stacked nonlinear layers fit new mapping while original layers are 
+		  “recast”
+		- recast is accomplished with “shortcut connections” which skip layers 
+		  performing identity mapping
+			- their outputs are added to the outputs of the stacked layers
+			- train these with back propagating SGD like normal and don’t add 
+			  parameter or computational complexity
+
+	- show successfully trained models with many datasets and high layer counts 
+	  (up to 1000)
+	
+
+2. Related work
+	- Author claims VLAD and Fisher Vector show encoding residual vectors is 
+	  more effective than encoding original vectors for vector quantization
+	
+	- Claims Multigrid method and another method “basis pre-conditioning” are 
+	  reformulations or representations of original and both converge much 
+	  faster than standard solvers. 
+
+	- lots of related work on shortcut connections
+		- theirs are special because not parameterized
+		- ResNet *always* learns residual functions and the identity functions 
+		  are never closed unlike several other options
+		- alternatives (such as highway networks) have not demonstrated 
+		  improved accuracy at high depths (over 100 layers)
+
+
+3. Deep residual learning
+	3.1
+	- where some connected layers operate on a group of inputs x : 
+		let H(x) be the underlying mapping to the outputs of those layers
+		H(x) - x is the residual
+
+		modify the network to instead learn 
+		F(x) := H(x) - x
+
+		and so F(x) + x would get you back to normal
+
+	- hypothesis is that using these could mean differences in training that 
+	  could be beneficial
+	
+	“Degradation problem”
+		- degradation problem (Fig. 1, left). As we discussed in the 
+		  introduction, if the added layers can be constructed as identity 
+		  mappings, a deeper model should have training error no greater than 
+		  its shallower counter- part. The degradation problem suggests that 
+		  the solvers might have difficulties in approximating identity 
+		  mappings by multiple nonlinear layers. 
+
+	- with residual learning, can perfectly approx identity by removing the 
+	  nonlinear layers (pushing weight to zero)
+
+	- but what’s the point since identity mappings will never be optimal 
+		- if in the reformulation, an output happens to be “close to the 
+		  identity”, then we only need to find the difference between the 
+		  identity mapping (0 mapping) and the ideal mapping
+		- this is often very small which kinda suggests that a good pre 
+		  conditioning of the network might just be identity mapped. 
+
+	3.2
+	y = F(x, {W_i}) + x where F(x, {W_i}) is residual mapping to be learned 
+	over every few layers
+	
+	- in a 2 layer situation it would be F = W_2 * act(W1 * x)
+	 	…then they would apply the nonlinearity act(F + x)
+	 	… so only 1 extra addition in something we are already doing
+
+	- However dimension of input must equal output of layer groups
+		- or can perform a linear projection over the shortcut connections
+
+	- authors only experimented with 2 or 3 layers between shortcut (1 layer 
+	  had no benefit)
+
+	- authors suggest this technique works for fully connected layers or 
+	  convolutional layers
+
+	Next authors describe their imageNet implementation 
+
+4. Experiments
+
+	Authors implemented a plain 18 layer convolution and 34 layer 
+		- graph shows error increases in 34 layer (close though)
+
+	- Authors implemented a 18 and 34 layer resnet, and show large improvement 
+	  in 34 layer resnet, with only tiny improvement between18 layer resnet and 
+	  plain error (but a faster convergence in the resnet)
+	
+	- However, authors argue that the issue in the plain nets is unlikely 
+	  caused by vanishing gradients due to the way they were trained (BN [16]) 
+	  and experimentally verified back propagated gradients which exhibit 
+	  healthy norms.  Guess deep plain nets have “exponentially low 
+	  convergence rates” and want to study reason in future.
+
+	- One major benefit of these nets is that they allow for easy comparisons 
+	  because the general structure of the plain is not modified except for a 
+	  shortcut connection
+
+
+	Experimenting with “projection shortcuts”
+		A) 0 padding for increasing dimensions
+		B) mix 0 padding for increase dimension and identity for others
+		C) all shortcuts are projects (winner)
+		
+		- all better than plain network 
+		- close enough that conclusion is that it doesn’t matter, so do 
+		  whatever is easiest and lowest complexity to implement
+			- identity shortcuts are important for deeper bottleneck 
+			  architectures because they double size and time complexity 
+
+	- Authors implemented 50 layer resNet
+		2 layer feed forward blocks are replaced by 3 layer “bottleneck blocks”
+
+	- Authors implemented 101 and 152 layer ResNet 
+		- still lower complexity than VGG (15.3/19.6 billion FLOP’s)
+		- more accurate than 34 layer by considerable margins
+
+	- Explored over 1000 layers 
+		- setting n = 200
+		- training error is excellent .1% but worst test error than the 110 
+		  layer network even though similar training error (argue due to 
+		  overfitting)
+	
