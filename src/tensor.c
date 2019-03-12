@@ -17,9 +17,13 @@ tensor_t tensor_make(uint const shape[], uint const len){
   }
   tensor_t t;
   t.data =malloc(num_elem*sizeof(T));
-  assert(t.data != NULL);
+  t.dim = dim;
+  assert(NULL != t.data);
 
 }
 
-tensor_destroy(){
+void tensor_destroy(tensor_t t){
+  if(t.data){
+    free(t.data);
+  }
 }

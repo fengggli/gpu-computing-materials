@@ -1,7 +1,9 @@
 #include "layer_conv.h"
 
 
-void convolution_forward(tensor_t input, tensor_t output, tensor_t filters, conv_param_t params){
+void convolution_forward(tensor_t x, tensor_t w, tensor_t* cache, conv_param_t params, tensor_t y){
 }
 
-void convolution_backward(tensor_t dout, tensor_t* caches, tensor_t dinput, tensor_t dfilters);
+
+void convolution_backward(tensor_t dx, tensor_t dw, tensor_t *cache, tensor_t dy){
+}
