@@ -34,4 +34,4 @@
 
 #### Kernels
 1. The first kernel we should have is  *an efficient convolution operation*. We can use profiling tools to compare the performance with existing libraries and show which optimization can be applied especially to Resnet nets.
-2. Another focus is how to make the data copy from host to device less frequent. (How to represent the neuron layers in device memory instead)
+3. Another focus is how to make the data copy from host to device less frequent. (How to represent the neuron layers in device memory instead)

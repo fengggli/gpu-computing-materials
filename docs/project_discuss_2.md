@@ -2,6 +2,15 @@
 
 March 6
 
+####
+
+Yuankuan will read the convolution and implement it in cuda
+i and crhis will decide the interface and decide the testing code(can be ported from numpy)
+chris will also look into the numpy code
+
+Data?
+
+
 #### Go through the numpy version
 
 Materials:
@@ -49,3 +58,5 @@ Maybe
 #### Minestones
 
 TO be filled
+
+
