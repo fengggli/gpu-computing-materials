@@ -16,10 +16,28 @@ typedef struct{
 } conv_param_t;
 
 /*
- * @param 
- */
-void convolution_forward(tensor_t input, tensor_t output, tensor_t filters, conv_param_t params);
+ * @brief forwarding for conv2d
+ *
+ * @param x data input of shape (N, C, H, W)
+ * @param w filters of shape (F, C, HH, WW)
+ * @param cache [output] intermidate results
+ * @param y [output] forwarding output
+ *
+ * Note: all tensor_t should be pre-allocated
 
-void convolution_backward(tensor_t dout, tensor_t* caches, tensor_t dinput, tensor_t dfilters);
+ *
+ * See conv_forward_naive https://github.com/fengggli/cs231n-assignments/blob/master/assignment2/cs231n/layers.py
+ */
+void convolution_forward(tensor_t x, tensor_t w, tensor_t* cache, conv_param_t params, tensor_t y);
+
+/*
+ * @brief backprop
+ *
+ * @param dx [output] gradient w.r.t input
+ * @param dw [output] gradient w.r.t filters
+ * @param cache
+ * @param dy gradient from upper layer
+ */
+void convolution_backward(tensor_t dx, tensor_t dw, tensor_t *cache, tensor_t dy);
 
 #endif

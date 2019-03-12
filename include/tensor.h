@@ -26,7 +26,7 @@ typedef struct tensor{
 tensor_t tensor_make(uint const shape[], uint const len);
 
 
-// TODO: do noting
+// TODO: do nothing
 static void _tensor_fill_random(tensor_t t);
 
 tensor_t tensor_make_random(uint const shape[], uint const len){
