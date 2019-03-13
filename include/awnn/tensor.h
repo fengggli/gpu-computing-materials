@@ -40,7 +40,7 @@ typedef struct tensor{
 } tensor_t;// tensor
 
 tensor_t tensor_make(uint const shape[], uint const ndims);
-
+void tensor_destroy(tensor_t t);
 
 // TODO: do nothing
 static void _tensor_fill_random(tensor_t t) {}
@@ -61,6 +61,7 @@ tensor_t tensor_make_random(uint const shape[], uint const ndims);
  */
 void tensor_plus_(tensor_t x, tensor_t from);
 void tensor_dot(tensor_t in1, tensor_t in2, tensor_t out);
+void tensor_dump(tensor_t t);
 
 /*
  * @brief create tensor of shape, filled with single scalar

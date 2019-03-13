@@ -1,8 +1,11 @@
 #include "awnn/tensor.h"
 #include "awnn/common.h"
+#include "awnn/logging.h"
 
 #include <stdlib.h>
 #include <stdarg.h>
+
+#define SIZE_LINE_BUFFER (160)
 
 
 dim_t make_dim(int ndims, ...){
@@ -61,7 +64,6 @@ tensor_t tensor_make(uint const shape[], uint const len){
   t.data =malloc(num_elem*sizeof(T));
   t.dim = dim;
   assert(NULL != t.data);
-
 }
 
 tensor_t tensor_make_random(uint const shape[], uint const ndims){
@@ -77,6 +79,32 @@ tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s){
 }
 
 
+/*void  _dump(T* data, dim_t dims, uint cur_dim, char *buffer){*/
+  /*char linebuffer[SIZE_LINE_BUFFER];*/
+  /*PLOG("[");*/
+
+
+
+/*}*/
+
+/*void tensor_dump(tensor_t t){*/
+  /*return;*/
+  /*char buffer[800];*/
+  /*PINF("Dump tensor\n");*/
+  /*uint i,j;*/
+  /*dim_t dim = t.dim;*/
+  /*uint ndims = dim_get_ndims(dim);*/
+  /*_dump(t.data, t.dim, dim);*/
+  /*for (i =0; i< ndims; i++){*/
+
+
+    /*for(j = 0; j< )*/
+      /*print*/
+    /*printf("]");*/
+  /*}*/
+
+
+/*}*/
 
 void tensor_destroy(tensor_t t){
   if(t.data){
