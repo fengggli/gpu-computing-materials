@@ -5,7 +5,8 @@
 git submodule update --init
 mkdir build
 cd build
-cmake .. (use cmake -DUSE_CLANG=on if you want to build with clang)
+cmake .. 
+  * use cmake -DUSE_CLANG=on if you want to build with clang)
 make
 ```
 

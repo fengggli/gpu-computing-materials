@@ -30,6 +30,7 @@ uint dim_get_capacity(dim_t dim){
     else
       break ;
   }
+  return size;
 }
 
 uint dim_get_ndims(dim_t dim){
