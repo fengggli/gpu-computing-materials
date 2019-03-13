@@ -1,3 +1,15 @@
+# Code guideline
+
+#### start
+```
+git submodule update --init
+mkdir build
+cd build
+cmake .. 
+  * use cmake -DUSE_CLANG=on if you want to build with clang)
+make
+```
+
 # GPU-computing-materials
 
 This is a collection of all materials of GPU computing course, which includes:
