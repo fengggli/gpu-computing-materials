@@ -1,4 +1,4 @@
-#include "layer_fc.h"
+#include "awnn/layer_fc.h"
 
 /* y = x*W+b */
 void layer_fc_forward(tensor_t x, tensor_t w, tensor_t b, tensor_t *cache, tensor_t y){

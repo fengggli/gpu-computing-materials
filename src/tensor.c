@@ -1,5 +1,5 @@
-#include "tensor.h"
-#include "common.h"
+#include "awnn/tensor.h"
+#include "awnn/common.h"
 
 #include <stdlib.h>
 #include <stdarg.h>
