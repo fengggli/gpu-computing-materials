@@ -1,4 +1,9 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.8)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+project(awnn LANGUAGES C)
+
+
 option(USE_CLANG OFF)
 if(USE_CLANG)
   set(CMAKE_C_COMPILER "clang")
@@ -8,7 +13,14 @@ else()
   set(CMAKE_CXX_COMPILER "g++")
 endif()
 
-PROJECT(awnn)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-include_directories(include)
-add_subdirectory(src)
+
+add_library(awnnlib STATIC
+  src/tensor.c
+  src/layer_conv.c
+
+  include/awnn/common.h
+  include/awnn/layer_conv.h
+  include/awnn/tensor.h
+)
+
+target_include_directories(awnnlib PUBLIC include)
