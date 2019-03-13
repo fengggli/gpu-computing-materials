@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.8)
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+cmake_minimum_required(VERSION 3.5)
+#set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 option(USE_CLANG "Use clang compiler set" OFF)
 option(BUILD_TEST "Build google test and all test cases" ON)
@@ -12,7 +12,9 @@ else()
   set(CMAKE_CXX_COMPILER "g++")
 endif()
 
-project(awnn LANGUAGES C)
+set(CMAKE_CXX_STANDARD 11)
+
+project(awnn LANGUAGES C CXX)
 
 add_library(awnnlib STATIC
   src/tensor.c
@@ -24,6 +26,7 @@ add_library(awnnlib STATIC
 )
 
 if(BUILD_TEST)
+  #add_subdirectory(/usr/src/gtest ${CMAKE_CURRENT_BINARY_DIR}/gtest)
   add_subdirectory(extern/googletest extern/googletest)
   enable_testing()
   add_subdirectory(tests)

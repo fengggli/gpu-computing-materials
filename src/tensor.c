@@ -63,6 +63,18 @@ tensor_t tensor_make(uint const shape[], uint const len){
 
 }
 
+tensor_t tensor_make_random(uint const shape[], uint const ndims){
+  tensor_t t =  tensor_make(shape, ndims);
+  _tensor_fill_random(t);
+  return t;
+}
+
+tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s){
+  tensor_t t =  tensor_make(shape, ndims);
+  _tensor_fill_scalar(t, s);
+  return t;
+}
+
 
 
 void tensor_destroy(tensor_t t){

@@ -8,6 +8,9 @@
 #ifndef TENSOR_H_
 #define TENSOR_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef unsigned int uint;
 typedef float T;
@@ -40,16 +43,12 @@ tensor_t tensor_make(uint const shape[], uint const ndims);
 
 
 // TODO: do nothing
-static void _tensor_fill_random(tensor_t t);
+static void _tensor_fill_random(tensor_t t) {}
 
 /* @brief fill a tensor with single scalar*/
-static void _tensor_fill_scalar(tensor_t t, T s);
+static void _tensor_fill_scalar(tensor_t t, T s) {}
 
-tensor_t tensor_make_random(uint const shape[], uint const ndims){
-  tensor_t t =  tensor_make(shape, ndims);
-  _tensor_fill_random(t);
-  return t;
-}
+tensor_t tensor_make_random(uint const shape[], uint const ndims);
 
 /* @brief Add tensor 'from' to 'to'
  *
@@ -66,10 +65,10 @@ void tensor_dot(tensor_t in1, tensor_t in2, tensor_t out);
 /*
  * @brief create tensor of shape, filled with single scalar
  */
-tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s){
-  tensor_t t =  tensor_make(shape, ndims);
-  _tensor_fill_scalar(t, s);
-  return t;
+tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s);
+
+#ifdef __cplusplus
 }
+#endif
 
 #endif
