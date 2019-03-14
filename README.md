@@ -4,6 +4,10 @@
 
 # Code guideline
 
+#### prepare
+Need cblas
+sudo ./install-apt.sh
+
 #### start
 ```
 git submodule update --init

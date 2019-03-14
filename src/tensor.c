@@ -1,5 +1,4 @@
 #include "awnn/tensor.h"
-#include "awnn/common.h"
 #include "awnn/logging.h"
 
 #include <stdlib.h>
@@ -153,7 +152,3 @@ void tensor_destroy(tensor_t t){
     free(t.data);
   }
 }
-
-void tensor_plus(tensor_t to, tensor_t from){
-}
-

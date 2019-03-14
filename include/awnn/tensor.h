@@ -8,6 +8,8 @@
 #ifndef TENSOR_H_
 #define TENSOR_H_
 
+#include "awnn/common.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -63,7 +65,7 @@ tensor_t tensor_make_patterned(uint const shape[], uint const ndims);
  *  * x.dims = {3,4,5}, y.dims = [0], add y to each of the elem
  */
 void tensor_plus_(tensor_t x, tensor_t from);
-void tensor_dot(tensor_t in1, tensor_t in2, tensor_t out);
+status_t tensor_dot(tensor_t in1, tensor_t in2, tensor_t out);
 void tensor_dump(tensor_t t);
 
 /*
