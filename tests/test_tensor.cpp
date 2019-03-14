@@ -38,29 +38,54 @@ protected:
   }
 
   // Objects declared here can be used by all tests in the test case for Foo.
-  tensor_t t;
+  static tensor_t t;
 };
+
+//
+tensor_t TensorTest::t;
 
 // Tests that the Foo::Bar() method does Abc.
 TEST_F(TensorTest, Construct) {
-  uint const shape[] = {3,4,5};
+  uint const shape[] = {2, 3, 4};
   t= tensor_make(shape, 3);
   EXPECT_TRUE(t.data != NULL);
 }
 
-/*TEST_F(TensorTest, Dump) {*/
-// dim_t dim = make_dim(1, 3);
-// EXPECT_EQ(dim.dims[0], 3);
-// EXPECT_EQ(dim.dims[1], 0);
-// EXPECT_EQ(dim.dims[2], 0);
-// EXPECT_EQ(dim.dims[3], 0);
-// EXPECT_EQ(dim_get_capacity(dim), 3);
-// EXPECT_EQ(dim_get_ndims(dim), 1);
-/*}*/
+TEST_F(TensorTest, Destroy) { tensor_destroy(t); }
 
-TEST_F(TensorTest, Destroy) {
-  EXPECT_TRUE(t.data != NULL);
-  tensor_destroy(t);
+TEST_F(TensorTest, Dumpd0) {
+  uint const shape[] = {0}; // a scalar
+  tensor_t tt = tensor_make_patterned(shape, 0);
+  tensor_dump(tt);
+  tensor_destroy(tt);
+}
+
+TEST_F(TensorTest, Dumpd1) {
+  uint const shape[] = {2}; // a scalar
+  tensor_t tt = tensor_make_patterned(shape, 1);
+  tensor_dump(tt);
+  tensor_destroy(tt);
+}
+
+TEST_F(TensorTest, Dumpd2) {
+  uint const shape[] = {2, 3}; // a scalar
+  tensor_t tt = tensor_make_patterned(shape, 2);
+  tensor_dump(tt);
+  tensor_destroy(tt);
+}
+
+TEST_F(TensorTest, Dumpd3) {
+  uint const shape[] = {2, 3, 4}; // a scalar
+  tensor_t tt = tensor_make_patterned(shape, 3);
+  tensor_dump(tt);
+  tensor_destroy(tt);
+}
+
+TEST_F(TensorTest, Dumpd4) {
+  uint const shape[] = {2, 3, 4, 5}; // a scalar
+  tensor_t tt = tensor_make_patterned(shape, 4);
+  tensor_dump(tt);
+  tensor_destroy(tt);
 }
 
 }  // namespace

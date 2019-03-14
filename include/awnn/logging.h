@@ -96,6 +96,10 @@
 
 #define PINF(f, ...)                                                           \
   fprintf(stderr, "%s" f "%s\n", ESC_INF, ##__VA_ARGS__, ESC_END)
+
+#define PSTR(f, ...)                                                           \
+  fprintf(stderr, "%s" f "%s", ESC_INF, ##__VA_ARGS__, ESC_END)
+
 #define PWRN(f, ...)                                                           \
   fprintf(stderr, "%s[WRN]:" f "%s\n", ESC_WRN, ##__VA_ARGS__, ESC_END)
 #define PERR(f, ...)                                                           \

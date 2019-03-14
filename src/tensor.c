@@ -49,21 +49,54 @@ uint dim_get_ndims(dim_t dim){
   return ndims;
 }
 
-tensor_t tensor_make(uint const shape[], uint const len){
-
-  int num_elem, i;
-  dim_t dim;
-  num_elem = 1;
-
-  for(i = 0; i< len; i++){
-    assert(shape[i]>0);
-    dim.dims[i] = shape[i];
-    num_elem*=shape[i];
+uint dim_dump(dim_t dim){
+  int i;
+  uint size = 1;
+  PSTR("Dimension Dump: [");
+  for(i = 0; i< MAX_DIM; i++){
+    uint tmp = dim.dims[i];
+    if(tmp > 0)
+      PSTR("%d ", tmp);
+    else
+      break ;
   }
+  PSTR("]\n");
+}
+
+
+void _tensor_fill_patterned(tensor_t t){
+  uint capacity = dim_get_capacity(t.dim);
+  uint i;
+  for(i = 0; i< capacity; i++){
+    t.data[i] = (T)(i);
+  }
+}
+
+
+tensor_t tensor_make(uint const shape[], uint const ndims){
+
+  int i;
+  uint capacity;
+  dim_t dim;
+
+  if(ndims == 0){
+    PINF("make zero");
+    dim = make_dim(0,0);
+  }
+
+  for(i = 0; i< MAX_DIM; i++){
+    if(i< ndims)
+      dim.dims[i] =shape[i];
+    else
+      dim.dims[i] = 0;
+  }
+
+  capacity = dim_get_capacity(dim);
   tensor_t t;
-  t.data =malloc(num_elem*sizeof(T));
+  t.data =malloc(capacity*sizeof(T));
   t.dim = dim;
   assert(NULL != t.data);
+  return t;
 }
 
 tensor_t tensor_make_random(uint const shape[], uint const ndims){
@@ -78,33 +111,42 @@ tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s){
   return t;
 }
 
-
-/*void  _dump(T* data, dim_t dims, uint cur_dim, char *buffer){*/
-  /*char linebuffer[SIZE_LINE_BUFFER];*/
-  /*PLOG("[");*/
-
-
-
-/*}*/
-
-/*void tensor_dump(tensor_t t){*/
-  /*return;*/
-  /*char buffer[800];*/
-  /*PINF("Dump tensor\n");*/
-  /*uint i,j;*/
-  /*dim_t dim = t.dim;*/
-  /*uint ndims = dim_get_ndims(dim);*/
-  /*_dump(t.data, t.dim, dim);*/
-  /*for (i =0; i< ndims; i++){*/
+tensor_t tensor_make_patterned(uint const shape[], uint const ndims){
+  tensor_t t =  tensor_make(shape, ndims);
+  _tensor_fill_patterned(t);
+  return t;
+}
 
 
-    /*for(j = 0; j< )*/
-      /*print*/
-    /*printf("]");*/
-  /*}*/
+void  _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity){
+  uint i;
+  for (i =0; i< dim.dims[cur_dim_id]; i++){
+    if(cur_dim_id + 1 == dim_get_ndims(dim)){ // this is the vector
+      PSTR("%.3f ", data[i]);
+    }
+    else{
+      PSTR("{");
+      _dump(data + i*(cur_capacity), dim, cur_dim_id+1, cur_capacity/dim.dims[cur_dim_id+1]);
+      PSTR("}\n");
+    }
+
+  }
+}
 
 
-/*}*/
+void tensor_dump(tensor_t t){
+  PINF("Dump tensor\n");
+  dim_t dim = t.dim;
+  dim_dump(t.dim);
+  uint capacity = dim_get_capacity(dim);
+  PSTR("{");
+  if(dim.dims[0]==0)
+    PSTR("%.3f ", t.data[0]); //scalar
+  else{
+    _dump(t.data, dim, 0, capacity/dim.dims[0]);
+  }
+  PSTR("}\n");
+}
 
 void tensor_destroy(tensor_t t){
   if(t.data){

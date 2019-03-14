@@ -12,4 +12,3 @@ add_executable(test-tensor test_tensor.cpp)
 target_link_libraries(test-tensor awnnlib gtest)
 add_test(test-tensor test-tensor)
 
-

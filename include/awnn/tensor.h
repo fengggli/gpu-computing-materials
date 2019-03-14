@@ -33,6 +33,7 @@ typedef struct{
 dim_t make_dim(int ndims, ...);
 uint dim_get_capacity(dim_t dim);
 uint dim_get_ndims(dim_t dim);
+uint dim_dump(dim_t dim);
 
 typedef struct tensor{
  dim_t dim;
@@ -47,8 +48,10 @@ static void _tensor_fill_random(tensor_t t) {}
 
 /* @brief fill a tensor with single scalar*/
 static void _tensor_fill_scalar(tensor_t t, T s) {}
+void _tensor_fill_patterned(tensor_t t); // debug use
 
 tensor_t tensor_make_random(uint const shape[], uint const ndims);
+tensor_t tensor_make_patterned(uint const shape[], uint const ndims);
 
 /* @brief Add tensor 'from' to 'to'
  *
