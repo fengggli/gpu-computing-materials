@@ -11,8 +11,7 @@ protected:
   // You can remove any or all of the following functions if its body
   // is empty.
 
-  TensorOpTest() {
-    // You can do set-up work for each test here.
+  TensorOpTest() { // You can do set-up work for each test here.
   }
 
   ~TensorOpTest() override {
@@ -58,19 +57,63 @@ TEST_F(TensorOpTest, Dot) {
   tensor_t in1, in2, out;
   uint const shape1[] = {2, 3};
   in1 = tensor_make_patterned(shape1, 2);
-  tensor_dump(in1);
+  // tensor_dump(in1);
 
   uint const shape2[] = {3, 2};
   in2 = tensor_make_patterned(shape2, 2);
-  tensor_dump(in2);
+  // tensor_dump(in2);
 
   uint const shape3[] = {2, 2};
   out = tensor_make_patterned(shape3, 2);
 
-  int correct_result[] = {10, 13, 28, 40};
+  // int correct_result[] = {10, 13, 28, 40};
 
   EXPECT_TRUE(S_OK == tensor_dot(in1, in2, out));
-  tensor_dump(out);
+  // tensor_dump(out);
+  EXPECT_EQ(out.data[0], 10);
+  EXPECT_EQ(out.data[1], 13);
+  EXPECT_EQ(out.data[2], 28);
+  EXPECT_EQ(out.data[3], 40);
+}
+
+TEST_F(TensorOpTest, PLUS) {
+  tensor_t in1, in2, out;
+  uint const shape1[] = {2, 3};
+  in1 = tensor_make_patterned(shape1, 2);
+  // tensor_dump(in1);
+
+  uint const shape2[] = {2, 3};
+  in2 = tensor_make_patterned(shape2, 2);
+  // tensor_dump(in2);
+
+  uint const shape3[] = {2, 3};
+  out = tensor_make(shape3, 2);
+
+  EXPECT_TRUE(S_OK == tensor_plus(in1, in2, out));
+  EXPECT_EQ(out.data[0], 0);
+  EXPECT_EQ(out.data[1], 2);
+  EXPECT_EQ(out.data[2], 4);
+  EXPECT_EQ(out.data[3], 6);
+  EXPECT_EQ(out.data[4], 8);
+  EXPECT_EQ(out.data[5], 10);
+}
+
+TEST_F(TensorOpTest, PLUS_INPLACE) {
+  tensor_t from, to;
+  uint const shape1[] = {2, 3};
+  from = tensor_make_patterned(shape1, 2);
+
+  uint const shape2[] = {2, 3};
+  to = tensor_make_patterned(shape2, 2);
+
+  EXPECT_TRUE(S_OK == tensor_plus_inplace(to, from));
+
+  EXPECT_EQ(to.data[0], 0);
+  EXPECT_EQ(to.data[1], 2);
+  EXPECT_EQ(to.data[2], 4);
+  EXPECT_EQ(to.data[3], 6);
+  EXPECT_EQ(to.data[4], 8);
+  EXPECT_EQ(to.data[5], 10);
 }
 
 } // namespace

@@ -35,7 +35,8 @@ typedef struct{
 dim_t make_dim(int ndims, ...);
 uint dim_get_capacity(dim_t dim);
 uint dim_get_ndims(dim_t dim);
-uint dim_dump(dim_t dim);
+status_t dim_is_same(dim_t, dim_t);
+void dim_dump(dim_t dim);
 
 typedef struct tensor{
  dim_t dim;
@@ -54,6 +55,8 @@ void _tensor_fill_patterned(tensor_t t); // debug use
 
 tensor_t tensor_make_random(uint const shape[], uint const ndims);
 tensor_t tensor_make_patterned(uint const shape[], uint const ndims);
+/* @brief create tensor of shape, filled with single scalar */
+tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s);
 
 /* @brief Add tensor 'from' to 'to'
  *
@@ -64,14 +67,15 @@ tensor_t tensor_make_patterned(uint const shape[], uint const ndims);
  *  * x.dims = {3,4,5}, y.dims = [5], add y to each of with vector with size [5]
  *  * x.dims = {3,4,5}, y.dims = [0], add y to each of the elem
  */
-void tensor_plus_(tensor_t x, tensor_t from);
-status_t tensor_dot(tensor_t in1, tensor_t in2, tensor_t out);
+
 void tensor_dump(tensor_t t);
 
-/*
- * @brief create tensor of shape, filled with single scalar
- */
-tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s);
+status_t tensor_plus_inplace(tensor_t to, tensor_t from);
+status_t tensor_plus(tensor_t in1, tensor_t in2, tensor_t out);
+status_t tensor_dot(tensor_t in1, tensor_t in2,
+                    tensor_t out);                // mm for 2d matrix
+status_t tensor_copy(tensor_t to, tensor_t from); // copy, only with same dim
+
 
 #ifdef __cplusplus
 }

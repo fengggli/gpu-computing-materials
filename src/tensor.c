@@ -48,9 +48,18 @@ uint dim_get_ndims(dim_t dim){
   return ndims;
 }
 
-uint dim_dump(dim_t dim){
+status_t dim_is_same(dim_t dim1,  dim_t dim2){
+  uint i;
+  for(i = 0 ;i < MAX_DIM; i++){
+    if(dim1.dims[i]!= dim2.dims[i]){
+      return S_BAD_DIM;
+    }
+  }
+  return S_OK;
+}
+
+void dim_dump(dim_t dim){
   int i;
-  uint size = 1;
   PSTR("Dimension Dump: [");
   for(i = 0; i< MAX_DIM; i++){
     uint tmp = dim.dims[i];
@@ -131,7 +140,6 @@ void  _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity){
 
   }
 }
-
 
 void tensor_dump(tensor_t t){
   PINF("Dump tensor\n");

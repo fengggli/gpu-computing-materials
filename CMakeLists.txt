@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 #set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 option(USE_CLANG "Use clang compiler set" OFF)
+option(USE_OPENBLAS "USE openblas for blas" OFF)
 option(BUILD_TEST "Build google test and all test cases" ON)
 
 if(USE_CLANG)
@@ -20,12 +21,15 @@ project(awnn LANGUAGES C CXX)
 include(CheckIncludeFiles)
 
 #TODO support MLK? source /opt/intel/mkl/bin/mklvars.sh intel64")
-CHECK_INCLUDE_FILES("cblas.h" HAVE_CBLAS_H)
-if(HAVE_CBLAS_H)
-  message("has cblas!")
-else()
-  message(FATAL_ERROR "in sievert, run:
-  sudo apt-get install libopenblas-dev")
+if(USE_OPENBLAS)
+  CHECK_INCLUDE_FILES("cblas.h" HAVE_CBLAS)
+  if(HAVE_CBLAS)
+    message("has cblas!")
+  else()
+    message(FATAL_ERROR "in sievert, run:
+    sudo apt-get install libopenblas-dev")
+  endif()
+  set(AWNN_LIBS ${AWNN_LIBS} openblas)
 endif()
 
 add_library(awnnlib SHARED
@@ -38,7 +42,14 @@ add_library(awnnlib SHARED
   include/awnn/tensor.h
 )
 
-target_link_libraries(awnnlib PUBLIC libopenblas.so)
+configure_file (
+  "${PROJECT_SOURCE_DIR}/config.h.in"
+  "${PROJECT_BINARY_DIR}/config.h"
+)
+
+include_directories ("${PROJECT_BINARY_DIR}")
+
+target_link_libraries(awnnlib PUBLIC ${AWNN_LIBS})
 
 if(BUILD_TEST)
   #add_subdirectory(/usr/src/gtest ${CMAKE_CURRENT_BINARY_DIR}/gtest)
