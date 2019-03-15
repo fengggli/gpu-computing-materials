@@ -80,11 +80,18 @@ void _tensor_fill_patterned(tensor_t t){
   }
 }
 
+tensor_t _tensor_make(dim_t dim){
+  tensor_t t;
+  uint capacity;
+  capacity = dim_get_capacity(dim);
+  t.data =malloc(capacity*sizeof(T));
+  t.dim = dim;
+  assert(NULL != t.data);
+  return t;
+}
 
 tensor_t tensor_make(uint const shape[], uint const ndims){
-
   int i;
-  uint capacity;
   dim_t dim;
 
   if(ndims == 0){
@@ -98,13 +105,7 @@ tensor_t tensor_make(uint const shape[], uint const ndims){
     else
       dim.dims[i] = 0;
   }
-
-  capacity = dim_get_capacity(dim);
-  tensor_t t;
-  t.data =malloc(capacity*sizeof(T));
-  t.dim = dim;
-  assert(NULL != t.data);
-  return t;
+  return _tensor_make(dim);
 }
 
 tensor_t tensor_make_random(uint const shape[], uint const ndims){
@@ -112,6 +113,13 @@ tensor_t tensor_make_random(uint const shape[], uint const ndims){
   _tensor_fill_random(t);
   return t;
 }
+
+tensor_t tensor_make_copy(tensor_t t){
+  tensor_t ret = _tensor_make(t.dim);
+  tensor_copy(ret, t);
+  return ret;
+}
+
 
 tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s){
   tensor_t t =  tensor_make(shape, ndims);

@@ -116,6 +116,24 @@ TEST_F(TensorOpTest, PLUS_INPLACE) {
   EXPECT_EQ(to.data[5], 10);
 }
 
+TEST_F(TensorOpTest, RESHAPE) {
+  tensor_t t;
+  uint const shape1[] = {2, 3, 4};
+  t = tensor_make_patterned(shape1, 3);
+
+  uint const shape2[] = {2, 13}; // this shall gives a error
+  uint const shape3[] = {2, 3, 2, 2};
+  uint const shape4[] = {2, 12};
+  uint const shape5[] = {24};
+
+  EXPECT_TRUE(S_BAD_DIM == tensor_reshape_(&t, shape2, 2));
+  EXPECT_TRUE(S_OK == tensor_reshape_(&t, shape3, 4));
+  EXPECT_TRUE(S_OK == tensor_reshape_(&t, shape4, 2));
+  EXPECT_TRUE(S_OK == tensor_reshape_(&t, shape5, 1));
+  EXPECT_EQ(t.dim.dims[0], 24);
+  EXPECT_EQ(t.dim.dims[1], 0);
+}
+
 } // namespace
 
 int main(int argc, char **argv) {

@@ -102,3 +102,26 @@ status_t tensor_plus(tensor_t in1, tensor_t in2, tensor_t out){
     return S_BAD_DIM;
   }
 }
+
+status_t tensor_reshape_(tensor_t* ptr_t, uint const  shape[], uint const ndims){
+  dim_t req_dim;
+  uint i;
+  if(ndims == 0){
+    PINF("make zero");
+    req_dim = make_dim(0,0);
+  }
+
+  for(i = 0; i< MAX_DIM; i++){
+    if(i< ndims){
+      req_dim.dims[i] =shape[i];
+    }
+    else
+      req_dim.dims[i] = 0;
+  }
+  if(dim_get_capacity(req_dim) != dim_get_capacity(ptr_t->dim)){
+    PERR("[tensor reshape]: dimension notmatch");
+    return S_BAD_DIM;
+  }
+  ptr_t->dim = req_dim;
+  return S_OK;
+}

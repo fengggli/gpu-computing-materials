@@ -88,6 +88,16 @@ TEST_F(TensorTest, Dumpd4) {
   tensor_destroy(tt);
 }
 
+TEST_F(TensorTest, MakeCopy) {
+  uint const shape[] = {2, 3, 4, 5}; // a scalar
+  tensor_t t1 = tensor_make_patterned(shape, 4);
+  tensor_t t2 = tensor_make_copy(t1);
+  EXPECT_TRUE(S_OK == dim_is_same(t1.dim, t2.dim));
+  EXPECT_TRUE(t1.data != t2.data);
+  tensor_destroy(t1);
+  tensor_destroy(t2);
+}
+
 }  // namespace
 
 int main(int argc, char **argv) {
