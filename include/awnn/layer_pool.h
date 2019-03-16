@@ -10,6 +10,10 @@
 
 #include "awnn/layer.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * @brief forwarding for global_avg_pool
  *
@@ -40,6 +44,10 @@ status_t global_avg_pool_forward(tensor_t x, lcache_t *cache, tensor_t y);
  */
 status_t global_avg_pool_backward(tensor_t dx, lcache_t const *cache, tensor_t dy);
 
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

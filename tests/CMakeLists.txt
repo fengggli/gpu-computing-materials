@@ -20,5 +20,10 @@ add_executable(test-layer-conv test_layer_conv.cpp)
 target_link_libraries(test-layer-conv awnnlib  gtest)
 add_test(test-layer-conv test-layer-conv)
 
+add_executable(test-layer-pool test_layer_pool.cpp)
+target_link_libraries(test-layer-pool awnnlib  gtest)
+add_test(test-layer-pool test-layer-pool)
+
+
 
 

@@ -27,12 +27,12 @@ typedef struct{
   tensor_t all_tensors[MAX_CACHE_SIZE];
 }lcache_t;
 
-void make_empty_lcache(lcache_t *cache){
+static void make_empty_lcache(lcache_t *cache){
   cache->count = 0;
 }
 
 /* This should be called inside the backprop*/
-void free_lcache(lcache_t *cache){
+static void free_lcache(lcache_t *cache){
   uint i;
   for(i =0; i <cache->count; i++){
     tensor_destroy(cache->all_tensors[i]);
