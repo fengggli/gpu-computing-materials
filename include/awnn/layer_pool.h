@@ -5,9 +5,8 @@
  * e-mail: fengggli@yahoo.com
  */
 
-#ifndef LAYER_CONV_H_
-#define LAYER_CONV_H_
-
+#ifndef LAYER_POOL_H_
+#define LAYER_POOL_H_
 
 #include "awnn/layer.h"
 
@@ -15,19 +14,12 @@
 extern "C" {
 #endif
 
-typedef struct{
-  int stride;
-  int padding;
-} conv_param_t;
-
-
 /*
- * @brief forwarding for conv2d
+ * @brief forwarding for global_avg_pool
  *
  * @param x data input of shape (N, C, H, W)
- * @param w filters, shape (F, C, HH, WW)
  * @param cache [output] intermidate results
- * @param y [output] forwarding output, shape (N,C,HH,WW)
+ * @param y [output] forwarding output (shape (N,C,1,1))
  *
  * @return S_OK if success, otherwise S_ERR or define your error type in common.h
  *
@@ -35,24 +27,27 @@ typedef struct{
  *  * all tensor_t should be pre-allocated
  *  * cache will be populated by forward function.
  *
- * See conv_forward_naive https://github.com/fengggli/cs231n-assignments/blob/master/assignment2/cs231n/layers.py
+ * See https://fengggli.github.io/gpu-computing-materials/layers/pool.html 
  */
-status_t convolution_forward(tensor_t x, tensor_t w, lcache_t* cache, conv_param_t params, tensor_t y);
+status_t global_avg_pool_forward(tensor_t x, lcache_t *cache, tensor_t y);
 
 /*
  * @brief backprop
  *
  * @param dx [output] gradient w.r.t input
- * @param dw [output] gradient w.r.t filters
  * @param cache
  * @param dy gradient from upper layer
  *
  * @return S_OK if success, otherwise S_ERR or define your error type in common.h
+ *
+ * Note: all tensor_t should be pre-allocated
  */
-status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t const *cache, tensor_t dy);
+status_t global_avg_pool_backward(tensor_t dx, lcache_t const *cache, tensor_t dy);
+
 
 #ifdef __cplusplus
 }
 #endif
+
 
 #endif

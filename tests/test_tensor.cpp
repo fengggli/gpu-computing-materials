@@ -7,7 +7,6 @@
 
 #include "awnn/tensor.h"
 #include "gtest/gtest.h"
-
 namespace {
 
 // The fixture for testing class Foo.
@@ -83,6 +82,13 @@ TEST_F(TensorTest, Dumpd3) {
 
 TEST_F(TensorTest, Dumpd4) {
   uint const shape[] = {2, 3, 4, 5}; // a scalar
+  tensor_t tt = tensor_make_patterned(shape, 4);
+  tensor_dump(tt);
+  tensor_destroy(tt);
+}
+
+TEST_F(TensorTest, Dumpd4_2) {
+  uint const shape[] = {2, 3, 1,1}; // a scalar
   tensor_t tt = tensor_make_patterned(shape, 4);
   tensor_dump(tt);
   tensor_destroy(tt);

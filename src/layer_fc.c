@@ -1,7 +1,7 @@
 #include "awnn/layer_fc.h"
 
 /* y = x*W+b */
-void layer_fc_forward(tensor_t x, tensor_t w, tensor_t b, tensor_t *cache, tensor_t y){
+status_t layer_fc_forward(tensor_t x, tensor_t w, tensor_t b, tensor_t *cache, tensor_t y){
   tensor_t x_reshaped = tensor_make_copy(x);
   uint const flat_shape[] = {1, tensor_get_capacity(x)};
   tensor_reshape_(&x_reshaped, flat_shape, 2);
@@ -13,4 +13,4 @@ void layer_fc_forward(tensor_t x, tensor_t w, tensor_t b, tensor_t *cache, tenso
   awnn_plus(1.0, y, b_extend); // y = y + b
 }
 
-void layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db,tensor_t *cache, tensor_t dy);
+status_t layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db,tensor_t *cache, tensor_t dy);

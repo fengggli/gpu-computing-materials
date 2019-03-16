@@ -1,7 +1,9 @@
 #include "awnn/tensor.h"
 #include "awnn/logging.h"
 
+#ifdef USE_OPENBLAS
 #include "cblas.h"
+#endif
 #include <assert.h>
 
 

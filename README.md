@@ -1,11 +1,14 @@
 [![Build Master](https://travis-ci.com/fengggli/gpu-computing-materials.svg?token=21ngWpDjfcY4FxnxdNnA&branch=master)](https://travis-ci.com/fengggli/gpu-computing-materials)
 [![Build feng](https://travis-ci.com/fengggli/gpu-computing-materials.svg?token=21ngWpDjfcY4FxnxdNnA&branch=feng)](https://travis-ci.com/fengggli/gpu-computing-materials)
 
+# GPU-computing-materials
+
+For the most recent documentations, see [here](https://fengggli.github.io/gpu-computing-materials)
 
 # Code guideline
 
-#### prepare
-Need cblas
+#### prepare (Optional)
+This is only needed for feng's experiments in CPU implementation. you can ignore it.
 sudo ./install-apt.sh
 
 #### start
@@ -14,14 +17,28 @@ git submodule update --init
 mkdir build
 cd build
 cmake .. 
-  * use cmake -DUSE_CLANG=on if you want to build with clang)
+  * (optional )use cmake -DUSE_CLANG=on if you want to build with clang)
 make
+```
+
+#### run test
+1. run all tests(in the build directory)
+```
+make run
+```
+or
+```
+ctest
+```
+
+2. run individual test, e.g.
+```
+./tests/test_tensor
 ```
 #### Documentation
 See fengggli.github.io/gpu-computing-material
 The sources of the doc in in docs/sources
 
-# GPU-computing-materials
 
 This is a collection of all materials of GPU computing course, which includes:
 1. slides (or link to slides).
