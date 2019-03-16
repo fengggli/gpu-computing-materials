@@ -83,7 +83,9 @@ TEST_F(LayerConvTest, DISABLED_Backward){
   EXPECT_TRUE(ret == S_OK);
 }
 
-TEST_F(LayerConvTest, DISABLED_CheckLcache){
+// TODO: check with cudnn
+
+TEST_F(LayerConvTest,CheckLcache){
   EXPECT_TRUE(cache.count == 0); // backward needs to call free_lcache(cache);
 }
 
