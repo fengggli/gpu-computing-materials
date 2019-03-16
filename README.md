@@ -17,6 +17,9 @@ cmake ..
   * use cmake -DUSE_CLANG=on if you want to build with clang)
 make
 ```
+#### Documentation
+See fengggli.github.io/gpu-computing-material
+The sources of the doc in in docs/sources
 
 # GPU-computing-materials
 

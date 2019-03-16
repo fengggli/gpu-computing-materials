@@ -1,7 +1,13 @@
 # https://github.com/rsp/travis-hello-modern-cpp/blob/master/.travis.yml
 
 dist: xenial
-language: cpp
+language:
+  - cpp
+  - python # python is only used to build docs
+
+python:
+  - "3.6"
+
 compiler:
   - gcc
   - clang
@@ -13,9 +19,21 @@ before_script:
   - cd build
   - cmake ..
 
-#install:
-  #- "[ $CXX = g++ ] && export CXX=g++-6 || true"
-  #- "[ $CXX = clang++ ] && export CXX=clang++-3.8 || true"
+install: "pip install sphinx sphinx_rtd_theme sphinxcontrib-bibtex"
 
 script:
-  - make
+  - make # build c/c++
+  - cd ../docs && make html  # build doc
+
+before_deploy: touch build/html/.nojekyll
+
+deploy:
+  provider: pages
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable in travis portal
+  keep-history: true
+  local-dir: docs/build/html
+  on:
+    branch:
+      - master  # updates from this branch will trigger deploy
+      - feng
