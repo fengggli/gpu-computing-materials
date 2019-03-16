@@ -38,8 +38,14 @@ uint dim_get_ndims(dim_t dim);
 status_t dim_is_same(dim_t, dim_t);
 void dim_dump(dim_t dim);
 
+typedef enum{
+  CPU_MEM = 0,
+  GPU_MEM = -1,
+}memory_type_t;
+
 typedef struct tensor{
  dim_t dim;
+ memory_type_t mem_type;
  T *data;
 } tensor_t;// tensor
 

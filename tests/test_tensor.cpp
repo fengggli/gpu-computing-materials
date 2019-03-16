@@ -88,7 +88,7 @@ TEST_F(TensorTest, Dumpd4) {
 }
 
 TEST_F(TensorTest, Dumpd4_2) {
-  uint const shape[] = {2, 3, 1,1}; // a scalar
+  uint const shape[] = {2, 3, 1,1}; // a 4-d tensor, but in memory this is the same as {2,3}
   tensor_t tt = tensor_make_patterned(shape, 4);
   tensor_dump(tt);
   tensor_destroy(tt);
