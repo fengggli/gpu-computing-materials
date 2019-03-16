@@ -8,7 +8,7 @@
 #ifndef LAYER_FC_H_
 #define LAYER_FC_H_
 
-#include "tensor.h"
+#include "awnn/tensor.h"
 
 /*
  * @brief Fully connected layer implementation

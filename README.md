@@ -1,4 +1,12 @@
+[![Build Master](https://travis-ci.com/fengggli/gpu-computing-materials.svg?token=21ngWpDjfcY4FxnxdNnA&branch=master)](https://travis-ci.com/fengggli/gpu-computing-materials)
+[![Build feng](https://travis-ci.com/fengggli/gpu-computing-materials.svg?token=21ngWpDjfcY4FxnxdNnA&branch=feng)](https://travis-ci.com/fengggli/gpu-computing-materials)
+
+
 # Code guideline
+
+#### prepare
+Need cblas
+sudo ./install-apt.sh
 
 #### start
 ```
@@ -9,6 +17,9 @@ cmake ..
   * use cmake -DUSE_CLANG=on if you want to build with clang)
 make
 ```
+#### Documentation
+See fengggli.github.io/gpu-computing-material
+The sources of the doc in in docs/sources
 
 # GPU-computing-materials
 

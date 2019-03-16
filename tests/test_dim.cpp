@@ -48,6 +48,7 @@ TEST_F(DimTest, SingleDim) {
   EXPECT_EQ(dim.dims[3], 0);
   EXPECT_EQ(dim_get_capacity(dim), 3);
   EXPECT_EQ(dim_get_ndims(dim), 1);
+  dim_dump(dim);
 }
 
 TEST_F(DimTest, ScaleDim) {
@@ -59,6 +60,7 @@ TEST_F(DimTest, ScaleDim) {
 
   EXPECT_EQ(dim_get_capacity(dim), 1);
   EXPECT_EQ(dim_get_ndims(dim), 0);
+  dim_dump(dim);
 }
 
 TEST_F(DimTest, FourDims) {
@@ -70,6 +72,7 @@ TEST_F(DimTest, FourDims) {
 
   EXPECT_EQ(dim_get_capacity(dim), 3 * 4 * 5 * 6);
   EXPECT_EQ(dim_get_ndims(dim), 4);
+  dim_dump(dim);
 }
 
 }  // namespace

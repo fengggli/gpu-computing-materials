@@ -36,6 +36,7 @@ class FooTest : public ::testing::Test {
   }
 
   // Objects declared here can be used by all tests in the test case for Foo.
+  // https://github.com/google/googletest/blob/master/googletest/docs/advanced.md#sharing-resources-between-tests-in-the-same-test-suite
 };
 
 // Tests that the Foo::Bar() method does Abc.
