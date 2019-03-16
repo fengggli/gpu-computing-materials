@@ -43,6 +43,8 @@ typedef struct tensor{
  T *data;
 } tensor_t;// tensor
 
+#define tensor_get_capacity(x) (dim_get_capacity((x).dim))
+
 tensor_t tensor_make(uint const shape[], uint const ndims);
 void tensor_destroy(tensor_t t);
 
