@@ -8,7 +8,7 @@
 #ifndef LAYER_FC_H_
 #define LAYER_FC_H_
 
-#include "awnn/tensor.h"
+#include "awnn/layer.h"
 
 /*
  * @brief Fully connected layer implementation
@@ -21,13 +21,13 @@
  *
  * Note: all tensor_t should be pre-allocated
  */
-void layer_fc_forward(tensor_t x, tensor_t w, tensor_t b, tensor_t *cache, tensor_t y);
+void layer_fc_forward(tensor_t x, tensor_t w, tensor_t b, lcache_t* cache, tensor_t y);
 
 /*
  * @brief Fully connected layer backprop
  * 
  * Note: all tensor_t should be pre-allocated
  */
-void layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t b,tensor_t *cache, tensor_t dy);
+void layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t b, lcache_t const * cache, tensor_t dy);
 
 #endif

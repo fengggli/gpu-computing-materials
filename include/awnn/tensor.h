@@ -48,10 +48,10 @@ typedef struct tensor{
 tensor_t tensor_make(uint const shape[], uint const ndims);
 void tensor_destroy(tensor_t t);
 
-// TODO: do nothing
+// TODO: fill random values
 static void _tensor_fill_random(tensor_t t) {}
 
-/* @brief fill a tensor with single scalar*/
+/* TODO @brief fill a tensor with single scalar*/
 static void _tensor_fill_scalar(tensor_t t, T s) {}
 void _tensor_fill_patterned(tensor_t t); // debug use
 
@@ -60,16 +60,6 @@ tensor_t tensor_make_patterned(uint const shape[], uint const ndims);
 tensor_t tensor_make_copy(tensor_t t);
 /* @brief create tensor of shape, filled with single scalar */
 tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s);
-
-/* @brief Add tensor 'from' to 'to'
- *
- * Notes: this will use the dims of the two input tensor to figure out which calculation to perform
- * e.g.
- *  * x.dims = {3,4,5}, y.dims = [3,4,5], perform an elemwised add to x[:,:,:]
- *  * x.dims = {3,4,5}, y.dims = [4,5], add y to each of the 3 planes with shape[4,5].
- *  * x.dims = {3,4,5}, y.dims = [5], add y to each of with vector with size [5]
- *  * x.dims = {3,4,5}, y.dims = [0], add y to each of the elem
- */
 
 void tensor_dump(tensor_t t);
 status_t tensor_reshape_(tensor_t *ptr_t, uint const shape[], uint const ndims);
