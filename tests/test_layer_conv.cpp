@@ -55,7 +55,6 @@ tensor_t LayerConvTest::dy;
 lcache_t LayerConvTest::cache;
 conv_param_t LayerConvTest::params;
 
-// Tests that the Foo::Bar() method does Abc.
 TEST_F(LayerConvTest, Construct) {
   params.stride=1;
   params.padding=1;
