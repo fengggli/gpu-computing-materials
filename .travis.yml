@@ -19,7 +19,7 @@ before_script:
   - cd build
   - cmake ..
 
-install: "pip install sphinx sphinx_rtd_theme sphinxcontrib-bibtex"
+install: "pip install --user sphinx sphinx_rtd_theme sphinxcontrib-bibtex"
 
 script:
   - make # build c/c++
