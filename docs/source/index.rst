@@ -3,18 +3,24 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to gpu-computing19-awnn's documentation!
+Documentation of gpu-computing-spring19 project
 ================================================
+
+Some of the contents of this documentation can be found in cs231n class website. (http://cs231n.github.io/)
+
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Tensor
+
+   tensor
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Layers:
+
+   layers/pool.rst
+   layers/conv.rst
 
 
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
