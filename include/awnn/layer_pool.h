@@ -17,13 +17,15 @@
  * @param cache [output] intermidate results
  * @param y [output] forwarding output (shape (N,C,1,1))
  *
+ * @return S_OK if success, otherwise S_ERR or define your error type in common.h
+ *
  * Note:
  *  * all tensor_t should be pre-allocated
  *  * cache will be populated by forward function.
  *
  * See https://fengggli.github.io/gpu-computing-materials/layers/pool.html 
  */
-void global_avg_pool_forward(tensor_t x, lcache_t *cache, tensor_t y);
+status_t global_avg_pool_forward(tensor_t x, lcache_t *cache, tensor_t y);
 
 /*
  * @brief backprop
@@ -32,9 +34,11 @@ void global_avg_pool_forward(tensor_t x, lcache_t *cache, tensor_t y);
  * @param cache
  * @param dy gradient from upper layer
  *
+ * @return S_OK if success, otherwise S_ERR or define your error type in common.h
+ *
  * Note: all tensor_t should be pre-allocated
  */
-void global_avg_pool_backward(tensor_t dx, lcache_t const *cache, tensor_t dy);
+status_t global_avg_pool_backward(tensor_t dx, lcache_t const *cache, tensor_t dy);
 
 
 
