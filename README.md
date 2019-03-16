@@ -24,7 +24,7 @@ make
 #### run test
 1. run all tests(in the build directory)
 ```
-make run
+make test
 ```
 or
 ```
