@@ -5,8 +5,7 @@
  * e-mail: fengggli@yahoo.com
  */
 
-#ifndef LAYER_FC_H_
-#define LAYER_FC_H_
+#pragma once
 
 #include "awnn/layer.h"
 
@@ -33,4 +32,3 @@ status_t layer_fc_forward(tensor_t x, tensor_t w, tensor_t b, lcache_t* cache, t
  */
 status_t layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t b, lcache_t const * cache, tensor_t dy);
 
-#endif

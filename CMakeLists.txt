@@ -53,7 +53,7 @@ include_directories ("${PROJECT_BINARY_DIR}")
 target_link_libraries(awnnlib PUBLIC ${AWNN_LIBS})
 
 if(BUILD_TEST)
-  #add_subdirectory(/usr/src/gtest ${CMAKE_CURRENT_BINARY_DIR}/gtest)
+#  add_subdirectory(/usr/src/gtest ${CMAKE_CURRENT_BINARY_DIR}/gtest)
   add_subdirectory(extern/googletest extern/googletest)
   enable_testing()
   add_subdirectory(tests)

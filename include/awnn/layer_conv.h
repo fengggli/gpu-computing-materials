@@ -5,8 +5,7 @@
  * e-mail: fengggli@yahoo.com
  */
 
-#ifndef LAYER_CONV_H_
-#define LAYER_CONV_H_
+#pragma once
 
 
 #include "awnn/layer.h"
@@ -53,6 +52,4 @@ status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t const *cache, t
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

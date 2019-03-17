@@ -5,6 +5,7 @@
  * e-mail: fengggli@yahoo.com
  */
 
+#include "test_util.h"
 #include "awnn/layer_pool.h"
 #include "awnn/tensor.h"
 #include "gtest/gtest.h"
@@ -49,37 +50,41 @@ tensor_t LayerGlobalAvgPoolTest::y;
 tensor_t LayerGlobalAvgPoolTest::dy;
 lcache_t LayerGlobalAvgPoolTest::cache;
 
-// Tests that the Foo::Bar() method does Abc.
+// TODO : document tests
 TEST_F(LayerGlobalAvgPoolTest, Construct) {
   uint const shape_x[] = {6, 2, 7, 7};
   uint const shape_y[] = {6, 4, 1, 1}; // (7-3+2*padding)/stride +1 = 7
-  x= tensor_make(shape_x, 3);
-  dx= tensor_make(shape_x, 3);
-  y= tensor_make(shape_y, 3);
-  dy= tensor_make(shape_y, 3);
+
+  x= tensor_make(shape_x, dim_of_shape(shape_x));
+  dx= tensor_make(shape_x, dim_of_shape(shape_x));
+  y= tensor_make(shape_y, dim_of_shape(shape_y));
+  dy= tensor_make(shape_y, dim_of_shape(shape_y));
 
   make_empty_lcache(&cache);
 }
 
+// TODO : document tests
 TEST_F(LayerGlobalAvgPoolTest, DISABLED_Forward){
   status_t ret;
-  ret = global_avg_pool_forward(x,&cache,y);// foward function should allocate and populate cache;
-  EXPECT_TRUE(ret == S_OK);
+  ret = global_avg_pool_forward(x, &cache, y);// foward function should allocate and populate cache;
+  EXPECT_EQ(ret, S_OK);
 
 }
 
+// TODO : document tests
 TEST_F(LayerGlobalAvgPoolTest, DISABLED_Backward){
   status_t ret;
   ret = global_avg_pool_backward(dx, &cache, dy); // backward needs to call free_lcache(cache);
-  EXPECT_TRUE(ret == S_OK);
+  EXPECT_EQ(ret, S_OK);
 }
 
 // TODO: check with cudnn
-
+// TODO : document tests
 TEST_F(LayerGlobalAvgPoolTest,CheckLcache){
-  EXPECT_TRUE(cache.count == 0); // backward needs to call free_lcache(cache);
+  EXPECT_EQ(cache.count, 0); // backward needs to call free_lcache(cache);
 }
 
+// TODO : document tests
 TEST_F(LayerGlobalAvgPoolTest, Destroy) {
   tensor_destroy(x);
   tensor_destroy(dx);
@@ -87,7 +92,6 @@ TEST_F(LayerGlobalAvgPoolTest, Destroy) {
   tensor_destroy(dy);
   free_lcache(&cache);
 }
-
 
 }  // namespace
 

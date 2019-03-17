@@ -1,5 +1,5 @@
-
 # skeleton example of google-test
+
 add_executable(test-skeleton test_skeleton.cpp)
 target_link_libraries(test-skeleton awnnlib gtest)
 add_test(test-skeleton test-skeleton)

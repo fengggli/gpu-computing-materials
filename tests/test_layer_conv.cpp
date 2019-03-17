@@ -5,9 +5,11 @@
  * e-mail: fengggli@yahoo.com
  */
 
+#include "test_util.h"
 #include "awnn/layer_conv.h"
 #include "awnn/tensor.h"
 #include "gtest/gtest.h"
+
 namespace {
 
 // The fixture for testing class Foo.
@@ -60,12 +62,12 @@ TEST_F(LayerConvTest, Construct) {
   uint const shape_x[] = {6, 2, 7, 7};
   uint const shape_w[] = {4, 2, 3, 3};
   uint const shape_y[] = {6, 4, 7, 7}; // (7-3+2*padding)/stride +1 = 7
-  x= tensor_make(shape_x, 3);
-  dx= tensor_make(shape_x, 3);
-  w= tensor_make(shape_w, 3);
-  dw= tensor_make(shape_w, 3);
-  y= tensor_make(shape_y, 3);
-  dy= tensor_make(shape_y, 3);
+  x   = tensor_make(shape_x, dim_of_shape(shape_x));
+  dx  = tensor_make(shape_x, dim_of_shape(shape_x));
+  w   = tensor_make(shape_w, dim_of_shape(shape_w));
+  dw  = tensor_make(shape_w, dim_of_shape(shape_w));
+  y   = tensor_make(shape_y, dim_of_shape(shape_y));
+  dy  = tensor_make(shape_y, dim_of_shape(shape_y));
 
   make_empty_lcache(&cache);
 }
@@ -73,20 +75,20 @@ TEST_F(LayerConvTest, Construct) {
 TEST_F(LayerConvTest, DISABLED_Forward){
   status_t ret;
   ret = convolution_forward(x,w, &cache, params,y);// foward function should allocate and populate cache;
-  EXPECT_TRUE(ret == S_OK);
+  EXPECT_EQ(ret, S_OK);
 
 }
 
 TEST_F(LayerConvTest, DISABLED_Backward){
   status_t ret;
   ret = convolution_backward(dx, dw, &cache, dy); // backward needs to call free_lcache(cache);
-  EXPECT_TRUE(ret == S_OK);
+  EXPECT_EQ(ret, S_OK);
 }
 
 // TODO: check with cudnn
 
 TEST_F(LayerConvTest,CheckLcache){
-  EXPECT_TRUE(cache.count == 0); // backward needs to call free_lcache(cache);
+  EXPECT_EQ(cache.count, 0); // backward needs to call free_lcache(cache);
 }
 
 

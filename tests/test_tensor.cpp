@@ -5,8 +5,10 @@
  * e-mail: fengggli@yahoo.com
  */
 
+#include "test_util.h"
 #include "awnn/tensor.h"
 #include "gtest/gtest.h"
+
 namespace {
 
 // The fixture for testing class Foo.
@@ -45,61 +47,62 @@ tensor_t TensorTest::t;
 
 // Tests that the Foo::Bar() method does Abc.
 TEST_F(TensorTest, Construct) {
-  uint const shape[] = {2, 3, 4};
-  t= tensor_make(shape, 3);
-  EXPECT_TRUE(t.data != NULL);
+  uint const shape[] = {2, 3, 4};;
+  t = tensor_make(shape, dim_of_shape(shape));
+  EXPECT_TRUE(t.data != nullptr);
 }
 
 TEST_F(TensorTest, Destroy) { tensor_destroy(t); }
 
 TEST_F(TensorTest, Dumpd0) {
+
   uint const shape[] = {0}; // a scalar
-  tensor_t tt = tensor_make_patterned(shape, 0);
+  tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
   tensor_destroy(tt);
 }
 
 TEST_F(TensorTest, Dumpd1) {
   uint const shape[] = {2}; // a scalar
-  tensor_t tt = tensor_make_patterned(shape, 1);
+  tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
   tensor_destroy(tt);
 }
 
 TEST_F(TensorTest, Dumpd2) {
   uint const shape[] = {2, 3}; // a scalar
-  tensor_t tt = tensor_make_patterned(shape, 2);
+  tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
   tensor_destroy(tt);
 }
 
 TEST_F(TensorTest, Dumpd3) {
   uint const shape[] = {2, 3, 4}; // a scalar
-  tensor_t tt = tensor_make_patterned(shape, 3);
+  tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
   tensor_destroy(tt);
 }
 
 TEST_F(TensorTest, Dumpd4) {
   uint const shape[] = {2, 3, 4, 5}; // a scalar
-  tensor_t tt = tensor_make_patterned(shape, 4);
+  tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
   tensor_destroy(tt);
 }
 
 TEST_F(TensorTest, Dumpd4_2) {
   uint const shape[] = {2, 3, 1,1}; // a scalar
-  tensor_t tt = tensor_make_patterned(shape, 4);
+  tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
   tensor_destroy(tt);
 }
 
 TEST_F(TensorTest, MakeCopy) {
   uint const shape[] = {2, 3, 4, 5}; // a scalar
-  tensor_t t1 = tensor_make_patterned(shape, 4);
+  tensor_t t1 = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_t t2 = tensor_make_copy(t1);
-  EXPECT_TRUE(S_OK == dim_is_same(t1.dim, t2.dim));
-  EXPECT_TRUE(t1.data != t2.data);
+  EXPECT_EQ(S_OK, dim_is_same(t1.dim, t2.dim));
+  EXPECT_NE(t1.data, t2.data);
   tensor_destroy(t1);
   tensor_destroy(t2);
 }
