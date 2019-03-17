@@ -5,8 +5,7 @@
  * e-mail: fengggli@yahoo.com
  */
 
-#ifndef LAYER_H_
-#define LAYER_H_
+#pragma once
 
 #include "awnn/tensor.h"
 
@@ -31,7 +30,7 @@ static void make_empty_lcache(lcache_t *cache){
   cache->count = 0;
 }
 
-/* This should be called inside the backprop*/
+/* This should be called inside the backprop */
 static void free_lcache(lcache_t *cache){
   uint i;
   for(i =0; i <cache->count; i++){
@@ -40,5 +39,3 @@ static void free_lcache(lcache_t *cache){
   cache->count = 0;
 }
 
-
-#endif

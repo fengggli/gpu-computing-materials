@@ -5,8 +5,7 @@
  * e-mail: fengggli@yahoo.com
  */
 
-#ifndef TENSOR_H_
-#define TENSOR_H_
+#pragma once
 
 #include "awnn/common.h"
 
@@ -73,6 +72,4 @@ status_t tensor_copy(tensor_t to, tensor_t from); // copy, only with same dim
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

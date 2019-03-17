@@ -5,8 +5,7 @@
  * e-mail: fengggli@yahoo.com
  */
 
-#ifndef LAYER_POOL_H_
-#define LAYER_POOL_H_
+#pragma once
 
 #include "awnn/layer.h"
 
@@ -50,4 +49,3 @@ status_t global_avg_pool_backward(tensor_t dx, lcache_t const *cache, tensor_t d
 #endif
 
 
-#endif

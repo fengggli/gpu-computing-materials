@@ -28,11 +28,11 @@
   Copyright (C) 2014, Daniel G. Waddington <daniel.waddington@acm.org>
 */
 
-#ifndef __COMMON_LOGGING_H__
-#define __COMMON_LOGGING_H__
+#pragma once
 
 #include <assert.h>
 #include <stdio.h>
+
 
 #define NORMAL_CYAN "\033[36m"
 #define NORMAL_MAGENTA "\033[35m"
@@ -135,5 +135,3 @@
 #define TRACE() fprintf(stderr, "[TRACE]: %s\n", __FUNCTION__)
 #define THREAD_ROLE(ROLE)                                                      \
   PLOG("thread (%p) role:%s", (void *)pthread_self(), ROLE)
-
-#endif // __COMMON_LOGGING_H__
