@@ -27,8 +27,10 @@ dim_t dim_get_reverse(dim_t dim) {
   uint i = 0;
   uint ndims = dim_get_ndims(dim);
   for(i = 0; i< ndims; i++) {
-    ret_dim.dims[ndims -i] = dim.dims[i];
+    ret_dim.dims[ndims -i -1] = dim.dims[i];
   }
+  for(i = ndims; i< MAX_DIM; i++)
+    ret_dim.dims[i] = 0;
   return ret_dim;
 }
 
@@ -170,6 +172,7 @@ status_t _tensor_fill_linspace(tensor_t t, float const start, float const stop){
   for(i = 0; i< capacity; i++) {
     t.data[i] = start + i*step;
   }
+  return S_OK;
 }
 
 tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[], uint const ndims){

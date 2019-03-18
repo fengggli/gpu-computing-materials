@@ -5,8 +5,9 @@
  * e-mail: fengggli@yahoo.com
  */
 
-#include "test_util.h"
+#include "awnn/logging.h"
 #include "awnn/tensor.h"
+#include "test_util.h"
 #include "gtest/gtest.h"
 
 namespace {
@@ -128,13 +129,15 @@ TEST_F(TensorTest, GetElem) {
 TEST_F(TensorTest, MakeTranspose) {
   uint const shape[] = {3, 4}; // a scalar
   tensor_t t1 = tensor_make_patterned(shape, dim_of_shape(shape));
-  tensor_t t2 = tensor_make_transpose(t1);
-
+  PINF("[-- dump t1]");
   tensor_dump(t1);
+
+  tensor_t t2 = tensor_make_transpose(t1);
+  PINF("[-- dump t2]");
   tensor_dump(t2);
 
   tensor_destroy(t1);
-  //tensor_destroy(t2);
+  tensor_destroy(t2);
 }
 
 }  // namespace
