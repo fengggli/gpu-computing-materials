@@ -159,6 +159,27 @@ TEST_F(TensorTest, MakeSum) {
   tensor_destroy(t1);
 }
 
+TEST_F(TensorTest, RelError) {
+  uint const shape[] = {3, 4}; // a scalar
+  tensor_t t1 = tensor_make_patterned(shape, dim_of_shape(shape));
+  tensor_t t2 = tensor_make_copy(t1);
+
+  T err_1 = tensor_rel_error(t1, t2);
+
+  t2.data[0] += 0.001;
+  T err_2 = tensor_rel_error(t1, t2);
+
+  t2.data[0] += 0.001;
+  T err_3 = tensor_rel_error(t1, t2);
+
+  EXPECT_FLOAT_EQ(0.0, err_1);
+  EXPECT_LT(err_1, err_2);
+  EXPECT_LT(err_2, err_3);
+
+  tensor_destroy(t2);
+  tensor_destroy(t1);
+}
+
 }  // namespace
 
 int main(int argc, char **argv) {

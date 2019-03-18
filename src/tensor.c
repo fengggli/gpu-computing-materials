@@ -254,6 +254,26 @@ void tensor_dump(tensor_t t){
   PSTR("}\n");
 }
 
+// np.max(np.abs(x - y) / (np.maximum(1e-8, np.abs(x) + np.abs(y))))
+T tensor_rel_error(tensor_t x, tensor_t ref){
+  if(S_OK !=  dim_is_same(x.dim, ref.dim)){
+    PERR("Dimension not match!");
+    return -1;
+  }
+  uint capacity = tensor_get_capacity(x);
+  T norm_diff = 0; // l-2 norm of difference
+  T norm_ref = 0;  // l-2 norm of reference
+  for(uint i = 0; i< capacity; i++){
+    register T a, r;
+    a = x.data[i];
+    r = ref.data[i];
+    norm_diff += (a-r)*(a-r);
+    norm_ref += (r*r);
+  }
+  assert(norm_ref>0);
+  return norm_diff/norm_ref;
+}
+
 void tensor_destroy(tensor_t t){
   if(t.data){
     free(t.data);
