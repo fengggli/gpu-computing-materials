@@ -128,6 +128,7 @@ status_t tensor_add_vector_inplace(tensor_t t, tensor_t v) {
     _add(t.data + i*v_capacity, v.data, v_capacity);
   }
   t.dim = old_dim;
+  return S_OK;
   // v should fit the last dimension
 }
 status_t tensor_reshape_(tensor_t* ptr_t, uint const  shape[], uint const ndims){
