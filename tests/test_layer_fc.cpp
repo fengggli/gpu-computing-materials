@@ -79,7 +79,7 @@ TEST_F(LayerFcTest, Forward){
   EXPECT_EQ(ret, S_OK);
 }
 
-TEST_F(LayerFcTest, DISABLED_Backward){
+TEST_F(LayerFcTest, Backward) {
   status_t ret;
   ret = layer_fc_backward(dx, dw, db, &cache, dy); // backward needs to call free_lcache(cache);
   EXPECT_EQ(ret, S_OK);
