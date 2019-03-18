@@ -8,7 +8,7 @@
 
 
 // TODO:  results not correct
-status_t tensor_dot(tensor_t in1, tensor_t in2, tensor_t out){
+status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
   status_t ret = S_ERR;
   if(dim_get_ndims(in1.dim) != 2 || dim_get_ndims(in2.dim)!=2){
     PERR("Dot only accepts 2d tensor as input");

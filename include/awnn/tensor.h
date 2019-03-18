@@ -62,6 +62,7 @@ void _tensor_fill_patterned(tensor_t t); // debug use
 
 tensor_t tensor_make_random(uint const shape[], uint const ndims);
 tensor_t tensor_make_patterned(uint const shape[], uint const ndims);
+tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[], uint const ndims);
 tensor_t tensor_make_copy(tensor_t t);
 /* @brief create tensor of shape, filled with single scalar */
 tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s);
@@ -71,8 +72,8 @@ status_t tensor_reshape_(tensor_t *ptr_t, uint const shape[], uint const ndims);
 
 status_t tensor_plus_inplace(tensor_t to, tensor_t from);
 status_t tensor_plus(tensor_t in1, tensor_t in2, tensor_t out);
-status_t tensor_dot(tensor_t in1, tensor_t in2,
-                    tensor_t out);                // mm for 2d matrix
+status_t tensor_matmul(tensor_t in1, tensor_t in2,
+                       tensor_t out);                // mm for 2d matrix
 status_t tensor_copy(tensor_t to, tensor_t from); // copy, only with same dim
 
 

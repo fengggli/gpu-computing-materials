@@ -127,6 +127,25 @@ tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s){
   return t;
 }
 
+status_t _tensor_fill_linspace(tensor_t t, float const start, float const stop){
+  uint i;
+  uint capacity = dim_get_capacity(t.dim);
+  if(stop <= start) {
+    PERR("Wrong linspace");
+    return S_ERR;
+  }
+  T step = (stop - start)/((T)capacity -1);
+  for(i = 0; i< capacity; i++) {
+    t.data[i] = start + i*step;
+  }
+}
+
+tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[], uint const ndims){
+  tensor_t t =  tensor_make(shape, ndims);
+  _tensor_fill_linspace(t, start, stop);
+  return t;
+}
+
 tensor_t tensor_make_patterned(uint const shape[], uint const ndims){
   tensor_t t =  tensor_make(shape, ndims);
   _tensor_fill_patterned(t);

@@ -9,6 +9,9 @@
 
 #include "awnn/layer.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
  * @brief Fully connected layer implementation
  *
@@ -22,7 +25,7 @@
  *
  * Note: all tensor_t should be pre-allocated
  */
-status_t layer_fc_forward(tensor_t x, tensor_t w, tensor_t b, lcache_t* cache, tensor_t y);
+status_t layer_fc_forward(tensor_t const x, tensor_t const w, tensor_t const b, lcache_t *cache, tensor_t y);
 
 /*
  * @brief Fully connected layer backprop
@@ -30,5 +33,9 @@ status_t layer_fc_forward(tensor_t x, tensor_t w, tensor_t b, lcache_t* cache, t
  * @return S_OK if success, otherwise S_ERR or define your error type in common.h
  * Note: all tensor_t should be pre-allocated
  */
-status_t layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t b, lcache_t const * cache, tensor_t dy);
+status_t layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db, lcache_t *cache, tensor_t const dy);
+
+#ifdef __cplusplus
+}
+#endif
 

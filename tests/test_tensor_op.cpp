@@ -51,7 +51,7 @@ TEST_F(TensorOpTest, DotWrongInput) {
   uint const shape3[] = {3, 4};
   out = tensor_make_patterned(shape3, dim_of_shape(shape3));
 
-  EXPECT_TRUE(S_ERR == tensor_dot(in1, in2, out));
+  EXPECT_TRUE(S_ERR == tensor_matmul(in1, in2, out));
 }
 
 TEST_F(TensorOpTest, Dot) {
@@ -69,7 +69,7 @@ TEST_F(TensorOpTest, Dot) {
 
   // int correct_result[] = {10, 13, 28, 40};
 
-  EXPECT_EQ(S_OK, tensor_dot(in1, in2, out));
+  EXPECT_EQ(S_OK, tensor_matmul(in1, in2, out));
   // tensor_dump(out);
   EXPECT_EQ(out.data[0], 10);
   EXPECT_EQ(out.data[1], 13);

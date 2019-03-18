@@ -97,6 +97,13 @@ TEST_F(TensorTest, Dumpd4_2) {
   tensor_destroy(tt);
 }
 
+TEST_F(TensorTest, MakeLinspace) {
+  uint const shape[] = {2, 2, 2, 2}; // a scalar
+  tensor_t t1 = tensor_make_linspace(-0.1, 0.1, shape, dim_of_shape(shape));
+  tensor_dump(t1);
+  tensor_destroy(t1);
+}
+
 TEST_F(TensorTest, MakeCopy) {
   uint const shape[] = {2, 3, 4, 5}; // a scalar
   tensor_t t1 = tensor_make_patterned(shape, dim_of_shape(shape));

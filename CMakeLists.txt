@@ -37,6 +37,7 @@ add_library(awnnlib SHARED
   src/tensor_op.c
   src/layer_conv.c
   src/layer_pool.c
+  src/layer_fc.c
 
   include/awnn/common.h
   include/awnn/layer_conv.h
