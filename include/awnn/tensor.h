@@ -62,15 +62,18 @@ void tensor_destroy(tensor_t t);
 // TODO: fill random values
 static void _tensor_fill_random(tensor_t t) {}
 
-/* TODO @brief fill a tensor with single scalar*/
-static void _tensor_fill_scalar(tensor_t t, T s) {}
 void _tensor_fill_patterned(tensor_t t); // debug use
 
+tensor_t tensor_make_zeros(uint const shape[], uint const ndims);
 tensor_t tensor_make_random(uint const shape[], uint const ndims);
 tensor_t tensor_make_patterned(uint const shape[], uint const ndims);
 tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[], uint const ndims);
+/* a new tensor, and it's a copy of the original */
 tensor_t tensor_make_copy(tensor_t t);
+/* a new tensor, and it's a transpose of the original */
 tensor_t tensor_make_transpose(tensor_t const t);
+/* a new tensor, and it's a sum over one axis */
+tensor_t tensor_make_sum(tensor_t const t, uint const axis_id);
 /* @brief create tensor of shape, filled with single scalar */
 tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s);
 
@@ -87,6 +90,13 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2,
                        tensor_t out);                // mm for 2d matrix
 status_t tensor_copy(tensor_t to, tensor_t from); // copy, only with same dim
 
+/* some fundamental func*/
+static inline void _add(T *to, T *from, uint len) {
+  uint i;
+  for (i = 0; i < len; i++) {
+    to[i] += from[i];
+  }
+}
 
 #ifdef __cplusplus
 }

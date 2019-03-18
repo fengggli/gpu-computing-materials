@@ -140,6 +140,25 @@ TEST_F(TensorTest, MakeTranspose) {
   tensor_destroy(t2);
 }
 
+TEST_F(TensorTest, MakeSum) {
+  uint const shape[] = {3, 4}; // a scalar
+  tensor_t t1 = tensor_make_patterned(shape, dim_of_shape(shape));
+  uint axis_id = 0; // the axis along which sum will be performed.
+  tensor_t t2 = tensor_make_sum(t1, axis_id);
+
+  // t2 will have shape [1,4]
+  EXPECT_EQ(1, t2.dim.dims[0]);
+  EXPECT_EQ(4, t2.dim.dims[1]);
+
+  EXPECT_EQ(12, t2.data[0]);
+  EXPECT_EQ(15, t2.data[1]);
+  EXPECT_EQ(18, t2.data[2]);
+  EXPECT_EQ(21, t2.data[3]);
+
+  tensor_destroy(t2);
+  tensor_destroy(t1);
+}
+
 }  // namespace
 
 int main(int argc, char **argv) {

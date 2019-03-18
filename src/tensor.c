@@ -121,7 +121,7 @@ tensor_t tensor_make(uint const shape[], uint const ndims){
 }
 
 tensor_t tensor_make_random(uint const shape[], uint const ndims){
-  tensor_t t =  tensor_make(shape, ndims);
+  tensor_t t = tensor_make(shape, ndims);
   _tensor_fill_random(t);
   return t;
 }
@@ -154,11 +154,34 @@ tensor_t tensor_make_transpose(tensor_t const t){
   return t_transposed;
 }
 
+/* TODO @brief fill a tensor with single scalar*/
+static void _tensor_fill_scalar(tensor_t t, T s) {
+  uint capacity = tensor_get_capacity(t);
+  for(uint i=0;i< capacity; i++)
+    t.data[i] = s;
+}
 
 tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s){
   tensor_t t =  tensor_make(shape, ndims);
   _tensor_fill_scalar(t, s);
   return t;
+}
+
+tensor_t tensor_make_sum(tensor_t const t, uint const axis_id){
+  assert(axis_id ==0); // TODO: currently only support sum along the first dim
+  dim_t new_dim = t.dim;
+  uint nr_slices = new_dim.dims[axis_id];
+  new_dim.dims[axis_id] = 1;
+
+  tensor_t t_ret = _tensor_make(new_dim);
+  _tensor_fill_scalar(t_ret, 0.0);
+
+  uint slice_capacity = tensor_get_capacity(t)/nr_slices;
+
+  for( uint i = 0; i< nr_slices; i++ ){
+    _add(t_ret.data, t.data + i*slice_capacity, slice_capacity);
+  }
+  return t_ret;
 }
 
 status_t _tensor_fill_linspace(tensor_t t, float const start, float const stop){

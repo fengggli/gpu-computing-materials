@@ -60,12 +60,7 @@ end:
   return ret;
 }
 
-void _add(T *to, T *from, uint len){
-  uint i;
-  for(i = 0; i< len; i++){
-    to[i] += from[i];
-  }
-}
+
 
 status_t tensor_add_inplace(tensor_t to, tensor_t from){
   if(S_OK == dim_is_same(to.dim, from.dim)){
