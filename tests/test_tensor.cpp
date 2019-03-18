@@ -13,7 +13,7 @@ namespace {
 
 // The fixture for testing class Foo.
 class TensorTest : public ::testing::Test {
-protected:
+ protected:
   // You can remove any or all of the following functions if its body
   // is empty.
 
@@ -29,13 +29,13 @@ protected:
   // and cleaning up each test, you can define the following methods:
 
   void SetUp() override {
-     // Code here will be called immediately after the constructor (right
-     // before each test).
+    // Code here will be called immediately after the constructor (right
+    // before each test).
   }
 
   void TearDown() override {
-     // Code here will be called immediately after each test (right
-     // before the destructor).
+    // Code here will be called immediately after each test (right
+    // before the destructor).
   }
 
   // Objects declared here can be used by all tests in the test case for Foo.
@@ -91,7 +91,7 @@ TEST_F(TensorTest, Dumpd4) {
 }
 
 TEST_F(TensorTest, Dumpd4_2) {
-  uint const shape[] = {2, 3, 1,1}; // a 4-d tensor, but in memory this is the same as {2,3}
+  uint const shape[] = {2, 3, 1, 1}; // a 4-d tensor, but in memory this is the same as {2,3}
   tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
   tensor_destroy(tt);
@@ -112,6 +112,29 @@ TEST_F(TensorTest, MakeCopy) {
   EXPECT_NE(t1.data, t2.data);
   tensor_destroy(t1);
   tensor_destroy(t2);
+}
+
+TEST_F(TensorTest, GetElem) {
+  uint const shape[] = {2, 3, 4}; // a scalar
+  tensor_t t1 = tensor_make_patterned(shape, dim_of_shape(shape));
+
+  dim_t loc1 = make_dim(3,0,0,0);
+  dim_t loc2 = make_dim(3,1,2,1);
+  EXPECT_EQ(0, *tensor_get_elem_ptr(t1, loc1)); // todo location can be 0!
+  EXPECT_EQ(21, *tensor_get_elem_ptr(t1, loc2));
+  tensor_destroy(t1);
+}
+
+TEST_F(TensorTest, MakeTranspose) {
+  uint const shape[] = {3, 4}; // a scalar
+  tensor_t t1 = tensor_make_patterned(shape, dim_of_shape(shape));
+  tensor_t t2 = tensor_make_transpose(t1);
+
+  tensor_dump(t1);
+  tensor_dump(t2);
+
+  tensor_destroy(t1);
+  //tensor_destroy(t2);
 }
 
 }  // namespace

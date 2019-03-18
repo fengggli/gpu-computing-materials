@@ -11,9 +11,21 @@ status_t layer_fc_forward(tensor_t const x, tensor_t const w, tensor_t const b, 
 
   tensor_matmul(x_reshaped, w, y); // y = x*w
   tensor_add_vector_inplace(y, b);
+
+  // create cache for backprog
+  tensor_t cached_x = tensor_make_copy(x);
+  cache->all_tensors[0] = cached_x;
+  cache->count +=1;
+  tensor_t cached_w = tensor_make_copy(w);
+  cache->all_tensors[1] = cached_w;
+  cache->count +=1;
   return S_OK;
+
 }
 
 status_t layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db, lcache_t *cache, tensor_t const dy) {
+
+  free_lcache(cache);
+
 }
 

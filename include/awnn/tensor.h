@@ -37,9 +37,14 @@ uint dim_get_ndims(dim_t dim);
 status_t dim_is_same(dim_t, dim_t);
 void dim_dump(dim_t dim);
 
+enum{
+  TENSOR_NONE = 0,
+};
+
 typedef enum{
   CPU_MEM = 0,
-  GPU_MEM = -1,
+  GPU_MEM = 1,
+  BAD_MEM = 2,
 }memory_type_t;
 
 typedef struct tensor{
@@ -65,8 +70,12 @@ tensor_t tensor_make_random(uint const shape[], uint const ndims);
 tensor_t tensor_make_patterned(uint const shape[], uint const ndims);
 tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[], uint const ndims);
 tensor_t tensor_make_copy(tensor_t t);
+tensor_t tensor_make_transpose(tensor_t const t);
 /* @brief create tensor of shape, filled with single scalar */
 tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s);
+
+/* access elem*/
+T* tensor_get_elem_ptr(tensor_t const t, dim_t const loc);
 
 void tensor_dump(tensor_t t);
 status_t tensor_reshape_(tensor_t *ptr_t, uint const shape[], uint const ndims);

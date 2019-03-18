@@ -122,7 +122,7 @@ status_t tensor_add_vector_inplace(tensor_t t, tensor_t v) {
     return S_ERR;
   }
 
-  const tmp_shape[] = {d1, v_capacity};
+  uint const tmp_shape[] = {d1, v_capacity};
   tensor_reshape_(&t, tmp_shape, 2); // reshape to 2d
   for( uint i = 0; i< d1; i++ ){
     _add(t.data + i*v_capacity, v.data, v_capacity);

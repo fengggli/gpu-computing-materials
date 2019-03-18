@@ -22,6 +22,16 @@ dim_t make_dim(int ndims, ...) {
   return dim;
 }
 
+dim_t dim_get_reverse(dim_t dim) {
+  dim_t ret_dim;
+  uint i = 0;
+  uint ndims = dim_get_ndims(dim);
+  for(i = 0; i< ndims; i++) {
+    ret_dim.dims[ndims -i] = dim.dims[i];
+  }
+  return ret_dim;
+}
+
 uint dim_get_capacity(dim_t dim){
   int i;
   uint size = 1;
@@ -120,6 +130,28 @@ tensor_t tensor_make_copy(tensor_t t){
   return ret;
 }
 
+tensor_t tensor_make_transpose(tensor_t const t){
+  uint i,j;
+  if(tensor_get_ndims(t) != 2){
+    PERR("currently only support 2d transpose")
+    tensor_t ret;
+    ret.mem_type = BAD_MEM;
+    return ret;
+  }
+  uint M = t.dim.dims[0];
+  uint N = t.dim.dims[1];
+
+  dim_t tranposed_dim = dim_get_reverse(t.dim);
+  tensor_t t_transposed = _tensor_make(tranposed_dim);
+
+  for(i = 0; i< N; i++){
+    for(j = 0; j< M; j++){
+      *tensor_get_elem_ptr(t_transposed, make_dim(2, i,j)) = *tensor_get_elem_ptr(t, make_dim(2, j, i));
+    }
+  }
+  return t_transposed;
+}
+
 
 tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s){
   tensor_t t =  tensor_make(shape, ndims);
@@ -152,6 +184,20 @@ tensor_t tensor_make_patterned(uint const shape[], uint const ndims){
   return t;
 }
 
+
+T* tensor_get_elem_ptr(tensor_t const t, dim_t const loc) {
+  uint index_dim;
+  uint ndims = tensor_get_ndims(t);
+  uint offset = 0;
+  for(index_dim = 0; index_dim < ndims; index_dim ++){
+    offset += loc.dims[index_dim];
+    if(index_dim < ndims -1) {
+      offset *= t.dim.dims[index_dim + 1];
+    }
+  }
+  // PINF("offset =  %u", offset);
+  return t.data + offset;
+}
 
 void  _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity){
   uint i;
