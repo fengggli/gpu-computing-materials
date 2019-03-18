@@ -56,15 +56,15 @@ tensor_t LayerFcTest::dy;
 lcache_t LayerFcTest::cache;
 
 TEST_F(LayerFcTest, Construct) {
-  uint const shape_x[] = {3, 2, 2, 2};
-  uint const shape_w[] = {8, 2};
-  uint const shape_b[] = {2};
-  uint const shape_y[] = {3, 2}; // (7-3+2*padding)/stride +1 = 7
-  x   = tensor_make(shape_x, dim_of_shape(shape_x));
+  uint const shape_x[] = {2, 4, 5, 6};
+  uint const shape_w[] = {120, 3};
+  uint const shape_b[] = {3};
+  uint const shape_y[] = {2, 3}; // (7-3+2*padding)/stride +1 = 7
+  x   = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
   dx  = tensor_make(shape_x, dim_of_shape(shape_x));
-  w   = tensor_make(shape_w, dim_of_shape(shape_w));
+  w   = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
   dw  = tensor_make(shape_w, dim_of_shape(shape_w));
-  b   = tensor_make(shape_b, dim_of_shape(shape_b));
+  b   = tensor_make_linspace(-0.3, 0.1,shape_b, dim_of_shape(shape_b));
   db  = tensor_make(shape_b, dim_of_shape(shape_b));
   y   = tensor_make(shape_y, dim_of_shape(shape_y));
   dy  = tensor_make(shape_y, dim_of_shape(shape_y));
@@ -74,7 +74,8 @@ TEST_F(LayerFcTest, Construct) {
 
 TEST_F(LayerFcTest, Forward){
   status_t ret;
-  ret = layer_fc_forward(x,w,b, &cache,y);// foward function should allocate and populate cache;
+  ret = layer_fc_forward(x,w,b, &cache,y);// forward function should allocate and populate cache;
+  tensor_dump(y);
   EXPECT_EQ(ret, S_OK);
 }
 

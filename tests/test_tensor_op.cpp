@@ -90,7 +90,7 @@ TEST_F(TensorOpTest, PLUS) {
   uint const shape3[] = {2, 3};
   out = tensor_make(shape3, dim_of_shape(shape3));
 
-  EXPECT_EQ(S_OK, tensor_plus(in1, in2, out));
+  EXPECT_EQ(S_OK, tensor_add_sameshape(in1, in2, out));
   EXPECT_EQ(out.data[0], 0);
   EXPECT_EQ(out.data[1], 2);
   EXPECT_EQ(out.data[2], 4);
@@ -107,7 +107,7 @@ TEST_F(TensorOpTest, PLUS_INPLACE) {
   uint const shape2[] = {2, 3};
   to = tensor_make_patterned(shape2, dim_of_shape(shape2));
 
-  EXPECT_EQ(S_OK, tensor_plus_inplace(to, from));
+  EXPECT_EQ(S_OK, tensor_add_inplace(to, from));
 
   EXPECT_EQ(to.data[0], 0);
   EXPECT_EQ(to.data[1], 2);
@@ -134,6 +134,24 @@ TEST_F(TensorOpTest, RESHAPE) {
 
   EXPECT_EQ(t.dim.dims[0], 24);
   EXPECT_EQ(t.dim.dims[1], 0);
+}
+
+
+TEST_F(TensorOpTest, AddVector) {
+  tensor_t t, v;
+  uint const shape1[] = {2, 3, 4, 5};
+  uint const shape2[] = {5};
+  t = tensor_make_patterned(shape1, dim_of_shape(shape1));
+  v = tensor_make_patterned(shape2, dim_of_shape(shape2));
+
+  EXPECT_EQ(S_OK, tensor_add_vector_inplace(t, v));
+
+  EXPECT_EQ(t.data[0], 0);
+  EXPECT_EQ(t.data[1], 2);
+  EXPECT_EQ(t.data[5], 5);
+
+  tensor_destroy(t);
+  tensor_destroy(v);
 }
 
 } // namespace

@@ -60,16 +60,16 @@ end:
   return ret;
 }
 
-void _plus(T* to, T* from, uint len){
+void _add(T *to, T *from, uint len){
   uint i;
   for(i = 0; i< len; i++){
     to[i] += from[i];
   }
 }
 
-status_t tensor_plus_inplace(tensor_t to, tensor_t from){
+status_t tensor_add_inplace(tensor_t to, tensor_t from){
   if(S_OK == dim_is_same(to.dim, from.dim)){
-    _plus(to.data, from.data, dim_get_capacity(to.dim));
+    _add(to.data, from.data, dim_get_capacity(to.dim));
     return S_OK;
   }
   else{
@@ -93,10 +93,10 @@ status_t tensor_copy(tensor_t out, tensor_t in){
   }
 }
 
-status_t tensor_plus(tensor_t in1, tensor_t in2, tensor_t out){
+status_t tensor_add_sameshape(tensor_t in1, tensor_t in2, tensor_t out){
   if( S_OK == dim_is_same(out.dim, in1.dim)){
     tensor_copy(out, in1);
-    tensor_plus_inplace(out, in2);
+    tensor_add_inplace(out, in2);
     return S_OK;
   }
   else{
@@ -105,6 +105,31 @@ status_t tensor_plus(tensor_t in1, tensor_t in2, tensor_t out){
   }
 }
 
+status_t tensor_add_vector_inplace(tensor_t t, tensor_t v) {
+  dim_t old_dim = t.dim;
+  if(tensor_get_ndims(v) != 1) {
+    PERR("second operator is not a 1-d vector");
+    return S_ERR;
+  }
+  uint v_capacity = v.dim.dims[0];
+  uint d1 = 1;
+  uint i_dim;
+  for(i_dim = 0; i_dim < tensor_get_ndims(t) -1; i_dim++ ){
+    d1 *= t.dim.dims[i_dim];
+  }
+  if(t.dim.dims[i_dim] != v_capacity) {
+    PERR("last dimension of tensor doesn't fit the vector");
+    return S_ERR;
+  }
+
+  const tmp_shape[] = {d1, v_capacity};
+  tensor_reshape_(&t, tmp_shape, 2); // reshape to 2d
+  for( uint i = 0; i< d1; i++ ){
+    _add(t.data + i*v_capacity, v.data, v_capacity);
+  }
+  t.dim = old_dim;
+  // v should fit the last dimension
+}
 status_t tensor_reshape_(tensor_t* ptr_t, uint const  shape[], uint const ndims){
   dim_t req_dim;
   uint i;

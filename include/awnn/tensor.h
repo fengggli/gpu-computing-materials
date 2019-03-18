@@ -31,7 +31,7 @@ typedef struct{
 }dim_t;
 
 /* make dimension, works like block() in cuda*/
-dim_t make_dim(int ndims, ...);
+dim_t make_dim(int ndims, ...); // TODO: can I just use array as the second param?
 uint dim_get_capacity(dim_t dim);
 uint dim_get_ndims(dim_t dim);
 status_t dim_is_same(dim_t, dim_t);
@@ -49,6 +49,7 @@ typedef struct tensor{
 } tensor_t;// tensor
 
 #define tensor_get_capacity(x) (dim_get_capacity((x).dim))
+#define tensor_get_ndims(x) (dim_get_ndims((x).dim))
 
 tensor_t tensor_make(uint const shape[], uint const ndims);
 void tensor_destroy(tensor_t t);
@@ -70,8 +71,9 @@ tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s);
 void tensor_dump(tensor_t t);
 status_t tensor_reshape_(tensor_t *ptr_t, uint const shape[], uint const ndims);
 
-status_t tensor_plus_inplace(tensor_t to, tensor_t from);
-status_t tensor_plus(tensor_t in1, tensor_t in2, tensor_t out);
+status_t tensor_add_inplace(tensor_t to, tensor_t from);
+status_t tensor_add_sameshape(tensor_t in1, tensor_t in2, tensor_t out);
+status_t tensor_add_vector_inplace(tensor_t t, tensor_t v);
 status_t tensor_matmul(tensor_t in1, tensor_t in2,
                        tensor_t out);                // mm for 2d matrix
 status_t tensor_copy(tensor_t to, tensor_t from); // copy, only with same dim
