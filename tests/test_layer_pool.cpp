@@ -5,6 +5,7 @@
  * e-mail: fengggli@yahoo.com
  */
 
+#include "awnn/channel.h"
 #include "test_util.h"
 #include "awnn/layer_pool.h"
 #include "awnn/tensor.h"
