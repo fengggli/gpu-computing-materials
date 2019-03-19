@@ -27,7 +27,7 @@ status_t global_avg_pool_backward(tensor_t dx, lcache_t const *cache, tensor_t c
   uint H = t->dim.dims[2];
   uint W = t->dim.dims[3];
 
-  tensor_t scales = tensor_make_scalar_alike(t, 1/(H*W));
+  tensor_t scales = tensor_make_scalar_alike(*t, 1/(H*W));
 
   tensor_op_inplace(scales, dy, TENSOR_OP_MUL);
 
