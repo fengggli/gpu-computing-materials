@@ -6,12 +6,17 @@
 
 #define SIZE_LINE_BUFFER (160)
 
+// make_dim(3, {2,3,4}):
+// TODO: make it more robust
+/*dim_t make_dim(uint ndims, uint all_dims[]){*/
+/*}*/
 
 dim_t make_dim(int ndims, ...) {
   int i;
   va_list vl;
   dim_t dim;
   va_start(vl, ndims);
+  assert(ndims <= MAX_DIM);
   for(i = 0; i< MAX_DIM; i++){
     if(i < ndims)
       dim.dims[i] = va_arg(vl, int);
@@ -20,6 +25,18 @@ dim_t make_dim(int ndims, ...) {
   }
   va_end(vl);
   return dim;
+}
+
+dim_t dim_get_reverse(dim_t dim) {
+  dim_t ret_dim;
+  uint i = 0;
+  uint ndims = dim_get_ndims(dim);
+  for(i = 0; i< ndims; i++) {
+    ret_dim.dims[ndims -i -1] = dim.dims[i];
+  }
+  for(i = ndims; i< MAX_DIM; i++)
+    ret_dim.dims[i] = 0;
+  return ret_dim;
 }
 
 uint dim_get_capacity(dim_t dim){
@@ -71,6 +88,18 @@ void dim_dump(dim_t dim){
   PSTR("]\n");
 }
 
+/*
+ * Tensor
+ */
+
+T tensor_get_sum(tensor_t t){
+  T ret = 0;
+  for (uint i = 0; i < tensor_get_capacity(t); i++) {
+    ret += t.data[i];
+  }
+  return ret;
+}
+
 
 void _tensor_fill_patterned(tensor_t t){
   uint capacity = dim_get_capacity(t.dim);
@@ -109,7 +138,7 @@ tensor_t tensor_make(uint const shape[], uint const ndims){
 }
 
 tensor_t tensor_make_random(uint const shape[], uint const ndims){
-  tensor_t t =  tensor_make(shape, ndims);
+  tensor_t t = tensor_make(shape, ndims);
   _tensor_fill_random(t);
   return t;
 }
@@ -120,10 +149,79 @@ tensor_t tensor_make_copy(tensor_t t){
   return ret;
 }
 
+tensor_t tensor_make_alike(tensor_t t){
+  return _tensor_make(t.dim);
+}
+
+tensor_t tensor_make_transpose(tensor_t const t){
+  uint i,j;
+  if(tensor_get_ndims(t) != 2){
+    PERR("currently only support 2d transpose")
+    tensor_t ret;
+    ret.mem_type = BAD_MEM;
+    return ret;
+  }
+  uint M = t.dim.dims[0];
+  uint N = t.dim.dims[1];
+
+  dim_t tranposed_dim = dim_get_reverse(t.dim);
+  tensor_t t_transposed = _tensor_make(tranposed_dim);
+
+  for(i = 0; i< N; i++){
+    for(j = 0; j< M; j++){
+      *tensor_get_elem_ptr(t_transposed, make_dim(2, i,j)) = *tensor_get_elem_ptr(t, make_dim(2, j, i));
+    }
+  }
+  return t_transposed;
+}
+
+/* TODO @brief fill a tensor with single scalar*/
+static void _tensor_fill_scalar(tensor_t t, T s) {
+  uint capacity = tensor_get_capacity(t);
+  for(uint i=0;i< capacity; i++)
+    t.data[i] = s;
+}
 
 tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s){
   tensor_t t =  tensor_make(shape, ndims);
   _tensor_fill_scalar(t, s);
+  return t;
+}
+
+tensor_t tensor_make_sum(tensor_t const t, uint const axis_id){
+  assert(axis_id ==0); // TODO: currently only support sum along the first dim
+  dim_t new_dim = t.dim;
+  uint nr_slices = new_dim.dims[axis_id];
+  new_dim.dims[axis_id] = 1;
+
+  tensor_t t_ret = _tensor_make(new_dim);
+  _tensor_fill_scalar(t_ret, 0.0);
+
+  uint slice_capacity = tensor_get_capacity(t)/nr_slices;
+
+  for( uint i = 0; i< nr_slices; i++ ){
+    _add(t_ret.data, t.data + i*slice_capacity, slice_capacity);
+  }
+  return t_ret;
+}
+
+status_t _tensor_fill_linspace(tensor_t t, float const start, float const stop){
+  uint i;
+  uint capacity = dim_get_capacity(t.dim);
+  if(stop <= start) {
+    PERR("Wrong linspace");
+    return S_ERR;
+  }
+  T step = (stop - start)/((T)capacity -1);
+  for(i = 0; i< capacity; i++) {
+    t.data[i] = start + i*step;
+  }
+  return S_OK;
+}
+
+tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[], uint const ndims){
+  tensor_t t =  tensor_make(shape, ndims);
+  _tensor_fill_linspace(t, start, stop);
   return t;
 }
 
@@ -133,6 +231,19 @@ tensor_t tensor_make_patterned(uint const shape[], uint const ndims){
   return t;
 }
 
+T* tensor_get_elem_ptr(tensor_t const t, dim_t const loc) {
+  uint index_dim;
+  uint ndims = tensor_get_ndims(t);
+  uint offset = 0;
+  for(index_dim = 0; index_dim < ndims; index_dim ++){
+    offset += loc.dims[index_dim];
+    if(index_dim < ndims -1) {
+      offset *= t.dim.dims[index_dim + 1];
+    }
+  }
+  // PINF("offset =  %u", offset);
+  return t.data + offset;
+}
 
 void  _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity){
   uint i;
@@ -161,6 +272,26 @@ void tensor_dump(tensor_t t){
     _dump(t.data, dim, 0, capacity/dim.dims[0]);
   }
   PSTR("}\n");
+}
+
+// np.max(np.abs(x - y) / (np.maximum(1e-8, np.abs(x) + np.abs(y))))
+T tensor_rel_error(tensor_t x, tensor_t ref){
+  if(S_OK !=  dim_is_same(x.dim, ref.dim)){
+    PERR("Dimension not match!");
+    return -1;
+  }
+  uint capacity = tensor_get_capacity(x);
+  T norm_diff = 0; // l-2 norm of difference
+  T norm_ref = 0;  // l-2 norm of reference
+  for(uint i = 0; i< capacity; i++){
+    register T a, r;
+    a = x.data[i];
+    r = ref.data[i];
+    norm_diff += (a-r)*(a-r);
+    norm_ref += (r*r);
+  }
+  assert(norm_ref>0);
+  return norm_diff/norm_ref;
 }
 
 void tensor_destroy(tensor_t t){

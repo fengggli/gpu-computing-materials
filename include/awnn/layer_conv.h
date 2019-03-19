@@ -36,7 +36,7 @@ typedef struct{
  *
  * See conv_forward_naive https://github.com/fengggli/cs231n-assignments/blob/master/assignment2/cs231n/layers.py
  */
-status_t convolution_forward(tensor_t x, tensor_t w, lcache_t* cache, conv_param_t params, tensor_t y);
+status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y);
 
 /*
  * @brief backprop
@@ -48,7 +48,7 @@ status_t convolution_forward(tensor_t x, tensor_t w, lcache_t* cache, conv_param
  *
  * @return S_OK if success, otherwise S_ERR or define your error type in common.h
  */
-status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t const *cache, tensor_t dy);
+status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t const *cache, tensor_t const dy);
 
 #ifdef __cplusplus
 }

@@ -24,6 +24,15 @@ add_executable(test-layer-pool test_layer_pool.cpp)
 target_link_libraries(test-layer-pool awnnlib  gtest)
 add_test(test-layer-pool test-layer-pool)
 
+add_executable(test-layer-fc test_layer_fc.cpp)
+target_link_libraries(test-layer-fc awnnlib  gtest)
+add_test(test-layer-fc test-layer-fc)
+
+add_executable(test-utility test_utility.cpp)
+target_link_libraries(test-utility awnnlib  gtest)
+add_test(test-utility test-utility)
+
+
 
 
 
