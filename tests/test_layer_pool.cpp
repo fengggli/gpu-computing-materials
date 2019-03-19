@@ -50,10 +50,10 @@ tensor_t LayerGlobalAvgPoolTest::y;
 tensor_t LayerGlobalAvgPoolTest::dy;
 lcache_t LayerGlobalAvgPoolTest::cache;
 
-// TODO : document tests
+// skeleton
 TEST_F(LayerGlobalAvgPoolTest, Construct) {
-  uint const shape_x[] = {6, 2, 7, 7};
-  uint const shape_y[] = {6, 4, 1, 1}; // (7-3+2*padding)/stride +1 = 7
+  uint const shape_x[] = {6, 2, 7, 7}; //6 images, 2x7x7
+  uint const shape_y[] = {6, 2, 1, 1};
 
   x= tensor_make(shape_x, dim_of_shape(shape_x));
   dx= tensor_make(shape_x, dim_of_shape(shape_x));
@@ -61,6 +61,15 @@ TEST_F(LayerGlobalAvgPoolTest, Construct) {
   dy= tensor_make(shape_y, dim_of_shape(shape_y));
 
   make_empty_lcache(&cache);
+}
+
+// channel_mean
+TEST_F(LayerGlobalAvgPoolTest, channel_mean){
+  uint channel_capacity = x.dim.dims[2] * x.dim.dims[3]; // each chanel
+  uint target_channel = 0;
+  T* start = x.data + channel_capacity * target_channel;
+
+  T res = channel_mean(start, channel_capacity);
 }
 
 // TODO : document tests
