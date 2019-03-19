@@ -153,6 +153,12 @@ tensor_t tensor_make_alike(tensor_t t){
   return _tensor_make(t.dim);
 }
 
+tensor_t tensor_make_scalar_alike(tensor_t t, T scalar){
+  tensor_t tmp = _tensor_make(t.dim);
+  _tensor_fill_scalar(tmp, scalar);
+  return tmp;
+}
+
 tensor_t tensor_make_transpose(tensor_t const t){
   uint i,j;
   if(tensor_get_ndims(t) != 2){
