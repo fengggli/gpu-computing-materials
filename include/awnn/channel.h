@@ -17,6 +17,6 @@ T channel_mean(T const *t, uint size){
   return mean/size;
 }
 
-inline uint channel_capacity(tensor_t t){
+uint channel_capacity(tensor_t t){
   return t.dim.dims[2] * t.dim.dims[3];
 }
