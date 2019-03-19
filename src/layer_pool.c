@@ -10,7 +10,7 @@ status_t global_avg_pool_forward(tensor_t const x, lcache_t *cache, tensor_t y){
 	  for (uint j = 0; j < num_channels; ++j){
 			int tmp = i * num_channels+j;
 	  	y.data[tmp] = channel_mean(x.data + i * num_channels * channel_capacity(x) + j * channel_capacity(x)
-	  		, channel_capacity);
+	  		, channel_capacity(x));
 	  }
 	return S_OK;
 }
