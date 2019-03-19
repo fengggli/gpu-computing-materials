@@ -74,7 +74,7 @@ TEST_F(LayerGlobalAvgPoolTest, channel_mean){
 }
 
 // TODO : document tests
-TEST_F(LayerGlobalAvgPoolTest, DISABLED_Forward){
+TEST_F(LayerGlobalAvgPoolTest, Forward){
   status_t ret;
   ret = global_avg_pool_forward(x, &cache, y);// foward function should allocate and populate cache;
   EXPECT_EQ(ret, S_OK);
