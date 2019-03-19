@@ -41,6 +41,7 @@ protected:
 
   // Objects declared here can be used by all tests in the test case for Foo.
   static tensor_t x, dx, w, dw, b, db, y, dy;
+  static tensor_t dx_ref, dw_ref, db_ref, y_ref;
   static lcache_t cache;
 };
 
@@ -53,6 +54,12 @@ tensor_t LayerFcTest::b;
 tensor_t LayerFcTest::db;
 tensor_t LayerFcTest::y;
 tensor_t LayerFcTest::dy;
+
+tensor_t LayerFcTest::dx_ref;
+tensor_t LayerFcTest::dw_ref;
+tensor_t LayerFcTest::db_ref;
+tensor_t LayerFcTest::y_ref;
+
 lcache_t LayerFcTest::cache;
 
 TEST_F(LayerFcTest, Construct) {
@@ -62,21 +69,26 @@ TEST_F(LayerFcTest, Construct) {
   uint const shape_y[] = {2, 3}; // (7-3+2*padding)/stride +1 = 7
   x   = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
   dx  = tensor_make(shape_x, dim_of_shape(shape_x));
+  dx_ref = tensor_make(shape_x, dim_of_shape(shape_x));
   w   = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
   dw  = tensor_make(shape_w, dim_of_shape(shape_w));
+  dw_ref = tensor_make(shape_w, dim_of_shape(shape_w));
   b   = tensor_make_linspace(-0.3, 0.1,shape_b, dim_of_shape(shape_b));
-  db  = tensor_make(shape_b, dim_of_shape(shape_b));
+  db_ref = tensor_make(shape_b, dim_of_shape(shape_b));
   y   = tensor_make(shape_y, dim_of_shape(shape_y));
-  dy  = tensor_make(shape_y, dim_of_shape(shape_y));
+  y_ref = tensor_make(shape_y, dim_of_shape(shape_y));
+  dy = tensor_make(shape_y, dim_of_shape(shape_y)); // make it radom
 
   make_empty_lcache(&cache);
 }
 
 TEST_F(LayerFcTest, Forward){
+  // forward using awnn
   status_t ret;
   ret = layer_fc_forward(x,w,b, &cache,y);// forward function should allocate and populate cache;
   tensor_dump(y);
   EXPECT_EQ(ret, S_OK);
+
 }
 
 TEST_F(LayerFcTest, Backward) {
@@ -85,24 +97,39 @@ TEST_F(LayerFcTest, Backward) {
   EXPECT_EQ(ret, S_OK);
 }
 
-// TODO: check with cudnn
+TEST_F(LayerFcTest, DISABLED_NumericalCheck) {
+  tensor_t w_copy = tensor_make_copy(w);
+  tensor_t b_copy = tensor_make_copy(b);
 
-TEST_F(LayerFcTest,CheckLcache){
+  // evaluate gradient of x
+  eval_numerical_gradient(
+      [w_copy, b_copy](tensor_t const in, tensor_t out) {
+        layer_fc_forward(in, w_copy, b_copy, NULL, out);
+      },
+      x, dy, dx_ref);
+
+  EXPECT_LT(1e-3, tensor_rel_error(dx_ref, dx));
+}
+
+TEST_F(LayerFcTest, CheckLcache) {
   EXPECT_EQ(cache.count, 0); // backward needs to call free_lcache(cache);
-}
+  }
 
+  TEST_F(LayerFcTest, Destroy) {
+    tensor_destroy(x);
+    tensor_destroy(dx);
+    tensor_destroy(w);
+    tensor_destroy(dw);
+    tensor_destroy(y);
+    tensor_destroy(dy);
 
+    tensor_destroy(dx_ref);
+    tensor_destroy(dw_ref);
+    tensor_destroy(db_ref);
+    tensor_destroy(y_ref);
 
-
-TEST_F(LayerFcTest, Destroy) {
-  tensor_destroy(x);
-  tensor_destroy(dx);
-  tensor_destroy(w);
-  tensor_destroy(dw);
-  tensor_destroy(y);
-  tensor_destroy(dy);
-  free_lcache(&cache);
-}
+    free_lcache(&cache);
+  }
 
 
 }  // namespace

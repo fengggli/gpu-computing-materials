@@ -15,12 +15,14 @@ status_t layer_fc_forward(tensor_t const x, tensor_t const w, tensor_t const b, 
   tensor_add_vector_inplace(y, b);
 
   // create cache for backprog
-  tensor_t cached_x_T = tensor_make_transpose(x_reshaped); // saves transpose of flattened x
-  cache->all_tensors[0] = cached_x_T;
-  cache->count +=1;
-  tensor_t cached_w_T = tensor_make_transpose(w); // saves tranpose of W
-  cache->all_tensors[1] = cached_w_T;
-  cache->count +=1;
+  if(cache){
+    tensor_t cached_x_T = tensor_make_transpose(x_reshaped); // saves transpose of flattened x
+    cache->all_tensors[0] = cached_x_T;
+    cache->count +=1;
+    tensor_t cached_w_T = tensor_make_transpose(w); // saves tranpose of W
+    cache->all_tensors[1] = cached_w_T;
+    cache->count +=1;
+  }
 
   // free temprary tensors
   tensor_destroy(x_reshaped);
