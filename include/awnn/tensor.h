@@ -91,6 +91,7 @@ tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s);
 T* tensor_get_elem_ptr(tensor_t const t, dim_t const loc);
 
 void tensor_dump(tensor_t t);
+
 T tensor_rel_error(tensor_t x, tensor_t y);
 status_t tensor_reshape_(tensor_t *ptr_t, uint const shape[], uint const ndims);
 
