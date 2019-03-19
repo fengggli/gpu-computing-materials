@@ -153,12 +153,6 @@ tensor_t tensor_make_alike(tensor_t t){
   return _tensor_make(t.dim);
 }
 
-tensor_t tensor_make_scalar_alike(tensor_t t, T scalar){
-  tensor_t tmp = _tensor_make(t.dim);
-  _tensor_fill_scalar(tmp, scalar);
-  return tmp;
-}
-
 tensor_t tensor_make_transpose(tensor_t const t){
   uint i,j;
   if(tensor_get_ndims(t) != 2){
@@ -187,6 +181,14 @@ static void _tensor_fill_scalar(tensor_t t, T s) {
   for(uint i=0;i< capacity; i++)
     t.data[i] = s;
 }
+
+
+tensor_t tensor_make_scalar_alike(tensor_t t, T scalar){
+  tensor_t tmp = _tensor_make(t.dim);
+  _tensor_fill_scalar(tmp, scalar);
+  return tmp;
+}
+
 
 tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s){
   tensor_t t =  tensor_make(shape, ndims);
