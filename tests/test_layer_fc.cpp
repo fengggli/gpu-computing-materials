@@ -63,10 +63,12 @@ tensor_t LayerFcTest::y_ref;
 lcache_t LayerFcTest::cache;
 
 TEST_F(LayerFcTest, Construct) {
-  uint const shape_x[] = {2, 4, 5, 6};
-  uint const shape_w[] = {120, 3};
-  uint const shape_b[] = {3};
-  uint const shape_y[] = {2, 3}; // (7-3+2*padding)/stride +1 = 7
+
+  uint const shape_x[] = {2, 4, 5,
+                          6}; // e.g. 2 images, 4 channels, width =5 hight=6
+  uint const shape_w[] = {120, 3}; // fc 120~3  neurons
+  uint const shape_b[] = {3};      // 3n
+  uint const shape_y[] = {2, 3};
   x   = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
   dx  = tensor_make(shape_x, dim_of_shape(shape_x));
   dx_ref = tensor_make(shape_x, dim_of_shape(shape_x));

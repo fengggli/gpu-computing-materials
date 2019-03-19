@@ -60,11 +60,25 @@ end:
   return ret;
 }
 
-
-
-status_t tensor_add_inplace(tensor_t to, tensor_t from){
+status_t tensor_op_inplace(tensor_t to, tensor_t from, tensor_op_t op){
   if(S_OK == dim_is_same(to.dim, from.dim)){
-    _add(to.data, from.data, dim_get_capacity(to.dim));
+    switch(op){
+      case TENSOR_OP_ADD:
+        _add(to.data, from.data, dim_get_capacity(to.dim));
+        break;
+      case TENSOR_OP_SUB:
+        _sub(to.data, from.data, dim_get_capacity(to.dim));
+        break;
+      case TENSOR_OP_MUL:
+        _mul(to.data, from.data, dim_get_capacity(to.dim));
+        break;
+      case TENSOR_OP_DIV:
+        _div(to.data, from.data, dim_get_capacity(to.dim));
+        break;
+      default:
+        PERR("unsupported tensor_op_t =%d", op);
+        return S_ERR;
+    }
     return S_OK;
   }
   else{
@@ -91,7 +105,7 @@ status_t tensor_copy(tensor_t out, tensor_t in){
 status_t tensor_add_sameshape(tensor_t in1, tensor_t in2, tensor_t out){
   if( S_OK == dim_is_same(out.dim, in1.dim)){
     tensor_copy(out, in1);
-    tensor_add_inplace(out, in2);
+    tensor_op_inplace(out, in2, TENSOR_OP_ADD);
     return S_OK;
   }
   else{

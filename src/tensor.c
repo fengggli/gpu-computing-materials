@@ -6,12 +6,17 @@
 
 #define SIZE_LINE_BUFFER (160)
 
+// make_dim(3, {2,3,4}):
+// TODO: make it more robust
+/*dim_t make_dim(uint ndims, uint all_dims[]){*/
+/*}*/
 
 dim_t make_dim(int ndims, ...) {
   int i;
   va_list vl;
   dim_t dim;
   va_start(vl, ndims);
+  assert(ndims <= MAX_DIM);
   for(i = 0; i< MAX_DIM; i++){
     if(i < ndims)
       dim.dims[i] = va_arg(vl, int);
@@ -83,6 +88,18 @@ void dim_dump(dim_t dim){
   PSTR("]\n");
 }
 
+/*
+ * Tensor
+ */
+
+T tensor_get_sum(tensor_t t){
+  T ret = 0;
+  for (uint i = 0; i < tensor_get_capacity(t); i++) {
+    ret += t.data[i];
+  }
+  return ret;
+}
+
 
 void _tensor_fill_patterned(tensor_t t){
   uint capacity = dim_get_capacity(t.dim);
@@ -130,6 +147,10 @@ tensor_t tensor_make_copy(tensor_t t){
   tensor_t ret = _tensor_make(t.dim);
   tensor_copy(ret, t);
   return ret;
+}
+
+tensor_t tensor_make_alike(tensor_t t){
+  return _tensor_make(t.dim);
 }
 
 tensor_t tensor_make_transpose(tensor_t const t){
@@ -209,7 +230,6 @@ tensor_t tensor_make_patterned(uint const shape[], uint const ndims){
   _tensor_fill_patterned(t);
   return t;
 }
-
 
 T* tensor_get_elem_ptr(tensor_t const t, dim_t const loc) {
   uint index_dim;

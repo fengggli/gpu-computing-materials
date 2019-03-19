@@ -36,11 +36,16 @@ status_t layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db, lcache_t *cach
     return S_ERR;
   }
 
+  //y = x*w+b  dy/dx = w
+  // dy ~ dL/dy
+  // * dL/dx
+  // * dL/dw
+
   // get the cache contents
   tensor_t x_reshaped_T  = cache->all_tensors[0];
   tensor_t w_T = cache->all_tensors[1];
 
-  // dx = dy*w^T
+  // calculate gradient: dx = dy*w^T
   uint N = dx.dim.dims[0];
   uint const flat_shape[] = {N, tensor_get_capacity(dx)/N};
   dim_t old_dim = dx.dim; // save to recover later
@@ -48,10 +53,10 @@ status_t layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db, lcache_t *cach
   tensor_matmul(dy, w_T, dx);
   dx.dim = old_dim; // reshape to N-d!
 
-  // dw = x^T * dy
+  // calculate gradient dw = x^T * dy
   tensor_matmul(x_reshaped_T, dy, dw);
 
-  // db = sum(dy, axis =1)
+  // gradient db = sum(dy, axis =1)
   // this make [N, M] sum to [1,M];
   uint axis_id = 0;
   tensor_t sum = tensor_make_sum(dy, axis_id);
