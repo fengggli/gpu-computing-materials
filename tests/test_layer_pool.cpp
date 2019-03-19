@@ -91,8 +91,20 @@ TEST_F(LayerGlobalAvgPoolTest, Forward){
 }
 
 // TODO : document tests
-TEST_F(LayerGlobalAvgPoolTest, DISABLED_Backward){
+TEST_F(LayerGlobalAvgPoolTest, Backward){
+  uint const shape_x[] = {6, 2, 7, 7}; //6 images, 2x7x7
+  uint const shape_y[] = {6, 2, 1, 1};
+
+  tensor_t in = tensor_make(shape_x, dim_of_shape(shape_x));
+  tensor_t din = tensor_make(shape_x, dim_of_shape(shape_x));
+  tensor_t out = tensor_make(shape_y, dim_of_shape(shape_y));
+  tensor_t dout = tensor_make(shape_y, dim_of_shape(shape_y));
+
   status_t ret;
+
+  ret = global_avg_pool_forward(in, &cache, out);// foward function should allocate and populate cache;
+  EXPECT_EQ(ret, S_OK);
+  
   ret = global_avg_pool_backward(dx, &cache, dy); // backward needs to call free_lcache(cache);
   EXPECT_EQ(ret, S_OK);
 }
