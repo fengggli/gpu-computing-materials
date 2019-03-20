@@ -76,10 +76,12 @@ TEST_F(LayerFcTest, Construct) {
   dw  = tensor_make(shape_w, dim_of_shape(shape_w));
   dw_ref = tensor_make(shape_w, dim_of_shape(shape_w));
   b   = tensor_make_linspace(-0.3, 0.1,shape_b, dim_of_shape(shape_b));
+  db = tensor_make(shape_b, dim_of_shape(shape_b));
   db_ref = tensor_make(shape_b, dim_of_shape(shape_b));
   y   = tensor_make(shape_y, dim_of_shape(shape_y));
   y_ref = tensor_make(shape_y, dim_of_shape(shape_y));
-  dy = tensor_make(shape_y, dim_of_shape(shape_y)); // make it radom
+  dy = tensor_make_linspace(0.1, 0.5, shape_y,
+                            dim_of_shape(shape_y)); // make it radom
 
   make_empty_lcache(&cache);
 }
@@ -88,9 +90,16 @@ TEST_F(LayerFcTest, Forward){
   // forward using awnn
   status_t ret;
   ret = layer_fc_forward(x,w,b, &cache,y);// forward function should allocate and populate cache;
+  PINF("calculated y:");
   tensor_dump(y);
   EXPECT_EQ(ret, S_OK);
+  tensor_t expected_y = tensor_make_alike(y);
+  T value_list[] = {1.49834967, 1.70660132, 1.91485297,
+                    3.25553199, 3.5141327,  3.77273342};
+  tensor_fill_list(expected_y, value_list, dim_of_shape(value_list));
 
+  EXPECT_LT(tensor_rel_error(expected_y, y), 1e-7);
+  PINF("Consistent with expected results");
 }
 
 TEST_F(LayerFcTest, Backward) {
@@ -99,7 +108,7 @@ TEST_F(LayerFcTest, Backward) {
   EXPECT_EQ(ret, S_OK);
 }
 
-TEST_F(LayerFcTest, DISABLED_NumericalCheck) {
+TEST_F(LayerFcTest, NumericalCheck) {
   tensor_t w_copy = tensor_make_copy(w);
   tensor_t b_copy = tensor_make_copy(b);
 
@@ -110,7 +119,7 @@ TEST_F(LayerFcTest, DISABLED_NumericalCheck) {
       },
       x, dy, dx_ref);
 
-  EXPECT_LT(1e-3, tensor_rel_error(dx_ref, dx));
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
 }
 
 TEST_F(LayerFcTest, CheckLcache) {

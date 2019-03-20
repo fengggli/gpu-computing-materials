@@ -109,6 +109,14 @@ void _tensor_fill_patterned(tensor_t t){
   }
 }
 
+void tensor_fill_list(tensor_t const t, T const value_list[],
+                        uint const length_of_value_list){
+  assert(length_of_value_list <= tensor_get_capacity(t));
+  for(uint i = 0; i< length_of_value_list; i ++){
+    t.data[i] = value_list[i];
+  }
+}
+
 tensor_t _tensor_make(dim_t dim){
   tensor_t t;
   uint capacity;

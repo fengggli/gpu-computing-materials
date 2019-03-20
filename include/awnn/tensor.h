@@ -72,6 +72,10 @@ void tensor_destroy(tensor_t t);
 static void _tensor_fill_random(tensor_t t) {}
 
 void _tensor_fill_patterned(tensor_t t); // debug use
+/*fill all contents of value list to the tensor, you will also
+ * value_list length needed to be no larger than tensor capacity*/
+void tensor_fill_list(tensor_t const, T const value_list[],
+                      uint const length_of_value_list);
 
 tensor_t tensor_make_zeros(uint const shape[], uint const ndims);
 tensor_t tensor_make_random(uint const shape[], uint const ndims);
