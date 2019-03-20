@@ -40,11 +40,13 @@ add_library(awnnlib SHARED
   src/layer_conv.c
   src/layer_pool.c
   src/layer_fc.c
+  src/layer_relu.c
 
   include/awnn/common.h
   include/awnn/layer_conv.h
   include/awnn/layer_pool.h
   include/awnn/layer_fc.h
+  include/awnn/layer_relu.h
   include/awnn/tensor.h
 )
 

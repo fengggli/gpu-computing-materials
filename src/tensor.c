@@ -161,6 +161,8 @@ tensor_t tensor_make_alike(tensor_t t){
   return _tensor_make(t.dim);
 }
 
+
+
 tensor_t tensor_make_transpose(tensor_t const t){
   uint i,j;
   if(tensor_get_ndims(t) != 2){
@@ -231,6 +233,12 @@ tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[], u
   tensor_t t =  tensor_make(shape, ndims);
   _tensor_fill_linspace(t, start, stop);
   return t;
+}
+
+tensor_t tensor_make_linspace_alike(T const start, T const stop, tensor_t const t){
+  tensor_t ret = _tensor_make(t.dim);
+  _tensor_fill_linspace(ret, start, stop);
+  return ret;
 }
 
 tensor_t tensor_make_patterned(uint const shape[], uint const ndims){

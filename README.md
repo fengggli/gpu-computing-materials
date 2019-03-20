@@ -4,7 +4,7 @@
 # GPU-computing-materials
 
 * For the most recent documentations, see [here](https://fengggli.github.io/gpu-computing-materials)
-* There is a changelog in the link above
+* There is a changelog in the link above.
 
 
 # Code guideline

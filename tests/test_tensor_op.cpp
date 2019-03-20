@@ -107,7 +107,7 @@ TEST_F(TensorOpTest, PLUS_INPLACE) {
   uint const shape2[] = {2, 3};
   to = tensor_make_patterned(shape2, dim_of_shape(shape2));
 
-  EXPECT_EQ(S_OK, tensor_op_inplace(to, from, TENSOR_OP_ADD));
+  EXPECT_EQ(S_OK, tensor_elemwise_op_inplace(to, from, TENSOR_OP_ADD));
 
   EXPECT_EQ(to.data[0], 0);
   EXPECT_EQ(to.data[1], 2);
