@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Tensor and its operations &mdash; gpu-computing19-awnn  documentation</title>
+  <title>Current &mdash; gpu-computing19-awnn  documentation</title>
   
 
   
@@ -35,8 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Pooling Layer" href="layers/pool.html" />
-    <link rel="prev" title="Documentation of gpu-computing-spring19 project" href="index.html" /> 
+    <link rel="prev" title="Convolution Layer" href="layers/conv.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -81,8 +80,8 @@
             
             
               <p class="caption"><span class="caption-text">Tensor</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Tensor and its operations</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tensor.html">Tensor and its operations</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Layers:</span></p>
 <ul>
@@ -90,9 +89,13 @@
 <li class="toctree-l1"><a class="reference internal" href="layers/conv.html">Convolution Layer</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Changelog</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Current</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html#previous">Previous</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Current</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#todo-list">TODO List</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#working-in-progress">Working in progress:</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#previous">Previous</a></li>
 </ul>
 
             
@@ -138,13 +141,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Tensor and its operations</li>
+      <li>Current</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/tensor.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/changelog.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -157,8 +160,45 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="tensor-and-its-operations">
-<span id="awnn-tensor"></span><h1>Tensor and its operations<a class="headerlink" href="#tensor-and-its-operations" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="current">
+<span id="changelog"></span><h1>Current<a class="headerlink" href="#current" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="todo-list">
+<h2>TODO List<a class="headerlink" href="#todo-list" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Layers<ol class="arabic">
+<li>global avg pool</li>
+<li>conv2d</li>
+<li>relu</li>
+<li>softmax</li>
+<li>batchnorm</li>
+</ol>
+</li>
+<li>Net<ol class="arabic">
+<li>residual blocks</li>
+<li>siplified resnet</li>
+</ol>
+</li>
+<li>Utility<ol class="arabic">
+<li>sgd</li>
+<li>reporting</li>
+</ol>
+</li>
+<li>Initializer (kaiming initialization)</li>
+<li>Data</li>
+<li>Others</li>
+</ul>
+</div>
+<div class="section" id="working-in-progress">
+<h2>Working in progress:<a class="headerlink" href="#working-in-progress" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>Softmax, and  relu in host(Feng Li)</li>
+<li>conv2d and global pool in gpu (Chris and Yuankun)</li>
+</ol>
+</div>
+</div>
+<div class="section" id="previous">
+<h1>Previous<a class="headerlink" href="#previous" title="Permalink to this headline">¶</a></h1>
+<p>see dl-docs for changelog prior to 0.4.1</p>
 </div>
 
 
@@ -169,10 +209,8 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="layers/pool.html" class="btn btn-neutral float-right" title="Pooling Layer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-      
-        <a href="index.html" class="btn btn-neutral float-left" title="Documentation of gpu-computing-spring19 project" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="layers/conv.html" class="btn btn-neutral float-left" title="Convolution Layer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
