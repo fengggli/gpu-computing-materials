@@ -31,8 +31,5 @@ add_test(test-layer-fc test-layer-fc)
 add_executable(test-utility test_utility.cpp)
 target_link_libraries(test-utility awnnlib  gtest)
 add_test(test-utility test-utility)
-
-
-
-
-
+set_target_properties(test-utility
+  PROPERTIES COMPILE_DEFINITIONS "CONFIG_DEBUG")

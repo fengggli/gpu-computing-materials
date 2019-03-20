@@ -14,7 +14,8 @@ extern "C" {
 #endif
 
 typedef unsigned int uint;
-typedef float T;
+// typedef float T;
+typedef double T;
 
 #define MAX_DIM (4) // N, C, H, W
 

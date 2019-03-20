@@ -249,7 +249,7 @@ void  _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity){
   uint i;
   for (i =0; i< dim.dims[cur_dim_id]; i++){
     if(cur_dim_id + 1 == dim_get_ndims(dim)){ // this is the vector
-      PSTR("%.3f ", data[i]);
+      PSTR("%.7f ", data[i]);
     }
     else{
       PSTR("{");
