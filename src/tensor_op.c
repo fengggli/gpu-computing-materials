@@ -31,8 +31,7 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
   int k = in1.dim.dims[1];
   int n = in2.dim.dims[1];
 
-  PINF("mnk = [%u, %u, %u]", m,n,k);
-
+  // PDBG("mnk = [%u, %u, %u]", m,n,k);
 
 #ifdef USE_OPENBLAS
   // https://software.intel.com/en-us/mkl-tutorial-c-multiplying-matrices-using-dgemm
@@ -157,6 +156,11 @@ status_t tensor_reshape_(tensor_t* ptr_t, uint const  shape[], uint const ndims)
   }
   if(dim_get_capacity(req_dim) != dim_get_capacity(ptr_t->dim)){
     PERR("[tensor reshape]: dimension notmatch");
+    PERR("Original dimension: ");
+    dim_dump(ptr_t->dim);
+    PERR("requested dimension: ");
+    dim_dump(req_dim);
+
     return S_BAD_DIM;
   }
   ptr_t->dim = req_dim;

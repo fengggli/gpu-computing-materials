@@ -5,6 +5,8 @@ option(USE_CLANG "Use clang compiler set" OFF)
 option(USE_OPENBLAS "USE openblas for blas" OFF)
 option(BUILD_TEST "Build google test and all test cases" ON)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS on)
+
 if(USE_CLANG)
   set(CMAKE_C_COMPILER "clang")
   set(CMAKE_CXX_COMPILER "clang++")

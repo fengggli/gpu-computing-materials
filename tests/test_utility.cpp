@@ -4,6 +4,7 @@
  * Author: Feng Li
  * e-mail: fengggli@yahoo.com
  */
+#include "awnn/logging.h"
 #include "awnn/tensor.h"
 #include "test_util.h"
 #include "gtest/gtest.h"
@@ -40,9 +41,9 @@ protected:
   // Objects declared here can be used by all tests in the test case for Foo.
 };
 
-TEST_F(UtilityTest, DISABLED_NumericalGradientSimple) {
-  uint const shape[] = {2, 3}; // a scalar
-  tensor_t x = tensor_make_linspace(0, 6, shape, dim_of_shape(shape));
+TEST_F(UtilityTest, NumericalGradientSimple) {
+  uint const shape[] = {2, 3}; // a 2x3 matrix
+  tensor_t x = tensor_make_linspace(1, 6, shape, dim_of_shape(shape));
   tensor_t dx = tensor_make(shape, dim_of_shape(shape));
 
   uint const y_shape[] = {1};
@@ -51,12 +52,15 @@ TEST_F(UtilityTest, DISABLED_NumericalGradientSimple) {
 
   // the gradient in each xi will by val_dy
   auto func_add = [](tensor_t const input, tensor_t output) {
-    output.data = 0;
-    for (uint i = 0; i < tensor_get_capacity(input); i++)
+    output.data[0] = 0;
+    for (uint i = 0; i < tensor_get_capacity(input); i++) {
+      PLOG("[+ %.7f at %u]", input.data[i], i);
       output.data[0] += input.data[i];
+    }
+    PLOG("----------");
   };
 
-  eval_numerical_gradient(func_add, x, dy, dx);
+  eval_numerical_gradient(func_add, x, dy, dx, 1e-5);
 
   for (uint i = 0; i < tensor_get_capacity(x); i++)
     EXPECT_FLOAT_EQ(val_dy, dx.data[i]);
