@@ -2,39 +2,58 @@
 #include "awnn/logging.h"
 #include <math.h>
 
-status_t loss_softmax(tensor_t const x, label_t const real_labels[], T *ptr_loss, tensor_t dx){
+status_t loss_softmax(tensor_t const x, label_t const real_labels[], T *ptr_loss, awnn_mode_t mode,  tensor_t dx){
   status_t ret = S_ERR;
 
   tensor_t scores = tensor_make_copy(x);
-  tensor_t exps = tensor_make_copy(x); // save the exponentials
   const uint cnt_imgs = scores.dim.dims[0];
-  const uint cnt_features = scores.dim.dims[1];
+  const uint cnt_classes = scores.dim.dims[1];
 
   T loss = 0;
 
   for(uint i_img = 0 ; i_img < cnt_imgs; ++i_img){
     label_t this_label = real_labels[i_img];
+    if(this_label >= cnt_classes){
+      PERR("label id should be between [0, %u]", cnt_classes);
+      goto end;
+    }
     T max_score = T_MIN; // initialize to a small number
-    T sum_of_exp = 0;
+    T sum_exp_this_img = 0;
 
     // get the maximun score
-    for(uint i_feature = 0; i_feature < cnt_features; ++i_feature){
-      if(scores.data[i_img * cnt_features + i_feature] > max_score) max_score = scores.data[i_img * cnt_features + i_feature];
+    for(uint i_class = 0; i_class < cnt_classes; ++i_class){
+      if(scores.data[i_img * cnt_classes + i_class] > max_score) max_score = scores.data[i_img * cnt_classes + i_class];
     }
-    for(uint i_feature = 0; i_feature < cnt_features; ++i_feature){
-      scores.data[i_img * cnt_features + i_feature] -= max_score; // substract maximum for numerical stability
-      sum_of_exp += exp(scores.data[i_img * cnt_features + i_feature]);
-      PINF("sum_exp += %lf", exp(scores.data[i_img * cnt_features + i_feature]));
+    for(uint i_class = 0; i_class < cnt_classes; ++i_class){
+      scores.data[i_img * cnt_classes + i_class] -= max_score; // substract maximum for numerical stability
+      T tmp_exp = exp(scores.data[i_img * cnt_classes + i_class]);
+      sum_exp_this_img += tmp_exp;
+
+      // fill the gradient
+      if(mode != MODE_INFER){
+        dx.data[i_img * cnt_classes + i_class] = tmp_exp;
+      }
     }
-    loss += log(sum_of_exp) - scores.data[this_label];
+
+    if(mode != MODE_INFER){
+      for(uint i_class = 0; i_class < cnt_classes; ++i_class){
+        T point_gradient = dx.data[i_img * cnt_classes + i_class];
+        point_gradient/=(sum_exp_this_img);
+        if(i_class == this_label){
+          point_gradient -= 1.0;
+        }
+        dx.data[i_img * cnt_classes + i_class] = point_gradient;
+      }
+    }
+
+    loss += log(sum_exp_this_img) - scores.data[this_label];
   }
 
   *ptr_loss = loss/cnt_imgs;
   ret = S_OK;
 
+end:
   tensor_destroy(scores);
-  tensor_destroy(exps);
-
   return ret;
 }
 

@@ -42,8 +42,7 @@ protected:
   // Objects declared here can be used by all tests.
 };
 
-
-TEST_F(LostSoftmaxTest, Construct) {
+TEST_F(LostSoftmaxTest, OneImg) {
 
   uint nr_classes = 3;
   uint nr_images = 1;
@@ -61,13 +60,71 @@ TEST_F(LostSoftmaxTest, Construct) {
   T loss;
   tensor_t dx = tensor_make_alike(x);
 
-  ret = loss_softmax(x, real_labels, &loss, dx);
+  ret = loss_softmax(x, real_labels, &loss, MODE_TRAIN, dx);
   EXPECT_TRUE(fabs(1.04 - loss) <
               1e-3); // http://cs231n.github.io/linear-classify/
 
   PINF("softmax loss of %d images is: %.3f", nr_images, loss);
   // tensor_dump(dx);
   EXPECT_EQ(ret, S_OK);
+
+  auto func_softmax = [real_labels, dx](tensor_t const input, tensor_t output) {
+    T ref_loss;
+    loss_softmax(input, real_labels, &ref_loss, MODE_INFER, dx);
+    output.data[0] = ref_loss;
+  };
+
+  uint const unit_shape[] = {1};
+  tensor_t unit_t = tensor_make(unit_shape, dim_of_shape(unit_shape));
+  tensor_t dx_ref = tensor_make_alike(x);
+  unit_t.data[0] = 1.0;
+  eval_numerical_gradient(func_softmax, x, unit_t, dx_ref, 1e-5);
+
+  PINF("backward gradient:");
+  tensor_dump(dx);
+  PINF("nuercial gradient:");
+  tensor_dump(dx_ref);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
+  PINF("gradient check of x... is ok");
+
+  tensor_destroy(dx_ref);
+}
+
+// see whether gradient for softmax is generated correctly for multiple images
+TEST_F(LostSoftmaxTest, DISABLED_MultiImg) {
+
+  uint nr_classes = 10;
+  uint nr_images = 6;
+
+  uint const shape_x[] = {
+      nr_images, nr_classes}; // e.g. 3 images, 4 features (softmax usually
+                              // follows fc, which is already flattened to 2d)
+  tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
+
+  label_t real_labels[] = {2, 3, 4, 5, 1, 2};
+
+  tensor_t dx = tensor_make_alike(x);
+
+  auto func_softmax = [real_labels, dx](tensor_t const input, tensor_t output) {
+    T ref_loss;
+    loss_softmax(input, real_labels, &ref_loss, MODE_INFER, dx);
+    output.data[0] = ref_loss;
+  };
+
+  uint const unit_shape[] = {1};
+  tensor_t unit_t = tensor_make(unit_shape, dim_of_shape(unit_shape));
+  tensor_t dx_ref = tensor_make_alike(x);
+  unit_t.data[0] = 1.0;
+  eval_numerical_gradient(func_softmax, x, unit_t, dx_ref, 1e-5);
+
+  PINF("backward gradient:");
+  tensor_dump(dx);
+  PINF("nuercial gradient:");
+  tensor_dump(dx_ref);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
+  PINF("gradient check of x... is ok");
+
+  tensor_destroy(dx_ref);
 }
 
 }  // namespace

@@ -9,6 +9,11 @@
 #include "awnn/tensor.h"
 
 typedef uint label_t;
+typedef int awnn_mode_t;
+enum {
+  MODE_TRAIN = 0,
+  MODE_INFER = 1,
+};
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,7 +32,7 @@ extern "C" {
  * TODO: label should be some other types than T
  */
 status_t loss_softmax(tensor_t const x, label_t const real_labels[],
-                      T *ptr_loss, tensor_t dx);
+                      T *ptr_loss, awnn_mode_t mode, tensor_t dx);
 
 #ifdef __cplusplus
 }
