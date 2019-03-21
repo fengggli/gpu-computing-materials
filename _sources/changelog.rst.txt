@@ -7,6 +7,10 @@ Current
 TODO List
 ----------
 
+* Note
+1. In the loss layer, should takes in a vector of  int, which conflicts with the type of tensor.
+
+
 * Layers
 
   1. global avg pool
