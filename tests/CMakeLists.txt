@@ -42,4 +42,5 @@ add_executable(test-loss-softmax test_loss_softmax.cpp)
 target_link_libraries(test-loss-softmax awnnlib  gtest)
 add_test(test-loss-softmax test-loss-softmax)
 
-
+set_target_properties(test-loss-softmax
+  PROPERTIES COMPILE_DEFINITIONS "CONFIG_DEBUG")

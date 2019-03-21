@@ -45,17 +45,17 @@ protected:
 TEST_F(LostSoftmaxTest, OneImg) {
 
   uint nr_classes = 3;
-  uint nr_images = 1;
+  uint nr_images = 2;
 
   uint const shape_x[] = {
       nr_images, nr_classes}; // e.g. 3 images, 4 features (softmax usually
                               // follows fc, which is already flattened to 2d)
   tensor_t x = tensor_make(shape_x, dim_of_shape(shape_x));
-  T const value_list[] = {-2.85, 0.86, 0.28};
+  T const value_list[] = {-2.85, 0.86, 0.28, -2.85, 0.86, 0.28};
   tensor_fill_list(x, value_list, dim_of_shape(value_list));
 
   status_t ret;
-  label_t real_labels[] = {2};
+  label_t real_labels[] = {2, 2};
 
   T loss;
   tensor_t dx = tensor_make_alike(x);
@@ -65,8 +65,10 @@ TEST_F(LostSoftmaxTest, OneImg) {
               1e-3); // http://cs231n.github.io/linear-classify/
 
   PINF("softmax loss of %d images is: %.3f", nr_images, loss);
-  // tensor_dump(dx);
   EXPECT_EQ(ret, S_OK);
+
+  PINF("backward gradient:");
+  tensor_dump(dx);
 
   auto func_softmax = [real_labels, dx](tensor_t const input, tensor_t output) {
     T ref_loss;
@@ -80,11 +82,9 @@ TEST_F(LostSoftmaxTest, OneImg) {
   unit_t.data[0] = 1.0;
   eval_numerical_gradient(func_softmax, x, unit_t, dx_ref, 1e-5);
 
-  PINF("backward gradient:");
-  tensor_dump(dx);
-  PINF("nuercial gradient:");
+  PINF("numerical gradient:");
   tensor_dump(dx_ref);
-  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-5);
   PINF("gradient check of x... is ok");
 
   tensor_destroy(dx_ref);
@@ -93,8 +93,8 @@ TEST_F(LostSoftmaxTest, OneImg) {
 // see whether gradient for softmax is generated correctly for multiple images
 TEST_F(LostSoftmaxTest, DISABLED_MultiImg) {
 
-  uint nr_classes = 10;
   uint nr_images = 6;
+  uint nr_classes = 10;
 
   uint const shape_x[] = {
       nr_images, nr_classes}; // e.g. 3 images, 4 features (softmax usually
@@ -103,7 +103,8 @@ TEST_F(LostSoftmaxTest, DISABLED_MultiImg) {
 
   label_t real_labels[] = {2, 3, 4, 5, 1, 2};
 
-  tensor_t dx = tensor_make_alike(x);
+  tensor_t dx =
+      tensor_make_alike(x); // this is not actually required for inference
 
   auto func_softmax = [real_labels, dx](tensor_t const input, tensor_t output) {
     T ref_loss;
@@ -112,7 +113,10 @@ TEST_F(LostSoftmaxTest, DISABLED_MultiImg) {
   };
 
   uint const unit_shape[] = {1};
-  tensor_t unit_t = tensor_make(unit_shape, dim_of_shape(unit_shape));
+  tensor_t unit_t = tensor_make(
+      unit_shape,
+      dim_of_shape(
+          unit_shape)); // softmax is last layer, no gradient from above
   tensor_t dx_ref = tensor_make_alike(x);
   unit_t.data[0] = 1.0;
   eval_numerical_gradient(func_softmax, x, unit_t, dx_ref, 1e-5);
