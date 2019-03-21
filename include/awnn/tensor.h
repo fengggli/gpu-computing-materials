@@ -16,6 +16,7 @@ extern "C" {
 typedef unsigned int uint;
 // typedef float T;
 typedef double T;
+#define T_MIN (-1000.)
 
 #define MAX_DIM (4) // N, C, H, W
 
