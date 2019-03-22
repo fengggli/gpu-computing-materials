@@ -20,7 +20,7 @@ extern "C" {
 #endif
 
 /*
- * @brief comput the loss and gradient for softmax classification
+ * @brief compute the loss and gradient for softmax classification
  *
  * @param x input data, shape (N, M), where x[i,j] is the score for the jth
  * class in the ith input

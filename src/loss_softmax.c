@@ -20,12 +20,12 @@ status_t loss_softmax(tensor_t const x, label_t const real_labels[], T *ptr_loss
     T max_score = T_MIN; // initialize to a small number
     T sum_exp_this_img = 0;
 
-    // get the maximun score
+    // get the maximum score
     for(uint i_class = 0; i_class < cnt_classes; ++i_class){
       if(scores.data[i_img * cnt_classes + i_class] > max_score) max_score = scores.data[i_img * cnt_classes + i_class];
     }
     for(uint i_class = 0; i_class < cnt_classes; ++i_class){
-      scores.data[i_img * cnt_classes + i_class] -= max_score; // substract maximum for numerical stability
+      scores.data[i_img * cnt_classes + i_class] -= max_score; // subtract maximum for numerical stability
       T tmp_exp = exp(scores.data[i_img * cnt_classes + i_class]);
       sum_exp_this_img += tmp_exp;
 
@@ -43,8 +43,8 @@ status_t loss_softmax(tensor_t const x, label_t const real_labels[], T *ptr_loss
         if(i_class == this_label){
           point_gradient -= 1.0;
         }
-        PINF("[%u, %u] gradient %.3f", i_img, i_class, point_gradient);
-        dx.data[i_img * cnt_classes + i_class] = point_gradient;
+        // PINF("[%u, %u] gradient %.3f", i_img, i_class, point_gradient);
+        dx.data[i_img * cnt_classes + i_class] = point_gradient/ cnt_imgs;
       }
     }
 

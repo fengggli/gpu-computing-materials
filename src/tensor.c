@@ -100,6 +100,14 @@ T tensor_get_sum(tensor_t t){
   return ret;
 }
 
+void _tensor_fill_random(tensor_t t, uint seed){
+  srand(seed);
+  uint capacity = dim_get_capacity(t.dim);
+  uint i;
+  for(i = 0; i< capacity; i++){
+    t.data[i] = (T)rand()/(T)RAND_MAX;
+  }
+}
 
 void _tensor_fill_patterned(tensor_t t){
   uint capacity = dim_get_capacity(t.dim);
@@ -122,6 +130,7 @@ tensor_t _tensor_make(dim_t dim){
   uint capacity;
   capacity = dim_get_capacity(dim);
   t.data =malloc(capacity*sizeof(T));
+  t.mem_type = CPU_MEM;
   t.dim = dim;
   assert(NULL != t.data);
   return t;
@@ -145,9 +154,9 @@ tensor_t tensor_make(uint const shape[], uint const ndims){
   return _tensor_make(dim);
 }
 
-tensor_t tensor_make_random(uint const shape[], uint const ndims){
+tensor_t tensor_make_random(uint const shape[], uint const ndims, int seed){
   tensor_t t = tensor_make(shape, ndims);
-  _tensor_fill_random(t);
+  _tensor_fill_random(t, seed);
   return t;
 }
 
@@ -232,6 +241,17 @@ status_t _tensor_fill_linspace(tensor_t t, float const start, float const stop){
 tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[], uint const ndims){
   tensor_t t =  tensor_make(shape, ndims);
   _tensor_fill_linspace(t, start, stop);
+  return t;
+}
+
+tensor_t tensor_make_zeros(uint const shape[], uint const ndims) {
+  tensor_t t =  tensor_make(shape, ndims);
+  _tensor_fill_scalar(t, 0.0);
+  return t;
+}
+tensor_t tensor_make_ones(uint const shape[], uint const ndims) {
+  tensor_t t =  tensor_make(shape, ndims);
+  _tensor_fill_scalar(t, 1.0);
   return t;
 }
 

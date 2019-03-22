@@ -56,10 +56,12 @@ status_t eval_numerical_gradient(
 
     x.data[i] = old_value;
 
+#ifdef CONFIG_DEBUG
     PDBG("###: dumping y_positive:");
     tensor_dump(y_pos);
     PDBG("###: dumping y_negative:");
     tensor_dump(y_neg);
+#endif
 
     tensor_t tmp = y_pos; // shadow copy
     tensor_elemwise_op_inplace(tmp, y_neg, TENSOR_OP_SUB);

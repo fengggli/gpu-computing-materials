@@ -70,8 +70,7 @@ tensor_t tensor_make(uint const shape[], uint const ndims);
 void tensor_destroy(tensor_t t);
 
 // TODO: fill random values
-static void _tensor_fill_random(tensor_t t) {}
-
+static void _tensor_fill_random(tensor_t t, uint seed);
 void _tensor_fill_patterned(tensor_t t); // debug use
 
 /* @brief fill tensor buffer with list of values
@@ -81,7 +80,8 @@ void tensor_fill_list(tensor_t const, T const value_list[],
                       uint const length_of_value_list);
 
 tensor_t tensor_make_zeros(uint const shape[], uint const ndims);
-tensor_t tensor_make_random(uint const shape[], uint const ndims);
+tensor_t tensor_make_ones(uint const shape[], uint const ndims);
+tensor_t tensor_make_random(uint const shape[], uint const ndims, int seed);
 tensor_t tensor_make_patterned(uint const shape[], uint const ndims);
 tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[], uint const ndims);
 /* a new tensor, and it has same shape as the original */

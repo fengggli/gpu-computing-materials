@@ -34,6 +34,13 @@ if(USE_OPENBLAS)
   set(AWNN_LIBS ${AWNN_LIBS} openblas)
 endif()
 
+configure_file (
+  "${PROJECT_SOURCE_DIR}/config.h.in"
+  "${PROJECT_BINARY_DIR}/config.h"
+)
+
+include_directories(include ${PROJECT_BINARY_DIR})
+
 add_library(awnnlib SHARED
   src/tensor.c
   src/tensor_op.c
@@ -42,22 +49,7 @@ add_library(awnnlib SHARED
   src/layer_fc.c
   src/layer_relu.c
   src/loss_softmax.c
-
-  include/awnn/common.h
-  include/awnn/layer_conv.h
-  include/awnn/layer_pool.h
-  include/awnn/layer_fc.h
-  include/awnn/layer_relu.h
-  include/awnn/loss_softmax.h
-  include/awnn/tensor.h
 )
-
-configure_file (
-  "${PROJECT_SOURCE_DIR}/config.h.in"
-  "${PROJECT_BINARY_DIR}/config.h"
-)
-
-include_directories ("${PROJECT_BINARY_DIR}")
 
 target_link_libraries(awnnlib PUBLIC ${AWNN_LIBS})
 
