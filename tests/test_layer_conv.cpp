@@ -40,46 +40,87 @@ protected:
   }
 
   // Objects declared here can be used by all tests in the test case for Foo.
-  static tensor_t x, w, dx, dw, y, dy;
+  static tensor_t x, w;
+  static uint nr_img;
+  static uint sz_img; // width and height of filter
+  static uint nr_in_channel;
+  static uint sz_filter; // width and height of filter
+  static uint nr_filter; // # of output channel
+
   static lcache_t cache;
   static conv_param_t params;
 };
 
 //
 tensor_t LayerConvTest::x;
-tensor_t LayerConvTest::dx;
 tensor_t LayerConvTest::w;
-tensor_t LayerConvTest::dw;
-tensor_t LayerConvTest::y;
-tensor_t LayerConvTest::dy;
+
+uint LayerConvTest::nr_img;
+uint LayerConvTest::sz_img;
+uint LayerConvTest::nr_in_channel;
+uint LayerConvTest::sz_filter;
+uint LayerConvTest::nr_filter;
+
 lcache_t LayerConvTest::cache;
 conv_param_t LayerConvTest::params;
 
 TEST_F(LayerConvTest, Construct) {
-  params.stride=1;
+  params.stride=2;
   params.padding=1;
-  uint const shape_x[] = {6, 2, 7, 7};
-  uint const shape_w[] = {4, 2, 3, 3};
-  uint const shape_y[] = {6, 4, 7, 7}; // (7-3+2*padding)/stride +1 = 7
-  x   = tensor_make(shape_x, dim_of_shape(shape_x));
-  dx  = tensor_make(shape_x, dim_of_shape(shape_x));
-  w   = tensor_make(shape_w, dim_of_shape(shape_w));
-  dw  = tensor_make(shape_w, dim_of_shape(shape_w));
-  y   = tensor_make(shape_y, dim_of_shape(shape_y));
-  dy  = tensor_make(shape_y, dim_of_shape(shape_y));
+
+  nr_img = 2;
+  sz_img = 4;
+  nr_in_channel = 3;
+  sz_filter = 4;
+  nr_filter =3;
+
+  uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img}; // 2x3x4x4
+  uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; // 3x3x4x4
+
+  x   = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
+  w   = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
+
 
   make_empty_lcache(&cache);
 }
 
-TEST_F(LayerConvTest, DISABLED_Forward){
+TEST_F(LayerConvTest, Forward){
+
+  uint sz_out = 1 + (sz_img + 2*params.padding - sz_filter)/params.stride;
+  EXPECT_EQ(2, sz_out);
+  uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out}; // 2x3x2x2
+
+  tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
+
   status_t ret;
   ret = convolution_forward(x,w, &cache, params,y);// foward function should allocate and populate cache;
   EXPECT_EQ(ret, S_OK);
+
+  tensor_t y_ref = tensor_make_alike(y);
+  T value_list[] = {0.02553947, 0.01900658, -0.03984868, -0.09432237,
+                    0.05964474,  0.09894079, 0.12641447,  0.19823684,
+                    0.09375, 0.178875,0.29267763,0.49079605,
+                    -0.36098684 -0.57783553,-0.67079605 -1.06632237,
+                    0.28701316, 0.42294079, 0.41630921,  0.6075,
+                    0.93501316,  1.42371711, 1.50341447,  2.28132237};
+
+  tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
+
+  EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
+  PINF("Consistent with expected results");
 
 }
 
 TEST_F(LayerConvTest, DISABLED_Backward){
   status_t ret;
+
+  uint sz_out = 1 + (sz_img + 2*params.padding - sz_filter)/params.stride;
+  uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out}; // 4x2x5x5
+  tensor_t dy = tensor_make(shape_y, dim_of_shape(shape_y));
+
+  tensor_t dx = tensor_make_alike(x);
+  tensor_t dw = tensor_make_alike(w);
+
   ret = convolution_backward(dx, dw, &cache, dy); // backward needs to call free_lcache(cache);
   EXPECT_EQ(ret, S_OK);
 }
@@ -95,11 +136,7 @@ TEST_F(LayerConvTest,CheckLcache){
 
 TEST_F(LayerConvTest, Destroy) {
   tensor_destroy(x);
-  tensor_destroy(dx);
   tensor_destroy(w);
-  tensor_destroy(dw);
-  tensor_destroy(y);
-  tensor_destroy(dy);
   free_lcache(&cache);
 }
 
