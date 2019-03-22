@@ -1,13 +1,15 @@
-[![Build Master](https://travis-ci.com/fengggli/gpu-computing-materials.svg?token=21ngWpDjfcY4FxnxdNnA&branch=master)](https://travis-ci.com/fengggli/gpu-computing-materials)
-[![Build feng](https://travis-ci.com/fengggli/gpu-computing-materials.svg?token=21ngWpDjfcY4FxnxdNnA&branch=feng)](https://travis-ci.com/fengggli/gpu-computing-materials)
-
 # GPU-computing-materials
+
+| branch | build status |
+|--------|--------------|
+| master | [![Build Master](https://travis-ci.com/fengggli/gpu-computing-materials.svg?token=21ngWpDjfcY4FxnxdNnA&branch=master)](https://travis-ci.com/fengggli/gpu-computing-materials) |
+| feng | [![Build feng](https://travis-ci.com/fengggli/gpu-computing-materials.svg?token=21ngWpDjfcY4FxnxdNnA&branch=feng)](https://travis-ci.com/fengggli/gpu-computing-materials) |
 
 * For the most recent documentations, see [here](https://fengggli.github.io/gpu-computing-materials)
 * There is a changelog in the link above.
 
 
-# Code guideline
+## Code guideline
 
 #### prepare (Optional)
 This is only needed for feng's experiments in CPU implementation. you can ignore it.

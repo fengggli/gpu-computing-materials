@@ -47,11 +47,7 @@ status_t loss_softmax(tensor_t const x, label_t const real_labels[], T *ptr_loss
         dx.data[i_img * cnt_classes + i_class] = point_gradient/ cnt_imgs;
       }
     }
-
-    T tmp_sum = log(sum_exp_this_img) - scores.data[i_img * cnt_classes+ this_label];
-    loss += tmp_sum; // -log(e^{y_i}/(\sum_j(e^{y_j}))
-    PDBG("loss [%.7f] = +[%.7f] -[%.7f]", tmp_sum, log(sum_exp_this_img), scores.data[i_img * cnt_classes + this_label]);
-    PDBG("loss value: %.7f", loss);
+    loss += log(sum_exp_this_img) - scores.data[i_img * cnt_classes+ this_label];// -log(e^{y_i}/(\sum_j(e^{y_j}))
   }
 
 #ifdef CONFIG_DEBUG
