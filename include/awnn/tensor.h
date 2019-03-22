@@ -16,6 +16,7 @@ extern "C" {
 typedef unsigned int uint;
 // typedef float T;
 typedef double T;
+#define T_MIN (-1000.)
 
 #define MAX_DIM (4) // N, C, H, W
 
@@ -69,8 +70,7 @@ tensor_t tensor_make(uint const shape[], uint const ndims);
 void tensor_destroy(tensor_t t);
 
 // TODO: fill random values
-static void _tensor_fill_random(tensor_t t) {}
-
+static void _tensor_fill_random(tensor_t t, uint seed);
 void _tensor_fill_patterned(tensor_t t); // debug use
 
 /* @brief fill tensor buffer with list of values
@@ -80,11 +80,16 @@ void tensor_fill_list(tensor_t const, T const value_list[],
                       uint const length_of_value_list);
 
 tensor_t tensor_make_zeros(uint const shape[], uint const ndims);
-tensor_t tensor_make_random(uint const shape[], uint const ndims);
+tensor_t tensor_make_ones(uint const shape[], uint const ndims);
+tensor_t tensor_make_random(uint const shape[], uint const ndims, int seed);
 tensor_t tensor_make_patterned(uint const shape[], uint const ndims);
 tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[], uint const ndims);
 /* a new tensor, and it has same shape as the original */
 tensor_t tensor_make_alike(tensor_t t);
+/* a new tensor, and it has same shape as the original, and it's filled with
+ * linspace */
+tensor_t tensor_make_linspace_alike(T const start, T const stop,
+                                    tensor_t const t);
 /* a new tensor, and it's a copy of the original */
 tensor_t tensor_make_copy(tensor_t t);
 /* a new tensor, and it's a transpose of the original */
@@ -101,7 +106,8 @@ void tensor_dump(tensor_t t);
 T tensor_rel_error(tensor_t x, tensor_t y);
 status_t tensor_reshape_(tensor_t *ptr_t, uint const shape[], uint const ndims);
 
-status_t tensor_op_inplace(tensor_t to, tensor_t from, tensor_op_t op);
+status_t tensor_elemwise_op_inplace(tensor_t to, tensor_t from, tensor_op_t op);
+
 status_t tensor_add_sameshape(tensor_t in1, tensor_t in2, tensor_t out);
 status_t tensor_add_vector_inplace(tensor_t t, tensor_t v);
 status_t tensor_matmul(tensor_t in1, tensor_t in2,

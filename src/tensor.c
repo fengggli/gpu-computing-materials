@@ -100,6 +100,14 @@ T tensor_get_sum(tensor_t t){
   return ret;
 }
 
+void _tensor_fill_random(tensor_t t, uint seed){
+  srand(seed);
+  uint capacity = dim_get_capacity(t.dim);
+  uint i;
+  for(i = 0; i< capacity; i++){
+    t.data[i] = (T)rand()/(T)RAND_MAX;
+  }
+}
 
 void _tensor_fill_patterned(tensor_t t){
   uint capacity = dim_get_capacity(t.dim);
@@ -122,6 +130,7 @@ tensor_t _tensor_make(dim_t dim){
   uint capacity;
   capacity = dim_get_capacity(dim);
   t.data =malloc(capacity*sizeof(T));
+  t.mem_type = CPU_MEM;
   t.dim = dim;
   assert(NULL != t.data);
   return t;
@@ -145,9 +154,9 @@ tensor_t tensor_make(uint const shape[], uint const ndims){
   return _tensor_make(dim);
 }
 
-tensor_t tensor_make_random(uint const shape[], uint const ndims){
+tensor_t tensor_make_random(uint const shape[], uint const ndims, int seed){
   tensor_t t = tensor_make(shape, ndims);
-  _tensor_fill_random(t);
+  _tensor_fill_random(t, seed);
   return t;
 }
 
@@ -160,6 +169,8 @@ tensor_t tensor_make_copy(tensor_t t){
 tensor_t tensor_make_alike(tensor_t t){
   return _tensor_make(t.dim);
 }
+
+
 
 tensor_t tensor_make_transpose(tensor_t const t){
   uint i,j;
@@ -233,6 +244,23 @@ tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[], u
   return t;
 }
 
+tensor_t tensor_make_zeros(uint const shape[], uint const ndims) {
+  tensor_t t =  tensor_make(shape, ndims);
+  _tensor_fill_scalar(t, 0.0);
+  return t;
+}
+tensor_t tensor_make_ones(uint const shape[], uint const ndims) {
+  tensor_t t =  tensor_make(shape, ndims);
+  _tensor_fill_scalar(t, 1.0);
+  return t;
+}
+
+tensor_t tensor_make_linspace_alike(T const start, T const stop, tensor_t const t){
+  tensor_t ret = _tensor_make(t.dim);
+  _tensor_fill_linspace(ret, start, stop);
+  return ret;
+}
+
 tensor_t tensor_make_patterned(uint const shape[], uint const ndims){
   tensor_t t =  tensor_make(shape, ndims);
   _tensor_fill_patterned(t);
@@ -253,7 +281,7 @@ T* tensor_get_elem_ptr(tensor_t const t, dim_t const loc) {
   return t.data + offset;
 }
 
-void  _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity){
+static void  _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity){
   uint i;
   for (i =0; i< dim.dims[cur_dim_id]; i++){
     if(cur_dim_id + 1 == dim_get_ndims(dim)){ // this is the vector
@@ -269,7 +297,7 @@ void  _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity){
 }
 
 void tensor_dump(tensor_t t){
-  PINF("Dump tensor\n");
+  PINF("\n$$Dump tensor:");
   dim_t dim = t.dim;
   dim_dump(t.dim);
   uint capacity = dim_get_capacity(dim);

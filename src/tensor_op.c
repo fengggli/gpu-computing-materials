@@ -59,7 +59,7 @@ end:
   return ret;
 }
 
-status_t tensor_op_inplace(tensor_t to, tensor_t from, tensor_op_t op){
+status_t tensor_elemwise_op_inplace(tensor_t to, tensor_t from, tensor_op_t op){
   if(S_OK == dim_is_same(to.dim, from.dim)){
     switch(op){
       case TENSOR_OP_ADD:
@@ -104,7 +104,7 @@ status_t tensor_copy(tensor_t out, tensor_t in){
 status_t tensor_add_sameshape(tensor_t in1, tensor_t in2, tensor_t out){
   if( S_OK == dim_is_same(out.dim, in1.dim)){
     tensor_copy(out, in1);
-    tensor_op_inplace(out, in2, TENSOR_OP_ADD);
+    tensor_elemwise_op_inplace(out, in2, TENSOR_OP_ADD);
     return S_OK;
   }
   else{

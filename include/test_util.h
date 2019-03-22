@@ -56,14 +56,16 @@ status_t eval_numerical_gradient(
 
     x.data[i] = old_value;
 
-    /*PDBG("###: dumping y_positive:");*/
-    // tensor_dump(y_pos);
-    // PDBG("###: dumping y_negative:");
-    /*tensor_dump(y_neg);*/
+#ifdef CONFIG_DEBUG
+    PDBG("###: dumping y_positive:");
+    tensor_dump(y_pos);
+    PDBG("###: dumping y_negative:");
+    tensor_dump(y_neg);
+#endif
 
     tensor_t tmp = y_pos; // shadow copy
-    tensor_op_inplace(tmp, y_neg, TENSOR_OP_SUB);
-    tensor_op_inplace(tmp, dy, TENSOR_OP_MUL);
+    tensor_elemwise_op_inplace(tmp, y_neg, TENSOR_OP_SUB);
+    tensor_elemwise_op_inplace(tmp, dy, TENSOR_OP_MUL);
 
     T partial_deriv = tensor_get_sum(tmp) / (2 * h);
     dx.data[i] = partial_deriv;
