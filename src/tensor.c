@@ -281,7 +281,7 @@ T* tensor_get_elem_ptr(tensor_t const t, dim_t const loc) {
   return t.data + offset;
 }
 
-void  _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity){
+static void  _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity){
   uint i;
   for (i =0; i< dim.dims[cur_dim_id]; i++){
     if(cur_dim_id + 1 == dim_get_ndims(dim)){ // this is the vector
@@ -297,7 +297,7 @@ void  _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity){
 }
 
 void tensor_dump(tensor_t t){
-  PINF("Dump tensor\n");
+  PINF("\n$$Dump tensor:");
   dim_t dim = t.dim;
   dim_dump(t.dim);
   uint capacity = dim_get_capacity(dim);

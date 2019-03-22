@@ -32,7 +32,7 @@ status_t loss_softmax(tensor_t const x, label_t const real_labels[], T *ptr_loss
       // fill the gradient
       if(mode != MODE_INFER){
         dx.data[i_img * cnt_classes + i_class] = tmp_exp;
-        PINF("[%u, %u] exp %.3f", i_img, i_class, tmp_exp);
+        PDBG("[%u, %u] exp %.3f", i_img, i_class, tmp_exp);
       }
     }
 
@@ -48,8 +48,20 @@ status_t loss_softmax(tensor_t const x, label_t const real_labels[], T *ptr_loss
       }
     }
 
-    loss += log(sum_exp_this_img) - scores.data[this_label]; // -log(e^{y_i}/(\sum_j(e^{y_j}))
+    T tmp_sum = log(sum_exp_this_img) - scores.data[i_img * cnt_classes+ this_label];
+    loss += tmp_sum; // -log(e^{y_i}/(\sum_j(e^{y_j}))
+    PDBG("loss [%.7f] = +[%.7f] -[%.7f]", tmp_sum, log(sum_exp_this_img), scores.data[i_img * cnt_classes + this_label]);
+    PDBG("loss value: %.7f", loss);
   }
+
+#ifdef CONFIG_DEBUG
+  PINF("[softmax-internal]: (modified (+/-h) data):");
+  tensor_dump(x);
+  PINF("[softmax-internal]: gradient");
+  tensor_dump(dx);
+  PINF("[softmax-internal]: loss: ");
+  PINF("%.7f", loss);
+#endif
 
   *ptr_loss = loss/cnt_imgs;
   ret = S_OK;

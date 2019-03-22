@@ -62,14 +62,14 @@ TEST_F(LostSoftmaxTest, OneImg) {
   tensor_fill_list(x, value_list, nr_images*nr_classes);
 
   status_t ret;
-  label_t real_labels[] = {1, 1}; // change to 2,2 will trigger an err
+  label_t real_labels[] = {2, 2}; // change to 2,2 will trigger an err
 
   T loss;
   tensor_t dx = tensor_make_alike(x);
 
   ret = loss_softmax(x, real_labels, &loss, MODE_TRAIN, dx);
-  //EXPECT_TRUE(fabs(1.04 - loss) <
-  //            1e-3); // http://cs231n.github.io/linear-classify/
+  EXPECT_TRUE(fabs(1.04 - loss) <
+              1e-3); // http://cs231n.github.io/linear-classify/
 
   PINF("softmax loss of %d images is: %.3f", nr_images, loss);
   EXPECT_EQ(ret, S_OK);
@@ -88,9 +88,6 @@ TEST_F(LostSoftmaxTest, OneImg) {
   tensor_t dx_ref = tensor_make_alike(x);
   eval_numerical_gradient(func_softmax, x, unit_t, dx_ref, 1e-3);
 
-  PINF("input: (modified (+/-h) data)");
-  tensor_dump(x);
-
   PINF("output (gradient of input):");
   tensor_dump(dx_ref);
   EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-5);
@@ -100,7 +97,10 @@ TEST_F(LostSoftmaxTest, OneImg) {
 }
 
 // see whether gradient for softmax is generated correctly for multiple images
-TEST_F(LostSoftmaxTest, DISABLED_MultiImg) {
+TEST_F(LostSoftmaxTest, MultiImg) {
+  status_t ret;
+
+  T loss;
 
   uint nr_images = 6;
   uint nr_classes = 10;
@@ -112,8 +112,8 @@ TEST_F(LostSoftmaxTest, DISABLED_MultiImg) {
 
   label_t real_labels[] = {2, 3, 4, 5, 1, 2};
 
-  tensor_t dx =
-      tensor_make_alike(x); // this is not actually required for inference
+  tensor_t dx = tensor_make_alike(x); // this is not actually required for inference
+  ret = loss_softmax(x, real_labels, &loss, MODE_TRAIN, dx);
 
   auto func_softmax = [real_labels, dx](tensor_t const input, tensor_t output) {
     T ref_loss;
@@ -122,18 +122,13 @@ TEST_F(LostSoftmaxTest, DISABLED_MultiImg) {
   };
 
   uint const unit_shape[] = {1};
-  tensor_t unit_t = tensor_make(
+  tensor_t unit_t = tensor_make_ones(
       unit_shape,
       dim_of_shape(
           unit_shape)); // softmax is last layer, no gradient from above
   tensor_t dx_ref = tensor_make_alike(x);
-  unit_t.data[0] = 1.0;
-  //eval_numerical_gradient(func_softmax, x, unit_t, dx_ref, 1e-5);
+  eval_numerical_gradient(func_softmax, x, unit_t, dx_ref, 1e-5);
 
-  PINF("backward gradient:");
-  tensor_dump(dx);
-  PINF("nuercial gradient:");
-  tensor_dump(dx_ref);
   EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
   PINF("gradient check of x... is ok");
 
