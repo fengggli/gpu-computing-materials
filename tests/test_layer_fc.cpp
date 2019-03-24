@@ -136,7 +136,7 @@ TEST_F(LayerFcTest, Backward) {
   EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-7);
   PINF("gradient check of w... is ok");
 
-  // evaluate gradient of w
+  // evaluate gradient of b
   eval_numerical_gradient(
       [x_copy, w_copy](tensor_t const in, tensor_t out) {
         layer_fc_forward(x_copy, w_copy, in, NULL, out);

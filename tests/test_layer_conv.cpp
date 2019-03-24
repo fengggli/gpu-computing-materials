@@ -84,7 +84,7 @@ TEST_F(LayerConvTest, Construct) {
   make_empty_lcache(&cache);
 }
 
-TEST_F(LayerConvTest, Forward){
+TEST_F(LayerConvTest, DISABLED_Forward){
 
   uint sz_out = 1 + (sz_img + 2*params.padding - sz_filter)/params.stride;
   EXPECT_EQ(2, sz_out);
@@ -116,12 +116,44 @@ TEST_F(LayerConvTest, DISABLED_Backward){
 
   uint sz_out = 1 + (sz_img + 2*params.padding - sz_filter)/params.stride;
   uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out}; // 4x2x5x5
-  tensor_t dy = tensor_make(shape_y, dim_of_shape(shape_y));
 
+  // input for backward
+  tensor_t dy = tensor_make_linspace(-0.1, 0.5, shape_y, dim_of_shape(shape_y));
+
+  // output for backward
   tensor_t dx = tensor_make_alike(x);
   tensor_t dw = tensor_make_alike(w);
 
   ret = convolution_backward(dx, dw, &cache, dy); // backward needs to call free_lcache(cache);
+  EXPECT_EQ(ret, S_OK);
+
+  /* II. Numerical check */
+  // I had to make this copy since lambda doesn't allow me to use global
+  // variable
+  tensor_t x_copy = tensor_make_copy(x);
+  tensor_t w_copy = tensor_make_copy(w);
+
+  tensor_t dx_ref = tensor_make_alike(x);
+  tensor_t dw_ref = tensor_make_alike(w);
+
+  // evaluate gradient of x
+  eval_numerical_gradient(
+      [w_copy](tensor_t const in, tensor_t out) {
+        convolution_forward(in, w_copy, NULL, params, out);
+      },
+      x, dy, dx_ref);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
+  PINF("gradient check of x... is ok");
+
+  // evaluate gradient of w
+  eval_numerical_gradient(
+      [x_copy](tensor_t const in, tensor_t out) {
+        convolution_forward(x_copy, in , NULL, params, out);
+      },
+      w, dy, dw_ref);
+  EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-7);
+  PINF("gradient check of w... is ok");
+
   EXPECT_EQ(ret, S_OK);
 }
 
@@ -130,7 +162,6 @@ TEST_F(LayerConvTest, DISABLED_Backward){
 TEST_F(LayerConvTest,CheckLcache){
   EXPECT_EQ(cache.count, 0); // backward needs to call free_lcache(cache);
 }
-
 
 
 

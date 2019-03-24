@@ -91,27 +91,46 @@ TEST_F(LayerGlobalAvgPoolTest, Forward){
 }
 
 // TODO : document tests
-TEST_F(LayerGlobalAvgPoolTest, Backward){
+TEST_F(LayerGlobalAvgPoolTest, DISABLED_Backward){
   uint const shape_x[] = {6, 2, 7, 7}; //6 images, 2x7x7
   uint const shape_y[] = {6, 2, 1, 1};
 
-  tensor_t in = tensor_make(shape_x, dim_of_shape(shape_x));
-  tensor_t din = tensor_make(shape_x, dim_of_shape(shape_x));
-  tensor_t out = tensor_make(shape_y, dim_of_shape(shape_y));
-  tensor_t dout = tensor_make(shape_y, dim_of_shape(shape_y));
+  tensor_t x = tensor_make_linspace(0.1,0.3, shape_x, dim_of_shape(shape_x));
+  tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
 
   status_t ret;
 
-  ret = global_avg_pool_forward(in, &cache, out);// foward function should allocate and populate cache;
+  ret = global_avg_pool_forward(x, &cache, y);// foward function should allocate and populate cache;
   EXPECT_EQ(ret, S_OK);
 
-  ret = global_avg_pool_backward(dx, &cache, dout); // backward needs to call free_lcache(cache);
+
+  // input for backward
+  tensor_t dy = tensor_make_linspace(-0.1, 0.5,shape_y, dim_of_shape(shape_y)); // some fake data
+
+  // output for backward
+  tensor_t dx = tensor_make_alike(x);
+
+  ret = global_avg_pool_backward(dx, &cache, dy); // backward needs to call free_lcache(cache);
   EXPECT_EQ(ret, S_OK);
+
+
+  /* II. Numerical check */
+  // variable
+  tensor_t dx_ref = tensor_make_alike(x);
+
+  // evaluate gradient of x
+  eval_numerical_gradient(
+      [](tensor_t const in, tensor_t out) {
+        global_avg_pool_forward(in, NULL, out);
+      },
+      x, dy, dx_ref);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
+  PINF("gradient check of x... is ok");
 }
 
 // TODO: check with cudnn
 // TODO : document tests
-TEST_F(LayerGlobalAvgPoolTest,CheckLcache){
+TEST_F(LayerGlobalAvgPoolTest,DISABLED_CheckLcache){
   EXPECT_EQ(cache.count, 0); // backward needs to call free_lcache(cache);
 }
 
