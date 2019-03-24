@@ -154,6 +154,14 @@ tensor_t tensor_make(uint const shape[], uint const ndims){
   return _tensor_make(dim);
 }
 
+tensor_t tensor_make_empty_with_dim(dim_t dim){
+  tensor_t empty;
+  empty.dim = dim;
+  empty.data = NULL;
+
+  return empty;
+}
+
 tensor_t tensor_make_random(uint const shape[], uint const ndims, int seed){
   tensor_t t = tensor_make(shape, ndims);
   _tensor_fill_random(t, seed);

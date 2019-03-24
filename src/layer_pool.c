@@ -14,8 +14,9 @@ status_t global_avg_pool_forward(tensor_t const x, lcache_t *cache, tensor_t y){
 
   // create cache
   if(cache){
-      tensor_t cached_x = tensor_make_copy(x); // saves transpose of flattened x
-      cache->all_tensors[cache->count++] = cached_x;
+    tensor_t t = tensor_make_empty_with_dim(x.dim);
+
+    cache->all_tensors[cache->count++] = t;
   }   
   
   return S_OK;
