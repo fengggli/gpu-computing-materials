@@ -105,7 +105,7 @@ TEST_F(LayerGlobalAvgPoolTest, Backward){
   ret = global_avg_pool_forward(in, &cache, out);// foward function should allocate and populate cache;
   EXPECT_EQ(ret, S_OK);
 
-  ret = global_avg_pool_backward(dx, &cache, out); // backward needs to call free_lcache(cache);
+  ret = global_avg_pool_backward(dx, &cache, dout); // backward needs to call free_lcache(cache);
   EXPECT_EQ(ret, S_OK);
 }
 
