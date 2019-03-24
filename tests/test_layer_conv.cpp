@@ -120,7 +120,6 @@ TEST_F(LayerConvTest, DISABLED_Backward){
   // input for backward
   tensor_t dy = tensor_make_linspace(-0.1, 0.5, shape_y, dim_of_shape(shape_y));
 
-  // output for backward
   tensor_t dx = tensor_make_alike(x);
   tensor_t dw = tensor_make_alike(w);
 
