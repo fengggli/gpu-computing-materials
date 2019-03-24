@@ -5,6 +5,7 @@
  * e-mail: fengggli@yahoo.com
  */
 
+#include "awnn/channel.h"
 #include "test_util.h"
 #include "awnn/layer_pool.h"
 #include "awnn/tensor.h"
@@ -50,31 +51,61 @@ tensor_t LayerGlobalAvgPoolTest::y;
 tensor_t LayerGlobalAvgPoolTest::dy;
 lcache_t LayerGlobalAvgPoolTest::cache;
 
-// TODO : document tests
+// skeleton
 TEST_F(LayerGlobalAvgPoolTest, Construct) {
-  uint const shape_x[] = {6, 2, 7, 7};
-  uint const shape_y[] = {6, 4, 1, 1}; // (7-3+2*padding)/stride +1 = 7
+  uint const shape_x[] = {6, 2, 7, 7}; //6 images, 2x7x7
+  uint const shape_y[] = {6, 2, 1, 1};
 
-  x= tensor_make(shape_x, dim_of_shape(shape_x));
-  dx= tensor_make(shape_x, dim_of_shape(shape_x));
-  y= tensor_make(shape_y, dim_of_shape(shape_y));
-  dy= tensor_make(shape_y, dim_of_shape(shape_y));
+  x = tensor_make(shape_x, dim_of_shape(shape_x));
+  dx = tensor_make(shape_x, dim_of_shape(shape_x));
+  y = tensor_make(shape_y, dim_of_shape(shape_y));
+  dy = tensor_make(shape_y, dim_of_shape(shape_y));
 
   make_empty_lcache(&cache);
 }
 
+// channel_mean
+TEST_F(LayerGlobalAvgPoolTest, channel_mean){
+  uint channel_capacity = x.dim.dims[2] * x.dim.dims[3]; // each chanel
+  uint target_channel = 0;
+  T* start = x.data + channel_capacity * target_channel;
+
+  T res = channel_mean(start, channel_capacity);
+}
+
 // TODO : document tests
-TEST_F(LayerGlobalAvgPoolTest, DISABLED_Forward){
+TEST_F(LayerGlobalAvgPoolTest, Forward){
+  uint const shape_x[] = {6, 2, 7, 7}; //6 images, 2x7x7
+  uint const shape_y[] = {6, 2, 1, 1};
+
+  tensor_t in = tensor_make(shape_x, dim_of_shape(shape_x));
+  tensor_t din = tensor_make(shape_x, dim_of_shape(shape_x));
+  tensor_t out = tensor_make(shape_y, dim_of_shape(shape_y));
+  tensor_t dout = tensor_make(shape_y, dim_of_shape(shape_y));
+  
   status_t ret;
-  ret = global_avg_pool_forward(x, &cache, y);// foward function should allocate and populate cache;
+
+  ret = global_avg_pool_forward(in, &cache, out);// foward function should allocate and populate cache;
   EXPECT_EQ(ret, S_OK);
 
 }
 
 // TODO : document tests
-TEST_F(LayerGlobalAvgPoolTest, DISABLED_Backward){
+TEST_F(LayerGlobalAvgPoolTest, Backward){
+  uint const shape_x[] = {6, 2, 7, 7}; //6 images, 2x7x7
+  uint const shape_y[] = {6, 2, 1, 1};
+
+  tensor_t in = tensor_make(shape_x, dim_of_shape(shape_x));
+  tensor_t din = tensor_make(shape_x, dim_of_shape(shape_x));
+  tensor_t out = tensor_make(shape_y, dim_of_shape(shape_y));
+  tensor_t dout = tensor_make(shape_y, dim_of_shape(shape_y));
+
   status_t ret;
-  ret = global_avg_pool_backward(dx, &cache, dy); // backward needs to call free_lcache(cache);
+
+  ret = global_avg_pool_forward(in, &cache, out);// foward function should allocate and populate cache;
+  EXPECT_EQ(ret, S_OK);
+
+  ret = global_avg_pool_backward(dx, &cache, dout); // backward needs to call free_lcache(cache);
   EXPECT_EQ(ret, S_OK);
 }
 

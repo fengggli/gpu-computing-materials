@@ -41,7 +41,7 @@ status_t global_avg_pool_forward(tensor_t const x, lcache_t *cache, tensor_t y);
  *
  * Note: all tensor_t should be pre-allocated
  */
-status_t global_avg_pool_backward(tensor_t dx, lcache_t const *cache, tensor_t const dy);
+status_t global_avg_pool_backward(tensor_t dx, lcache_t *cache, tensor_t const dy);
 
 
 #ifdef __cplusplus

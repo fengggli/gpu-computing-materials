@@ -154,6 +154,14 @@ tensor_t tensor_make(uint const shape[], uint const ndims){
   return _tensor_make(dim);
 }
 
+tensor_t tensor_make_empty_with_dim(dim_t dim){
+  tensor_t empty;
+  empty.dim = dim;
+  empty.data = NULL;
+
+  return empty;
+}
+
 tensor_t tensor_make_random(uint const shape[], uint const ndims, int seed){
   tensor_t t = tensor_make(shape, ndims);
   _tensor_fill_random(t, seed);
@@ -169,8 +177,6 @@ tensor_t tensor_make_copy(tensor_t t){
 tensor_t tensor_make_alike(tensor_t t){
   return _tensor_make(t.dim);
 }
-
-
 
 tensor_t tensor_make_transpose(tensor_t const t){
   uint i,j;
@@ -200,6 +206,14 @@ static void _tensor_fill_scalar(tensor_t t, T s) {
   for(uint i=0;i< capacity; i++)
     t.data[i] = s;
 }
+
+
+tensor_t tensor_make_scalar_alike(tensor_t t, T scalar){
+  tensor_t tmp = _tensor_make(t.dim);
+  _tensor_fill_scalar(tmp, scalar);
+  return tmp;
+}
+
 
 tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s){
   tensor_t t =  tensor_make(shape, ndims);

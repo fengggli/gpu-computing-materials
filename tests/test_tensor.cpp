@@ -180,6 +180,17 @@ TEST_F(TensorTest, RelError) {
   tensor_destroy(t1);
 }
 
+TEST_F(TensorTest, MAKE_EMPTY_WITH_DIM){
+//  uint const shape[] = {6,2};
+  dim_t empty = make_dim(4, 6, 5, 3, 2);
+  tensor_t t = tensor_make_empty_with_dim(empty);
+
+  EXPECT_EQ(empty.dims[0], t.dim.dims[0]);
+  EXPECT_EQ(empty.dims[1], t.dim.dims[1]);
+  EXPECT_EQ(empty.dims[2], t.dim.dims[2]);
+  EXPECT_EQ(empty.dims[3], t.dim.dims[3]);
+}
+
 }  // namespace
 
 int main(int argc, char **argv) {
