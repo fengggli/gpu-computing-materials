@@ -154,6 +154,28 @@ TEST_F(TensorOpTest, AddVector) {
   tensor_destroy(v);
 }
 
+TEST_F(TensorOpTest, tensor_reshape_flat_) {
+  tensor_t t;
+  uint const shape1[] = {2, 3, 4, 5};
+  t = tensor_make_patterned(shape1, dim_of_shape(shape1));
+
+  uint original_capacity_of_t = tensor_get_capacity(t);
+
+  tensor_reshape_flat_(&t);
+
+  uint new_capacity_of_t = tensor_get_capacity(t);
+
+  ASSERT_EQ(original_capacity_of_t, new_capacity_of_t);
+
+  int i;
+  for (i = 0; i < MAX_DIM - 1; ++i) {
+    ASSERT_EQ(t.dim.dims[i], 1);
+  }
+  ASSERT_EQ(t.dim.dims[i], original_capacity_of_t);
+}
+
+
+
 } // namespace
 
 int main(int argc, char **argv) {
