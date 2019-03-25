@@ -91,7 +91,7 @@ TEST_F(LayerGlobalAvgPoolTest, Forward){
 }
 
 // TODO : document tests
-TEST_F(LayerGlobalAvgPoolTest, DISABLED_Backward){
+TEST_F(LayerGlobalAvgPoolTest, Backward){
   uint const shape_x[] = {6, 2, 7, 7}; //6 images, 2x7x7
   uint const shape_y[] = {6, 2, 1, 1};
 
@@ -130,7 +130,7 @@ TEST_F(LayerGlobalAvgPoolTest, DISABLED_Backward){
 
 // TODO: check with cudnn
 // TODO : document tests
-TEST_F(LayerGlobalAvgPoolTest,DISABLED_CheckLcache){
+TEST_F(LayerGlobalAvgPoolTest, CheckLcache){
   EXPECT_EQ(cache.count, 0); // backward needs to call free_lcache(cache);
 }
 
