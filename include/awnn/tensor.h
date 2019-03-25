@@ -109,6 +109,7 @@ void tensor_dump(tensor_t t);
 
 T tensor_rel_error(tensor_t x, tensor_t y);
 status_t tensor_reshape_(tensor_t *ptr_t, uint const shape[], uint const ndims);
+status_t tensor_reshape_flat_(tensor_t * t);
 
 status_t tensor_elemwise_op_inplace(tensor_t to, tensor_t from, tensor_op_t op);
 
@@ -117,6 +118,8 @@ status_t tensor_add_vector_inplace(tensor_t t, tensor_t v);
 status_t tensor_matmul(tensor_t in1, tensor_t in2,
                        tensor_t out);                // mm for 2d matrix
 status_t tensor_copy(tensor_t to, tensor_t from); // copy, only with same dim
+
+void tensor_print_flat(tensor_t t);
 
 /* some fundamental func*/
 static inline void _add(T *to, T *from, uint len) {

@@ -139,7 +139,7 @@ status_t tensor_add_vector_inplace(tensor_t t, tensor_t v) {
   return S_OK;
   // v should fit the last dimension
 }
-status_t tensor_reshape_(tensor_t* ptr_t, uint const  shape[], uint const ndims){
+status_t tensor_reshape_(tensor_t* ptr_t, uint const shape[], uint const ndims){
   dim_t req_dim;
   uint i;
   if(ndims == 0){
@@ -148,14 +148,14 @@ status_t tensor_reshape_(tensor_t* ptr_t, uint const  shape[], uint const ndims)
   }
 
   for(i = 0; i< MAX_DIM; i++){
-    if(i< ndims){
-      req_dim.dims[i] =shape[i];
+    if(i < ndims){
+      req_dim.dims[i] = shape[i];
     }
     else
       req_dim.dims[i] = 0;
   }
   if(dim_get_capacity(req_dim) != dim_get_capacity(ptr_t->dim)){
-    PERR("[tensor reshape]: dimension notmatch");
+    PERR("[tensor reshape]: dimension not matched");
     PERR("Original dimension: ");
     dim_dump(ptr_t->dim);
     PERR("requested dimension: ");
@@ -165,4 +165,28 @@ status_t tensor_reshape_(tensor_t* ptr_t, uint const  shape[], uint const ndims)
   }
   ptr_t->dim = req_dim;
   return S_OK;
+}
+
+
+status_t tensor_reshape_flat_(tensor_t * t) {
+  uint capacity = dim_get_capacity(t->dim);
+  uint shape[MAX_DIM];
+  int i;
+  for (i = 0; i < MAX_DIM - 1; ++i) {
+    shape[i] = 1;
+  }
+  shape[i] = capacity;
+  tensor_reshape_(t, shape, MAX_DIM);
+  return S_OK;
+}
+
+
+void tensor_print_flat(tensor_t t) {
+  uint capacity = tensor_get_capacity(t);
+  printf("[");
+  int i;
+  for (i = 0; i < capacity - 1; ++i) {
+    printf("%.10f, ", t.data[i]);
+  }
+  printf("%.10f]\n", t.data[i]);
 }
