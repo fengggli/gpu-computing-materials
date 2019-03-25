@@ -119,6 +119,8 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2,
                        tensor_t out);                // mm for 2d matrix
 status_t tensor_copy(tensor_t to, tensor_t from); // copy, only with same dim
 
+void tensor_print_flat(tensor_t t);
+
 /* some fundamental func*/
 static inline void _add(T *to, T *from, uint len) {
   uint i;

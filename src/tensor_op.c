@@ -179,3 +179,12 @@ status_t tensor_reshape_flat_(tensor_t * t) {
   tensor_reshape_(t, shape, MAX_DIM);
   return S_OK;
 }
+
+void tensor_print_flat(tensor_t t) {
+  uint capacity = tensor_get_capacity(t);
+  printf("[");
+  for (int i = 0; i < capacity - 1; ++i) {
+    printf("%f ", t.data[i]);
+  }
+  printf("]\n");
+}
