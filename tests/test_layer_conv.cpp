@@ -84,7 +84,7 @@ TEST_F(LayerConvTest, Construct) {
   make_empty_lcache(&cache);
 }
 
-TEST_F(LayerConvTest, DISABLED_Forward){
+TEST_F(LayerConvTest, Forward){
 
   uint sz_out = 1 + (sz_img + 2*params.padding - sz_filter)/params.stride;
   EXPECT_EQ(2, sz_out);
@@ -92,8 +92,7 @@ TEST_F(LayerConvTest, DISABLED_Forward){
 
   tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
 
-  status_t ret;
-  ret = convolution_forward(x,w, &cache, params,y);// foward function should allocate and populate cache;
+  status_t ret = convolution_forward(x, w, &cache, params, y);// foward function should allocate and populate cache;
   EXPECT_EQ(ret, S_OK);
 
   tensor_t y_ref = tensor_make_alike(y);
