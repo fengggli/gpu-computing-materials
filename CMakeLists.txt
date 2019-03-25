@@ -49,7 +49,7 @@ add_library(awnnlib SHARED
   src/layer_fc.c
   src/layer_relu.c
   src/loss_softmax.c
-)
+        src/net_mlp.c)
 
 target_link_libraries(awnnlib PUBLIC ${AWNN_LIBS})
 
