@@ -37,7 +37,7 @@ status_t global_avg_pool_backward(tensor_t dx, lcache_t *cache, tensor_t const d
     for(uint j = 0; j < C; ++j)
       for(uint k = 0; k < H; ++k)
         for(uint l = 0; l < W; ++l)
-            dx.data[i * C * H * W + j * H * W + k * W + l] *= scale_by * dy.data[i * C + j];
+            dx.data[i * C * H * W + j * H * W + k * W + l] = scale_by * dy.data[i * C + j];
 
 end:
   // free layer cache
