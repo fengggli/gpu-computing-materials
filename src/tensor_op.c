@@ -180,11 +180,13 @@ status_t tensor_reshape_flat_(tensor_t * t) {
   return S_OK;
 }
 
+
 void tensor_print_flat(tensor_t t) {
   uint capacity = tensor_get_capacity(t);
   printf("[");
-  for (int i = 0; i < capacity - 1; ++i) {
-    printf("%f ", t.data[i]);
+  int i;
+  for (i = 0; i < capacity - 1; ++i) {
+    printf("%.10f, ", t.data[i]);
   }
-  printf("]\n");
+  printf("%.10f]\n", t.data[i]);
 }
