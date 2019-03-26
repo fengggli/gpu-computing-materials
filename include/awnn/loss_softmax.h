@@ -8,12 +8,6 @@
 
 #include "awnn/tensor.h"
 
-typedef uint label_t;
-typedef int awnn_mode_t;
-enum {
-  MODE_TRAIN = 0,
-  MODE_INFER = 1,
-};
 
 #ifdef __cplusplus
 extern "C" {

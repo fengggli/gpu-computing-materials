@@ -14,31 +14,47 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef struct {
+  typedef struct {
   tensor_t *learnable_params_data;
   tensor_t *learnable_params_diff;
+} model_data_t;
+
+typedef struct {
+  model_data_t *model_data;
+  uint max_batch_sz;
+  T reg;
 } model_t;
+
+
 
 tensor_t *layer_output;
 
 /*
- * @brief Create a fc model
+ * @brief Create a mlp model
+ *
+ * This will allocate all space for:
+ *  1. weight/bias for each hidden layer
+ * TODO: allocate space for cache
  */
-status_t fcnet_init(model_t *model, // output
-    uint nr_input, //
-    uint nr_hidden,
-    uint nr_output);
+status_t mlp_init(model_t *model, // output
+    uint max_batch_sz,
+    uint input_dim, //
+    uint nr_hidden_layers,
+    uint hidden_dim,
+    uint output_dim,
+    T reg);
+
+/*
+ * @brief Destroy a mlp model
+ */
+status_t mlp_finalize(model_t *model);
 
 
-/* Compute the scores for a batch or input*/
-/* TODO: need better design.
-status_t fcnet_forward(model_t const *model, tensor_t x, tensor_t y, T *loss);
+/* Compute the scores for a batch or input, infer only*/
+status_t mlp_scores(model_t const *model, tensor_t x, tensor_t scores);
 
-/* Compute the loss and gradients(of the weights)for a batch or input*/
-status_t fcnet_backward(model_t *model, tensor_t x, tensor_t const y, T *loss);
-
-/* Compute the scores for a batch of input (inference only)*/
-status_t fcnet_infer_only(model_t const *model, tensor_t x);
+/* Compute loss for a batch of (x,y), do forward/backward, and update gradients*/
+status_t mlp_loss(model_t const *model, tensor_t x, label_t const labels[], T * loss);
 
 #ifdef __cplusplus
 }
