@@ -1,6 +1,7 @@
 #include "awnn/layer_conv.h"
+
 status_t im2col(tensor_t const x, tensor_t const w, lcache_t * cache, conv_param_t const params, tensor_t out) {
-  uint N, C, H, W, num_filters, filter_height, filter_width, stride, pad, out_height, out_width;
+  uint N, C, H, W, num_filters, filter_height, filter_width, stride, pad, x_cols, res;
   N = x.dim.dims[0];
   C = x.dim.dims[1];
   H = x.dim.dims[2];
@@ -17,14 +18,22 @@ status_t im2col(tensor_t const x, tensor_t const w, lcache_t * cache, conv_param
   assert((W + 2 * pad - filter_width) % stride == 0);
   assert((H + 2 * pad - filter_height) % stride == 0);
 
-  out = tensor_make_scalar_alike(out, 0);
+  uint HH = (H + 2 * pad - filter_height) / stride + 1;
+  uint WW = (W + 2 * pad - filter_width) / stride + 1;
 
+  // TO: Optimize
+
+
+  return S_OK;
 }
 
 status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cache, conv_param_t const params, tensor_t y){
   status_t ret = S_ERR;
 
   // im2col with input
+  ret = im2col(x, w, cache, params, y);
+
+
 
   // im2col with kernels
 

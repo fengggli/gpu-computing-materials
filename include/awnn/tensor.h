@@ -99,6 +99,7 @@ tensor_t tensor_make_sum(tensor_t const t, uint const axis_id);
 /* @brief create tensor of shape, filled with single scalar */
 tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s);
 
+tensor_t tensor_make_padded_square_input(tensor_t t, uint p);
 tensor_t tensor_make_scalar_alike(tensor_t t, T scalar);
 tensor_t tensor_make_empty_with_dim(dim_t dim);
 

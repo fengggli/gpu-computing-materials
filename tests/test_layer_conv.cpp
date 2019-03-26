@@ -84,6 +84,10 @@ TEST_F(LayerConvTest, Construct) {
   make_empty_lcache(&cache);
 }
 
+TEST_F(LayerConvTest, get_flattened_x) {
+  uint N, C, H, W;
+}
+
 TEST_F(LayerConvTest, Forward){
 
   uint sz_out = 1 + (sz_img + 2*params.padding - sz_filter)/params.stride;
