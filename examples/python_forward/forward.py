@@ -21,6 +21,11 @@ def conv_forward_im2col(x, w, conv_param):
 
     # x_cols = im2col_indices(x, w.shape[2], w.shape[3], pad, stride)
     x_cols = im2col_cython(x, w.shape[2], w.shape[3], pad, stride)
+
+    # print()
+    # print(x)
+    # print(x_cols)
+
     res = w.reshape((w.shape[0], -1)).dot(x_cols)
 
     out = res.reshape(w.shape[0], out.shape[2], out.shape[3], x.shape[0])
