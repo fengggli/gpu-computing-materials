@@ -21,8 +21,14 @@ status_t im2col(tensor_t const x, tensor_t const w, lcache_t * cache, conv_param
   uint HH = (H + 2 * pad - filter_height) / stride + 1;
   uint WW = (W + 2 * pad - filter_width) / stride + 1;
 
-  // TO: Optimize
+  // TODO: Optimize tensor_make_padded function
+  tensor_t x_padded = tensor_make_padded_square_input(x, pad, 0);
 
+  uint cols_shape[] = {C * filter_height * filter_width, N * HH * WW};
+
+  tensor_t cols = tensor_make_zeros(cols_shape, 2); // set ndims=2
+
+  im2col_inner(cols, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, pad, stride);
 
   return S_OK;
 }
