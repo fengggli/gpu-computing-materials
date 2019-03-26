@@ -145,9 +145,9 @@ tensor_t tensor_make(uint const shape[], uint const ndims){
     dim = make_dim(0,0);
   }
 
-  for(i = 0; i< MAX_DIM; i++){
-    if(i< ndims)
-      dim.dims[i] =shape[i];
+  for(i = 0; i < MAX_DIM; i++){
+    if(i < ndims)
+      dim.dims[i] = shape[i];
     else
       dim.dims[i] = 0;
   }
@@ -281,6 +281,32 @@ tensor_t tensor_make_patterned(uint const shape[], uint const ndims){
   return t;
 }
 
+// p is pad size
+tensor_t tensor_make_padded_square_input(tensor_t t, uint p, float pad_val) {
+  uint N, C, H, W, HH, WW;
+  N = t.dim.dims[0];
+  C = t.dim.dims[1];
+  H = t.dim.dims[2];
+  W = t.dim.dims[3];
+  HH = H + 2 * p;
+  WW = W + 2 * p;
+
+  uint new_shape[] = {N, C, H + p, W + p};
+
+  tensor_t n = tensor_make(new_shape, 4);  // 4 is the number of dimensions... TODO fix this
+  for (int i = 0; i < N; i++)
+    for (int j = 0; j< C; j++)
+      for(int k = 0; k < HH; k++)
+        for(int l = 0; l < WW; l++) {
+          if (k < p || k > (H+p) || l < p || l > (W+p))
+            n.data[i * C * HH * WW + j * HH * WW + k * WW + l] =
+              t.data[i * C * H * W + j * H * W + k * W + l];
+          else {
+            n.data[i * C * HH * WW + j * HH * WW + k * WW + l] = pad_val;
+          }
+        }
+}
+
 T* tensor_get_elem_ptr(tensor_t const t, dim_t const loc) {
   uint index_dim;
   uint ndims = tensor_get_ndims(t);
@@ -349,3 +375,5 @@ void tensor_destroy(tensor_t t){
     free(t.data);
   }
 }
+
+
