@@ -175,6 +175,483 @@ TEST_F(TensorOpTest, tensor_reshape_flat_) {
 }
 
 
+TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test1) {
+  uint const shape[] = { 1, 1, 1, 1 };
+  tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+  uint pad_size = 1;
+  float pad_val = 0;
+
+  // 1 x 1 x 1 x 1 -> 1 x 1 x 3 x 3
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val);
+
+//  tensor_dump(in);
+//  tensor_dump(padded_in);
+
+  ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+  uint h = padded_in.dim.dims[2];
+  uint w = padded_in.dim.dims[3];
+  for (int i = 0; i < h; ++i) {
+    for (int j = 0; j < w; ++j) {
+      uint target_idx = i * w + j;
+      if (i < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (i >= h - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j >= w - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else {
+        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+      }
+    }
+  }
+  tensor_destroy(in);
+  tensor_destroy(padded_in);
+}
+
+
+TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test2) {
+  uint const shape[] = { 1, 1, 1, 1 };
+  tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+  uint pad_size = 2;
+  float pad_val = 0;
+
+  // 1 x 1 x 1 x 1 -> 1 x 1 x 3 x 3
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val);
+//
+//  tensor_dump(in);
+//  tensor_dump(padded_in);
+
+  ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+  uint h = padded_in.dim.dims[2];
+  uint w = padded_in.dim.dims[3];
+  for (int i = 0; i < h; ++i) {
+    for (int j = 0; j < w; ++j) {
+      uint target_idx = i * w + j;
+      if (i < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (i >= h - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j >= w - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else {
+        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+      }
+    }
+  }
+  tensor_destroy(in);
+  tensor_destroy(padded_in);
+}
+
+TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test3) {
+  uint const shape[] = { 1, 1, 1, 2 };
+  tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+  uint pad_size = 1;
+  float pad_val = 0;
+
+  // 1 x 1 x 1 x 1 -> 1 x 1 x 3 x 3
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val);
+
+//  tensor_dump(in);
+//  tensor_dump(padded_in);
+
+  ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+  uint h = padded_in.dim.dims[2];
+  uint w = padded_in.dim.dims[3];
+  for (int i = 0; i < h; ++i) {
+    for (int j = 0; j < w; ++j) {
+      uint target_idx = i * w + j;
+      if (i < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (i >= h - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j >= w - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else {
+        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+      }
+    }
+  }
+  tensor_destroy(in);
+  tensor_destroy(padded_in);
+}
+
+
+TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test4) {
+  uint const shape[] = { 1, 1, 2, 2 };
+  tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+  uint pad_size = 1;
+  float pad_val = 0;
+
+  // 1 x 1 x 2 x 2 -> 1 x 1 x 4 x 4
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val);
+
+//  tensor_dump(in);
+//  tensor_dump(padded_in);
+
+  ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+  uint h = padded_in.dim.dims[2];
+  uint w = padded_in.dim.dims[3];
+  for (int i = 0; i < h; ++i) {
+    for (int j = 0; j < w; ++j) {
+      uint target_idx = i * w + j;
+      if (i < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (i >= h - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j >= w - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else {
+        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+      }
+    }
+  }
+  tensor_destroy(in);
+  tensor_destroy(padded_in);
+}
+
+
+TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test5) {
+  uint const shape[] = { 1, 1, 2, 2 };
+  tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+  uint pad_size = 2;
+  float pad_val = 0;
+
+  // 1 x 1 x 2 x 2 -> 1 x 1 x 6 x 6
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val);
+
+//  tensor_dump(in);
+//  tensor_dump(padded_in);
+
+  ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+  uint h = padded_in.dim.dims[2];
+  uint w = padded_in.dim.dims[3];
+  for (int i = 0; i < h; ++i) {
+    for (int j = 0; j < w; ++j) {
+      uint target_idx = i * w + j;
+      if (i < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (i >= h - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j >= w - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else {
+        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+      }
+    }
+  }
+  tensor_destroy(in);
+  tensor_destroy(padded_in);
+}
+
+
+TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test6) {
+  uint const shape[] = { 1, 1, 3, 2 };
+  tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+  uint pad_size = 1;
+  float pad_val = 0;
+
+  // 1 x 1 x 3 x 2 -> 1 x 1 x 5 x 4
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val);
+
+//  tensor_dump(in);
+//  tensor_dump(padded_in);
+
+  ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+  uint h = padded_in.dim.dims[2];
+  uint w = padded_in.dim.dims[3];
+  for (int i = 0; i < h; ++i) {
+    for (int j = 0; j < w; ++j) {
+      uint target_idx = i * w + j;
+      if (i < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (i >= h - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j >= w - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else {
+        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+      }
+    }
+  }
+  tensor_destroy(in);
+  tensor_destroy(padded_in);
+}
+
+TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test7) {
+  uint const shape[] = { 1, 1, 3, 2 };
+  tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+  uint pad_size = 2;
+  float pad_val = 0;
+
+  // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val);
+
+//  tensor_dump(in);
+//  tensor_dump(padded_in);
+
+  ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+  uint h = padded_in.dim.dims[2];
+  uint w = padded_in.dim.dims[3];
+  for (int i = 0; i < h; ++i) {
+    for (int j = 0; j < w; ++j) {
+      uint target_idx = i * w + j;
+      if (i < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (i >= h - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j >= w - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else {
+        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+      }
+    }
+  }
+  tensor_destroy(in);
+  tensor_destroy(padded_in);
+}
+
+
+TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test8) {
+  uint const shape[] = { 1, 1, 2, 3 };
+  tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+  uint pad_size = 2;
+  float pad_val = 0;
+
+  // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val);
+
+//  tensor_dump(in);
+//  tensor_dump(padded_in);
+
+  ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+  uint h = padded_in.dim.dims[2];
+  uint w = padded_in.dim.dims[3];
+  for (int i = 0; i < h; ++i) {
+    for (int j = 0; j < w; ++j) {
+      uint target_idx = i * w + j;
+      if (i < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (i >= h - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j >= w - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else {
+        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+      }
+    }
+  }
+  tensor_destroy(in);
+  tensor_destroy(padded_in);
+}
+
+TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test9) {
+  uint const shape[] = { 1, 2, 2, 3 };
+  tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+  uint pad_size = 1;
+  float pad_val = 0;
+
+  // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val);
+
+//  tensor_dump(in);
+//  tensor_dump(padded_in);
+
+  ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+  uint h = padded_in.dim.dims[2];
+  uint w = padded_in.dim.dims[3];
+  for (int i = 0; i < h; ++i) {
+    for (int j = 0; j < w; ++j) {
+      uint target_idx = i * w + j;
+      if (i < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (i >= h - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j >= w - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else {
+        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+      }
+    }
+  }
+  tensor_destroy(in);
+  tensor_destroy(padded_in);
+}
+
+TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test10) {
+  uint const shape[] = { 2, 1, 2, 3 };
+  tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+  uint pad_size = 1;
+  float pad_val = 0;
+
+  // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val);
+
+//  tensor_dump(in);
+//  tensor_dump(padded_in);
+
+  ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+  uint h = padded_in.dim.dims[2];
+  uint w = padded_in.dim.dims[3];
+  for (int i = 0; i < h; ++i) {
+    for (int j = 0; j < w; ++j) {
+      uint target_idx = i * w + j;
+      if (i < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (i >= h - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j >= w - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else {
+        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+      }
+    }
+  }
+  tensor_destroy(in);
+  tensor_destroy(padded_in);
+}
+
+TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test11) {
+  uint const shape[] = { 2, 2, 2, 3 };
+  tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+  uint pad_size = 1;
+  float pad_val = 0;
+
+  // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val);
+
+//  tensor_dump(in);
+//  tensor_dump(padded_in);
+
+  ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+  uint h = padded_in.dim.dims[2];
+  uint w = padded_in.dim.dims[3];
+  for (int i = 0; i < h; ++i) {
+    for (int j = 0; j < w; ++j) {
+      uint target_idx = i * w + j;
+      if (i < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (i >= h - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else if (j >= w - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        int a = 0;
+      } else {
+        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+      }
+    }
+  }
+  tensor_destroy(in);
+  tensor_destroy(padded_in);
+}
 
 } // namespace
 

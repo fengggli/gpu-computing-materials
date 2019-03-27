@@ -112,7 +112,7 @@ void _tensor_fill_random(tensor_t t, uint seed){
 void _tensor_fill_patterned(tensor_t t){
   uint capacity = dim_get_capacity(t.dim);
   uint i;
-  for(i = 0; i< capacity; i++){
+  for(i = 0; i < capacity; i++){
     t.data[i] = (T)(i);
   }
 }
@@ -125,11 +125,12 @@ void tensor_fill_list(tensor_t const t, T const value_list[],
   }
 }
 
+// TODO : add error handling
 tensor_t _tensor_make(dim_t dim){
   tensor_t t;
   uint capacity;
   capacity = dim_get_capacity(dim);
-  t.data =malloc(capacity*sizeof(T));
+  t.data = malloc(capacity * sizeof(T));
   t.mem_type = CPU_MEM;
   t.dim = dim;
   assert(NULL != t.data);
@@ -291,20 +292,29 @@ tensor_t tensor_make_padded_square_input(tensor_t t, uint p, float pad_val) {
   HH = H + 2 * p;
   WW = W + 2 * p;
 
-  uint new_shape[] = {N, C, H + p, W + p};
+  uint new_shape[] = {N, C, HH, WW};
 
   tensor_t n = tensor_make(new_shape, 4);  // 4 is the number of dimensions... TODO fix this
   for (int i = 0; i < N; i++)
-    for (int j = 0; j< C; j++)
+    for (int j = 0; j < C; j++)
       for(int k = 0; k < HH; k++)
         for(int l = 0; l < WW; l++) {
-          if (k < p || k > (H+p) || l < p || l > (W+p))
-            n.data[i * C * HH * WW + j * HH * WW + k * WW + l] =
-              t.data[i * C * H * W + j * H * W + k * W + l];
-          else {
-            n.data[i * C * HH * WW + j * HH * WW + k * WW + l] = pad_val;
+          uint target_idx = i * C * HH * WW + j * HH * WW + k * WW + l;
+          if (k < p) {
+            n.data[target_idx] = pad_val;
+          } else if (k >= (H + p)) {
+            n.data[target_idx] = pad_val;
+          } else if (l < p) {
+            n.data[target_idx] = pad_val;
+          } else if (l >= (W + p)) {
+            n.data[target_idx] = pad_val;
+          } else {
+            uint src_idx = i * C * H * W + j * H * W + (k - p) * W + (l - p);
+            n.data[target_idx] = t.data[src_idx];
           }
         }
+
+  return n;
 }
 
 T* tensor_get_elem_ptr(tensor_t const t, dim_t const loc) {
@@ -321,15 +331,15 @@ T* tensor_get_elem_ptr(tensor_t const t, dim_t const loc) {
   return t.data + offset;
 }
 
-static void  _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity){
+static void _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity){
   uint i;
-  for (i =0; i< dim.dims[cur_dim_id]; i++){
+  for (i = 0; i < dim.dims[cur_dim_id]; i++){
     if(cur_dim_id + 1 == dim_get_ndims(dim)){ // this is the vector
       PSTR("%.7f ", data[i]);
     }
     else{
       PSTR("{");
-      _dump(data + i*(cur_capacity), dim, cur_dim_id+1, cur_capacity/dim.dims[cur_dim_id+1]);
+      _dump(data + i * (cur_capacity), dim, cur_dim_id + 1, cur_capacity / dim.dims[cur_dim_id + 1]);
       PSTR("}\n");
     }
 
@@ -342,10 +352,10 @@ void tensor_dump(tensor_t t){
   dim_dump(t.dim);
   uint capacity = dim_get_capacity(dim);
   PSTR("{");
-  if(dim.dims[0]==0)
+  if(dim.dims[0] == 0)
     PSTR("%.3f ", t.data[0]); //scalar
   else{
-    _dump(t.data, dim, 0, capacity/dim.dims[0]);
+    _dump(t.data, dim, 0, capacity / dim.dims[0]);
   }
   PSTR("}\n");
 }
@@ -359,20 +369,21 @@ T tensor_rel_error(tensor_t x, tensor_t ref){
   uint capacity = tensor_get_capacity(x);
   T norm_diff = 0; // l-2 norm of difference
   T norm_ref = 0;  // l-2 norm of reference
-  for(uint i = 0; i< capacity; i++){
+  for(uint i = 0; i < capacity; i++){
     register T a, r;
     a = x.data[i];
     r = ref.data[i];
-    norm_diff += (a-r)*(a-r);
-    norm_ref += (r*r);
+    norm_diff += (a - r) * (a - r);
+    norm_ref += (r * r);
   }
-  assert(norm_ref>0);
-  return norm_diff/norm_ref;
+  assert(norm_ref > 0);
+  return norm_diff / norm_ref;
 }
 
 void tensor_destroy(tensor_t t){
   if(t.data){
     free(t.data);
+    t.data = NULL;
   }
 }
 

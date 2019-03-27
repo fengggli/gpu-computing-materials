@@ -139,6 +139,7 @@ status_t tensor_add_vector_inplace(tensor_t t, tensor_t v) {
   return S_OK;
   // v should fit the last dimension
 }
+
 status_t tensor_reshape_(tensor_t* ptr_t, uint const shape[], uint const ndims){
   dim_t req_dim;
   uint i;
