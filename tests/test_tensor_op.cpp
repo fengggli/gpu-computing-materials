@@ -198,16 +198,12 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test1) {
       uint target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (i >= h - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else {
         uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
@@ -242,16 +238,12 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test2) {
       uint target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (i >= h - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else {
         uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
@@ -285,16 +277,12 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test3) {
       uint target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (i >= h - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else {
         uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
@@ -329,16 +317,12 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test4) {
       uint target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (i >= h - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else {
         uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
@@ -373,16 +357,12 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test5) {
       uint target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (i >= h - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else {
         uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
@@ -417,16 +397,12 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test6) {
       uint target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (i >= h - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else {
         uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
@@ -460,16 +436,12 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test7) {
       uint target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (i >= h - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else {
         uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
@@ -504,16 +476,12 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test8) {
       uint target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (i >= h - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else {
         uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
@@ -547,16 +515,12 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test9) {
       uint target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (i >= h - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else {
         uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
@@ -590,16 +554,12 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test10) {
       uint target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (i >= h - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else {
         uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
@@ -633,16 +593,12 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test11) {
       uint target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (i >= h - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
-        int a = 0;
       } else {
         uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
