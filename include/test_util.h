@@ -9,6 +9,7 @@
 
 #include "awnn/logging.h"
 #include "awnn/tensor.h"
+
 #include <algorithm>
 #include <cstdio>
 #include <functional>
