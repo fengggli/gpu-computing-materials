@@ -8,22 +8,27 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
   // 1. flatten the input into vectors which represent the filters
   tensor_t flattened_x = im2col(x, w, params);
 
-  tensor_dump(flattened_x);
+//  tensor_dump(flattened_x);
 
   // 2. this is where the filters are actually applied
-  uint const w_shape[] = { w.dim.dims[0], w.dim.dims[1] * w.dim.dims[2] * w.dim.dims[3] };
-  tensor_t ww = tensor_make(w_shape, ARRAY_SIZE(w_shape));
+  uint const reshaped_w_shape[] = { w.dim.dims[0], w.dim.dims[1] * w.dim.dims[2] * w.dim.dims[3] };
+  tensor_t reshaped_w = tensor_make_copy(w);
+  tensor_reshape_(&reshaped_w, reshaped_w_shape, ARRAY_SIZE(reshaped_w_shape));
 
   uint const out_shape[] = { w.dim.dims[0], flattened_x.dim.dims[1] };
   tensor_t out = tensor_make(out_shape, ARRAY_SIZE(out_shape));
 
-  tensor_matmul(ww, flattened_x, out);
+  tensor_matmul(reshaped_w, flattened_x, out);
 
 
   //  tensor_t res = w.reshape((w.shape[0], -1)).dot(x_cols);
 //
 //  //##### convert output back to appropriate shape
 //  out = res.reshape(w.shape[0], out.shape[2], out.shape[3], x.shape[0]);
+
+  uint const out_shape_2[] = { w.dim.dims[0], out.dim.dims[2], out.dim.dims[3], x.dim.dims[0] };
+  tensor_reshape_(&out, out_shape_2, ARRAY_SIZE(out_shape_2));
+  tensor_dump(out);
 //
 //  // 3. transpose output
 //  out = out.transpose(3, 0, 1, 2);
@@ -33,7 +38,6 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
 
   return S_OK;
 }
-
 
 
 tensor_t im2col(tensor_t const x, tensor_t const w, conv_param_t const params) {

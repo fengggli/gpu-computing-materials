@@ -245,7 +245,9 @@ TEST_F(LayerConvTest, im2col_numerical2) {
   tensor_t x = tensor_make(shape_x, dim_of_shape(shape_x));
   tensor_fill_list(x, x_values, array_size(x_values));
 
+  T w_values[] = {1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 2, 2};
   tensor_t w = tensor_make(shape_w, dim_of_shape(shape_w));
+  tensor_fill_list(w, w_values, array_size(w_values));
 
   lcache_t cache;
   make_empty_lcache(&cache);
@@ -325,9 +327,12 @@ TEST_F(LayerConvTest, forward_from_picture) {
   T x_values[] = { 1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2 };
   tensor_t x = tensor_make(shape_x, dim_of_shape(shape_x));
   tensor_fill_list(x, x_values, array_size(x_values));
-//  tensor_dump(x);
 
+
+  T w_values[] = {1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 2, 2};
   tensor_t w = tensor_make(shape_w, dim_of_shape(shape_w));
+  tensor_fill_list(w, w_values, array_size(w_values));
+
   tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
   lcache_t cache;
   make_empty_lcache(&cache);

@@ -13,4 +13,6 @@
 typedef int status_t;
 enum ERROR_CODE { S_OK = 0, S_ERR = -1, S_BAD_DIM = -2 };
 
+#define ARRAY_SIZE(x)  (sizeof(x) / sizeof((x)[0]))
+
 #endif

@@ -44,11 +44,11 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
   int ii, jj, kk; // A[i.j] with B[j,k]
   for(ii = 0; ii < m; ii++){
     for(kk = 0; kk < n; kk++){
-      T tmp =0;
+      T tmp = 0;
       for(jj = 0; jj < k; jj++){
-        tmp+=in1.data[ii*k+jj]*in2.data[jj*n+kk];
+        tmp += in1.data[ii * k + jj] * in2.data[jj * n + kk];
       }
-      out.data[ii*n+kk] = tmp;
+      out.data[ii * n + kk] = tmp;
     }
   }
 

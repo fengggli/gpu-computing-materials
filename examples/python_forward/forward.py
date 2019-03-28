@@ -36,7 +36,7 @@ def conv_forward(x: np.array, w: np.array, conv_param: dict):
     res = w.reshape((w.shape[0], -1)).dot(x_cols)
 
 
-    ##### convert output back to appropriate shape
+    ##### convert output to appropriate shape based on ???
     out = res.reshape(w.shape[0], out.shape[2], out.shape[3], x.shape[0])
 
     ############### 3.  transpose output (not sure what this is doing ??????)
