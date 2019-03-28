@@ -1,15 +1,30 @@
-#include <printf.h>
 #include "awnn/layer_conv.h"
+
+#include <printf.h>
+
 
 status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cache, conv_param_t const params, tensor_t y){
 
   // 1. flatten the input into vectors which represent the filters
-  tensor_t ret = im2col(x, w, params);
+  tensor_t flattened_x = im2col(x, w, params);
 
-  tensor_dump(ret);
+//  tensor_dump(flattened_x);
 
-//  // 2. this is where the filters are actually applied
-//  tensor_t res = w.reshape((w.shape[0], -1)).dot(x_cols);
+  // 2. this is where the filters are actually applied
+  uint const ww_shape[] = { w.dim.dims[0], w.dim.dims[1] * w.dim.dims[2] * w.dim.dims[3] };
+  tensor_t ww = tensor_make_copy(w);
+  tensor_reshape_(&ww, ww_shape, ARRAY_SIZE(ww_shape));
+
+//  tensor_dump(w);
+
+  uint const out_shape[] = { w.dim.dims[0], flattened_x.dim.dims[1] };
+  tensor_t out = tensor_make(out_shape, ARRAY_SIZE(out_shape));
+
+  tensor_matmul(ww, flattened_x, out);
+
+  tensor_dump(out);
+
+  //  tensor_t res = w.reshape((w.shape[0], -1)).dot(x_cols);
 //
 //  //##### convert output back to appropriate shape
 //  out = res.reshape(w.shape[0], out.shape[2], out.shape[3], x.shape[0]);

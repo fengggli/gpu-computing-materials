@@ -22,20 +22,21 @@ def conv_forward(x: np.array, w: np.array, conv_param: dict):
     ############## 1. flatten the input into vectors which represent the filters
     x_cols = get_flattened_x(x, w, conv_param)
 
-    print()
-    print(x_cols.shape)
-    np.set_printoptions(precision=15)
-    print(list(x_cols.reshape(1, -1)))
+    # print()
+    # print(x_cols.shape)
+    # np.set_printoptions(precision=15)
+    # print(list(x_cols.reshape(1, -1)))
 
     ############### 2. this is where the filters are actually applied
     # the -1 will make the shape into a single column vector of length w.shape[0]
     # this just puts all the weights into a vector.  Then we do a numpy "dot" on the
     # reshaped filters and the x which was placed into rows that were resized based
     # on the filter size.
+    reshaped_w = w.reshape((w.shape[0], -1))
     res = w.reshape((w.shape[0], -1)).dot(x_cols)
 
 
-    ##### convert output back to appropriate shape
+    ##### convert output to appropriate shape based on ???
     out = res.reshape(w.shape[0], out.shape[2], out.shape[3], x.shape[0])
 
     ############### 3.  transpose output (not sure what this is doing ??????)
@@ -95,8 +96,7 @@ def im2col_cython(x, filter_height, filter_width, padding, stride):
     # when creating our columns array, we are sizing it based on
     # (Channels * filter size, number of images * total filter applications
     cols = np.zeros((C * filter_height * filter_width, N * HH * WW), dtype=x.dtype)  # field_height and width are filter
-    
-    #
+
     im2col_cython_inner(cols, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, padding, stride)
 
     return cols
