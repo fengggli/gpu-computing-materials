@@ -1,7 +1,7 @@
 from unittest import TestCase
 import numpy as np
 
-from python_forward.forward import conv_forward_im2col
+from python_forward.forward import conv_forward
 
 
 class TestConvBackwardIm2col(TestCase):
@@ -23,7 +23,7 @@ class TestConvBackwardIm2col(TestCase):
         x = np.linspace(-.1, .5, x_size).reshape(nr_img, nr_in_channel, sz_img, sz_img)
         w = np.linspace(-0.2, 0.3, w_size).reshape(nr_filter, nr_in_channel, sz_filter, sz_filter)
 
-        y, cache = conv_forward_im2col(x, w, conv_param=conv_params)
+        y, cache = conv_forward(x, w, conv_param=conv_params)
 
         sz_out = int(1 + (sz_img + 2 * conv_params['pad'] - sz_filter) / conv_params['stride'])
         shape_y = (nr_img, nr_filter, sz_out, sz_out) # 4x2x5x5
