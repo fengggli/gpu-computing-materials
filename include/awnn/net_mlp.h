@@ -8,36 +8,26 @@
 
 #pragma once
 
+#include "awnn/net.h"
+
 #include "awnn/common.h"
 #include "awnn/tensor.h"
+#include "utils/list.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-enum{
-  MAX_PARAMS=10
-};
-
-typedef struct {
-  uint id_param;
-  tensor_t *data[MAX_PARAMS];
-  tensor_t *diff[MAX_PARAMS];
-} learnable_param_t;
 
 typedef struct {
   uint input_dim;
   uint output_dim;
   uint nr_hidden_layers;
   uint hidden_dims[MAX_DIM];
-  learnable_param_t* learnale_params;
   uint max_batch_sz;
   T reg;
+
+  struct list_head list_all_params[1]; // list of all learnable params
 } model_t;
-
-
-
-tensor_t *layer_output;
 
 /*
  * @brief Create a mlp model

@@ -18,6 +18,8 @@ struct list_head{
   struct list_head *prev;
 };
 
+#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+
 #define container_of(ptr, type, member) ({ \
 	const typeof( ((type *)0)->member ) *__mptr = (ptr); \
   (type *)( (char *)__mptr - offsetof(type,member) );})
@@ -51,6 +53,10 @@ static inline void list_add(struct list_head *node, struct list_head *head){
   _list_add(node, head, head->next);
 }
 
+static inline void list_add_tail(struct list_head *node, struct list_head *head){
+  _list_add(node, head->prev, head);
+}
+
 static inline void _list_del(struct list_head* prev, struct list_head * next){
   next->prev = prev;
   prev->next = next;
@@ -66,6 +72,10 @@ static inline int list_empty(const struct list_head *head){
 
 #define list_for_each(pos, head) \
   for (pos = (head)->next; pos!=(head); pos = pos->next)
+
+// iterate for save removal
+#define list_for_each_safe(pos, n, head) \
+  for (pos = (head)->next, n = pos->next; pos!=(head); pos = n, n = pos->next)
 
 #define list_for_each_entry(pos, head, member) \
 	for (pos = list_entry((head)->next, typeof(*pos), member);	\

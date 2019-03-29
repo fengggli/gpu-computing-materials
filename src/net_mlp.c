@@ -3,6 +3,10 @@
 //
 
 #include "awnn/net_mlp.h"
+#include <stdlib.h>
+#include <string.h>
+
+
 
 status_t mlp_init(model_t *model, uint max_batch_sz,
     uint input_dim, uint output_dim,
@@ -13,6 +17,8 @@ status_t mlp_init(model_t *model, uint max_batch_sz,
   model->output_dim = output_dim;
   model->nr_hidden_layers = nr_hidden_layers;
   model->reg = reg;
+  init_list_head(model->list_all_params);
+
   for(uint i = 0; i< nr_hidden_layers; ++i) model->hidden_dims[i] = hidden_dims[i];
 
   for(uint i = 0; i< nr_hidden_layers +1; ++i) {
@@ -26,8 +32,17 @@ status_t mlp_init(model_t *model, uint max_batch_sz,
     tensor_t  w= tensor_make(shape_w, 2);
     tensor_t  dw= tensor_make(shape_w, 2);
 
+    char w_name[MAX_STR_LENGTH] = "W";
+    snprintf(w_name, MAX_STR_LENGTH,"W%u",i );
+    char b_name[MAX_STR_LENGTH] = "b";
+    snprintf(b_name, MAX_STR_LENGTH,"b%u",i );
+
+    net_attach_param(model->list_all_params, w_name, w, dw);
+
     tensor_t b= tensor_make(shape_b, 1);
     tensor_t db= tensor_make(shape_b, 1);
+
+    net_attach_param(model->list_all_params, b_name, b, db);
   }
 
 }
@@ -35,5 +50,7 @@ status_t mlp_init(model_t *model, uint max_batch_sz,
 status_t mlp_finalize(model_t *model){
  
   // free all of them
+  // net_print_params(model->list_all_params);
+  net_free_params(model->list_all_params);
 
 }

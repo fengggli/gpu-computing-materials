@@ -15,13 +15,13 @@
 extern "C" {
 #endif
 
-void* mem_alloc(size_t size){
+static inline void* mem_alloc(size_t size){
   void * ret = malloc(size);
   if(!ret){
     PERR("Allocation faild\n");
   }
 }
-void mem_free(void* data){
+static inline void mem_free(void* data){
   if(data) free(data);
 }
 
