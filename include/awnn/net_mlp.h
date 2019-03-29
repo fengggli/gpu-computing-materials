@@ -14,13 +14,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  typedef struct {
-  tensor_t *learnable_params_data;
-  tensor_t *learnable_params_diff;
-} model_data_t;
+
+enum{
+  MAX_PARAMS=10
+};
 
 typedef struct {
-  model_data_t *model_data;
+  uint id_param;
+  tensor_t *data[MAX_PARAMS];
+  tensor_t *diff[MAX_PARAMS];
+} learnable_param_t;
+
+typedef struct {
+  uint input_dim;
+  uint output_dim;
+  uint nr_hidden_layers;
+  uint hidden_dims[MAX_DIM];
+  learnable_param_t* learnale_params;
   uint max_batch_sz;
   T reg;
 } model_t;
@@ -39,9 +49,9 @@ tensor_t *layer_output;
 status_t mlp_init(model_t *model, // output
     uint max_batch_sz,
     uint input_dim, //
-    uint nr_hidden_layers,
-    uint hidden_dim,
     uint output_dim,
+    uint nr_hidden_layers,
+    uint hidden_dim[],
     T reg);
 
 /*

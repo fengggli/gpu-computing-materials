@@ -8,6 +8,7 @@
 #pragma once
 
 #include "awnn/common.h"
+#include "awnn/logging.h"
 #include <stdlib.h>
 
 #ifdef __cplusplus

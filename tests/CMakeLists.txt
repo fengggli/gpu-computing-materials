@@ -42,6 +42,15 @@ add_executable(test-loss-softmax test_loss_softmax.cpp)
 target_link_libraries(test-loss-softmax awnnlib  gtest)
 add_test(test-loss-softmax test-loss-softmax)
 
+add_executable(net-mlp test_net_mlp.cpp)
+target_link_libraries(net-mlp awnnlib  gtest)
+add_test(net-mlp net-mlp)
+
+add_executable(test-dtype-list test_dtype_list.cpp)
+target_link_libraries(test-dtype-list awnnlib  gtest)
+add_test(test-dtype-list test-dtype-list)
+
+
 #add_executable(test-loss-softmax-simple test_loss_softmax_simple.cpp)
 #target_link_libraries(test-loss-softmax-simple awnnlib  gtest)
 #add_test(test-loss-softmax-simple test-loss-softmax-simple)
