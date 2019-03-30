@@ -7,17 +7,13 @@ Current
 TODO List
 ----------
 
-* Note
-1. In the loss layer, should takes in a vector of  int, which conflicts with the type of tensor.
-
+* Utility:
+  show show backtrace (https://www.gnu.org/software/libc/manual/html_node/Backtraces.html)
 
 * Layers
 
-  1. global avg pool
-  2. conv2d
-  3. relu
-  4. softmax
-  5. batchnorm
+  * conv2d
+  * batchnorm
 
 * Net
 
@@ -35,12 +31,31 @@ TODO List
 
 * Others
 
-
 Working in progress:
 ---------------------
 
-1. Softmax, and  relu in host(Feng Li)
-2. conv2d and global pool in gpu (Chris and Yuankun)
+1. Conv2d and global pool in gpu (Chris and Yuankun)
+2. 2-layer mlp (Feng).
+
+0.4.2
+======
+
+:Date 2019-03-30
+
+Added
+-------
+
+1. Layers:
+
+  * fully-connected
+  * global avg pool.
+  * relu
+  * softmax
+
+2. Data structure
+
+  * The param_t uses linux-kernel style linked list, which can be also used to construct other basic data structures like stack/queue.
+  * currently it's used to manage all learnable params of fc layers.
 
 =========
 Previous
@@ -50,6 +65,3 @@ Previous
 ========
 
 see dl-docs for changelog prior to 0.4.1
-
-
-

@@ -8,6 +8,7 @@
 #pragma once
 
 #include "awnn/tensor.h"
+#include "utils/list.h"
 
 #define MAX_CACHE_SIZE (10)
 /*
@@ -24,6 +25,8 @@
 typedef struct{
   uint count; // number of tensors
   tensor_t all_tensors[MAX_CACHE_SIZE];
+  char name[MAX_STR_LENGTH];
+  struct list_head list;
 }lcache_t;
 
 static void make_empty_lcache(lcache_t *cache){

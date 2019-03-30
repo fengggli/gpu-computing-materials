@@ -13,9 +13,6 @@
 extern "C" {
 #endif
 
-typedef unsigned int uint;
-// typedef float T;
-typedef double T;
 #define T_MIN (-1000.)
 
 #define MAX_DIM (4) // N, C, H, W
@@ -47,6 +44,7 @@ typedef enum{
   CPU_MEM = 0,
   GPU_MEM = 1,
   BAD_MEM = 2,
+  EMPTY_MEM = 3, // unitialized, e.g. net input
 }memory_type_t;
 
 typedef struct tensor{
@@ -78,6 +76,12 @@ void _tensor_fill_patterned(tensor_t t); // debug use
  * Value_list length needs to be no larger than tensor capacity*/
 void tensor_fill_list(tensor_t const, T const value_list[],
                       uint const length_of_value_list);
+
+static inline tensor_t tensor_make_placeholder(){
+  tensor_t ret;
+  ret.mem_type = EMPTY_MEM;
+  return ret;
+}
 
 tensor_t tensor_make_zeros(uint const shape[], uint const ndims);
 tensor_t tensor_make_ones(uint const shape[], uint const ndims);
