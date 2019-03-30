@@ -61,6 +61,14 @@ TEST_F(NetMLPTest, Construct) {
   EXPECT_NE((void *)0, (void *)net_get_param(model.list_all_params, "W1"));
 }
 
+/* Interference-only forward*/
+TEST_F(NetMLPTest, Forward) {
+  uint x_shape[] = {model.max_batch_sz, model.input_dim};
+  tensor_t x = tensor_make_linspace(-0.1, 0.5, x_shape, 2);
+  mlp_scores(&model, x);
+}
+
+
 TEST_F(NetMLPTest, Destroy) {
   mlp_finalize(&model);
 }

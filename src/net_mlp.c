@@ -53,8 +53,8 @@ status_t mlp_init(model_t *model, uint max_batch_sz,
 
     // prepare layer output
     uint out_shape[] = {max_batch_sz, fan_out};
-    tensor_t out = tensor_make(out_shape, 1);
-    tensor_t dout = tensor_make(out_shape, 1);
+    tensor_t out = tensor_make(out_shape, 2);
+    tensor_t dout = tensor_make(out_shape, 2);
     char out_name[MAX_STR_LENGTH];
     snprintf(out_name, MAX_STR_LENGTH,"out%u",i );
     net_attach_param(model->list_layer_out, out_name, out, dout);
@@ -80,9 +80,8 @@ status_t mlp_finalize(model_t *model){
   net_free_params(model->list_all_params);
 }
 
-
-
 tensor_t mlp_scores(model_t const *model, tensor_t x){
+  tensor_t layer_input = x;
   for( uint i = 0 ; i< model->nr_hidden_layers+1; i++) {
 
     char w_name[MAX_STR_LENGTH];
@@ -90,13 +89,21 @@ tensor_t mlp_scores(model_t const *model, tensor_t x){
     snprintf(w_name, MAX_STR_LENGTH, "W%u", i);
     snprintf(b_name, MAX_STR_LENGTH, "b%u", i);
     tensor_t w = net_get_param(model->list_all_params, w_name)->data;
-    tensor_t b = net_get_param(model->list_all_params, w_name)->data;
+    tensor_t b = net_get_param(model->list_all_params, b_name)->data;
 
-    uint shape_out[] = {x.dim.dims[0], w.dim.dims[1]};
-    tensor_t out = tensor_make(shape_out, 2);
-    lcache_t cache;
+    // locate preallocated out
+    char out_name[MAX_STR_LENGTH];
+    snprintf(out_name, MAX_STR_LENGTH,"out%u",i );
+    tensor_t out = net_get_param(model->list_layer_out, out_name)->data;
+
+    // locate preallocated cache
+    lcache_t *cache;
+    char cache_name[MAX_STR_LENGTH];
+    snprintf(cache_name, MAX_STR_LENGTH,"cache%u",i );
+    cache = net_get_cache(model->list_layer_cache, cache_name);
 
     // TODO: need to track y and cache;
-    AWNN_CHECK_EQ(S_OK, layer_fc_forward(x, w, b, &cache, out));
+    AWNN_CHECK_EQ(S_OK, layer_fc_forward(layer_input, w, b, cache, out));
+    layer_input = out;
   }
 }

@@ -34,7 +34,7 @@ static inline void net_attach_param(struct list_head *l_params, char* name, tens
   p_param->diff = diff;
   init_list_head(&p_param->list);
   list_add_tail(&p_param->list, l_params);
-  PINF("-- attaching %s", p_param->name);
+  PINF("-- attaching %s [%u, %u, %u, %u]", p_param->name, data.dim.dims[0],data.dim.dims[1], data.dim.dims[2], data.dim.dims[3]);
 }
 
 /* Deallocated tensor from net, and free all of them*/
@@ -94,8 +94,15 @@ static inline void net_free_cache(struct list_head *l_cache){
   PINF("}/");
 }
 
+/* Get the entry of a specific cache*/
+static inline lcache_t *net_get_cache(struct list_head const * l_cache, char const*name){
+  lcache_t *p_cache;
+  list_for_each_entry(p_cache, l_cache, list){
+    if(strcmp(name, p_cache->name) == 0) return p_cache;
+  }
+  return NULL;
+}
+
 #ifdef __cplusplus
 }
 #endif
-
-

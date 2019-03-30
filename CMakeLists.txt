@@ -16,7 +16,7 @@ else()
 endif()
 
 set(CMAKE_CXX_STANDARD 11)
-
+set(CMAKE_SHARED_LINKER_FLAGS "-rdynamic") 
 
 project(awnn LANGUAGES C CXX)
 
