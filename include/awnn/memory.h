@@ -20,6 +20,7 @@ static inline void* mem_alloc(size_t size){
   if(!ret){
     PERR("Allocation faild\n");
   }
+  return ret;
 }
 static inline void mem_free(void* data){
   if(data) free(data);

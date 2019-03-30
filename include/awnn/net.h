@@ -74,7 +74,7 @@ static inline param_t *net_get_param(struct list_head const * l_params, char con
 /* Attach cache placeholder to net*/
 static inline void net_attach_cache(struct list_head *l_cache, char* name){
   lcache_t * p_cache = (lcache_t *)mem_alloc(sizeof(lcache_t)); // cache for this layer
-  strncpy(p_cache->name, name, sizeof(name));
+  strncpy(p_cache->name, name, MAX_STR_LENGTH);
   p_cache->count = 0;
   init_list_head(&p_cache->list);
   list_add_tail(&p_cache->list, l_cache); // add to the net's global list

@@ -55,7 +55,7 @@ status_t mlp_finalize(model_t *model);
 tensor_t mlp_scores(model_t const *model, tensor_t x);
 
 /* Compute loss for a batch of (x,y), do forward/backward, and update gradients*/
-status_t mlp_loss(model_t const *model, tensor_t x, label_t const labels[], T * loss);
+status_t mlp_loss(model_t const *model, tensor_t x, label_t const labels[], T * ptr_loss);
 
 #ifdef __cplusplus
 }

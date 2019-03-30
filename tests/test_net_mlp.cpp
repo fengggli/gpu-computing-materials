@@ -62,10 +62,20 @@ TEST_F(NetMLPTest, Construct) {
 }
 
 /* Interference-only forward*/
-TEST_F(NetMLPTest, Forward) {
+TEST_F(NetMLPTest, ForwardInferOnly) {
   uint x_shape[] = {model.max_batch_sz, model.input_dim};
   tensor_t x = tensor_make_linspace(-0.1, 0.5, x_shape, 2);
   mlp_scores(&model, x);
+}
+
+TEST_F(NetMLPTest, Forward) {
+  T loss = 0;
+  uint x_shape[] = {model.max_batch_sz, model.input_dim};
+  tensor_t x = tensor_make_linspace(-0.1, 0.5, x_shape, 2);
+  label_t *labels = label_make_random(model.max_batch_sz, model.output_dim);
+
+  mlp_loss(&model, x, labels, &loss);
+  label_destroy(labels);
 }
 
 

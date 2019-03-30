@@ -1,8 +1,22 @@
 #include "awnn/loss_softmax.h"
 #include "awnn/logging.h"
+#include "awnn/memory.h"
 #include <math.h>
 
-status_t loss_softmax(tensor_t const x, label_t const real_labels[], T *ptr_loss, awnn_mode_t mode,  tensor_t dx){
+label_t *label_make_random(uint nr_elem, uint range){
+  label_t *labels = (label_t*)mem_alloc(sizeof(label_t)*nr_elem);
+  for(uint i =0; i< nr_elem; i++){
+    labels[i] = rand()%range;
+  }
+  return labels;
+}
+
+void label_destroy(label_t *labels) {
+  mem_free(labels);
+}
+
+
+status_t loss_softmax(tensor_t const x, label_t const * real_labels, T *ptr_loss, awnn_mode_t mode,  tensor_t dx){
   status_t ret = S_ERR;
 
   tensor_t scores = tensor_make_copy(x);

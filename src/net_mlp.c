@@ -5,6 +5,7 @@
 #include "awnn/net_mlp.h"
 #include "awnn/tensor.h"
 #include "awnn/layer_fc.h"
+#include "awnn/loss_softmax.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -82,6 +83,7 @@ status_t mlp_finalize(model_t *model){
 
 tensor_t mlp_scores(model_t const *model, tensor_t x){
   tensor_t layer_input = x;
+  tensor_t layer_out;
   for( uint i = 0 ; i< model->nr_hidden_layers+1; i++) {
 
     char w_name[MAX_STR_LENGTH];
@@ -91,10 +93,10 @@ tensor_t mlp_scores(model_t const *model, tensor_t x){
     tensor_t w = net_get_param(model->list_all_params, w_name)->data;
     tensor_t b = net_get_param(model->list_all_params, b_name)->data;
 
-    // locate preallocated out
+    // locate preallocated layer_out
     char out_name[MAX_STR_LENGTH];
     snprintf(out_name, MAX_STR_LENGTH,"out%u",i );
-    tensor_t out = net_get_param(model->list_layer_out, out_name)->data;
+    layer_out = net_get_param(model->list_layer_out, out_name)->data;
 
     // locate preallocated cache
     lcache_t *cache;
@@ -103,7 +105,35 @@ tensor_t mlp_scores(model_t const *model, tensor_t x){
     cache = net_get_cache(model->list_layer_cache, cache_name);
 
     // TODO: need to track y and cache;
-    AWNN_CHECK_EQ(S_OK, layer_fc_forward(layer_input, w, b, cache, out));
-    layer_input = out;
+    AWNN_CHECK_EQ(S_OK, layer_fc_forward(layer_input, w, b, cache, layer_out));
+    layer_input = layer_out;
   }
+  return layer_out;
 }
+
+/* Compute loss for a batch of (x,y), do forward/backward, and update gradients*/
+status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels, T * ptr_loss){
+  *ptr_loss = 0;
+  tensor_t mlp_scores(model_t const *model, tensor_t x);
+  // forward
+  tensor_t scores;
+  tensor_t dscores;
+
+  char out_name[MAX_STR_LENGTH]; // find the param (data/diff) for score
+  snprintf(out_name, MAX_STR_LENGTH,"out%u", model->nr_hidden_layers);
+  PINF("out score is %s", out_name);
+  param_t *param_score = net_get_param(model->list_layer_out, out_name);
+  AWNN_CHECK_NE(NULL, labels);
+  scores = param_score->data;
+  dscores = param_score->diff;
+
+  awnn_mode_t mode = MODE_TRAIN;
+  AWNN_CHECK_EQ( S_OK, loss_softmax(scores, labels,
+                      ptr_loss, mode, dscores));
+
+  // backprop
+
+
+}
+
+
