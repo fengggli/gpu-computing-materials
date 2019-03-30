@@ -56,6 +56,9 @@ TEST_F(NetMLPTest, Construct) {
   T reg = 0;
 
   mlp_init(&model, batch_sz, input_dim, output_dim, nr_hidden_layers, hidden_dims, reg);
+
+  EXPECT_EQ((void *)0, (void *)net_get_param(model.list_all_params, "W3")); // unexisting param
+  EXPECT_NE((void *)0, (void *)net_get_param(model.list_all_params, "W1"));
 }
 
 TEST_F(NetMLPTest, Destroy) {

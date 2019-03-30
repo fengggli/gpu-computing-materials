@@ -27,6 +27,8 @@ typedef struct {
   T reg;
 
   struct list_head list_all_params[1]; // list of all learnable params
+  struct list_head list_layer_out[1]; // list of output of each layer 
+  struct list_head list_layer_cache[1]; // list of layer cache.
 } model_t;
 
 /*
@@ -49,9 +51,8 @@ status_t mlp_init(model_t *model, // output
  */
 status_t mlp_finalize(model_t *model);
 
-
 /* Compute the scores for a batch or input, infer only*/
-status_t mlp_scores(model_t const *model, tensor_t x, tensor_t scores);
+tensor_t mlp_scores(model_t const *model, tensor_t x);
 
 /* Compute loss for a batch of (x,y), do forward/backward, and update gradients*/
 status_t mlp_loss(model_t const *model, tensor_t x, label_t const labels[], T * loss);

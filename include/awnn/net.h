@@ -29,7 +29,7 @@ typedef struct {
   struct list_head list;
 } param_t;
 
-
+/* Attach preallocated tensor to net*/
 static inline void net_attach_param(struct list_head *l_params, char* name, tensor_t data, tensor_t diff){
   param_t * p_param = (param_t *)mem_alloc(sizeof(param_t));
   strncpy(p_param->name, name, sizeof(name));
@@ -40,7 +40,7 @@ static inline void net_attach_param(struct list_head *l_params, char* name, tens
   PINF("-- attaching %s", p_param->name);
 }
 
-// 
+/* Deallocated tensor from net, and free all of them*/
 static inline void net_free_params(struct list_head *l_params){
   struct list_head *p_node, *tmp;
   PINF("Freeing all net params: \n{");
@@ -51,21 +51,30 @@ static inline void net_free_params(struct list_head *l_params){
     tensor_destroy(p_param->data); 
     tensor_destroy(p_param->diff); 
   }
-
   PINF("}/");
 }
 
-
-static inline void net_print_params(struct list_head *l_params){
+/* print current param names*/
+static inline void net_print_params(struct list_head const *l_params){
   param_t *p_param;
   PINF("Dumping all net params: \n{");
   list_for_each_entry(p_param, l_params, list){
     PSTR("%s,", p_param->name);
   }
-
   PINF("}/");
+}
+
+/* Get the entry of a specific param*/
+static inline param_t *net_get_param(struct list_head const * l_params, char const*name){
+  param_t *p_param;
+  list_for_each_entry(p_param, l_params, list){
+    if(strcmp(name, p_param->name) == 0) return p_param;
+  }
+  return NULL;
 }
 
 #ifdef __cplusplus
 }
 #endif
+
+

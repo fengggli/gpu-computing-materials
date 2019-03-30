@@ -8,6 +8,7 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#include <awnn/logging.h>
 #include <assert.h>
 
 
@@ -20,6 +21,11 @@ enum {
   MODE_TRAIN = 0,
   MODE_INFER = 1,
 };
+
+#define AWNN_CHECK_EQ(a, b) \
+  if((a)!= (b)) PERR("Run value");
+
+
 
 
 #endif
