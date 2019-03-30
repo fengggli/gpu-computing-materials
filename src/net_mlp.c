@@ -14,6 +14,8 @@ status_t mlp_init(model_t *model, uint max_batch_sz,
     uint input_dim, uint output_dim,
     uint nr_hidden_layers, uint hidden_dims[], T reg) {
 
+  status_t ret = S_ERR;
+
   // save config
   model->max_batch_sz = max_batch_sz;
   model->input_dim = input_dim;
@@ -51,15 +53,20 @@ status_t mlp_init(model_t *model, uint max_batch_sz,
 
     // prepare layer output
     uint out_shape[] = {max_batch_sz, fan_out};
-
     tensor_t out = tensor_make(out_shape, 1);
     tensor_t dout = tensor_make(out_shape, 1);
     char out_name[MAX_STR_LENGTH];
     snprintf(out_name, MAX_STR_LENGTH,"out%u",i );
-
     net_attach_param(model->list_layer_out, out_name, out, dout);
 
+    // prepare layer cache
+    // Currently the actual allocation is managed by the fc layer itself
+    char cache_name[MAX_STR_LENGTH];
+    snprintf(cache_name, MAX_STR_LENGTH,"cache%u",i );
+    net_attach_cache(model->list_layer_cache, cache_name);
   }
+  ret = S_OK;
+  return ret;
 }
 
 
@@ -67,8 +74,10 @@ status_t mlp_finalize(model_t *model){
  
   // free all of them
   // net_print_params(model->list_all_params);
-  net_free_params(model->list_all_params);
+    
+  net_free_cache(model->list_layer_cache);
   net_free_params(model->list_layer_out);
+  net_free_params(model->list_all_params);
 }
 
 

@@ -11,6 +11,9 @@
 #include <awnn/logging.h>
 #include <assert.h>
 
+enum{
+  MAX_STR_LENGTH=81
+};
 
 typedef int status_t;
 enum ERROR_CODE { S_OK = 0, S_ERR = -1, S_BAD_DIM = -2 };
