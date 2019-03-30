@@ -132,6 +132,9 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels, T * p
                       ptr_loss, mode, dscores));
 
   // backprop
+  for(int i =  model->nr_hidden_layers; i>=0; i--) {
+
+  }
 
 
 }
