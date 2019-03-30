@@ -92,7 +92,11 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Current</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#todo-list">TODO List</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#working-in-progress">Working in progress:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#working-in-progress">Working in progress:</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">0.4.2</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#added">Added</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#previous">Previous</a></li>
@@ -165,19 +169,10 @@
 <div class="section" id="todo-list">
 <h2>TODO List<a class="headerlink" href="#todo-list" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>Note</li>
-</ul>
-<ol class="arabic simple">
-<li>In the loss layer, should takes in a vector of  int, which conflicts with the type of tensor.</li>
-</ol>
-<ul class="simple">
-<li>Layers<ol class="arabic">
-<li>global avg pool</li>
+<li>Layers<ul>
 <li>conv2d</li>
-<li>relu</li>
-<li>softmax</li>
 <li>batchnorm</li>
-</ol>
+</ul>
 </li>
 <li>Net<ol class="arabic">
 <li>residual blocks</li>
@@ -197,9 +192,36 @@
 <div class="section" id="working-in-progress">
 <h2>Working in progress:<a class="headerlink" href="#working-in-progress" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li>Softmax, and  relu in host(Feng Li)</li>
-<li>conv2d and global pool in gpu (Chris and Yuankun)</li>
+<li>Conv2d and global pool in gpu (Chris and Yuankun)</li>
+<li>2-layer mlp (Feng).</li>
 </ol>
+<div class="section" id="id1">
+<h3>0.4.2<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>:Date 2019-03-30</p>
+</div>
+</div>
+<div class="section" id="added">
+<h2>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>Layers:</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>fully-connected</li>
+<li>global avg pool.</li>
+<li>relu</li>
+<li>softmax</li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li>Data structure</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>The param_t uses linux-kernel style linked list, which can be also used to construct other basic data structures like stack/queue.</li>
+<li>currently it’s used to manage all learnable params of fc layers.</li>
+</ul>
+</div></blockquote>
 </div>
 </div>
 <div class="section" id="previous">
