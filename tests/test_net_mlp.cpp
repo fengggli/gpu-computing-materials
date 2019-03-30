@@ -68,7 +68,8 @@ TEST_F(NetMLPTest, ForwardInferOnly) {
   mlp_scores(&model, x);
 }
 
-TEST_F(NetMLPTest, Forward) {
+/* Check both forward/backward*/
+TEST_F(NetMLPTest, Loss) {
   T loss = 0;
   uint x_shape[] = {model.max_batch_sz, model.input_dim};
   tensor_t x = tensor_make_linspace(-0.1, 0.5, x_shape, 2);
