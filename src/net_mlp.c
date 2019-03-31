@@ -138,6 +138,7 @@ tensor_t mlp_scores(model_t const *model, tensor_t x){
 
 /* Compute loss for a batch of (x,y), do forward/backward, and update gradients*/
 status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels, T * ptr_loss){
+  status_t ret = S_ERR;
   *ptr_loss = 0;
   tensor_t mlp_scores(model_t const *model, tensor_t x);
   // forward
@@ -150,8 +151,7 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels, T * p
   PINF("out score is %s", out_name);
   param_t *param_score = net_get_param(model->list_layer_out, out_name);
   AWNN_CHECK_NE(NULL, labels);
-  out = param_score->data;
-  dout = param_score->diff;
+  out = param_score->data; dout = param_score->diff;
 
   awnn_mode_t mode = MODE_TRAIN;
   AWNN_CHECK_EQ( S_OK, loss_softmax(out, labels,
@@ -185,6 +185,8 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels, T * p
     // TODO: need to track y and cache;
     AWNN_CHECK_EQ(S_OK, layer_fc_backward(din, dw, db, cache, dout));
   }
+  ret = S_OK;
+  return ret;
 }
 
 

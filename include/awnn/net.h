@@ -63,7 +63,8 @@ static inline void net_print_params(struct list_head const *l_params){
     PSTR("%s,", p_param->name);
   }
   PINF("}/");
-} 
+}
+
 /* Get the entry of a specific param*/
 static inline param_t *net_get_param(struct list_head const * l_params, char const*name){
   param_t *p_param;
