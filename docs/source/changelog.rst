@@ -8,6 +8,7 @@ TODO List
 ----------
 
 * Utility:
+
   show show backtrace (https://www.gnu.org/software/libc/manual/html_node/Backtraces.html)
 
 * Layers
@@ -36,6 +37,9 @@ Working in progress:
 
 1. Conv2d and global pool in gpu (Chris and Yuankun)
 2. 2-layer mlp (Feng).
+
+   * need sandwich layer
+   * need verify net loss/scores function.
 
 0.4.2
 ======
