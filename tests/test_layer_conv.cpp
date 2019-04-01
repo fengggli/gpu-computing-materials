@@ -289,12 +289,11 @@ TEST_F(LayerConvTest, im2col_dot_operation) {
   EXPECT_LT(tensor_rel_error(ref, ret), 1e-7);
 
   tensor_reshape_(&ret, shape_ret, dim_of_shape(shape_ret));
-
 }
 
 TEST_F(LayerConvTest, test_tpose3012) {
   uint const shape_x[] = {2, 3, 4, 4}; // 2x3x4x4
-  uint const shape_w[] = {3, 3, 4, 6}; // 3x3x4x4
+  uint const shape_w[] = {3, 3, 4, 6}; // 3x3x4x6
 
   tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
   tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
@@ -362,47 +361,6 @@ TEST_F(LayerConvTest, forward_from_picture) {
   EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
   PINF("Consistent with expected results");
 }
-
-//TEST_F(LayerConvTest, forward_from_picture) {
-//  conv_param_t conv_params = {1, 0};
-//
-//  uint n = 1;
-//  uint img_sz = 3;
-//  uint c = 2;
-//  uint fltr_sz = 2;
-//  uint num_fil = 2;
-//  uint sz_out = 1 + (img_sz + 2 * conv_params.padding - fltr_sz) / conv_params.stride;
-//
-//  uint const shape_x[] = {n, c, img_sz, img_sz}; // 2x3x4x4
-//  uint const shape_w[] = {num_fil, c, fltr_sz, fltr_sz}; // 3x3x4x4
-//  uint const shape_y[] = {n, num_fil, sz_out, sz_out}; // 2x3x2x2
-//
-//  EXPECT_EQ(2, sz_out);
-//
-//  T x_values[] = { 1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2 };
-//  tensor_t x = tensor_make(shape_x, dim_of_shape(shape_x));
-//  tensor_fill_list(x, x_values, array_size(x_values));
-//
-//
-//  T w_values[] = {1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 2, 2};
-//  tensor_t w = tensor_make(shape_w, dim_of_shape(shape_w));
-//  tensor_fill_list(w, w_values, array_size(w_values));
-//
-//  tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
-//  lcache_t cache;
-//  make_empty_lcache(&cache);
-//
-//  status_t ret = convolution_forward(x, w, &cache, conv_params, y);// forward function should allocate and populate cache;
-//  EXPECT_EQ(ret, S_OK);
-//
-//  tensor_t y_ref = tensor_make_alike(y);
-//  T value_list[] = { 6, 2, 3, 4, 3, 3, 7, 7 };
-//  tensor_fill_list(y_ref, value_list, array_size(value_list));
-//
-//  EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
-//  PINF("Consistent with expected results");
-//}
-
 
 
 TEST_F(LayerConvTest, Forward){
