@@ -1,5 +1,6 @@
 #include "awnn/tensor.h"
 #include "awnn/logging.h"
+#include "utils/debug.h"
 
 #ifdef USE_OPENBLAS
 #include "cblas.h"
@@ -38,6 +39,7 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
     dim_dump(in1.dim);
     dim_dump(in2.dim);
     dim_dump(out.dim);
+    print_trace();
     goto end;
   }
   int m = in1.dim.dims[0];
@@ -99,6 +101,14 @@ status_t tensor_elemwise_op_inplace(tensor_t to, tensor_t from, tensor_op_t op){
   }
 }
 
+T tensor_sum_of_square(tensor_t const t) {
+  T ret = 0;
+  for (uint i = 0; i < tensor_get_capacity(t); i++) {
+    ret += (t.data[i]) * (t.data[i]);
+  }
+  return ret;
+}
+
 status_t tensor_copy(tensor_t out, tensor_t in){
   uint i;
   uint capacity = dim_get_capacity(out.dim);
@@ -129,7 +139,9 @@ status_t tensor_add_sameshape(tensor_t in1, tensor_t in2, tensor_t out){
 status_t tensor_add_vector_inplace(tensor_t t, tensor_t v) {
   dim_t old_dim = t.dim;
   if(tensor_get_ndims(v) != 1) {
-    PERR("second operator is not a 1-d vector");
+    PERR("second operator is not a 1-d vector:");
+    dim_dump(v.dim);
+    print_trace();
     return S_ERR;
   }
   uint v_capacity = v.dim.dims[0];
@@ -140,6 +152,7 @@ status_t tensor_add_vector_inplace(tensor_t t, tensor_t v) {
   }
   if(t.dim.dims[i_dim] != v_capacity) {
     PERR("last dimension of tensor doesn't fit the vector");
+    print_trace();
     return S_ERR;
   }
 

@@ -451,7 +451,7 @@ TEST_F(LayerConvTest, DISABLED_Backward){
 // TODO: check with cudnn
 
 TEST_F(LayerConvTest,CheckLcache){
-//  EXPECT_EQ(cache.count, 0); // backward needs to call free_lcache(cache);
+//  EXPECT_EQ(cache.count, 0); // backward needs to pop all all caches and destroy them
 }
 
 
@@ -459,7 +459,7 @@ TEST_F(LayerConvTest,CheckLcache){
 TEST_F(LayerConvTest, Destroy) {
 //  tensor_destroy(x);
 //  tensor_destroy(w);
-//  free_lcache(&cache);
+//  lcache_free_all(&cache);
 }
 
 

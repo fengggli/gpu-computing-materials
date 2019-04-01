@@ -1,7 +1,8 @@
 #include "awnn/tensor.h"
 #include "awnn/logging.h"
+#include "awnn/memory.h"
 
-#include <stdlib.h>
+
 #include <stdarg.h>
 
 #define SIZE_LINE_BUFFER (160)
@@ -130,7 +131,11 @@ tensor_t _tensor_make(dim_t dim){
   tensor_t t;
   uint capacity;
   capacity = dim_get_capacity(dim);
+<<<<<<< HEAD
   t.data = malloc(capacity * sizeof(T));
+=======
+  t.data =mem_alloc(capacity*sizeof(T));
+>>>>>>> master
   t.mem_type = CPU_MEM;
   t.dim = dim;
   assert(NULL != t.data);
@@ -382,8 +387,12 @@ T tensor_rel_error(tensor_t x, tensor_t ref){
 
 void tensor_destroy(tensor_t t){
   if(t.data){
+<<<<<<< HEAD
     free(t.data);
     t.data = NULL;
+=======
+    mem_free(t.data);
+>>>>>>> master
   }
 }
 

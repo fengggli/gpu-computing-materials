@@ -7,17 +7,14 @@ Current
 TODO List
 ----------
 
-* Note
-1. In the loss layer, should takes in a vector of  int, which conflicts with the type of tensor.
+* Utility:
 
+  show show backtrace (https://www.gnu.org/software/libc/manual/html_node/Backtraces.html)
 
 * Layers
 
-  1. global avg pool
-  2. conv2d
-  3. relu
-  4. softmax
-  5. batchnorm
+  * conv2d
+  * batchnorm
 
 * Net
 
@@ -26,7 +23,7 @@ TODO List
 
 * Utility
 
-  1. sgd
+  1. solver
   2. reporting
 
 * Initializer (kaiming initialization)
@@ -39,8 +36,60 @@ TODO List
 Working in progress:
 ---------------------
 
-1. Softmax, and  relu in host(Feng Li)
-2. conv2d and global pool in gpu (Chris and Yuankun)
+1. Conv2d and global pool in gpu (Chris and Yuankun).
+2. solver.
+
+0.4.3
+======
+
+:Date 2019-04-01
+
+See (https://github.com/fengggli/gpu-computing-materials/pull/19)
+
+Added
+-----------
+
+* a fc_relu sandwich layer
+* weight initialization (currently only linspace is used)
+*  macro: tensor_for_each_entry in tensor.h
+* net-mlp:
+
+  - inference-only forward - mlp_scores
+  - loss function to update the gradients mlp_loss
+  - forward compared with numpy version
+  - backward checked with numerical results
+  - regulizer is  added
+
+Changed
+--------
+
+* changed the layer cache, now each layer has a lcache_t, which can be assessed as a stack using lcache_push, and lcache_pop. See docs/source/memory.rst for more details
+
+others
+------
+
+* clangformat using google style
+
+
+0.4.2
+======
+
+:Date 2019-03-30
+
+Added
+-------
+
+1. Layers:
+
+  * fully-connected
+  * global avg pool.
+  * relu
+  * softmax
+
+2. Data structure
+
+  * The param_t uses linux-kernel style linked list, which can be also used to construct other basic data structures like stack/queue.
+  * currently it's used to manage all learnable params of fc layers.
 
 =========
 Previous
@@ -50,6 +99,3 @@ Previous
 ========
 
 see dl-docs for changelog prior to 0.4.1
-
-
-
