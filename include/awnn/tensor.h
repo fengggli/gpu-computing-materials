@@ -66,7 +66,7 @@ typedef enum {
 T tensor_get_sum(tensor_t t);
 
 tensor_t tensor_make(uint const shape[], uint const ndims);
-void tensor_destroy(tensor_t t);
+void tensor_destroy(tensor_t* t);
 
 // TODO: fill random values
 static void _tensor_fill_random(tensor_t t, uint seed);

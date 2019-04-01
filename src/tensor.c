@@ -385,15 +385,9 @@ T tensor_rel_error(tensor_t x, tensor_t ref){
   return norm_diff / norm_ref;
 }
 
-void tensor_destroy(tensor_t t){
-  if(t.data){
-<<<<<<< HEAD
-    free(t.data);
-    t.data = NULL;
-=======
-    mem_free(t.data);
->>>>>>> master
-  }
+void tensor_destroy(tensor_t* t){
+  mem_free(t->data);
+  t->data = NULL;
 }
 
 bool tensors_equal_exact(tensor_t a, tensor_t b) {
