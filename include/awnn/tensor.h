@@ -103,7 +103,7 @@ tensor_t tensor_make_padded_square_input(tensor_t t, uint p, float pad_val);
 tensor_t tensor_make_scalar_alike(tensor_t t, T scalar);
 tensor_t tensor_make_empty_with_dim(dim_t dim);
 
-tensor_t tensor_transpose_3012(tensor_t t);
+tensor_t tensor_make_transpose_3012(tensor_t t);
 
 /* access elem*/
 T* tensor_get_elem_ptr(tensor_t const t, dim_t const loc);

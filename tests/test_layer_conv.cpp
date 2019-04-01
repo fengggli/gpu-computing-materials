@@ -51,19 +51,6 @@ protected:
 //  static conv_param_t params;
 };
 
-//tensor_t LayerConvTest::x;
-//tensor_t LayerConvTest::w;
-//
-//uint LayerConvTest::nr_img;
-//uint LayerConvTest::sz_img;
-//uint LayerConvTest::nr_in_channel;
-//uint LayerConvTest::sz_filter;
-//uint LayerConvTest::nr_filter;
-//
-//lcache_t LayerConvTest::cache;
-//conv_param_t LayerConvTest::params;
-
-
 TEST_F(LayerConvTest, im2col_numerical1) {
   conv_param_t conv_params = {2, 1};
 
@@ -312,8 +299,8 @@ TEST_F(LayerConvTest, test_tpose3012) {
   tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
   tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
 
-  tensor_t x_tpose_3012 = tensor_transpose_3012(x);
-  tensor_t w_tpose_3012 = tensor_transpose_3012(w);
+  tensor_t x_tpose_3012 = tensor_make_transpose_3012(x);
+  tensor_t w_tpose_3012 = tensor_make_transpose_3012(w);
 
   tensor_t x_ref = tensor_make(shape_x, dim_of_shape(shape_x));
   T x3012[] = {-0.1, -0.07473684210526316, -0.04947368421052632, -0.024210526315789488, 0.0010526315789473606, 0.02631578947368421, 0.05157894736842103, 0.07684210526315788, 0.10210526315789473, 0.12736842105263158, 0.15263157894736842, 0.17789473684210524, 0.20315789473684207, 0.22842105263157894, 0.25368421052631573, 0.2789473684210526, 0.3042105263157895, 0.32947368421052625, 0.35473684210526313, 0.38, 0.4052631578947369, 0.43052631578947365, 0.4557894736842105, 0.4810526315789474, -0.0936842105263158, -0.06842105263157895, -0.04315789473684211, -0.01789473684210527, 0.007368421052631566, 0.0326315789473684, 0.05789473684210525, 0.0831578947368421, 0.10842105263157895, 0.13368421052631577, 0.15894736842105264, 0.18421052631578946, 0.20947368421052628, 0.23473684210526316, 0.26, 0.2852631578947368, 0.31052631578947365, 0.3357894736842105, 0.3610526315789474, 0.38631578947368417, 0.41157894736842104, 0.4368421052631579, 0.4621052631578948, 0.48736842105263156, -0.08736842105263158, -0.06210526315789475, -0.0368421052631579, -0.011578947368421064, 0.013684210526315785, 0.03894736842105262, 0.06421052631578947, 0.08947368421052632, 0.11473684210526314, 0.13999999999999999, 0.1652631578947368, 0.19052631578947368, 0.2157894736842105, 0.24105263157894738, 0.2663157894736842, 0.29157894736842105, 0.3168421052631579, 0.3421052631578947, 0.36736842105263157, 0.39263157894736844, 0.4178947368421053, 0.4431578947368421, 0.46842105263157896, 0.49368421052631584, -0.08105263157894738, -0.055789473684210535, -0.030526315789473693, -0.005263157894736845, 0.01999999999999999, 0.04526315789473684, 0.07052631578947369, 0.09578947368421051, 0.12105263157894736, 0.1463157894736842, 0.17157894736842103, 0.1968421052631579, 0.22210526315789472, 0.24736842105263154, 0.27263157894736845, 0.2978947368421052, 0.3231578947368421, 0.34842105263157896, 0.37368421052631573, 0.3989473684210526, 0.4242105263157895, 0.44947368421052636, 0.4747368421052631, 0.5};
@@ -335,7 +322,6 @@ TEST_F(LayerConvTest, test_tpose3012) {
   tensor_destroy(w_tpose_3012);
   tensor_destroy(w_ref);
 }
-
 
 TEST_F(LayerConvTest, forward_from_picture) {
   conv_param_t conv_params = {1, 0};
@@ -377,51 +363,85 @@ TEST_F(LayerConvTest, forward_from_picture) {
   PINF("Consistent with expected results");
 }
 
-
-TEST_F(LayerConvTest, Construct) {
-//  params.stride=2;
-//  params.padding=1;
+//TEST_F(LayerConvTest, forward_from_picture) {
+//  conv_param_t conv_params = {1, 0};
 //
-//  nr_img = 2;
-//  sz_img = 4;
-//  nr_in_channel = 3;
-//  sz_filter = 4;
-//  nr_filter =3;
+//  uint n = 1;
+//  uint img_sz = 3;
+//  uint c = 2;
+//  uint fltr_sz = 2;
+//  uint num_fil = 2;
+//  uint sz_out = 1 + (img_sz + 2 * conv_params.padding - fltr_sz) / conv_params.stride;
 //
-//  uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img}; // 2x3x4x4
-//  uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; // 3x3x4x4
+//  uint const shape_x[] = {n, c, img_sz, img_sz}; // 2x3x4x4
+//  uint const shape_w[] = {num_fil, c, fltr_sz, fltr_sz}; // 3x3x4x4
+//  uint const shape_y[] = {n, num_fil, sz_out, sz_out}; // 2x3x2x2
 //
-//  x   = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
-//  w   = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
-//
-//
-//  make_empty_lcache(&cache);
-}
-
-
-TEST_F(LayerConvTest, Forward){
-//
-//  uint sz_out = 1 + (sz_img + 2 * params.padding - sz_filter) / params.stride;
 //  EXPECT_EQ(2, sz_out);
-//  uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out}; // 2x3x2x2
+//
+//  T x_values[] = { 1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2 };
+//  tensor_t x = tensor_make(shape_x, dim_of_shape(shape_x));
+//  tensor_fill_list(x, x_values, array_size(x_values));
+//
+//
+//  T w_values[] = {1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 2, 2};
+//  tensor_t w = tensor_make(shape_w, dim_of_shape(shape_w));
+//  tensor_fill_list(w, w_values, array_size(w_values));
 //
 //  tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
+//  lcache_t cache;
+//  make_empty_lcache(&cache);
 //
-//  status_t ret = convolution_forward(x, w, &cache, params, y);// forward function should allocate and populate cache;
+//  status_t ret = convolution_forward(x, w, &cache, conv_params, y);// forward function should allocate and populate cache;
 //  EXPECT_EQ(ret, S_OK);
 //
 //  tensor_t y_ref = tensor_make_alike(y);
-//  T value_list[] = {0.02553947, 0.01900658, -0.03984868, -0.09432237,
-//                    0.05964474,  0.09894079, 0.12641447,  0.19823684,
-//                    0.09375, 0.178875,0.29267763,0.49079605,
-//                    -0.36098684 -0.57783553,-0.67079605 -1.06632237,
-//                    0.28701316, 0.42294079, 0.41630921,  0.6075,
-//                    0.93501316,  1.42371711, 1.50341447,  2.28132237};
-//
+//  T value_list[] = { 6, 2, 3, 4, 3, 3, 7, 7 };
 //  tensor_fill_list(y_ref, value_list, array_size(value_list));
 //
 //  EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
 //  PINF("Consistent with expected results");
+//}
+
+
+
+TEST_F(LayerConvTest, Forward){
+  conv_param_t conv_params;
+
+  conv_params.stride=2;
+  conv_params.padding=1;
+
+  uint nr_img = 2;
+  uint sz_img = 4;
+  uint nr_in_channel = 3;
+  uint sz_filter = 4;
+  uint nr_filter = 3;
+
+  uint sz_out = 1 + (sz_img + 2 * conv_params.padding - sz_filter) / conv_params.stride;
+  EXPECT_EQ(2, sz_out);
+
+  uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img}; // 2x3x4x4
+  uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; // 3x3x4x4
+  uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out}; // 2x3x2x2
+
+  tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
+  tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
+  tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
+
+  lcache_t cache;
+  make_empty_lcache(&cache);
+
+  status_t ret = convolution_forward(x, w, &cache, conv_params, y);// forward function should allocate and populate cache;
+  EXPECT_EQ(ret, S_OK);
+  tensor_dump(y);
+
+  tensor_t y_ref = tensor_make_alike(y);
+  T value_list[] =  {0.012401913875598115, -0.009877806404122181, -0.08387191755612806, -0.11092160471107837, 0.16027088700772907, 0.166610967979389, 0.17847626058152372, 0.1800463746779536, 0.30813986013986006, 0.3430997423629002, 0.4408244387191755, 0.47101435406698555, -0.8805358851674642, -0.9314354066985646, -1.0912889216047112, -1.1469584100110415, 0.6410835480309163, 0.618803827751196, 0.5448097165991902, 0.5177600294442398, 2.162702981229297, 2.1690430622009567, 2.1809083548030914, 2.1824784688995216};
+
+  tensor_fill_list(y_ref, value_list, array_size(value_list));
+
+  EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
+  PINF("Consistent with expected results");
 }
 
 

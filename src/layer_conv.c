@@ -8,8 +8,6 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
   // 1. flatten the input into vectors which represent the filters
   tensor_t flattened_x = im2col(x, w, params);
 
-//  tensor_dump(flattened_x);
-
   // 2. this is where the filters are actually applied
   uint const reshaped_w_shape[] = { w.dim.dims[0], w.dim.dims[1] * w.dim.dims[2] * w.dim.dims[3] };
   tensor_t reshaped_w = tensor_make_copy(w);
@@ -20,25 +18,23 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
 
   tensor_matmul(reshaped_w, flattened_x, out);
 
-
-  //  tensor_t res = w.reshape((w.shape[0], -1)).dot(x_cols);
-//
-//  //##### convert output back to appropriate shape
-//  out = res.reshape(w.shape[0], out.shape[2], out.shape[3], x.shape[0]);
-  tensor_dump(out);
-  // want w[0]: 2 x out[2] : 0 x
   uint const out_shape_2[] = { w.dim.dims[0], y.dim.dims[2], y.dim.dims[3], x.dim.dims[0] };
   tensor_reshape_(&out, out_shape_2, ARRAY_SIZE(out_shape_2));
-  tensor_dump(out);
 
-  tensor_destroy(y);
-  tensor_copy(out, y);
+//  tensor_destroy(y);
 
-  //  // 3. transpose output
-  //  out = out.transpose(3, 0, 1, 2);
-  tensor_t tpose = tensor_transpose_3012(out);
-//
-//  // fill cache
+  // 3. transpose output
+  tensor_t tpose = tensor_make_transpose_3012(out);
+
+  // copy transposed to y
+  y.dim = tpose.dim;
+  uint sz = dim_get_capacity(tpose.dim);
+  for (int i = 0; i < sz; ++i) {
+    y.data[i] = tpose.data[i];
+  }
+  y.mem_type = tpose.mem_type;
+
+  // fill cache
 //  cache = (x, w, conv_param, x_cols);
 
   return S_OK;
@@ -65,7 +61,8 @@ tensor_t im2col(tensor_t const x, tensor_t const w, conv_param_t const params) {
   uint HH = (H + 2 * pad - filter_height) / stride + 1; // total strides needed over rows
   uint WW = (W + 2 * pad - filter_width) / stride + 1; // total strides needed over cols
 
-  // TODO: Optimize tensor_make_padded function
+  // TODO : Optimize tensor_make_padded function
+  // TODO : look into not allocating here... maybe check bounds in the inner
   tensor_t x_padded = tensor_make_padded_square_input(x, pad, 0);
 
   uint cols_shape[] = {C * filter_height * filter_width, N * HH * WW};
@@ -73,6 +70,8 @@ tensor_t im2col(tensor_t const x, tensor_t const w, conv_param_t const params) {
   tensor_t cols = tensor_make_zeros(cols_shape, 2); // set ndims=2
 
   im2col_inner(cols, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, pad, stride);
+
+  tensor_destroy(x_padded);
 
   return cols;
 }

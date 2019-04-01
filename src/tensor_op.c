@@ -7,7 +7,7 @@
 #include <assert.h>
 
 
-tensor_t tensor_transpose_3012(tensor_t t) {
+tensor_t tensor_make_transpose_3012(tensor_t t) {
   uint target_idx = 0;
   tensor_t tpose = tensor_make_copy(t);
   for (int i = 0; i < t.dim.dims[3]; ++i) {  // for each of the new dim 0
@@ -103,7 +103,7 @@ status_t tensor_copy(tensor_t out, tensor_t in){
   uint i;
   uint capacity = dim_get_capacity(out.dim);
   if( S_OK == dim_is_same(out.dim, in.dim)){
-    for(i = 0; i< capacity; i++){
+    for(i = 0; i < capacity; i++){
       out.data[i] = in.data[i];
     }
     return S_OK;
