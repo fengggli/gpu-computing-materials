@@ -11,10 +11,13 @@ def conv_backward_im2col(dout, cache):
     db = np.sum(dout, axis=(0, 2, 3))
 
     num_filters, _, filter_height, filter_width = w.shape
+
     dout_reshaped = dout.transpose(1, 2, 3, 0).reshape(num_filters, -1)
+
     dw = dout_reshaped.dot(x_cols.T).reshape(w.shape)
 
     dx_cols = w.reshape(num_filters, -1).T.dot(dout_reshaped)
+
     # dx = col2im_indices(dx_cols, x.shape, filter_height, filter_width, pad, stride)
     dx = col2im_cython(dx_cols, x.shape[0], x.shape[1], x.shape[2], x.shape[3],
                        filter_height, filter_width, pad, stride)

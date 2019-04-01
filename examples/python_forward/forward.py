@@ -1,5 +1,12 @@
 import numpy as np
 
+def ttpose(out):
+    shape1 = out.shape
+    out_cpy = []
+    for i in range(shape1[3]):
+        for j in range(shape1[0] * shape1[1] * shape1[2]):
+            out_cpy.append(out.flatten()[i + j * shape1[3]])
+    return out_cpy
 
 def conv_forward(x: np.array, w: np.array, conv_param: dict):
     """
@@ -36,12 +43,27 @@ def conv_forward(x: np.array, w: np.array, conv_param: dict):
     res = w.reshape((w.shape[0], -1)).dot(x_cols)
 
 
+    print(res.flatten())
+
     ##### convert output to appropriate shape based on ???
     out = res.reshape(w.shape[0], out.shape[2], out.shape[3], x.shape[0])
+
+    posed = np.array(ttpose(out)).reshape(out.shape[3], out.shape[0], out.shape[1], out.shape[2])
+
+
+    print()
+    print("BEFORE 'TRANSPOSE'")
+    print(out)
 
     ############### 3.  transpose output (not sure what this is doing ??????)
     # below is the order of the dimensions
     out = out.transpose(3, 0, 1, 2)
+
+    print(out == posed)
+    print()
+    print("AFTER 'TRANSPOSE'")
+    print(out)
+    # print(out.flatten())
 
     ##### fill cache
     cache = (x, w, conv_param, x_cols)

@@ -25,13 +25,18 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
 //
 //  //##### convert output back to appropriate shape
 //  out = res.reshape(w.shape[0], out.shape[2], out.shape[3], x.shape[0]);
-
-  uint const out_shape_2[] = { w.dim.dims[0], out.dim.dims[2], out.dim.dims[3], x.dim.dims[0] };
+  tensor_dump(out);
+  // want w[0]: 2 x out[2] : 0 x
+  uint const out_shape_2[] = { w.dim.dims[0], y.dim.dims[2], y.dim.dims[3], x.dim.dims[0] };
   tensor_reshape_(&out, out_shape_2, ARRAY_SIZE(out_shape_2));
   tensor_dump(out);
-//
-//  // 3. transpose output
-//  out = out.transpose(3, 0, 1, 2);
+
+  tensor_destroy(y);
+  tensor_copy(out, y);
+
+  //  // 3. transpose output
+  //  out = out.transpose(3, 0, 1, 2);
+  tensor_t tpose = tensor_transpose_3012(out);
 //
 //  // fill cache
 //  cache = (x, w, conv_param, x_cols);
@@ -93,7 +98,6 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
               uint col = yy * WW * N + xx * N + i;
               uint target_idx = row * cols.dim.dims[1] + col;
               uint src_idx = (i * img_sz) + (c * chan_sz) + (stride * yy + ii) * row_sz + stride * xx + jj;
-//              printf("target idx=%u, src idx=%u\n", target_idx, src_idx);
               cols.data[target_idx] = x_padded.data[src_idx];
             }
           }
