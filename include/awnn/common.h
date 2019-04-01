@@ -9,6 +9,7 @@
 #define COMMON_H_
 
 #include <assert.h>
+#include <stdbool.h>
 
 typedef int status_t;
 enum ERROR_CODE { S_OK = 0, S_ERR = -1, S_BAD_DIM = -2 };

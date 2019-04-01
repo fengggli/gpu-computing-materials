@@ -1,7 +1,7 @@
 from unittest import TestCase
 import numpy as np
 
-from python_forward.forward import conv_forward
+from python_forward.forward import conv_forward, tpose3012
 
 class TestConvForwardIm2col(TestCase):
     def test_conv_forward_im2col(self):
@@ -50,6 +50,32 @@ class TestConvForwardIm2col(TestCase):
         w = np.array([1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 2, 2]).reshape(nr_filter, nr_in_channel, sz_filter, sz_filter)
 
         y, cache = conv_forward(x, w, conv_param=conv_params)
-        print()
-        print(y)
+        # print()
+        # print(y)
         # print(cache)
+
+    def test_tpose3012(self):
+        """
+        this function checks the manual transpose function that reshapes to a 3012
+            pattern and compares it to the built in numpy function
+        """
+
+        conv_params = {
+            'stride': 2,
+            'pad': 1
+        }
+
+        nr_img = 2;
+        sz_img = 4;
+        nr_in_channel = 3;
+        sz_filter = 4;
+        nr_filter = 3;
+
+        x = np.linspace(-.1, .5, 2*3*4*4).reshape(2, 3, 4, 4)
+        w = np.linspace(-0.2, 0.3, 3*3*4*6).reshape(3, 3, 4, 6)
+
+        self.assertEqual(tpose3012(x).all(), x.transpose(3,0,1,2).all())
+        self.assertEqual(tpose3012(w).all(), w.transpose(3, 0, 1, 2).all())
+
+        # print(list(x.transpose(3, 0, 1, 2).flatten()))
+        print(list(w.transpose(3, 0, 1, 2).flatten()))
