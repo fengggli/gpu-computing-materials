@@ -142,7 +142,7 @@ tensor_t mlp_scores(model_t const *model, tensor_t x) {
 status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
                   T *ptr_loss) {
   status_t ret = S_ERR;
-  *ptr_loss = 0;
+  T loss = 0;
   mlp_scores(model, x);
   // forward
   tensor_t out;
@@ -158,7 +158,7 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
   dout = param_score->diff;
 
   awnn_mode_t mode = MODE_TRAIN;
-  AWNN_CHECK_EQ(S_OK, loss_softmax(out, labels, ptr_loss, mode, dout));
+  AWNN_CHECK_EQ(S_OK, loss_softmax(out, labels, &loss, mode, dout));
 
   // backprop
   for (int i = model->nr_hidden_layers; i >= 0; i--) {
@@ -173,8 +173,10 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
     snprintf(b_name, MAX_STR_LENGTH, "fc%u.bias", i);
     tensor_t dw = net_get_param(model->list_all_params, w_name)->diff;
     tensor_t db = net_get_param(model->list_all_params, b_name)->diff;
+    tensor_t w = net_get_param(model->list_all_params, w_name)->data;
+    loss += 0.5 * (model->reg) * tensor_sum_of_square(w);
 
-    // locate preallocated layer_out gradient
+    // locate pre-allocated layer_out gradient
     char out_name[MAX_STR_LENGTH];
     snprintf(out_name, MAX_STR_LENGTH, "fc%u.out", i);
     dout = net_get_param(model->list_layer_out, out_name)->diff;
@@ -192,6 +194,7 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
       AWNN_CHECK_EQ(S_OK, layer_fc_backward(din, dw, db, cache, dout));
     }
   }
+  *ptr_loss = loss;
   ret = S_OK;
   return ret;
 }

@@ -14,6 +14,7 @@ Some of the contents of this documentation can be found in cs231n class website.
    :caption: Tensor
 
    tensor
+   memory
 
 .. toctree::
    :maxdepth: 2
