@@ -362,7 +362,6 @@ TEST_F(LayerConvTest, forward_from_picture) {
   PINF("Consistent with expected results");
 }
 
-
 TEST_F(LayerConvTest, Forward){
   conv_param_t conv_params;
 
