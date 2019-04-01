@@ -151,7 +151,7 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
 
   char out_name[MAX_STR_LENGTH];  // find the param (data/diff) for score
   snprintf(out_name, MAX_STR_LENGTH, "fc%u.out", model->nr_hidden_layers);
-  PINF("out score is %s", out_name);
+  // PINF("out score is %s", out_name);
   param_t *param_score = net_get_param(model->list_layer_out, out_name);
   AWNN_CHECK_NE(NULL, labels);
   out = param_score->data;
@@ -193,6 +193,13 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
     } else {
       AWNN_CHECK_EQ(S_OK, layer_fc_backward(din, dw, db, cache, dout));
     }
+
+    // add gradient for regulizer term
+    tensor_t tmp = tensor_make_copy(w);
+    T *pelem;
+    uint ii;  // for iteration
+    tensor_for_each_entry(pelem, ii, tmp) { (*pelem) *= model->reg; }
+    tensor_elemwise_op_inplace(dw, tmp, TENSOR_OP_ADD);
   }
   *ptr_loss = loss;
   ret = S_OK;

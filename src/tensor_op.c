@@ -88,7 +88,7 @@ status_t tensor_elemwise_op_inplace(tensor_t to, tensor_t from, tensor_op_t op){
   }
 }
 
-T tensor_sum_of_square(tensor_t t) {
+T tensor_sum_of_square(tensor_t const t) {
   T ret = 0;
   for (uint i = 0; i < tensor_get_capacity(t); i++) {
     ret += (t.data[i]) * (t.data[i]);
