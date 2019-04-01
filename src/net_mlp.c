@@ -143,7 +143,7 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
                   T *ptr_loss) {
   status_t ret = S_ERR;
   *ptr_loss = 0;
-  tensor_t mlp_scores(model_t const *model, tensor_t x);
+  mlp_scores(model, x);
   // forward
   tensor_t out;
   tensor_t dout;

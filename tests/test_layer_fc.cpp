@@ -147,7 +147,7 @@ TEST_F(LayerFcTest, Backward) {
 }
 
 TEST_F(LayerFcTest, CheckLcache) {
-  EXPECT_EQ(cache.count, 0); // backward needs to call free_lcache(cache);
+  EXPECT_EQ(cache.count, 0); // backward needs to call lcache_free_all(cache);
   }
 
   TEST_F(LayerFcTest, Destroy) {
@@ -155,7 +155,7 @@ TEST_F(LayerFcTest, CheckLcache) {
     tensor_destroy(w);
     tensor_destroy(b);
 
-    free_lcache(&cache);
+    lcache_free_all(&cache);
   }
 
 

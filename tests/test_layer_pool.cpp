@@ -85,7 +85,7 @@ TEST_F(LayerGlobalAvgPoolTest, Forward){
   
   status_t ret;
 
-  ret = global_avg_pool_forward(in, &cache, out);// foward function should allocate and populate cache;
+  ret = global_avg_pool_forward(in, NULL, out);// foward function should allocate and populate cache;
   EXPECT_EQ(ret, S_OK);
 
 }
@@ -110,7 +110,7 @@ TEST_F(LayerGlobalAvgPoolTest, Backward){
   // output for backward
   tensor_t dx = tensor_make_alike(x);
 
-  ret = global_avg_pool_backward(dx, &cache, dy); // backward needs to call free_lcache(cache);
+  ret = global_avg_pool_backward(dx, &cache, dy); // backward needs to call lcache_free_all(cache);
   EXPECT_EQ(ret, S_OK);
 
 
@@ -131,7 +131,7 @@ TEST_F(LayerGlobalAvgPoolTest, Backward){
 // TODO: check with cudnn
 // TODO : document tests
 TEST_F(LayerGlobalAvgPoolTest, CheckLcache){
-  EXPECT_EQ(cache.count, 0); // backward needs to call free_lcache(cache);
+  EXPECT_EQ(cache.count, 0); // backward needs to call lcache_free_all(cache);
 }
 
 // TODO : document tests
@@ -140,7 +140,7 @@ TEST_F(LayerGlobalAvgPoolTest, Destroy) {
   tensor_destroy(dx);
   tensor_destroy(y);
   tensor_destroy(dy);
-  free_lcache(&cache);
+  lcache_free_all(&cache);
 }
 
 }  // namespace

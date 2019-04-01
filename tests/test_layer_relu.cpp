@@ -114,13 +114,13 @@ TEST_F(LayerReluTest, Backward) {
 }
 
 TEST_F(LayerReluTest, CheckLcache) {
-  EXPECT_EQ(cache.count, 0); // backward needs to call free_lcache(cache);
+  EXPECT_EQ(cache.count, 0); // backward needs to call lcache_free_all(cache);
   }
 
   TEST_F(LayerReluTest, Destroy) {
     tensor_destroy(x);
 
-    free_lcache(&cache);
+    lcache_free_all(&cache);
   }
 
 

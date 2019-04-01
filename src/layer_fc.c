@@ -66,6 +66,7 @@ status_t layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db,
 
 end:
   // free layer cache
-  free_lcache(cache);
+  tensor_destroy(w_T);
+  tensor_destroy(x_reshaped_T);
   return ret;
 }

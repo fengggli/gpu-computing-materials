@@ -18,8 +18,7 @@ status_t global_avg_pool_forward(tensor_t const x, lcache_t *cache,
   // create cache
   if (cache) {
     tensor_t t = tensor_make_empty_with_dim(x.dim);
-
-    cache->all_tensors[cache->count++] = t;
+    lcache_push(cache, t);
   }
 
   return S_OK;
@@ -27,7 +26,7 @@ status_t global_avg_pool_forward(tensor_t const x, lcache_t *cache,
 
 status_t global_avg_pool_backward(tensor_t dx, lcache_t *cache,
                                   tensor_t const dy) {
-  tensor_t t = cache->all_tensors[--cache->count];
+  tensor_t t = lcache_pop(cache);
   uint N = t.dim.dims[0];
   uint C = t.dim.dims[1];
   uint H = t.dim.dims[2];
@@ -45,7 +44,7 @@ status_t global_avg_pool_backward(tensor_t dx, lcache_t *cache,
               scale_by * dy.data[i * C + j];
 
   // free layer cache
-  free_lcache(cache);
+  tensor_destroy(t);
 
   return S_OK;
 }

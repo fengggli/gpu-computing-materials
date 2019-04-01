@@ -30,6 +30,6 @@ status_t layer_relu_backward(tensor_t dx, lcache_t *cache, tensor_t const dy) {
 
   ret = S_OK;
 
-  free_lcache(cache);
+  tensor_destroy(mask);
   return ret;
 }
