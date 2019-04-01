@@ -386,19 +386,3 @@ void tensor_destroy(tensor_t* t){
   t->data = NULL;
 }
 
-bool tensors_equal_exact(tensor_t a, tensor_t b) {
-  if(a.mem_type != b.mem_type)
-    return false;
-  if(!dim_is_same(a.dim, b.dim))
-    return false;
-
-  uint capacity = dim_get_capacity(a.dim);
-  for(uint i = 0; i < capacity; ++i) {
-    if (a.data[i] != b.data[i]) {
-      return false;
-    }
-  }
-
-  return true;
-}
-

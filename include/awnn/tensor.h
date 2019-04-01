@@ -117,7 +117,7 @@ T *tensor_get_elem_ptr(tensor_t const t, dim_t const loc);
 void tensor_dump(tensor_t t);
 
 T tensor_rel_error(tensor_t x, tensor_t y);
-bool tensors_equal_exact(tensor_t a, tensor_t b);
+
 status_t tensor_reshape_(tensor_t *ptr_t, uint const shape[], uint const ndims);
 status_t tensor_reshape_flat_(tensor_t *t);
 
