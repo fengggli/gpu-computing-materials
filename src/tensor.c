@@ -131,11 +131,7 @@ tensor_t _tensor_make(dim_t dim){
   tensor_t t;
   uint capacity;
   capacity = dim_get_capacity(dim);
-<<<<<<< HEAD
-  t.data = malloc(capacity * sizeof(T));
-=======
-  t.data =mem_alloc(capacity*sizeof(T));
->>>>>>> master
+  t.data = mem_alloc(capacity * sizeof(T));
   t.mem_type = CPU_MEM;
   t.dim = dim;
   assert(NULL != t.data);
