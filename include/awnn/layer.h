@@ -22,23 +22,30 @@
  * Backward pass needs to delete the cache
  *
  * */
-typedef struct{
-  uint count; // number of tensors
+typedef struct {
+  uint count;  // number of tensors
   tensor_t all_tensors[MAX_CACHE_SIZE];
   char name[MAX_STR_LENGTH];
-  struct list_head list;
-}lcache_t;
+  struct list_head list;  // for inter-layer traversal
+} lcache_t;
 
-static void make_empty_lcache(lcache_t *cache){
-  cache->count = 0;
+static inline void lcache_push(lcache_t *cache, tensor_t t) {
+  cache->all_tensors[cache->count++] = t;
 }
 
-/* This should be called inside the backprop */
-static void free_lcache(lcache_t *cache){
+static inline tensor_t lcache_pop(lcache_t *cache) {
+  tensor_t ret = cache->all_tensors[cache->count - 1];
+  cache->count--;
+  return ret;
+}
+
+static void make_empty_lcache(lcache_t *cache) { cache->count = 0; }
+
+/* This is merely needed most of the time, we should pop and destroy one by one */
+static void lcache_free_all(lcache_t *cache) {
   uint i;
-  for(i =0; i <cache->count; i++){
+  for (i = 0; i < cache->count; i++) {
     tensor_destroy(cache->all_tensors[i]);
   }
   cache->count = 0;
 }
-
