@@ -150,8 +150,8 @@ TEST_F(TensorOpTest, AddVector) {
   EXPECT_EQ(t.data[1], 2);
   EXPECT_EQ(t.data[5], 5);
 
-  tensor_destroy(t);
-  tensor_destroy(v);
+  tensor_destroy(&t);
+  tensor_destroy(&v);
 }
 
 TEST_F(TensorOpTest, tensor_reshape_flat_) {
@@ -210,8 +210,8 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test0) {
       }
     }
   }
-  tensor_destroy(in);
-  tensor_destroy(padded_in);
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
 }
 
 
@@ -250,8 +250,8 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test1) {
       }
     }
   }
-  tensor_destroy(in);
-  tensor_destroy(padded_in);
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
 }
 
 
@@ -290,8 +290,8 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test2) {
       }
     }
   }
-  tensor_destroy(in);
-  tensor_destroy(padded_in);
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test3) {
@@ -329,8 +329,8 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test3) {
       }
     }
   }
-  tensor_destroy(in);
-  tensor_destroy(padded_in);
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
 }
 
 
@@ -369,8 +369,8 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test4) {
       }
     }
   }
-  tensor_destroy(in);
-  tensor_destroy(padded_in);
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
 }
 
 
@@ -409,8 +409,8 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test5) {
       }
     }
   }
-  tensor_destroy(in);
-  tensor_destroy(padded_in);
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
 }
 
 
@@ -449,8 +449,8 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test6) {
       }
     }
   }
-  tensor_destroy(in);
-  tensor_destroy(padded_in);
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test7) {
@@ -488,8 +488,8 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test7) {
       }
     }
   }
-  tensor_destroy(in);
-  tensor_destroy(padded_in);
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
 }
 
 
@@ -528,8 +528,8 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test8) {
       }
     }
   }
-  tensor_destroy(in);
-  tensor_destroy(padded_in);
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test9) {
@@ -567,8 +567,8 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test9) {
       }
     }
   }
-  tensor_destroy(in);
-  tensor_destroy(padded_in);
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test10) {
@@ -606,8 +606,8 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test10) {
       }
     }
   }
-  tensor_destroy(in);
-  tensor_destroy(padded_in);
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test11) {
@@ -645,8 +645,8 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test11) {
       }
     }
   }
-  tensor_destroy(in);
-  tensor_destroy(padded_in);
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
 }
 
 } // namespace

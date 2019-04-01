@@ -316,10 +316,10 @@ TEST_F(LayerConvTest, test_tpose3012) {
   EXPECT_LT(tensor_rel_error(x_tpose_3012, x_ref), 1e-7);
   EXPECT_LT(tensor_rel_error(w_tpose_3012, w_ref), 1e-7);
 
-  tensor_destroy(x_tpose_3012);
-  tensor_destroy(x_ref);
-  tensor_destroy(w_tpose_3012);
-  tensor_destroy(w_ref);
+  tensor_destroy(&x_tpose_3012);
+  tensor_destroy(&x_ref);
+  tensor_destroy(&w_tpose_3012);
+  tensor_destroy(&w_ref);
 }
 
 TEST_F(LayerConvTest, forward_from_picture) {

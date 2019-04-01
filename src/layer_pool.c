@@ -44,7 +44,7 @@ status_t global_avg_pool_backward(tensor_t dx, lcache_t *cache,
               scale_by * dy.data[i * C + j];
 
   // free layer cache
-  tensor_destroy(t);
+  tensor_destroy(&t);
 
   return S_OK;
 }

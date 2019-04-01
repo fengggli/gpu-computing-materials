@@ -72,8 +72,8 @@ status_t eval_numerical_gradient(
     dx.data[i] = partial_deriv;
     PDBG("Seting dx[%u] = %.7f", i, partial_deriv);
   }
-  tensor_destroy(y_pos);
-  tensor_destroy(y_neg);
+  tensor_destroy(&y_pos);
+  tensor_destroy(&y_neg);
 
   return S_OK;
 }

@@ -71,7 +71,7 @@ tensor_t im2col(tensor_t const x, tensor_t const w, conv_param_t const params) {
 
   im2col_inner(cols, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, pad, stride);
 
-  tensor_destroy(x_padded);
+  tensor_destroy(&x_padded);
 
   return cols;
 }

@@ -47,8 +47,8 @@ static inline void net_free_params(struct list_head *l_params){
     if(p_param->data.data != NULL){
     // if(p_param->data.mem_type != EMPTY_MEM){
       PINF("-- freeing %s at %p", p_param->name, p_param->data.data);
-      tensor_destroy(p_param->data);
-      tensor_destroy(p_param->diff);
+      tensor_destroy(&p_param->data);
+      tensor_destroy(&p_param->diff);
     }
     mem_free(p_param);
   }

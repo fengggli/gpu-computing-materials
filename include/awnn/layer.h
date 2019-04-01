@@ -45,7 +45,7 @@ static void make_empty_lcache(lcache_t *cache) { cache->count = 0; }
 static void lcache_free_all(lcache_t *cache) {
   uint i;
   for (i = 0; i < cache->count; i++) {
-    tensor_destroy(cache->all_tensors[i]);
+    tensor_destroy(&cache->all_tensors[i]);
   }
   cache->count = 0;
 }

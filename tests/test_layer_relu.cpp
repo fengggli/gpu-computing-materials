@@ -81,7 +81,7 @@ TEST_F(LayerReluTest, Forward) {
   EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
   PINF("Consistent with expected results");
 
-  tensor_destroy(y_ref);
+  tensor_destroy(&y_ref);
 }
 
 TEST_F(LayerReluTest, Backward) {
@@ -118,7 +118,7 @@ TEST_F(LayerReluTest, CheckLcache) {
   }
 
   TEST_F(LayerReluTest, Destroy) {
-    tensor_destroy(x);
+    tensor_destroy(&x);
 
     lcache_free_all(&cache);
   }

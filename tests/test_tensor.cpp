@@ -53,56 +53,56 @@ TEST_F(TensorTest, Construct) {
   EXPECT_TRUE(t.data != nullptr);
 }
 
-TEST_F(TensorTest, Destroy) { tensor_destroy(t); }
+TEST_F(TensorTest, Destroy) { tensor_destroy(&t); }
 
 TEST_F(TensorTest, Dumpd0) {
 
   uint const shape[] = {0}; // a scalar
   tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
-  tensor_destroy(tt);
+  tensor_destroy(&tt);
 }
 
 TEST_F(TensorTest, Dumpd1) {
   uint const shape[] = {2}; // a scalar
   tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
-  tensor_destroy(tt);
+  tensor_destroy(&tt);
 }
 
 TEST_F(TensorTest, Dumpd2) {
   uint const shape[] = {2, 3}; // a scalar
   tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
-  tensor_destroy(tt);
+  tensor_destroy(&tt);
 }
 
 TEST_F(TensorTest, Dumpd3) {
   uint const shape[] = {2, 3, 4}; // a scalar
   tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
-  tensor_destroy(tt);
+  tensor_destroy(&tt);
 }
 
 TEST_F(TensorTest, Dumpd4) {
   uint const shape[] = {2, 3, 4, 5}; // a scalar
   tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
-  tensor_destroy(tt);
+  tensor_destroy(&tt);
 }
 
 TEST_F(TensorTest, Dumpd4_2) {
   uint const shape[] = {2, 3, 1, 1}; // a 4-d tensor, but in memory this is the same as {2,3}
   tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
-  tensor_destroy(tt);
+  tensor_destroy(&tt);
 }
 
 TEST_F(TensorTest, MakeLinspace) {
   uint const shape[] = {2, 2, 2, 2}; // a scalar
   tensor_t t1 = tensor_make_linspace(-0.1, 0.1, shape, dim_of_shape(shape));
   tensor_dump(t1);
-  tensor_destroy(t1);
+  tensor_destroy(&t1);
 }
 
 TEST_F(TensorTest, MakeCopy) {
@@ -111,8 +111,8 @@ TEST_F(TensorTest, MakeCopy) {
   tensor_t t2 = tensor_make_copy(t1);
   EXPECT_EQ(S_OK, dim_is_same(t1.dim, t2.dim));
   EXPECT_NE(t1.data, t2.data);
-  tensor_destroy(t1);
-  tensor_destroy(t2);
+  tensor_destroy(&t1);
+  tensor_destroy(&t2);
 }
 
 TEST_F(TensorTest, GetElem) {
@@ -123,7 +123,7 @@ TEST_F(TensorTest, GetElem) {
   dim_t loc2 = make_dim(3,1,2,1);
   EXPECT_EQ(0, *tensor_get_elem_ptr(t1, loc1)); // todo location can be 0!
   EXPECT_EQ(21, *tensor_get_elem_ptr(t1, loc2));
-  tensor_destroy(t1);
+  tensor_destroy(&t1);
 }
 
 TEST_F(TensorTest, MakeTranspose) {
@@ -136,8 +136,8 @@ TEST_F(TensorTest, MakeTranspose) {
   PINF("[-- dump t2]");
   tensor_dump(t2);
 
-  tensor_destroy(t1);
-  tensor_destroy(t2);
+  tensor_destroy(&t1);
+  tensor_destroy(&t2);
 }
 
 TEST_F(TensorTest, MakeSum) {
@@ -155,8 +155,8 @@ TEST_F(TensorTest, MakeSum) {
   EXPECT_EQ(18, t2.data[2]);
   EXPECT_EQ(21, t2.data[3]);
 
-  tensor_destroy(t2);
-  tensor_destroy(t1);
+  tensor_destroy(&t2);
+  tensor_destroy(&t1);
 }
 
 TEST_F(TensorTest, RelError) {
@@ -176,8 +176,8 @@ TEST_F(TensorTest, RelError) {
   EXPECT_LT(err_1, err_2);
   EXPECT_LT(err_2, err_3);
 
-  tensor_destroy(t2);
-  tensor_destroy(t1);
+  tensor_destroy(&t2);
+  tensor_destroy(&t1);
 }
 
 TEST_F(TensorTest, MAKE_EMPTY_WITH_DIM){
