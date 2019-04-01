@@ -94,10 +94,16 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Current</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#todo-list">TODO List</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#working-in-progress">Working in progress:</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">0.4.2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id1">0.4.3</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#added">Added</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#changed">Changed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#others">others</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">0.4.2</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Added</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#previous">Previous</a></li>
@@ -187,7 +193,7 @@
 </li>
 <li><p class="first">Utility</p>
 <ol class="arabic simple">
-<li>sgd</li>
+<li>solver</li>
 <li>reporting</li>
 </ol>
 </li>
@@ -202,20 +208,49 @@
 <div class="section" id="working-in-progress">
 <h2>Working in progress:<a class="headerlink" href="#working-in-progress" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li>Conv2d and global pool in gpu (Chris and Yuankun)</li>
-<li>2-layer mlp (Feng).<ul>
-<li>need sandwich layer</li>
-<li>need verify net loss/scores function.</li>
-</ul>
-</li>
+<li>Conv2d and global pool in gpu (Chris and Yuankun).</li>
+<li>solver.</li>
 </ol>
 <div class="section" id="id1">
-<h3>0.4.2<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
-<p>:Date 2019-03-30</p>
+<h3>0.4.3<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>:Date 2019-04-01</p>
+<p>See (<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/pull/19">https://github.com/fengggli/gpu-computing-materials/pull/19</a>)</p>
 </div>
 </div>
 <div class="section" id="added">
 <h2>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>a fc_relu sandwich layer</li>
+<li>weight initialization (currently only linspace is used)</li>
+<li>macro: tensor_for_each_entry in tensor.h</li>
+<li>net-mlp:<ul>
+<li>inference-only forward - mlp_scores</li>
+<li>loss function to update the gradients mlp_loss</li>
+<li>forward compared with numpy version</li>
+<li>backward checked with numerical results</li>
+<li>regulizer is  added</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="changed">
+<h2>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>changed the layer cache, now each layer has a lcache_t, which can be assessed as a stack using lcache_push, and lcache_pop. See docs/source/memory.rst for more details</li>
+</ul>
+</div>
+<div class="section" id="others">
+<h2>others<a class="headerlink" href="#others" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>clangformat using google style</li>
+</ul>
+<div class="section" id="id2">
+<h3>0.4.2<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>:Date 2019-03-30</p>
+</div>
+</div>
+<div class="section" id="id3">
+<h2>Added<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li>Layers:</li>
 </ol>
