@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.5)
 option(USE_CLANG "Use clang compiler set" OFF)
 option(USE_OPENBLAS "USE openblas for blas" OFF)
 option(BUILD_TEST "Build google test and all test cases" ON)
+option(USE_CUDA "Build with CUDA" OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
@@ -16,9 +17,26 @@ else()
 endif()
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_SHARED_LINKER_FLAGS "-rdynamic") 
+set(CMAKE_SHARED_LINKER_FLAGS "-rdynamic")
 
 project(awnn LANGUAGES C CXX)
+
+## cuda
+if(USE_CUDA)
+  find_package(CUDA REQUIRED)
+  set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
+  set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda/)
+  set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -std=c++11 -O3 -DCONFIG_DEBUG -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=sm_35 -gencode arch=compute_37,code=sm_37 -gencode arch=compute_50,code=sm_50 -gencode arch=compute_52,code=sm_52 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_70,code=compute_70)
+  set(CUDA_HOST_COMPILATION_CPP ON)
+  set(CUDA_SEPARABLE_COMPILATION ON)
+  set(CUDA_VERBOSE ON)
+  set(CUDA_64_BIT_DEVICE_CODE ON CACHE STRING "Compile device code in 64 bit mode" FORCE)
+
+  message(STATUS "FoundCUDA              : ${CUDA_FOUND}")
+  message(STATUS "Cuda cublas libraries  : ${CUDA_CUBLAS_LIBRARIES}")
+
+  set(CMAKE_CUDA_COMPILER "nvcc")
+endif(USE_CUDA)
 
 include(CheckIncludeFiles)
 
@@ -41,7 +59,7 @@ configure_file (
 
 include_directories(include ${PROJECT_BINARY_DIR})
 
-add_library(awnnlib SHARED
+add_library(awnnlib
   src/tensor.c
   src/tensor_op.c
   src/layer_conv.c
@@ -53,6 +71,11 @@ add_library(awnnlib SHARED
   src/weight_init.c
   src/layer_sandwich.c
   src/solver.c)
+
+if(USE_CUDA)
+  cuda_add_library(awnnlib_device src/layer_pool.cu)
+endif(USE_CUDA)
+
 
 target_link_libraries(awnnlib PUBLIC ${AWNN_LIBS})
 
