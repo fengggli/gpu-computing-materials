@@ -13,13 +13,16 @@ namespace {
 
 // The fixture for testing class Foo.
 class SolverTest : public ::testing::Test {
+ protected:
+  static solver_handle_t solver;
 };
+
+solver_handle_t SolverTest:: solver;
 
 // input of forward
 
 TEST_F(SolverTest, Construct) {
   // input to the model
-  solver_handle_t solver;
   data_t data;
   model_t model;
 
@@ -34,6 +37,7 @@ TEST_F(SolverTest, Construct) {
   solver_config_t solver_config;
   solver_config.batch_size = batch_sz;
   solver_config.optimize_method = OPTIM_SGD;
+  solver_config.learning_rate = 0.1;
 
   mlp_init(&model, batch_sz, input_dim, output_dim, nr_hidden_layers,
            hidden_dims, reg);
@@ -46,6 +50,8 @@ TEST_F(SolverTest, Construct) {
 // update the model with one step
 TEST_F(SolverTest, Update) {
   // input to the model
+  solver_train(&solver);
+}
 
 }  // namespace
 

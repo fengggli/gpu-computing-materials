@@ -133,7 +133,7 @@ tensor_t _tensor_make(dim_t dim){
   t.data =mem_alloc(capacity*sizeof(T));
   t.mem_type = CPU_MEM;
   t.dim = dim;
-  assert(NULL != t.data);
+  AWNN_CHECK_NE(NULL, t.data);
   return t;
 }
 

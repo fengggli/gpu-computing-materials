@@ -44,6 +44,10 @@ enum {
 #define AWNN_CHECK_NE(a, b) \
   if((a)== (b)) PERR("Expect unequal value, but not");
 
+// great than
+#define AWNN_CHECK_GT(a, b) \
+  if((a) <= (b)) PERR("Expect lh > rh, but not");
+
 
 #ifdef __cplusplus
 }

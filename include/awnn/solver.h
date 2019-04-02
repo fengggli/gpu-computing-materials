@@ -21,9 +21,9 @@ typedef struct {
 } solver_config_t;
 
 typedef struct {
-  data_t *data;
-  solver_config_t *config;
-  model_t *model;
+  data_t data;
+  solver_config_t config;
+  model_t model;
 } solver_handle_t;
 
 /* Solver does the following:
