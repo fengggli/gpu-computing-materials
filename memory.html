@@ -97,7 +97,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Changelog</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Current</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html#previous">Previous</a></li>
 </ul>
 
@@ -190,12 +190,11 @@ of memory types above can be inferred.</p>
 <ul class="simple">
 <li>In the mlp_init function, all the <em>output</em>, <em>learnable params</em>  are directly</li>
 </ul>
-<p>allocated and added to the net using <em>net_attach_param</em>
-* <em>input</em> can be special, since the input of upper layer is the output of the</p>
-<blockquote>
-<div>bottom layer, we still use the <em>list</em> structure above to track all the data/diff
-of input, but they are just shadow copy of lower output.</div></blockquote>
+<p>allocated and added to the net using <em>net_attach_param</em>.</p>
 <ul class="simple">
+<li><em>input</em> can be special, since the input of upper layer is the output of the
+bottom layer, we still use the <em>list</em> structure above to track all the data/diff
+of input, but they are just shadow copy of lower output.</li>
 <li><em>cache</em> Currently, each layer can different types of caches. For the simplicity,
 lcache_t is just a place holder to track caches used by <em>each layer</em>.
 inside each lcache_t, tensors can be pushed in and popped out</li>
