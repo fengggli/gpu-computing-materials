@@ -21,6 +21,19 @@ tensor_t tensor_make_transpose_3012(tensor_t t) {
   return tpose;
 }
 
+tensor_t tensor_make_transpose_1230(tensor_t t) {
+  uint target_idx = 0;
+  tensor_t tpose = tensor_make_copy(t);
+  for (int i = 0; i < t.dim.dims[1]; ++i) {  // for each of the new dim 0
+    for (int j = 0; j < t.dim.dims[0] * t.dim.dims[2] * t.dim.dims[3]; ++j) {
+      tpose.data[target_idx++] = t.data[i + j * t.dim.dims[1]];
+    }
+  }
+  uint const shape[] = { t.dim.dims[1], t.dim.dims[2], t.dim.dims[3], t.dim.dims[0] };
+  tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
+  return tpose;
+}
+
 // TODO:  results not correct
 status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
   status_t ret = S_ERR;

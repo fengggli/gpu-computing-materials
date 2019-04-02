@@ -365,7 +365,7 @@ void tensor_dump(tensor_t t){
 T tensor_rel_error(tensor_t x, tensor_t ref){
   if(S_OK !=  dim_is_same(x.dim, ref.dim)){
     PERR("Dimension not match!");
-    return -1;
+    return 100;
   }
   uint capacity = tensor_get_capacity(x);
   T norm_diff = 0; // l-2 norm of difference
