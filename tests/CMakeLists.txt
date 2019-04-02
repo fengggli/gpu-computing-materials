@@ -21,7 +21,7 @@ target_link_libraries(test-layer-conv awnnlib  gtest)
 add_test(test-layer-conv test-layer-conv)
 
 add_executable(test-layer-pool test_layer_pool.cpp)
-target_link_libraries(test-layer-pool awnnlib  gtest)
+target_link_libraries(test-layer-pool awnnlib awnnlib_device gtest)
 add_test(test-layer-pool test-layer-pool)
 
 add_executable(test-layer-fc test_layer_fc.cpp)

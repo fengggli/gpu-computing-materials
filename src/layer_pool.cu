@@ -1,4 +1,3 @@
-#include "awnn/channel.h"
 #include "awnn/layer_pool.h"
 
 /* this is a */
