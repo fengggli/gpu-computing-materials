@@ -1,8 +1,17 @@
 .. _changelog:
 
-========
+=========
+Changelog
+=========
+
 Current
-========
+=======
+
+.. note::
+
+  Code is maintained in https://github.com/fengggli/gpu-computing-materials/
+
+  Ask Feng for access.
 
 TODO List
 ----------
@@ -18,8 +27,9 @@ TODO List
 
 * Net
 
-  1. residual blocks
-  2. siplified resnet
+  1. Lenet
+  2. residual blocks
+  3. simplified resnet
 
 * Utility
 
@@ -33,14 +43,18 @@ TODO List
 * Others
 
 
-Working in progress:
----------------------
+Working in progress
+--------------------
 
 1. Conv2d and global pool in gpu (Chris and Yuankun).
 2. solver.
 
+=========
+Previous
+=========
+
 0.4.3
-======
+=======
 
 :Date 2019-04-01
 
@@ -91,9 +105,7 @@ Added
   * The param_t uses linux-kernel style linked list, which can be also used to construct other basic data structures like stack/queue.
   * currently it's used to manage all learnable params of fc layers.
 
-=========
-Previous
-=========
+
 
 < 0.4.1
 ========

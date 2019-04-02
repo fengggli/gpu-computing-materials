@@ -32,10 +32,12 @@ Currently the net knows about the maximum batch size, so all the sizes
 of memory types above can be inferred.
 
 * In the mlp_init function, all the *output*, *learnable params*  are directly
-allocated and added to the net using *net_attach_param*
+allocated and added to the net using *net_attach_param*.
+
 * *input* can be special, since the input of upper layer is the output of the
   bottom layer, we still use the *list* structure above to track all the data/diff
   of input, but they are just shadow copy of lower output.
+
 * *cache* Currently, each layer can different types of caches. For the simplicity,
   lcache_t is just a place holder to track caches used by *each layer*.
   inside each lcache_t, tensors can be pushed in and popped out
