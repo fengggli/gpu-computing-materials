@@ -163,8 +163,12 @@ static inline void _div(T *to, T *from, uint len) {
  * Device support
  */
 
+/* Allocate a tensor in GPU, based on the value from a host tensor*/
 tensor_t tensor_make_copy_h2d(tensor_t t_host);
+/* destroy the tensor in  GPU*/
 tensor_t tensor_destroy_device(tensor_t t_device);
+/* copy the tensor back from gpu to host*/
+void tensor_copy_d2h(tensor_t t_host, tensor_t t_device);
 
 #ifdef __cplusplus
 }

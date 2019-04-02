@@ -81,6 +81,14 @@ TEST_F(LayerGlobalAvgPoolTest, Backward) {
       x, &cache, y);  // foward function should allocate and populate cache;
   EXPECT_EQ(ret, S_OK);
 
+  // check forward value
+  tensor_t y_ref = tensor_make_alike(y);
+  T value_list[] = {0.10817717, 0.12487223, 0.14156729, 0.15826235,
+                    0.17495741, 0.19165247, 0.20834753, 0.22504259,
+                    0.24173765, 0.25843271, 0.27512777, 0.29182283};
+  tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
+  EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
+
   // input for backward
   tensor_t dy = tensor_make_linspace(-0.1, 0.5, shape_y,
                                      dim_of_shape(shape_y));  // some fake data
@@ -107,7 +115,7 @@ TEST_F(LayerGlobalAvgPoolTest, Backward) {
 }
 
 #ifdef USE_CUDA
-TEST_F(LayerGlobalAvgPoolTest, BackwardCUDA) {
+TEST_F(LayerGlobalAvgPoolTest, BackwardDevice) {
   uint const shape_x[] = {6, 2, 7, 7};  // 6 images, 2x7x7
   uint const shape_y[] = {6, 2, 1, 1};
 
@@ -116,9 +124,17 @@ TEST_F(LayerGlobalAvgPoolTest, BackwardCUDA) {
 
   status_t ret;
 
-  ret = global_avg_pool_forward(
+  ret = global_avg_pool_forward_device(
       x, &cache, y);  // foward function should allocate and populate cache;
   EXPECT_EQ(ret, S_OK);
+
+  // check forward value
+  tensor_t y_ref = tensor_make_alike(y);
+  T value_list[] = {0.10817717, 0.12487223, 0.14156729, 0.15826235,
+                    0.17495741, 0.19165247, 0.20834753, 0.22504259,
+                    0.24173765, 0.25843271, 0.27512777, 0.29182283};
+  tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
+  EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
 
   // input for backward
   tensor_t dy = tensor_make_linspace(-0.1, 0.5, shape_y,

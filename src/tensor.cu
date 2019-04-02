@@ -7,6 +7,7 @@ void* mem_alloc_device(size_t size) {
   AWNN_CHECK_EQ(cudaStat, cudaSuccess);
   return d_data;
 }
+
 void mem_free_device(void* d_data) {
   if (d_data) cudaFree(d_data);
 }
@@ -22,6 +23,13 @@ tensor_t tensor_make_copy_h2d(tensor_t t_host) {
   t_device.dim = t_host.dim;
 
   return t_device;
+}
+
+void tensor_copy_d2h(tensor_t t_host, tensor_t t_device) {
+  uint capacity = tensor_get_capacity(t_device);
+  AWNN_CHECK_EQ(tensor_get_capacity(t_host), capacity)
+  cudaMemcpy(t_host.data, t_device.data, capacity * sizeof(T),
+             cudaMemcpyDeviceToHost);
 }
 
 tensor_t tensor_destroy_device(tensor_t t_device) {
