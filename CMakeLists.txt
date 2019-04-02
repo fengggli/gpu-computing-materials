@@ -51,7 +51,8 @@ add_library(awnnlib SHARED
   src/loss_softmax.c
   src/net_mlp.c
   src/weight_init.c
-  src/layer_sandwich.c)
+  src/layer_sandwich.c
+  src/solver.c)
 
 target_link_libraries(awnnlib PUBLIC ${AWNN_LIBS})
 
