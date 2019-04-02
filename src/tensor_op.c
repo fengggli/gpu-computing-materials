@@ -7,7 +7,7 @@
 #endif
 #include <assert.h>
 
-
+// used for forward
 tensor_t tensor_make_transpose_3012(tensor_t t) {
   uint target_idx = 0;
   tensor_t tpose = tensor_make_copy(t);
@@ -21,15 +21,24 @@ tensor_t tensor_make_transpose_3012(tensor_t t) {
   return tpose;
 }
 
+// used for backward
 tensor_t tensor_make_transpose_1230(tensor_t t) {
-  uint target_idx = 0;
+  uint src_idx = 0, target_idx = 0;
+  uint original_dim_0 = t.dim.dims[0];
+  uint original_dim_1 = t.dim.dims[1];
+  uint original_dim_2 = t.dim.dims[2];
+  uint original_dim_3 = t.dim.dims[3];
+
   tensor_t tpose = tensor_make_copy(t);
-  for (int i = 0; i < t.dim.dims[1]; ++i) {  // for each of the new dim 0
-    for (int j = 0; j < t.dim.dims[0] * t.dim.dims[2] * t.dim.dims[3]; ++j) {
-      tpose.data[target_idx++] = t.data[i + j * t.dim.dims[1]];
+
+  for (int i = 0; i < original_dim_0; ++i) {
+    for (int j = 0; j < original_dim_1 * original_dim_2 * original_dim_3; ++j) {
+      target_idx = (i + j * original_dim_0);
+      tpose.data[target_idx] = t.data[src_idx++];
     }
   }
-  uint const shape[] = { t.dim.dims[1], t.dim.dims[2], t.dim.dims[3], t.dim.dims[0] };
+
+  uint const shape[] = { original_dim_1, original_dim_2, original_dim_3, original_dim_0 };
   tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
   return tpose;
 }
