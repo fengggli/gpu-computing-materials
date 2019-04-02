@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Documentation of gpu-computing-spring19 project &mdash; gpu-computing19-awnn  documentation</title>
+  <title>CUDA Support &mdash; gpu-computing19-awnn  documentation</title>
   
 
   
@@ -35,7 +35,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Tensor and its operations" href="tensor.html" /> 
+    <link rel="next" title="Pooling Layer" href="layers/pool.html" />
+    <link rel="prev" title="Memory management" href="memory.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -49,7 +50,7 @@
           
 
           
-            <a href="#" class="icon icon-home"> gpu-computing19-awnn
+            <a href="index.html" class="icon icon-home"> gpu-computing19-awnn
           
 
           
@@ -80,10 +81,13 @@
             
             
               <p class="caption"><span class="caption-text">Tensor</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="tensor.html">Tensor and its operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="memory.html">Memory management</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cuda.html">CUDA Support</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CUDA Support</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#howto">HOWTO</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">Layers:</span></p>
 <ul>
@@ -108,7 +112,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">gpu-computing19-awnn</a>
+          <a href="index.html">gpu-computing19-awnn</a>
         
       </nav>
 
@@ -137,15 +141,15 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="#">Docs</a> &raquo;</li>
+      <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Documentation of gpu-computing-spring19 project</li>
+      <li>CUDA Support</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/cuda.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -158,46 +162,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="documentation-of-gpu-computing-spring19-project">
-<h1>Documentation of gpu-computing-spring19 project<a class="headerlink" href="#documentation-of-gpu-computing-spring19-project" title="Permalink to this headline">¶</a></h1>
-<p>Some of the contents of this documentation can be found in cs231n class website. (<a class="reference external" href="http://cs231n.github.io/">http://cs231n.github.io/</a>)</p>
-<div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Tensor</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tensor.html">Tensor and its operations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="memory.html">Memory management</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="memory.html#allocation">Allocation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="memory.html#access">Access</a></li>
-<li class="toctree-l2"><a class="reference internal" href="memory.html#destroy">Destroy</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="cuda.html">CUDA Support</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="cuda.html#howto">HOWTO</a></li>
-</ul>
-</li>
-</ul>
+  <div class="section" id="cuda-support">
+<span id="cuda"></span><h1>CUDA Support<a class="headerlink" href="#cuda-support" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="howto">
+<h2>HOWTO<a class="headerlink" href="#howto" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">-</span><span class="n">DUSE_CUDA</span> <span class="o">..</span>
+</pre></div>
 </div>
-<div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Layers:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="layers/pool.html">Pooling Layer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="layers/conv.html">Convolution Layer</a></li>
-</ul>
-</div>
-<div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Changelog</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#current">Current</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html#previous">Previous</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id2">0.4.3</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id3">0.4.2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id5">&lt; 0.4.1</a></li>
-</ul>
-</li>
-</ul>
 </div>
 </div>
 
@@ -209,8 +180,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="tensor.html" class="btn btn-neutral float-right" title="Tensor and its operations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="layers/pool.html" class="btn btn-neutral float-right" title="Pooling Layer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
+      
+        <a href="memory.html" class="btn btn-neutral float-left" title="Memory management" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
