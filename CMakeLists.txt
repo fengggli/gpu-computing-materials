@@ -36,6 +36,7 @@ if(USE_CUDA)
   message(STATUS "Cuda cublas libraries  : ${CUDA_CUBLAS_LIBRARIES}")
 
   set(CMAKE_CUDA_COMPILER "nvcc")
+
 endif(USE_CUDA)
 
 include(CheckIncludeFiles)
@@ -49,7 +50,7 @@ if(USE_OPENBLAS)
     message(FATAL_ERROR "in sievert, run:
     sudo apt-get install libopenblas-dev")
   endif()
-  set(AWNN_LIBS ${AWNN_LIBS} openblas)
+  set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS} openblas)
 endif()
 
 configure_file (
@@ -72,12 +73,21 @@ add_library(awnnlib
   src/layer_sandwich.c
   src/solver.c)
 
+target_link_libraries(awnnlib PUBLIC ${AWNN_DEP_LIBS})
+
+set(AWNN_LIBS "awnnlib")
+
 if(USE_CUDA)
-  cuda_add_library(awnnlib_device src/layer_pool.cu)
+  cuda_add_library(awnndevicelib
+    src/tensor.cu
+    src/layer_pool.cu)
+
+  set(AWNN_DEVICE_LIBS "awnndevicelib")
+
 endif(USE_CUDA)
 
+# message("AWNNLIBS is ${AWNN_LIBS}")
 
-target_link_libraries(awnnlib PUBLIC ${AWNN_LIBS})
 
 if(BUILD_TEST)
 #  add_subdirectory(/usr/src/gtest ${CMAKE_CURRENT_BINARY_DIR}/gtest)

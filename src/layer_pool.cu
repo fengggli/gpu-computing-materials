@@ -20,21 +20,27 @@ status_t global_avg_pool_forward_device(tensor_t const x, lcache_t *cache,
                                         tensor_t y) {
   uint num_images = x.dim.dims[0];
   uint num_channels = x.dim.dims[1];
-  T *d_x, *d_y;
+  uint capacity_x = tensor_get_capacity(x);
+  uint capacity_y = tensor_get_capacity(y);
 
-  cudaMalloc(&d_x, sizeof(T) * tensor_get_capacity(x));
-  cudaMalloc(&d_y, sizeof(T) * tensor_get_capacity(y));
-  // _do_forward(d_x, num_image, num_channels, channel_capacity(x), dout);
+  tensor_t d_x = tensor_make_copy_h2d(x);
+  tensor_t d_y = tensor_make_copy_h2d(y);
 
-  // tensor_t x_d = tensor_make_copy_h2d();
+  dim3 threads(32);
+  dim3 blocks(1);
+  // dim3 blocks(N/threads.x);
 
-  // create cache
+  _do_forward<<<blocks, threads>>>(d_x.data, num_images, num_channels,
+                                   (capacity_x) / (num_images * num_channels),
+                                   d_y.data);
+
   if (cache) {
     tensor_t t = tensor_make_empty_with_dim(x.dim);
     lcache_push(cache, t);
   }
-  cudaFree(d_x);
-  cudaFree(d_y);
+
+  tensor_destroy_device(d_x);
+  tensor_destroy_device(d_y);
 
   return S_OK;
 }

@@ -8,6 +8,7 @@
 #include "awnn/channel.h"
 #include "awnn/layer_pool.h"
 #include "awnn/tensor.h"
+#include "config.h"
 #include "gtest/gtest.h"
 #include "test_util.h"
 namespace {
@@ -87,7 +88,7 @@ TEST_F(LayerGlobalAvgPoolTest, Backward) {
   // output for backward
   tensor_t dx = tensor_make_alike(x);
 
-  ret = global_avg_pool_backward_device(
+  ret = global_avg_pool_backward(
       dx, &cache, dy);  // backward needs to call lcache_free_all(cache);
   EXPECT_EQ(ret, S_OK);
 

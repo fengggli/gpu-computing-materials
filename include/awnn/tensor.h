@@ -159,6 +159,13 @@ static inline void _div(T *to, T *from, uint len) {
 #define tensor_for_each_entry(pdata, i, t) \
   for (i = 0, (pdata) = (t).data; i < tensor_get_capacity(t); i++)
 
+/*
+ * Device support
+ */
+
+tensor_t tensor_make_copy_h2d(tensor_t t_host);
+tensor_t tensor_destroy_device(tensor_t t_device);
+
 #ifdef __cplusplus
 }
 #endif
