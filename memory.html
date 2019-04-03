@@ -166,7 +166,8 @@
             
   <div class="section" id="memory-management">
 <span id="awnn-memory"></span><h1>Memory management<a class="headerlink" href="#memory-management" title="Permalink to this headline">¶</a></h1>
-<p>There are three several types of memory used:</p>
+<p>There are three several types of memory used, as shown in the figure:</p>
+<a class="reference internal image-reference" href="_images/net-memory.png"><img alt="_images/net-memory.png" src="_images/net-memory.png" style="width: 375.0px; height: 318.5px;" /></a>
 <ul class="simple">
 <li>layer learnable params(data and diff)</li>
 <li>layer output(data and diff)</li>
@@ -189,10 +190,8 @@ added to the list by <em>list_add</em> or <em>list_add_tail</em></p>
 <p>Currently the net knows about the maximum batch size, so all the sizes
 of memory types above can be inferred.</p>
 <ul class="simple">
-<li>In the mlp_init function, all the <em>output</em>, <em>learnable params</em>  are directly</li>
-</ul>
-<p>allocated and added to the net using <em>net_attach_param</em>.</p>
-<ul class="simple">
+<li>In the mlp_init function, all the <em>output</em>, <em>learnable params</em>  are directly
+allocated and added to the net using <em>net_attach_param</em>.</li>
 <li><em>input</em> can be special, since the input of upper layer is the output of the
 bottom layer, we still use the <em>list</em> structure above to track all the data/diff
 of input, but they are just shadow copy of lower output.</li>
