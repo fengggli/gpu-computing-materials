@@ -3,7 +3,10 @@
 Memory management
 =================
 
-There are three several types of memory used:
+There are three several types of memory used, as shown in the figure:
+
+.. image:: /../imgs/net-memory.png
+  :scale: 50%
 
 * layer learnable params(data and diff)
 * layer output(data and diff)
@@ -32,7 +35,7 @@ Currently the net knows about the maximum batch size, so all the sizes
 of memory types above can be inferred.
 
 * In the mlp_init function, all the *output*, *learnable params*  are directly
-allocated and added to the net using *net_attach_param*.
+  allocated and added to the net using *net_attach_param*.
 
 * *input* can be special, since the input of upper layer is the output of the
   bottom layer, we still use the *list* structure above to track all the data/diff
