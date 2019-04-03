@@ -1,1 +1,2 @@
 #cmakedefine USE_OPENBLAS
+#cmakedefine USE_CUDA

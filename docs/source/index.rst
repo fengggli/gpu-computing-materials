@@ -15,6 +15,7 @@ Some of the contents of this documentation can be found in cs231n class website.
 
    tensor
    memory
+   cuda
 
 .. toctree::
    :maxdepth: 2
