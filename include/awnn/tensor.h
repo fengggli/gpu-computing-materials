@@ -66,7 +66,7 @@ typedef enum {
 T tensor_get_sum(tensor_t t);
 
 tensor_t tensor_make(uint const shape[], uint const ndims);
-void tensor_destroy(tensor_t* t);
+void tensor_destroy(tensor_t *ptr_t);
 
 // TODO: fill random values
 static void _tensor_fill_random(tensor_t t, uint seed);
@@ -170,7 +170,7 @@ static inline void _div(T *to, T *from, uint len) {
 /* Allocate a tensor in GPU, based on the value from a host tensor*/
 tensor_t tensor_make_copy_h2d(tensor_t t_host);
 /* destroy the tensor in  GPU*/
-tensor_t tensor_destroy_device(tensor_t t_device);
+void tensor_destroy_device(tensor_t *ptr_t_device);
 /* copy the tensor back from gpu to host*/
 void tensor_copy_d2h(tensor_t t_host, tensor_t t_device);
 

@@ -32,8 +32,6 @@ void tensor_copy_d2h(tensor_t t_host, tensor_t t_device) {
              cudaMemcpyDeviceToHost);
 }
 
-tensor_t tensor_destroy_device(tensor_t t_device) {
-  if (t_device.data) {
-    mem_free_device(t_device.data);
-  }
+void tensor_destroy_device(tensor_t* ptr_t_device) {
+  mem_free_device(ptr_t_device->data);
 }
