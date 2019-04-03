@@ -359,7 +359,7 @@ TEST_F(LayerConvTest, Forward){
   PINF("Consistent with expected results");
 }
 
-TEST_F(LayerConvTest, Backward){
+TEST_F(LayerConvTest, DISABLED_Backward){
   conv_param_t params;
 
   params.stride=2;
