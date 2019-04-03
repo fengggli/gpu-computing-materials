@@ -49,6 +49,11 @@ Working in progress
 1. Conv2d and global pool in gpu (Chris and Yuankun).
 2. solver.
 
+Added
+======
+
+* naiive CUDA pooling layer, set USE_CUDA=on to enable
+
 =========
 Previous
 =========
