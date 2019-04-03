@@ -77,7 +77,7 @@ status_t loss_softmax(tensor_t const x, label_t const * real_labels, T *ptr_loss
   ret = S_OK;
 
 end:
-  tensor_destroy(scores);
+  tensor_destroy(&scores);
   return ret;
 }
 

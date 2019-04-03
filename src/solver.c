@@ -12,7 +12,7 @@ status_t solver_init(solver_handle_t *ptr_handle, model_t *ptr_model,
 
 status_t solver_train(solver_handle_t const *ptr_solver) {
   // TODO: need a data loading util
-  //Compute loss and gradient
+  // Compute loss and gradient
   model_t model = ptr_solver->model;
   T loss = 0;
   uint x_shape[] = {model.max_batch_sz, model.input_dim};
@@ -24,7 +24,7 @@ status_t solver_train(solver_handle_t const *ptr_solver) {
   // optimizer
   param_t *p_param;
   // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
-  int i = 0; // TODO: some gabage interted in the end of paramlist.
+  int i = 0;  // TODO: some gabage interted in the end of paramlist.
   list_for_each_entry(p_param, model.list_all_params, list) {
     PINF("updating %s...", p_param->name);
     tensor_t param = p_param->data;
@@ -41,11 +41,10 @@ status_t solver_train(solver_handle_t const *ptr_solver) {
     PINF("updating %s complete.", p_param->name);
 
     i++;
-    if(i >= 4) break;
+    if (i >= 4) break;
   }
 
   PINF("clean up.");
-  tensor_destroy(x);
+  tensor_destroy(&x);
   label_destroy(labels);
 }
-

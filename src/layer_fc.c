@@ -26,7 +26,7 @@ status_t layer_fc_forward(tensor_t const x, tensor_t const w, tensor_t const b,
   }
 
   // free temprary tensors
-  tensor_destroy(x_reshaped);
+  tensor_destroy(&x_reshaped);
   return S_OK;
 }
 
@@ -61,12 +61,12 @@ status_t layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db,
   uint const tmp_shape[] = {tensor_get_capacity(db)};
   if (S_OK != tensor_reshape_(&sum, tmp_shape, 1)) goto end;  // reshape to 2d
   tensor_copy(db, sum);
-  tensor_destroy(sum);
+  tensor_destroy(&sum);
   ret = S_OK;
 
 end:
   // free layer cache
-  tensor_destroy(w_T);
-  tensor_destroy(x_reshaped_T);
+  tensor_destroy(&w_T);
+  tensor_destroy(&x_reshaped_T);
   return ret;
 }

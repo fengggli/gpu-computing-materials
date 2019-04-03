@@ -170,10 +170,10 @@ TEST_F(LayerGlobalAvgPoolTest, CheckLcache) {
 
 // TODO : document tests
 TEST_F(LayerGlobalAvgPoolTest, Destroy) {
-  tensor_destroy(x);
-  tensor_destroy(dx);
-  tensor_destroy(y);
-  tensor_destroy(dy);
+  tensor_destroy(&x);
+  tensor_destroy(&dx);
+  tensor_destroy(&y);
+  tensor_destroy(&dy);
   lcache_free_all(&cache);
 }
 

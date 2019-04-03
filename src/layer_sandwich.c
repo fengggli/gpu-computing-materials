@@ -11,7 +11,7 @@ status_t layer_fc_relu_forward(tensor_t const x, tensor_t const w, tensor_t b,
   AWNN_CHECK_EQ(S_OK, layer_relu_forward(tmp, cache, y));
 
   ret = S_OK;
-  tensor_destroy(tmp);
+  tensor_destroy(&tmp);
   return ret;
 }
 
@@ -24,7 +24,7 @@ status_t layer_fc_relu_backward(tensor_t dx, tensor_t dw, tensor_t db,
   AWNN_CHECK_EQ(S_OK, layer_relu_backward(tmp, cache, dy));
   AWNN_CHECK_EQ(S_OK, layer_fc_backward(dx, dw, db, cache, tmp));
 
-  tensor_destroy(tmp);
+  tensor_destroy(&tmp);
   ret = S_OK;
   return ret;
 }

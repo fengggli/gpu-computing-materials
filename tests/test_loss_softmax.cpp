@@ -93,7 +93,7 @@ TEST_F(LostSoftmaxTest, OneImg) {
   EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-5);
   PINF("gradient check of x... is ok");
 
-  tensor_destroy(dx_ref);
+  tensor_destroy(&dx_ref);
 }
 
 // see whether gradient for softmax is generated correctly for multiple images
@@ -132,7 +132,7 @@ TEST_F(LostSoftmaxTest, MultiImg) {
   EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
   PINF("gradient check of x... is ok");
 
-  tensor_destroy(dx_ref);
+  tensor_destroy(&dx_ref);
 }
 
 }  // namespace

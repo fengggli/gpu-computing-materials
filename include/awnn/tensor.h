@@ -66,7 +66,7 @@ typedef enum {
 T tensor_get_sum(tensor_t t);
 
 tensor_t tensor_make(uint const shape[], uint const ndims);
-void tensor_destroy(tensor_t t);
+void tensor_destroy(tensor_t *ptr_t);
 
 // TODO: fill random values
 static void _tensor_fill_random(tensor_t t, uint seed);
@@ -105,8 +105,11 @@ tensor_t tensor_make_sum(tensor_t const t, uint const axis_id);
 /* @brief create tensor of shape, filled with single scalar */
 tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s);
 
+tensor_t tensor_make_padded_square_input(tensor_t t, uint p, float pad_val);
 tensor_t tensor_make_scalar_alike(tensor_t t, T scalar);
 tensor_t tensor_make_empty_with_dim(dim_t dim);
+
+tensor_t tensor_make_transpose_3012(tensor_t t);
 
 /* access elem*/
 T *tensor_get_elem_ptr(tensor_t const t, dim_t const loc);
@@ -114,6 +117,7 @@ T *tensor_get_elem_ptr(tensor_t const t, dim_t const loc);
 void tensor_dump(tensor_t t);
 
 T tensor_rel_error(tensor_t x, tensor_t y);
+
 status_t tensor_reshape_(tensor_t *ptr_t, uint const shape[], uint const ndims);
 status_t tensor_reshape_flat_(tensor_t *t);
 
@@ -166,7 +170,7 @@ static inline void _div(T *to, T *from, uint len) {
 /* Allocate a tensor in GPU, based on the value from a host tensor*/
 tensor_t tensor_make_copy_h2d(tensor_t t_host);
 /* destroy the tensor in  GPU*/
-tensor_t tensor_destroy_device(tensor_t t_device);
+void tensor_destroy_device(tensor_t *ptr_t_device);
 /* copy the tensor back from gpu to host*/
 void tensor_copy_d2h(tensor_t t_host, tensor_t t_device);
 

@@ -8,6 +8,19 @@
 #include <assert.h>
 
 
+tensor_t tensor_make_transpose_3012(tensor_t t) {
+  uint target_idx = 0;
+  tensor_t tpose = tensor_make_copy(t);
+  for (int i = 0; i < t.dim.dims[3]; ++i) {  // for each of the new dim 0
+    for (int j = 0; j < t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2]; ++j) {
+      tpose.data[target_idx++] = t.data[i + j * t.dim.dims[3]];
+    }
+  }
+  uint const shape[] = { t.dim.dims[3], t.dim.dims[0], t.dim.dims[1], t.dim.dims[2] };
+  tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
+  return tpose;
+}
+
 // TODO:  results not correct
 status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
   status_t ret = S_ERR;
@@ -46,11 +59,11 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
   int ii, jj, kk; // A[i.j] with B[j,k]
   for(ii = 0; ii < m; ii++){
     for(kk = 0; kk < n; kk++){
-      T tmp =0;
+      T tmp = 0;
       for(jj = 0; jj < k; jj++){
-        tmp+=in1.data[ii*k+jj]*in2.data[jj*n+kk];
+        tmp += in1.data[ii * k + jj] * in2.data[jj * n + kk];
       }
-      out.data[ii*n+kk] = tmp;
+      out.data[ii * n + kk] = tmp;
     }
   }
 
@@ -100,7 +113,7 @@ status_t tensor_copy(tensor_t out, tensor_t in){
   uint i;
   uint capacity = dim_get_capacity(out.dim);
   if( S_OK == dim_is_same(out.dim, in.dim)){
-    for(i = 0; i< capacity; i++){
+    for(i = 0; i < capacity; i++){
       out.data[i] = in.data[i];
     }
     return S_OK;
@@ -152,6 +165,7 @@ status_t tensor_add_vector_inplace(tensor_t t, tensor_t v) {
   return S_OK;
   // v should fit the last dimension
 }
+
 status_t tensor_reshape_(tensor_t* ptr_t, uint const shape[], uint const ndims){
   dim_t req_dim;
   uint i;
