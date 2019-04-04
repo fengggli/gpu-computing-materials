@@ -27,8 +27,8 @@ typedef struct {
   T reg;
 
   struct list_head list_all_params[1]; // list of all learnable params
-  struct list_head list_layer_out[1]; // list of output of each layer 
-  struct list_head list_layer_in[1]; // list of input of each layer 
+  struct list_head list_layer_out[1]; // list of output of each layer
+  struct list_head list_layer_in[1]; // list of input of each layer
   struct list_head list_layer_cache[1]; // list of layer cache.
 } model_t;
 

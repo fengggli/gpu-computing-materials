@@ -50,11 +50,6 @@ add_executable(test-dtype-list test_dtype_list.cpp)
 target_link_libraries(test-dtype-list ${AWNN_LIBS}  gtest)
 add_test(test-dtype-list test-dtype-list)
 
-add_executable(test-solver test_solver.cpp)
-target_link_libraries(test-solver ${AWNN_LIBS}  gtest)
-add_test(test-solver test-solver)
-
-
 #add_executable(test-loss-softmax-simple test_loss_softmax_simple.cpp)
 #target_link_libraries(test-loss-softmax-simple ${AWNN_LIBS}  gtest)
 #add_test(test-loss-softmax-simple test-loss-softmax-simple)

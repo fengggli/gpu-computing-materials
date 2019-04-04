@@ -4,19 +4,19 @@
 #pragma once
 
 #include "awnn/common.h"
-#include "awnn/tensor.h"
 #include "awnn/data_utils.h"
+#include "awnn/tensor.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct{
+typedef struct {
+  T data;
 } data_t;
 
-/* Open data from files*/
+// Open data from files
 data_t model_open_data();
-
 
 #ifdef __cplusplus
 }

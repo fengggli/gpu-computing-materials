@@ -21,8 +21,12 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
   model->output_dim = output_dim;
   model->nr_hidden_layers = nr_hidden_layers;
   model->reg = reg;
-  for (uint i = 0; i < nr_hidden_layers; ++i)
-    model->hidden_dims[i] = hidden_dims[i];
+  for (uint i = 0; i < MAX_DIM; ++i) {
+    if(i < nr_hidden_layers)
+      model->hidden_dims[i] = hidden_dims[i];
+    else
+      model->hidden_dims[i] = 0;
+  }
 
   // init all list structure
   init_list_head(model->list_all_params);
@@ -100,6 +104,7 @@ status_t mlp_finalize(model_t *model) {
   net_free_params(model->list_layer_out);
   // net_free_params(model->list_layer_in); // TODO: fix the double free here.
   net_free_params(model->list_all_params);
+  return S_OK;
 }
 
 tensor_t mlp_scores(model_t const *model, tensor_t x) {
