@@ -41,8 +41,8 @@ status_t global_avg_pool_forward_device(tensor_t const x, lcache_t *cache,
 
   tensor_copy_d2h(y, d_y);
 
-  tensor_destroy_device(d_x);
-  tensor_destroy_device(d_y);
+  tensor_destroy_device(&d_x);
+  tensor_destroy_device(&d_y);
 
   return S_OK;
 }
@@ -82,11 +82,11 @@ status_t global_avg_pool_backward_device(tensor_t dx, lcache_t *cache,
   _do_backward<<<blocks, threads>>>(d_dx.data, N, C, H * W, d_dy.data);
 
   tensor_copy_d2h(dx, d_dx);
-  tensor_destroy_device(d_dx);
-  tensor_destroy_device(d_dy);
+  tensor_destroy_device(&d_dx);
+  tensor_destroy_device(&d_dy);
 
   // free layer cache
-  tensor_destroy(t);
+  tensor_destroy(&t);
 
   return S_OK;
 }

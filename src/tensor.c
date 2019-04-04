@@ -111,7 +111,8 @@ void _tensor_fill_random(tensor_t t, uint seed) {
 void _tensor_fill_patterned(tensor_t t) {
   uint capacity = dim_get_capacity(t.dim);
   uint i;
-  for(i = 0; i < capacity; ++i){
+
+  for (i = 0; i < capacity; i++) {
     t.data[i] = (T)(i);
   }
 }
@@ -123,7 +124,6 @@ void tensor_fill_list(tensor_t const t, T const value_list[],
     t.data[i] = value_list[i];
   }
 }
-
 
 // TODO : add error handling
 tensor_t _tensor_make(dim_t dim) {
@@ -339,7 +339,6 @@ static void _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity) {
       PSTR("{");
       _dump(data + i * (cur_capacity), dim, cur_dim_id + 1,
             cur_capacity / dim.dims[cur_dim_id + 1]);
-
       PSTR("}\n");
     }
   }
@@ -351,7 +350,6 @@ void tensor_dump(tensor_t t) {
   dim_dump(t.dim);
   uint capacity = dim_get_capacity(dim);
   PSTR("{");
-
   if (dim.dims[0] == 0)
     PSTR("%.3f ", t.data[0]);  // scalar
   else {
@@ -363,11 +361,10 @@ void tensor_dump(tensor_t t) {
 // np.max(np.abs(x - y) / (np.maximum(1e-8, np.abs(x) + np.abs(y))))
 T tensor_rel_error(tensor_t x, tensor_t ref) {
   if (S_OK != dim_is_same(x.dim, ref.dim)) {
-    PERR("Dimension not match!");
+    PERR("Dimensions not matched!");
     return 100;
   }
   uint capacity = tensor_get_capacity(x);
-
   T norm_diff = 0;  // l-2 norm of difference
   T norm_ref = 0;   // l-2 norm of reference
   for (uint i = 0; i < capacity; i++) {
