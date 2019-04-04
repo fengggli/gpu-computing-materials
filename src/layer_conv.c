@@ -116,3 +116,68 @@ status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t const *cache, t
 
   return ret;
 }
+
+/*
+# x = np.empty((N, C, H, W), dtype=cols.dtype)
+  HH = int((H + 2 * padding - field_height) / stride + 1)
+  WW = int((W + 2 * padding - field_width) / stride + 1)
+  x_padded = np.zeros((N, C, H + 2 * padding, W + 2 * padding), dtype=cols.dtype)
+
+# Moving the inner loop to a C-function with no bounds checking improves
+# performance quite a bit for col2im.
+  col2im_inner(cols, x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride)
+  if padding > 0:
+  return x_padded[:, :, padding:-padding, padding:-padding]
+  return x_padded
+ */
+tensor_t col2im(tensor_t cols, uint N, uint C, uint H, uint W, uint field_height, uint field_width, uint padding, uint stride)
+{
+  uint HH = (H + 2 * padding - field_height) / stride + 1;
+  uint WW = (W + 2 * padding - field_width) / stride + 1;
+//  x_padded = np.zeros((N, C, H + 2 * padding, W + 2 * padding), dtype=cols.dtype)
+
+  col2im_inner(cols, x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride)
+  if (padding) {
+//    return x_padded[:, :, padding:-padding, padding:-padding]
+//    return tensor_remove_padding(x_padded, padding);
+  }
+  return x_padded;
+}
+
+
+/*
+    for c in range(C):
+        for ii in range(field_height):
+            for jj in range(field_width):
+                row = c * field_width * field_height + ii * field_height + jj
+                for yy in range(HH):
+                    for xx in range(WW):
+                        for i in range(N):
+                            col = yy * WW * N + xx * N + i
+                            x_padded[i, c, stride * yy + ii, stride * xx + jj] += cols[row, col]
+ */
+void col2im_inner(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW,
+                  uint field_height, uint field_width, uint padding, uint stride)
+{
+  for (int c = 0; c < C; ++c) {
+    for (int ii = 0; ii < field_height; ++ii) {
+      for (int jj = 0; jj < field_width; ++jj) {
+        uint row = c * field_width * field_height + ii * field_height + jj;
+        for (int yy = 0; yy < HH; ++yy) {
+          for (int xx = 0; xx < WW; ++xx) {
+            for (int i = 0; i < N; ++i) {
+              uint col = yy * WW * N + xx * N + i;
+              uint src_idx = row * cols.dim.dims[1] + col;
+              uint target_idx =
+                  i * x_padded.dim.dims[1] * x_padded.dim.dims[2] * x_padded.dim.dims[3]
+                  + c * x_padded.dim.dims[2] * x_padded.dim.dims[3]
+                  + (stride * yy + ii) * x_padded.dim.dims[3]
+                  + stride * xx + jj;
+              x_padded.data[target_idx] += cols.data[src_idx];
+            }
+          }
+        }
+      }
+    }
+  }
+}

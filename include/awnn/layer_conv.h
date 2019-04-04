@@ -57,6 +57,14 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
  */
 status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t const *cache, tensor_t const dy);
 
+tensor_t col2im(tensor_t cols,
+                uint N, uint C, uint H, uint W,
+                uint field_height, uint field_width, uint padding, uint stride);
+
+void col2im_inner(tensor_t cols, tensor_t x_padded,
+                  uint N, uint C, uint H, uint W, uint HH, uint WW,
+                  uint field_height, uint field_width, uint padding, uint stride);
+
 #ifdef __cplusplus
 }
 #endif
