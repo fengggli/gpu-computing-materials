@@ -43,7 +43,7 @@ def conv_forward(x: np.array, w: np.array, conv_param: dict):
     res = w.reshape((w.shape[0], -1)).dot(x_cols)
 
 
-    print(res.flatten())
+    # print(res.flatten())
 
     ##### convert output to appropriate shape based on ???
     out = res.reshape(w.shape[0], out.shape[2], out.shape[3], x.shape[0])
@@ -51,9 +51,9 @@ def conv_forward(x: np.array, w: np.array, conv_param: dict):
     posed = tpose3012(out)
 
 
-    print()
-    print("BEFORE 'TRANSPOSE'")
-    print(out)
+    # print()
+    # print("BEFORE 'TRANSPOSE'")
+    # print(out)
 
     ############### 3.  transpose output (not sure what this is doing ??????)
     # below is the order of the dimensions
@@ -61,9 +61,9 @@ def conv_forward(x: np.array, w: np.array, conv_param: dict):
 
     assert np.equal(posed.all(), out.all())
     # print(out == posed)
-    print()
-    print("AFTER 'TRANSPOSE'")
-    print(out)
+    # print()
+    # print("AFTER 'TRANSPOSE'")
+    # print(out)
     # print(out.flatten())
 
     ##### fill cache
@@ -85,18 +85,9 @@ def get_flattened_x(x: np.array, w: np.array, conv_param: dict):
 
     ##### convert the image to the flattened form
     # note that the length of the rows will be the total size of a filter.
-    # The number of columns will be num_chanels * (total times the filter is
+    # The number of columns will be num_channels * (total times the filter is
     # applied).  That is dependent on the pad, stride, and size of the filters,
     # which is why we send w.shape[2] and [3]
-
-    # NOTE : this operation requires extra memory, and additionally
-    #        walks over each chunk of memory the size of a filter, just
-    #        to copy.  I'm currently not clear why the convolution would
-    #        be faster this way than performing it directly.  Just look
-    #        at the massive function in inner im2col, which loops over
-    #        a ton of stuff in a very memory inefficient way.
-    #        I would like to explore doing this mapping in CUDA during
-    #        the transfer.
     x_cols = im2col_cython(x, w.shape[2], w.shape[3], pad, stride)
     return x_cols
 

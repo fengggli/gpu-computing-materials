@@ -7,10 +7,11 @@
 
 #pragma once
 
+#include "config.h"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <awnn/logging.h>
-#include "config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,9 +30,8 @@ enum { MAX_STR_LENGTH = 81 };
 typedef int status_t;
 enum ERROR_CODE { S_OK = 0, S_ERR = -1, S_BAD_DIM = -2 };
 
-
 #define ARRAY_SIZE(x)  (sizeof(x) / sizeof((x)[0]))
-  
+
 typedef int awnn_mode_t;
 enum {
   MODE_TRAIN = 0,
