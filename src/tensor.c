@@ -292,8 +292,8 @@ tensor_t tensor_make_padded_square_input(tensor_t t, uint p, float pad_val) {
   WW = W + 2 * p;
 
   uint new_shape[] = {N, C, HH, WW};
+  tensor_t n = tensor_make(new_shape, ARRAY_SIZE(new_shape));
 
-  tensor_t n = tensor_make(new_shape, 4);  // 4 is the number of dimensions... TODO : remove magic number
   for (int i = 0; i < N; i++)
     for (int j = 0; j < C; j++)
       for(int k = 0; k < HH; k++)
@@ -312,6 +312,33 @@ tensor_t tensor_make_padded_square_input(tensor_t t, uint p, float pad_val) {
             n.data[target_idx] = t.data[src_idx];
           }
         }
+
+  return n;
+}
+
+tensor_t tensor_make_remove_padding_square(tensor_t t, uint p) {
+  uint N, C, H, W, HH, WW;
+  N = t.dim.dims[0];
+  C = t.dim.dims[1];
+  H = t.dim.dims[2];
+  W = t.dim.dims[3];
+  HH = H - 2 * p;
+  WW = W - 2 * p;
+
+  uint new_shape[] = {N, C, HH, WW};
+  tensor_t n = tensor_make(new_shape, ARRAY_SIZE(new_shape));
+
+  for (int i = 0; i < N; ++i) {
+    for (int j = 0; j < C; ++j) {
+      for (int k = 0; k < HH; ++k) {
+        for (int l = 0; l < WW; ++l) {
+          uint target_idx = i * C * HH * WW + j * HH * WW + k * WW + l;
+          uint src_idx = i * C * H * W + j * H * W + (k + p) * W + (l + p);
+          n.data[target_idx] = t.data[src_idx];
+        }
+      }
+    }
+  }
 
   return n;
 }
