@@ -175,11 +175,21 @@
 <li>layer cache(data only)</li>
 </ul>
 <p>They are all attached in the model_t:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">list_head</span> <span class="n">list_all_params</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span> <span class="o">//</span> <span class="nb">list</span> <span class="n">of</span> <span class="nb">all</span> <span class="n">learnable</span> <span class="n">params</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">A</span><span class="p">{</span>
+<span class="n">SomeType</span> <span class="n">Data</span><span class="p">;</span>
+
+<span class="n">struct</span> <span class="n">list_head</span> <span class="n">list_all_params</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span> <span class="o">//</span> <span class="nb">list</span> <span class="n">of</span> <span class="nb">all</span> <span class="n">learnable</span> <span class="n">params</span>
 <span class="n">struct</span> <span class="n">list_head</span> <span class="n">list_layer_out</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span> <span class="o">//</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">output</span> <span class="n">of</span> <span class="n">each</span> <span class="n">layer</span>
 <span class="n">struct</span> <span class="n">list_head</span> <span class="n">list_layer_in</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span> <span class="o">//</span> <span class="nb">list</span> <span class="n">of</span> <span class="nb">input</span> <span class="n">of</span> <span class="n">each</span> <span class="n">layer</span>
 <span class="n">struct</span> <span class="n">list_head</span> <span class="n">list_layer_cache</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span> <span class="o">//</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">layer</span> <span class="n">cache</span><span class="o">.</span>
+<span class="p">}</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Use with caution, don’t pass A by value, since all list
+data structure rely on list_head <a href="#id1"><span class="problematic" id="id2">*</span></a>head, to determine
+the end of the list.</p>
 </div>
 <p>The struct list_head is a list structure derived from linux kernel list.h.
 To use it we need to first call <em>init_list_head(head)</em>,

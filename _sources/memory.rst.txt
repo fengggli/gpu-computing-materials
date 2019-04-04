@@ -17,10 +17,20 @@ They are all attached in the model_t:
 
 ::
 
+  struct A{
+  SomeType Data;
+
   struct list_head list_all_params[1]; // list of all learnable params
   struct list_head list_layer_out[1]; // list of output of each layer
   struct list_head list_layer_in[1]; // list of input of each layer
   struct list_head list_layer_cache[1]; // list of layer cache.
+  }
+
+.. note::
+
+  Use with caution, don't pass A by value, since all list
+  data structure rely on list_head *head, to determine
+  the end of the list.
 
 The struct list_head is a list structure derived from linux kernel list.h.
 To use it we need to first call *init_list_head(head)*,
