@@ -166,7 +166,8 @@
             
   <div class="section" id="memory-management">
 <span id="awnn-memory"></span><h1>Memory management<a class="headerlink" href="#memory-management" title="Permalink to this headline">¶</a></h1>
-<p>There are three several types of memory used:</p>
+<p>There are three several types of memory used, as shown in the figure:</p>
+<a class="reference internal image-reference" href="_images/net-memory.png"><img alt="_images/net-memory.png" src="_images/net-memory.png" style="width: 416.5px; height: 318.5px;" /></a>
 <ul class="simple">
 <li>layer learnable params(data and diff)</li>
 <li>layer output(data and diff)</li>
@@ -174,11 +175,21 @@
 <li>layer cache(data only)</li>
 </ul>
 <p>They are all attached in the model_t:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">list_head</span> <span class="n">list_all_params</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span> <span class="o">//</span> <span class="nb">list</span> <span class="n">of</span> <span class="nb">all</span> <span class="n">learnable</span> <span class="n">params</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">A</span><span class="p">{</span>
+<span class="n">SomeType</span> <span class="n">Data</span><span class="p">;</span>
+
+<span class="n">struct</span> <span class="n">list_head</span> <span class="n">list_all_params</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span> <span class="o">//</span> <span class="nb">list</span> <span class="n">of</span> <span class="nb">all</span> <span class="n">learnable</span> <span class="n">params</span>
 <span class="n">struct</span> <span class="n">list_head</span> <span class="n">list_layer_out</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span> <span class="o">//</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">output</span> <span class="n">of</span> <span class="n">each</span> <span class="n">layer</span>
 <span class="n">struct</span> <span class="n">list_head</span> <span class="n">list_layer_in</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span> <span class="o">//</span> <span class="nb">list</span> <span class="n">of</span> <span class="nb">input</span> <span class="n">of</span> <span class="n">each</span> <span class="n">layer</span>
 <span class="n">struct</span> <span class="n">list_head</span> <span class="n">list_layer_cache</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span> <span class="o">//</span> <span class="nb">list</span> <span class="n">of</span> <span class="n">layer</span> <span class="n">cache</span><span class="o">.</span>
+<span class="p">}</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Use with caution, don’t pass A by value, since all list
+data structure rely on list_head <a href="#id1"><span class="problematic" id="id2">*</span></a>head, to determine
+the end of the list.</p>
 </div>
 <p>The struct list_head is a list structure derived from linux kernel list.h.
 To use it we need to first call <em>init_list_head(head)</em>,
@@ -189,10 +200,8 @@ added to the list by <em>list_add</em> or <em>list_add_tail</em></p>
 <p>Currently the net knows about the maximum batch size, so all the sizes
 of memory types above can be inferred.</p>
 <ul class="simple">
-<li>In the mlp_init function, all the <em>output</em>, <em>learnable params</em>  are directly</li>
-</ul>
-<p>allocated and added to the net using <em>net_attach_param</em>.</p>
-<ul class="simple">
+<li>In the mlp_init function, all the <em>output</em>, <em>learnable params</em>  are directly
+allocated and added to the net using <em>net_attach_param</em>.</li>
 <li><em>input</em> can be special, since the input of upper layer is the output of the
 bottom layer, we still use the <em>list</em> structure above to track all the data/diff
 of input, but they are just shadow copy of lower output.</li>
