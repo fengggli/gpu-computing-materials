@@ -26,19 +26,17 @@ def convolution_backward(dout, cache):
 
     num_filters, _, filter_height, filter_width = w.shape
 
-    dout_reshaped = dout.transpose(1, 2, 3, 0).reshape(num_filters, -1)
-
     # reshape the derivative from upper layer
     # 1 - num filters
     # then reshape on the number of filters and bring to 2D
     # transpose will take a while
-    print("BEFORE TRANSPOSE")
-    print(dout)
-    tpose = dout.transpose(1, 2, 3, 0)
-    print("AFTER TRANSPOSE")
-    print(tpose)
+    # print("BEFORE TRANSPOSE")
+    # print(dout)
+    dout_tpose = dout.transpose(1, 2, 3, 0)
+    # print("AFTER TRANSPOSE")
+    # print(tpose)
 
-    dout_reshaped = dout.reshape(num_filters, -1)
+    dout_reshaped = dout_tpose.reshape(num_filters, -1)
 
     # transpose makes the width of (x_cols) the filters becomes
     # Dim 1,
@@ -46,19 +44,24 @@ def convolution_backward(dout, cache):
 
     dw = dout_reshaped.dot(x_cols.T).reshape(w.shape)
 
+    # done getting dw
+
     # deriv x dL/dx = dL/dy * dy/dx
-    dx_cols = w.reshape(num_filters, -1).T.dot(dout_reshaped)
+    w_T = w.reshape(num_filters, -1).T
+    dx_cols = w_T.dot(dout_reshaped)
 
-    dx = col2im(dx_cols, x.shape[0], x.shape[1], x.shape[2], x.shape[3],
-                filter_height, filter_width, pad, stride)
-
-    print(dx.shape)
-    print(list(dx.flatten()))
-
+    print()
+    print(dx_cols)
     # convert back to multidimensional
     # is gonna take a while
     dx = col2im(dx_cols, x.shape[0], x.shape[1], x.shape[2], x.shape[3],
                 filter_height, filter_width, pad, stride)
+
+
+    print(dx.shape)
+    print(list(dx.flatten()))
+
+
 
     return dx, dw
 

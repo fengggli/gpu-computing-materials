@@ -36,7 +36,10 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
   y.mem_type = tpose.mem_type;
 
   // fill cache
-//  cache = (x, w, conv_param, x_cols);
+  // NOTE, the order matters should be x, w, flattened_x
+  lcache_push(cache, x);
+  lcache_push(cache, w);
+  lcache_push(cache, flattened_x);
 
   tensor_destroy(&tpose);
   tensor_destroy(&out);
@@ -110,11 +113,58 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
 
 
 
-status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t const *cache, tensor_t const dy){
+status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t const *cache, conv_param_t const conv_params, tensor_t const dout) {
   status_t ret = S_ERR;
+  tensor_t x, w, x_cols;
+
+  // NOTE : the order matters, should be flattened_x, w, x (reverse of forward)
+  x_cols = lcache_pop(cache);
+  w = lcache_pop(cache);
+  x = lcache_pop(cache);
+
+  uint num_filters = w.dim.dims[0];
+  uint w_channels = w.dim.dims[1];
+  uint filter_height = w.dim.dims[2];
+  uint filter_width = w.dim.dims[3];
+
+  tensor_t dout_reshaped = tensor_make_transpose_1230(dout);
+  uint dout_2d_shape[] = { num_filters, dout_reshaped.dim.dims[1] * dout_reshaped.dim.dims[2] * dout_reshaped.dim.dims[3] };
+  tensor_reshape_(&dout_reshaped, dout_2d_shape, ARRAY_SIZE(dout_2d_shape));
+
+  tensor_t x_cols_T = tensor_make_transpose(x_cols);
+
+  uint mult_shape[] = { dout_reshaped.dim.dims[0], x_cols_T.dim.dims[1] };
+  tensor_reshape_(&dw, mult_shape, ARRAY_SIZE(mult_shape));
+  tensor_matmul(dout_reshaped, x_cols_T, dw);
+
+  uint dw_shape[] = { num_filters, w_channels, filter_height, filter_width };
+  tensor_reshape_(&dw, dw_shape, ARRAY_SIZE(dw_shape));
+
+  // done getting dw
+
+  // now get dx in column form multiplying the w_T with the d_out
+  uint w_shape[] = { num_filters, w_channels * filter_height * filter_width };
+  tensor_reshape_(&w, w_shape, ARRAY_SIZE(w_shape));
+  tensor_t w_T = tensor_make_transpose(w);
+
+  // next gotta get dx : first we get it in flat form,
+  uint dx_cols_shape[] = { w_T.dim.dims[0], dout_reshaped.dim.dims[1] };
+  tensor_t dx_cols = tensor_make(dx_cols_shape, ARRAY_SIZE(dx_cols_shape));
+  tensor_matmul(w_T, dout_reshaped, dx_cols);
 
 
-  return ret;
+
+  // then we convert it back to tensor form
+  tensor_t t = col2im(dx_cols, x.dim.dims[0], x.dim.dims[1], x.dim.dims[2], x.dim.dims[3], filter_height, filter_width, conv_params.padding, conv_params.stride);
+
+  tensor_dump(t);
+
+  uint capacity = tensor_get_capacity(t);
+  for (int i = 0; i < capacity; ++i) {
+    dx.data[i] = t.data[i];
+  }
+
+  return S_OK;
 }
 
 /*

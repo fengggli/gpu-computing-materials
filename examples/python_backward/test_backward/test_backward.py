@@ -20,15 +20,53 @@ class TestConvBackward(TestCase):
 
     def test_bkwrd_from_jupyter_example(self):
         np.random.seed(231)
+
         x = np.random.randn(4, 3, 5, 5)
+        print("x")
+        print(x.shape)
+        print(list(x.flatten()))
+
         w = np.random.randn(2, 3, 3, 3)
+        print("w")
+        print(w.shape)
+        print(list(w.flatten()))
+
         dout = np.random.randn(4, 2, 5, 5) # standin for the derivative from next layer
+        print("dout")
+        print(dout.shape)
+        print(list(dout.flatten()))
+
         conv_param = {'stride': 1, 'pad': 1}
 
         dx_num = eval_numerical_gradient_array(lambda x: conv_forward(x, w, conv_param)[0], x, dout)
-        dw_num = eval_numerical_gradient_array(lambda w: conv_forward(x, w, conv_param)[0], w, dout)
+        print("dx_num")
+        print(dx_num.shape)
+        print(list(dx_num.flatten()))
 
-        out, cache = conv_forward(x, w, conv_param)
+        dw_num = eval_numerical_gradient_array(lambda w: conv_forward(x, w, conv_param)[0], w, dout)
+        print("dw_num")
+        print(dw_num.shape)
+        print(list(dw_num.flatten()))
+
+        y, cache = conv_forward(x, w, conv_param)
+        print("y")
+        print(y.shape)
+        print(list(y.flatten()))
+
+        x_cached, w_cached, _, x_cols_cached = cache
+        print("x_cached")
+        print(x_cached.shape)
+        print(list(x_cached.flatten()))
+
+        print("w_cached")
+        print(w_cached.shape)
+        print(list(w_cached.flatten()))
+
+        print("x_cols_cached")
+        print(x_cols_cached.shape)
+        print(list(x_cols_cached.flatten()))
+
+
         dx, dw = convolution_backward(dout, cache)
 
         # Your errors should be around e-8 or less.
