@@ -190,7 +190,9 @@ tensor_t col2im(tensor_t cols, uint N, uint C, uint H, uint W, uint field_height
 
   col2im_inner(cols, x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
   if (padding) {
-    return tensor_make_remove_padding_square(x_padded, padding);
+    tensor_t padding_removed = tensor_make_remove_padding_square(x_padded, padding);
+    tensor_destroy(&x_padded);
+    return padding_removed;
   }
   return x_padded;
 }
