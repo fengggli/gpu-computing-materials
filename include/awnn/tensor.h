@@ -32,6 +32,19 @@ typedef struct {
 /* make dimension, works like block() in cuda*/
 dim_t make_dim(int ndims,
                ...);  // TODO: can I just use array as the second param?
+
+static inline dim_t make_dim_from_arr(uint ndims, uint all_dims[]) {
+  dim_t ret;
+  assert(ndims <= MAX_DIM);
+  for (uint i = 0; i < MAX_DIM; i++) {
+    if (i < MAX_DIM)
+      ret.dims[i] = all_dims[i];
+    else
+      ret.dims[i] = 0;
+  }
+  return ret;
+}
+
 uint dim_get_capacity(dim_t dim);
 uint dim_get_ndims(dim_t dim);
 status_t dim_is_same(dim_t, dim_t);

@@ -12,11 +12,12 @@ extern "C" {
 #endif
 
 typedef struct {
-  T data;
-} data_t;
-
-// Open data from files
-data_t model_open_data();
+  uint batch_sz;
+  T *data_train;
+  T *data_test;
+  label_t *label_train;
+  label_t *label_test;
+} data_loader_t;
 
 #ifdef __cplusplus
 }

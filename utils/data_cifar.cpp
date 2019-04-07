@@ -1,0 +1,136 @@
+//
+// Created by lifen on 4/5/19.
+//
+
+#include <stdio.h>
+#include <string>
+#include "awnn/memory.h"
+#include "awnn/tensor.h"
+#include "utils/data_cifar.h"
+
+// This read all data into memory and calculate offset of each batch
+
+const uint C = 3;
+const uint H = 32;
+const uint W = 32;
+// cifar 10 training set is organized as 5 batches
+static const uint nr_train_img = 50000;
+static const uint nr_test_img = 10000;
+
+// Read byte stream
+void read_image(FILE *file, label_t *label, char *buffer) {
+  char label_char;
+  fread(&label_char, 1, 1, file);
+  *label = label_char;  // has to convert from char
+  fread(buffer, 1, (C * H * W), file);
+  return;
+}
+
+// Saves a float/double
+// TODO: substract mean
+inline void preprocess_data(char *buffer_str, T *buffer_float, size_t nr_elem) {
+  for (uint i = 0; i < nr_elem; i++) {
+    buffer_float[i] = T(buffer_str[i]);
+  }
+}
+
+status_t cifar_open(data_loader_t *loader, const char *input_folder) {
+  label_t label;
+  uint bytes_per_img = C * H * W;
+  char *buffer_str = (char *)mem_alloc(bytes_per_img);
+  char inFileName[MAX_STR_LENGTH];
+
+  /*
+   * Training set
+   */
+  loader->data_train = (T *)mem_alloc(nr_train_img * C * H * W * sizeof(T));
+  AWNN_CHECK_NE(NULL, loader->data_train);
+
+  loader->label_train = (label_t *)mem_alloc(nr_train_img * sizeof(label_t));
+  AWNN_CHECK_NE(NULL, loader->label_train);
+
+  PINF("Opening Training data");
+  // Open files
+  snprintf(inFileName, MAX_STR_LENGTH, "%s/data_batch_all.bin", input_folder);
+
+  FILE *data_file = fopen(inFileName, "rb");
+  if (data_file == NULL) {
+    PERR("file %s not found", inFileName);
+    exit(-1);
+  }
+
+  for (uint itemid = 0; itemid < nr_train_img; ++itemid) {
+    read_image(data_file, &label, buffer_str);
+    loader->label_train[itemid] = label;
+    preprocess_data(buffer_str, &loader->data_train[itemid], bytes_per_img);
+  }
+  fclose(data_file);
+
+  /*
+   * Testing set
+   */
+  loader->data_test = (T *)mem_alloc(nr_test_img * C * H * W * sizeof(T));
+  AWNN_CHECK_NE(NULL, loader->data_test);
+
+  loader->label_test = (label_t *)mem_alloc(nr_test_img * sizeof(label_t));
+  AWNN_CHECK_NE(NULL, loader->label_test);
+  PINF("Opening Testing data");
+  // Open files
+  snprintf(inFileName, MAX_STR_LENGTH, "%s/test_batch.bin", input_folder);
+
+  data_file = fopen(inFileName, "rb");
+  if (data_file == NULL) {
+    PERR("file %s not found", inFileName);
+    exit(-1);
+  }
+
+  for (uint itemid = 0; itemid < nr_test_img; ++itemid) {
+    read_image(data_file, &label, buffer_str);
+    loader->label_test[itemid] = label;
+    preprocess_data(buffer_str, &loader->data_test[itemid], bytes_per_img);
+  }
+  fclose(data_file);
+
+  mem_free(buffer_str);
+  return S_OK;
+}
+
+status_t cifar_close(data_loader_t *loader) {
+  mem_free(loader->data_train);
+  mem_free(loader->label_train);
+
+  mem_free(loader->data_test);
+  mem_free(loader->label_test);
+  return S_OK;
+}
+
+// Finer get
+uint get_train_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
+                     uint batch_id, uint batch_sz) {
+  uint i_start = batch_id * batch_sz;
+  uint i_end = (batch_id + 1) * batch_sz;
+
+  if (i_end > nr_train_img) i_end = nr_train_img;
+  uint nr_imgs = i_end - i_start;
+
+  uint shape_batch[] = {nr_imgs, C, H, W};
+  x->dim = make_dim_from_arr(4, shape_batch);
+  x->data = loader->data_train + i_start * (C * H * W);
+  *label = loader->label_train + i_start;
+  return nr_imgs;
+}
+
+uint get_test_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
+                    uint batch_id, uint batch_sz) {
+  uint i_start = batch_id * batch_sz;
+  uint i_end = (batch_id + 1) * batch_sz;
+
+  if (i_end > nr_test_img) i_end = nr_test_img;
+  uint nr_imgs = i_end - i_start;
+
+  uint shape_batch[] = {nr_imgs, C, H, W};
+  x->dim = make_dim_from_arr(4, shape_batch);
+  x->data = loader->data_test + i_start * (C * H * W);
+  *label = loader->label_test + i_start;
+  return nr_imgs;
+}

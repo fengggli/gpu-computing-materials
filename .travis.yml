@@ -22,6 +22,9 @@ before_script:
 install: "pip install --user sphinx sphinx_rtd_theme sphinxcontrib-bibtex"
 
 script:
+  - cd ../data/cifar10
+  - ./get_cifar10.sh
+  - cd ../build
   - make # build c/c++
   - make test # run all the test
   - cd ../docs && make html  # build doc
