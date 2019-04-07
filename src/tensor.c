@@ -111,13 +111,13 @@ void _tensor_fill_random(tensor_t t, uint seed) {
 void _tensor_fill_patterned(tensor_t t) {
   uint capacity = dim_get_capacity(t.dim);
   uint i;
+
   for (i = 0; i < capacity; i++) {
     t.data[i] = (T)(i);
   }
 }
 
 void tensor_fill_list(tensor_t const t, T const value_list[],
-
                       uint const length_of_value_list) {
   assert(length_of_value_list <= tensor_get_capacity(t));
   for (uint i = 0; i < length_of_value_list; i++) {
@@ -126,7 +126,7 @@ void tensor_fill_list(tensor_t const t, T const value_list[],
 }
 
 // TODO : add error handling
-tensor_t _tensor_make(dim_t dim){
+tensor_t _tensor_make(dim_t dim) {
   tensor_t t;
   uint capacity;
   capacity = dim_get_capacity(dim);
@@ -361,7 +361,7 @@ void tensor_dump(tensor_t t) {
 // np.max(np.abs(x - y) / (np.maximum(1e-8, np.abs(x) + np.abs(y))))
 T tensor_rel_error(tensor_t x, tensor_t ref) {
   if (S_OK != dim_is_same(x.dim, ref.dim)) {
-    PERR("Dimension not match!");
+    PERR("Dimensions not matched!");
     return 100;
   }
   uint capacity = tensor_get_capacity(x);

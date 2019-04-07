@@ -5,6 +5,9 @@ language:
   - cpp
   - python # python is only used to build docs
 
+env:
+  - AWNN_ROOT=${TRAVIS_BUILD_DIR}
+
 python:
   - "3.6"
 
@@ -22,9 +25,12 @@ before_script:
 install: "pip install --user sphinx sphinx_rtd_theme sphinxcontrib-bibtex"
 
 script:
+  - cd ${AWNN_ROOT}/data/cifar10
+  - ./get_cifar10.sh
+  - cd ${AWNN_ROOT}/build
   - make # build c/c++
   - make test # run all the test
-  - cd ../docs && make html  # build doc
+  - cd ${AWNN_ROOT}/docs && make html  # build doc
 
 before_deploy: touch build/html/.nojekyll
 

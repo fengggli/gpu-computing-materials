@@ -43,9 +43,6 @@ class TestConvForwardIm2col(TestCase):
         sz_filter = 2
         nr_filter = 2  # num output channels
 
-        x_size = nr_img * nr_in_channel * sz_img * sz_img
-        w_size = nr_filter * nr_in_channel * sz_filter * sz_filter
-
         x = np.array([1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2]).reshape(nr_img, nr_in_channel, sz_img, sz_img)
         w = np.array([1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 2, 2]).reshape(nr_filter, nr_in_channel, sz_filter, sz_filter)
 
@@ -71,11 +68,15 @@ class TestConvForwardIm2col(TestCase):
         sz_filter = 4;
         nr_filter = 3;
 
-        x = np.linspace(-.1, .5, 2*3*4*4).reshape(2, 3, 4, 4)
-        w = np.linspace(-0.2, 0.3, 3*3*4*6).reshape(3, 3, 4, 6)
+        p = np.array([1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2]).reshape(1, 2, 3, 3)
+        x = np.linspace(-.1, .5, 2 * 3 * 4 * 4).reshape(2, 3, 4, 4)
+        w = np.linspace(-0.2, 0.3, 3 * 3 * 4 * 6).reshape(3, 3, 4, 6)
 
-        self.assertEqual(tpose3012(x).all(), x.transpose(3,0,1,2).all())
-        self.assertEqual(tpose3012(w).all(), w.transpose(3, 0, 1, 2).all())
+        self.assertTrue(np.array_equal(tpose3012(p), p.transpose(3, 0, 1, 2)))
+        self.assertTrue(np.array_equal(tpose3012(w), w.transpose(3, 0, 1, 2)))
+        self.assertTrue(np.array_equal(tpose3012(x), x.transpose(3, 0, 1, 2)))
 
+        # print(list(p.transpose(3, 0, 1, 2).flatten()))
         # print(list(x.transpose(3, 0, 1, 2).flatten()))
-        print(list(w.transpose(3, 0, 1, 2).flatten()))
+        # print(list(w.transpose(3, 0, 1, 2).flatten()))
+

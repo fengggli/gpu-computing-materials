@@ -32,6 +32,19 @@ typedef struct {
 /* make dimension, works like block() in cuda*/
 dim_t make_dim(int ndims,
                ...);  // TODO: can I just use array as the second param?
+
+static inline dim_t make_dim_from_arr(uint ndims, uint all_dims[]) {
+  dim_t ret;
+  assert(ndims <= MAX_DIM);
+  for (uint i = 0; i < MAX_DIM; i++) {
+    if (i < MAX_DIM)
+      ret.dims[i] = all_dims[i];
+    else
+      ret.dims[i] = 0;
+  }
+  return ret;
+}
+
 uint dim_get_capacity(dim_t dim);
 uint dim_get_ndims(dim_t dim);
 status_t dim_is_same(dim_t, dim_t);
@@ -110,6 +123,7 @@ tensor_t tensor_make_scalar_alike(tensor_t t, T scalar);
 tensor_t tensor_make_empty_with_dim(dim_t dim);
 
 tensor_t tensor_make_transpose_3012(tensor_t t);
+tensor_t tensor_make_transpose_1230(tensor_t t);
 
 /* access elem*/
 T *tensor_get_elem_ptr(tensor_t const t, dim_t const loc);

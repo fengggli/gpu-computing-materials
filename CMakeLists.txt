@@ -60,7 +60,7 @@ configure_file (
 
 include_directories(include ${PROJECT_BINARY_DIR})
 
-add_library(awnnlib
+add_library(awnn_core
   src/tensor.c
   src/tensor_op.c
   src/layer_conv.c
@@ -72,9 +72,13 @@ add_library(awnnlib
   src/weight_init.c
   src/layer_sandwich.c)
 
-target_link_libraries(awnnlib PUBLIC ${AWNN_DEP_LIBS})
+target_include_directories(awnn_core PUBLIC include)
+target_link_libraries(awnn_core PUBLIC ${AWNN_DEP_LIBS})
 
-set(AWNN_LIBS "awnnlib")
+add_library(awnn_utils
+  utils/data_cifar.cpp)
+
+set(AWNN_LIBS "awnn_core" "awnn_utils")
 
 if(USE_CUDA)
   cuda_add_library(awnndevicelib
@@ -95,4 +99,3 @@ if(BUILD_TEST)
   add_subdirectory(tests)
 endif()
 
-target_include_directories(awnnlib PUBLIC include)

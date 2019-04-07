@@ -8,7 +8,9 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
   // 1. flatten the input into vectors which represent the filters
   tensor_t flattened_x = im2col(x, w, params);
 
-  // 2. this is where the filters are actually applied
+  // 2. setup and apply filters
+  // TODO : const input is preventing reshape, but this memory doesn't need to be allocated
+  //        w is just used as a multiplier, but it needs to be reshaped.
   uint const reshaped_w_shape[] = { w.dim.dims[0], w.dim.dims[1] * w.dim.dims[2] * w.dim.dims[3] };
   tensor_t reshaped_w = tensor_make_copy(w);
   tensor_reshape_(&reshaped_w, reshaped_w_shape, ARRAY_SIZE(reshaped_w_shape));
@@ -16,12 +18,11 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
   uint const out_shape[] = { w.dim.dims[0], flattened_x.dim.dims[1] };
   tensor_t out = tensor_make(out_shape, ARRAY_SIZE(out_shape));
 
+  // apply here !!!
   tensor_matmul(reshaped_w, flattened_x, out);
 
   uint const out_shape_2[] = { w.dim.dims[0], y.dim.dims[2], y.dim.dims[3], x.dim.dims[0] };
   tensor_reshape_(&out, out_shape_2, ARRAY_SIZE(out_shape_2));
-
-//  tensor_destroy(y);
 
   // 3. transpose output
   tensor_t tpose = tensor_make_transpose_3012(out);
@@ -37,6 +38,8 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
   // fill cache
 //  cache = (x, w, conv_param, x_cols);
 
+  tensor_destroy(&tpose);
+  tensor_destroy(&out);
   return S_OK;
 }
 
@@ -110,7 +113,6 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
 status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t const *cache, tensor_t const dy){
   status_t ret = S_ERR;
 
-  ret = S_OK;
 
   return ret;
 }
