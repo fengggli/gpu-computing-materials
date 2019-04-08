@@ -16,34 +16,7 @@
 namespace {
 
 // The fixture for testing class Foo.
-class NetMLPTest : public ::testing::Test {
- protected:
-  // You can remove any or all of the following functions if its body
-  // is empty.
-
-  NetMLPTest() {
-    // You can do set-up work for each test here.
-  }
-
-  ~NetMLPTest() override {
-    // You can do clean-up work that doesn't throw exceptions here.
-  }
-
-  // If the constructor and destructor are not enough for setting up
-  // and cleaning up each test, you can define the following methods:
-
-  void SetUp() override {
-    // Code here will be called immediately after the constructor (right
-    // before each test).
-  }
-
-  void TearDown() override {
-    // Code here will be called immediately after each test (right
-    // before the destructor).
-  }
-
-  // Objects declared here can be used by all tests.
-};
+class NetMLPTest : public ::testing::Test {};
 
 TEST_F(NetMLPTest, CifarTest) {
   static model_t model;
@@ -69,7 +42,7 @@ TEST_F(NetMLPTest, CifarTest) {
   // overfit small data;
   uint train_sz = 50;
   uint val_sz = 1000;
-  T learning_rate = 0.1;
+  T learning_rate = 0.01;
 
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
