@@ -744,6 +744,287 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test11) {
   tensor_destroy(&padded_in);
 }
 
+TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test0) {
+  uint pad_size = 1;
+  float pad_val = 0;
+
+  uint const in_shape[] = { 1, 1, 2, 2 };
+  tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x2x2 -> 1x1x4x4
+
+  uint new_h = padded_in.dim.dims[2];
+  uint new_w = padded_in.dim.dims[3];
+
+  tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
+
+  //  tensor_dump(in);
+  //  tensor_dump(out);
+
+  ASSERT_EQ(in.dim.dims[2], out.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3], out.dim.dims[3]);
+
+
+  EXPECT_LT(tensor_rel_error(in, out), 1e-7);
+  std::cout << "\nRelative error should be 0 : " << tensor_rel_error(in, out) << "\n";
+
+
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
+}
+
+TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test1) {
+  uint pad_size = 1;
+  float pad_val = 0;
+
+  uint const in_shape[] = { 1, 1, 3, 2 };
+  tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x3x2 -> 1x1x5x4
+
+  uint new_h = padded_in.dim.dims[2];
+  uint new_w = padded_in.dim.dims[3];
+
+  tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
+
+  //  tensor_dump(in);
+  //  tensor_dump(out);
+
+  ASSERT_EQ(in.dim.dims[2], out.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3], out.dim.dims[3]);
+
+
+  EXPECT_LT(tensor_rel_error(in, out), 1e-7);
+  std::cout << "\nRelative error should be 0 : " << tensor_rel_error(in, out) << "\n";
+
+
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
+}
+
+TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test3) {
+  uint pad_size = 1;
+  float pad_val = 0;
+
+  uint const in_shape[] = { 1, 1, 2, 3 };
+  tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x2x3 -> 1x1x4x5
+
+  uint new_h = padded_in.dim.dims[2];
+  uint new_w = padded_in.dim.dims[3];
+
+  tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
+
+  //  tensor_dump(in);
+  //  tensor_dump(out);
+
+  ASSERT_EQ(in.dim.dims[2], out.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3], out.dim.dims[3]);
+
+
+  EXPECT_LT(tensor_rel_error(in, out), 1e-7);
+  std::cout << "\nRelative error should be 0 : " << tensor_rel_error(in, out) << "\n";
+
+
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
+}
+
+TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test4) {
+  uint pad_size = 2;
+  float pad_val = 0;
+
+  uint const in_shape[] = { 1, 1, 3, 2 };
+  tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x2x3 -> 1x1x7x6
+
+  uint new_h = padded_in.dim.dims[2];
+  uint new_w = padded_in.dim.dims[3];
+
+  tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
+
+  //  tensor_dump(in);
+  //  tensor_dump(out);
+
+  ASSERT_EQ(in.dim.dims[2], out.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3], out.dim.dims[3]);
+
+
+  EXPECT_LT(tensor_rel_error(in, out), 1e-7);
+  std::cout << "\nRelative error should be 0 : " << tensor_rel_error(in, out) << "\n";
+
+
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
+}
+
+TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test5) {
+  uint pad_size = 2;
+  float pad_val = 0;
+
+  uint const in_shape[] = { 1, 1, 2, 3 };
+  tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x2x3 -> 1x1x6x7
+
+  uint new_h = padded_in.dim.dims[2];
+  uint new_w = padded_in.dim.dims[3];
+
+  tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
+
+  //  tensor_dump(in);
+  //  tensor_dump(out);
+
+  ASSERT_EQ(in.dim.dims[2], out.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3], out.dim.dims[3]);
+
+
+  EXPECT_LT(tensor_rel_error(in, out), 1e-7);
+  std::cout << "\nRelative error should be 0 : " << tensor_rel_error(in, out) << "\n";
+
+
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
+}
+
+TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test6) {
+  uint pad_size = 1;
+  float pad_val = 0;
+
+  uint const in_shape[] = { 1, 2, 2, 2 };
+  tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x2x2x2 -> 1x2x4x4
+
+  uint new_h = padded_in.dim.dims[2];
+  uint new_w = padded_in.dim.dims[3];
+
+  tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
+
+  //  tensor_dump(in);
+  //  tensor_dump(out);
+
+  ASSERT_EQ(in.dim.dims[2], out.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3], out.dim.dims[3]);
+
+
+  EXPECT_LT(tensor_rel_error(in, out), 1e-7);
+  std::cout << "\nRelative error should be 0 : " << tensor_rel_error(in, out) << "\n";
+
+
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
+}
+
+TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test7) {
+  uint pad_size = 1;
+  float pad_val = 0;
+
+  uint const in_shape[] = { 1, 2, 3, 2 };
+  tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x2x3x2 -> 1x2x5x4
+
+  uint new_h = padded_in.dim.dims[2];
+  uint new_w = padded_in.dim.dims[3];
+
+  tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
+
+  //  tensor_dump(in);
+  //  tensor_dump(out);
+
+  ASSERT_EQ(in.dim.dims[2], out.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3], out.dim.dims[3]);
+
+
+  EXPECT_LT(tensor_rel_error(in, out), 1e-7);
+  std::cout << "\nRelative error should be 0 : " << tensor_rel_error(in, out) << "\n";
+
+
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
+}
+
+TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test8) {
+  uint pad_size = 2;
+  float pad_val = 0;
+
+  uint const in_shape[] = { 1, 2, 3, 2 };
+  tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x2x3x2 -> 1x2x7x6
+
+  uint new_h = padded_in.dim.dims[2];
+  uint new_w = padded_in.dim.dims[3];
+
+  tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
+
+  //  tensor_dump(in);
+  //  tensor_dump(out);
+
+  ASSERT_EQ(in.dim.dims[2], out.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3], out.dim.dims[3]);
+
+
+  EXPECT_LT(tensor_rel_error(in, out), 1e-7);
+  std::cout << "\nRelative error should be 0 : " << tensor_rel_error(in, out) << "\n";
+
+
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
+}
+
+TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test9) {
+  uint pad_size = 1;
+  float pad_val = 0;
+
+  uint const in_shape[] = { 2, 2, 2, 2 };
+  tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 2x2x2x2 -> 2x2x4x4
+
+  uint new_h = padded_in.dim.dims[2];
+  uint new_w = padded_in.dim.dims[3];
+
+  tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
+
+  //  tensor_dump(in);
+  //  tensor_dump(out);
+
+  ASSERT_EQ(in.dim.dims[2], out.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3], out.dim.dims[3]);
+
+
+  EXPECT_LT(tensor_rel_error(in, out), 1e-7);
+  std::cout << "\nRelative error should be 0 : " << tensor_rel_error(in, out) << "\n";
+
+
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
+}
+
+TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test10) {
+  uint pad_size = 5;
+  float pad_val = 0;
+
+  uint const in_shape[] = { 5, 13, 7, 20 };
+  tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 2x2x2x2 -> 2x2x4x4
+
+  uint new_h = padded_in.dim.dims[2];
+  uint new_w = padded_in.dim.dims[3];
+
+  tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
+
+  //  tensor_dump(in);
+  //  tensor_dump(out);
+
+  ASSERT_EQ(in.dim.dims[2], out.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3], out.dim.dims[3]);
+
+
+  EXPECT_LT(tensor_rel_error(in, out), 1e-7);
+  std::cout << "\nRelative error should be 0 : " << tensor_rel_error(in, out) << "\n";
+
+
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
+}
+
+
 } // namespace
 
 int main(int argc, char **argv) {

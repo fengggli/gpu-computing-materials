@@ -15,6 +15,7 @@ def tpose1230(X):
 
     return np.array(out_cpy).reshape(original_x_shape[1], original_x_shape[2], original_x_shape[3], original_x_shape[0])
 
+
 def convolution_backward(dout, cache):
     """
     A fast implementation of the backward pass for a convolution layer
@@ -29,26 +30,38 @@ def convolution_backward(dout, cache):
     # 1 - num filters
     # then reshape on the number of filters and bring to 2D
     # transpose will take a while
-    print("BEFORE TRANSPOSE")
-    print(dout)
-    tpose = dout.transpose(1, 2, 3, 0)
-    print("AFTER TRANSPOSE")
-    print(tpose)
+    # print("BEFORE TRANSPOSE")
+    # print(dout)
+    dout_tpose = dout.transpose(1, 2, 3, 0)
+    # print("AFTER TRANSPOSE")
+    # print(tpose)
 
-    dout_reshaped = dout.reshape(num_filters, -1)
+    dout_reshaped = dout_tpose.reshape(num_filters, -1)
 
     # transpose makes the width of (x_cols) the filters becomes
     # Dim 1,
     # gives the dLoss/dw which == (dL/dy * dy/dw) since dy/dw == X
+
     dw = dout_reshaped.dot(x_cols.T).reshape(w.shape)
 
-    # deriv x dL/dx = dL/dy * dy/dx
-    dx_cols = w.reshape(num_filters, -1).T.dot(dout_reshaped)
+    # done getting dw
 
+    # deriv x dL/dx = dL/dy * dy/dx
+    w_T = w.reshape(num_filters, -1).T
+    dx_cols = w_T.dot(dout_reshaped)
+
+    print()
+    print(dx_cols)
     # convert back to multidimensional
     # is gonna take a while
     dx = col2im(dx_cols, x.shape[0], x.shape[1], x.shape[2], x.shape[3],
                 filter_height, filter_width, pad, stride)
+
+
+    print(dx.shape)
+    print(list(dx.flatten()))
+
+
 
     return dx, dw
 
@@ -86,13 +99,14 @@ def col2im(cols, N, C, H, W, field_height, field_width, padding, stride):
     WW = int((W + 2 * padding - field_width) / stride + 1)
     x_padded = np.zeros((N, C, H + 2 * padding, W + 2 * padding), dtype=cols.dtype)
 
+
     # Moving the inner loop to a C-function with no bounds checking improves
     # performance quite a bit for col2im.
     col2im_inner(cols, x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride)
+
     if padding > 0:
         return x_padded[:, :, padding:-padding, padding:-padding]
     return x_padded
-
 
 
 """
@@ -114,6 +128,7 @@ cdef int col2im_cython_inner(np.ndarray[DTYPE_t, ndim=2] cols,
                             x_padded[i, c, stride * yy + ii, stride * xx + jj] += cols[row, col]
 """
 
+
 def col2im_inner(cols, x_padded,
                  N, C, H, W, HH, WW,
                  field_height, field_width, padding, stride):
@@ -126,4 +141,9 @@ def col2im_inner(cols, x_padded,
                     for xx in range(WW):
                         for i in range(N):
                             col = yy * WW * N + xx * N + i
+                            # print(cols[row, col])
                             x_padded[i, c, stride * yy + ii, stride * xx + jj] += cols[row, col]
+
+    # print()
+    # print(x_padded.shape)
+    # print(list(x_padded.flatten()))
