@@ -94,25 +94,28 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#current">Current</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#todo-list">TODO List</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#working-in-progress">Working in progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#todo-list">TODO List</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#added">Added</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#previous">Previous</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id2">0.4.3</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id3">Added</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">0.4.4</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#added">Added</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">0.4.3</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Added</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#others">others</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id4">0.4.2</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id5">Added</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">0.4.2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Added</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id6">&lt; 0.4.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">&lt; 0.4.1</a></li>
 </ul>
 </li>
 </ul>
@@ -188,62 +191,97 @@
 <p>Code is maintained in <a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/">https://github.com/fengggli/gpu-computing-materials/</a></p>
 <p class="last">Ask Feng for access.</p>
 </div>
+<div class="section" id="working-in-progress">
+<h3>Working in progress<a class="headerlink" href="#working-in-progress" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>Reporting statistics in MLP. For now loss does change as expected.</li>
+<li>Convnet</li>
+</ol>
+</div>
 <div class="section" id="todo-list">
 <h3>TODO List<a class="headerlink" href="#todo-list" title="Permalink to this headline">¶</a></h3>
-<ul>
-<li><p class="first">Utility:</p>
-<p>show show backtrace (<a class="reference external" href="https://www.gnu.org/software/libc/manual/html_node/Backtraces.html">https://www.gnu.org/software/libc/manual/html_node/Backtraces.html</a>)</p>
-</li>
-<li><p class="first">Layers</p>
 <ul class="simple">
-<li>conv2d</li>
+<li>Layers<ul>
 <li>batchnorm</li>
 </ul>
 </li>
-<li><p class="first">Net</p>
-<ol class="arabic simple">
+<li>Net<ol class="arabic">
 <li>Lenet</li>
 <li>residual blocks</li>
 <li>simplified resnet</li>
 </ol>
 </li>
-<li><p class="first">Utility</p>
-<ol class="arabic simple">
-<li>solver</li>
+<li>Utility<ul>
 <li>reporting</li>
-</ol>
+</ul>
 </li>
-<li><p class="first">Initializer (kaiming initialization)</p>
-</li>
-<li><p class="first">Data</p>
-</li>
-<li><p class="first">Others</p>
+<li>Initializer (kaiming initialization)</li>
+<li>Others<ul>
+<li>show show backtrace (<a class="reference external" href="https://www.gnu.org/software/libc/manual/html_node/Backtraces.html">https://www.gnu.org/software/libc/manual/html_node/Backtraces.html</a>)</li>
+</ul>
 </li>
 </ul>
 </div>
-<div class="section" id="working-in-progress">
-<h3>Working in progress<a class="headerlink" href="#working-in-progress" title="Permalink to this headline">¶</a></h3>
-<ol class="arabic simple">
-<li>Conv2d and global pool in gpu (Chris and Yuankun).</li>
-<li>solver.</li>
-</ol>
-</div>
-</div>
-<div class="section" id="added">
-<h2>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li>naiive CUDA pooling layer, set USE_CUDA=on to enable</li>
-</ul>
 </div>
 </div>
 <div class="section" id="previous">
 <h1>Previous<a class="headerlink" href="#previous" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id2">
-<h2>0.4.3<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<h2>0.4.4<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>:Date 2019-04-08</p>
+<div class="section" id="added">
+<h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>cifar Data loader:</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>Use data/cifar10/get_cifar10.sh to download data.</li>
+<li>preprocess: normailzed, and with channel mean substracted.</li>
+<li>train/validation split</li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li>Solver(main for loop):</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>feed batches from loader, forward/backward and gradient updates(test/test_net_mlp_cifar)</li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li>Weight init</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>Kaiming init and weight-scale based init.</li>
+<li>Extract this part to utils/ since we use distribution from stl.</li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li>Doc</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>Added the network memory allocation figure.</li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="4">
+<li>Cuda</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>naiive CUDA pooling layer, set USE_CUDA=on to enable</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="id3">
+<h2>0.4.3<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <p>:Date 2019-04-01</p>
 <p>See (<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/pull/19">https://github.com/fengggli/gpu-computing-materials/pull/19</a>)</p>
-<div class="section" id="id3">
-<h3>Added<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h3>Added<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>a fc_relu sandwich layer</li>
 <li>weight initialization (currently only linspace is used)</li>
@@ -271,11 +309,11 @@
 </ul>
 </div>
 </div>
-<div class="section" id="id4">
-<h2>0.4.2<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
-<p>:Date 2019-03-30</p>
 <div class="section" id="id5">
-<h3>Added<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<h2>0.4.2<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<p>:Date 2019-03-30</p>
+<div class="section" id="id6">
+<h3>Added<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Layers:</li>
 </ol>
@@ -298,8 +336,8 @@
 </div></blockquote>
 </div>
 </div>
-<div class="section" id="id6">
-<h2>&lt; 0.4.1<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id7">
+<h2>&lt; 0.4.1<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
 <p>see dl-docs for changelog prior to 0.4.1</p>
 </div>
 </div>
