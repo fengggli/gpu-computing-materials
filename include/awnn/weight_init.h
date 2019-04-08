@@ -18,6 +18,9 @@ extern "C" {
 /* Init a tensor with linspace*/
 status_t weight_init_linspace(tensor_t t, T start, T stop);
 
+/* Init a fc weight layer*/
+status_t weight_init_fc(tensor_t weight, tensor_t bias);
+
 /* Init a tensor with normal distribution*/
 status_t weight_init_norm(tensor_t t, T mean, T std);
 

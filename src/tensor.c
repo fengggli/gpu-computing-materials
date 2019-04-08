@@ -108,6 +108,18 @@ void _tensor_fill_random(tensor_t t, uint seed) {
   }
 }
 
+void _tensor_fill_random_uniform(tensor_t t, double low, double high,
+                                 uint seed) {
+  assert(high > low);
+  srand(seed);
+  uint capacity = dim_get_capacity(t.dim);
+  uint i;
+  for (i = 0; i < capacity; i++) {
+    double scale = (T)rand() / (T)RAND_MAX;  // 0~1
+    t.data[i] = low + (high - low) * scale;
+  }
+}
+
 void _tensor_fill_patterned(tensor_t t) {
   uint capacity = dim_get_capacity(t.dim);
   uint i;
@@ -293,11 +305,13 @@ tensor_t tensor_make_padded_square_input(tensor_t t, uint p, float pad_val) {
 
   uint new_shape[] = {N, C, HH, WW};
 
-  tensor_t n = tensor_make(new_shape, 4);  // 4 is the number of dimensions... TODO : remove magic number
+  tensor_t n = tensor_make(
+      new_shape,
+      4);  // 4 is the number of dimensions... TODO : remove magic number
   for (int i = 0; i < N; i++)
     for (int j = 0; j < C; j++)
-      for(int k = 0; k < HH; k++)
-        for(int l = 0; l < WW; l++) {
+      for (int k = 0; k < HH; k++)
+        for (int l = 0; l < WW; l++) {
           uint target_idx = i * C * HH * WW + j * HH * WW + k * WW + l;
           if (k < p) {
             n.data[target_idx] = pad_val;
@@ -378,8 +392,7 @@ T tensor_rel_error(tensor_t x, tensor_t ref) {
   return norm_diff / norm_ref;
 }
 
-void tensor_destroy(tensor_t* t){
+void tensor_destroy(tensor_t* t) {
   mem_free(t->data);
   t->data = NULL;
 }
-

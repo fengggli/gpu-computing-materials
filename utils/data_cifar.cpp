@@ -36,7 +36,9 @@ void read_image(FILE *file, label_t *label, char *buffer) {
 // TODO: substract mean
 inline void preprocess_data(char *buffer_str, T *buffer_float, size_t nr_elem) {
   for (uint i = 0; i < nr_elem; i++) {
-    buffer_float[i] = T(buffer_str[i]);
+    // buffer_float[i] = T(buffer_str[i]);
+    // normalize to (0, 255) -> (-1, 1)
+    buffer_float[i] = 2.0* ((unsigned char)(buffer_str[i])/255.0);
   }
 }
 

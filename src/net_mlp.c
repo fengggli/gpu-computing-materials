@@ -9,6 +9,7 @@
 #include "awnn/loss_softmax.h"
 #include "awnn/net_mlp.h"
 #include "awnn/tensor.h"
+#include "awnn/weight_init.h"
 
 status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
                   uint output_dim, uint nr_hidden_layers, uint hidden_dims[],
@@ -22,7 +23,7 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
   model->nr_hidden_layers = nr_hidden_layers;
   model->reg = reg;
   for (uint i = 0; i < MAX_DIM; ++i) {
-    if(i < nr_hidden_layers)
+    if (i < nr_hidden_layers)
       model->hidden_dims[i] = hidden_dims[i];
     else
       model->hidden_dims[i] = 0;
@@ -73,6 +74,9 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
     char b_name[MAX_STR_LENGTH];
     snprintf(b_name, MAX_STR_LENGTH, "fc%u.bias", i);
     net_attach_param(model->list_all_params, b_name, b, db);
+
+    // weight init
+    weight_init_fc(w, b);
 
     // prepare layer output
     uint out_shape[] = {max_batch_sz, fan_out};

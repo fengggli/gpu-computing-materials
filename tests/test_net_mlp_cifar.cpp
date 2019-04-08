@@ -43,13 +43,10 @@ class NetMLPTest : public ::testing::Test {
   }
 
   // Objects declared here can be used by all tests.
-  static model_t model;
 };
 
-// input of forward
-model_t NetMLPTest::model;
-
-TEST_F(NetMLPTest, Construct) {
+TEST_F(NetMLPTest, CifarTest) {
+  static model_t model;
   uint batch_sz = 25;
   uint input_dim = 3 * 32 * 32;
   uint output_dim = 10;
@@ -64,9 +61,7 @@ TEST_F(NetMLPTest, Construct) {
                                              "W3"));  // unexisting param
   EXPECT_NE((void *)0,
             (void *)net_get_param(model.list_all_params, "fc0.weight"));
-}
 
-TEST_F(NetMLPTest, CifarTest) {
   data_loader_t loader;
   status_t ret = cifar_open(&loader, CIFAR_PATH);
   EXPECT_EQ(S_OK, ret);
@@ -74,12 +69,11 @@ TEST_F(NetMLPTest, CifarTest) {
   // overfit small data;
   uint train_sz = 50;
   uint val_sz = 1000;
-  T learning_rate = 0.1;
+  T learning_rate = 0.01;
 
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
-  uint batch_sz = 25;  // this can be 50 000/50 = 1000 batches
-  uint nr_epoches = 1;
+  uint nr_epoches = 20;
 
   uint iterations_per_epoch = train_sz / batch_sz;
   if (iterations_per_epoch == 0) iterations_per_epoch = 1;
@@ -111,9 +105,8 @@ TEST_F(NetMLPTest, CifarTest) {
     }
   }
   cifar_close(&loader);
+  mlp_finalize(&model);
 }
-
-TEST_F(NetMLPTest, Destroy) { mlp_finalize(&model); }
 
 }  // namespace
 
