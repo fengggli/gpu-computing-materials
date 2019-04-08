@@ -46,6 +46,10 @@ add_executable(test-net-mlp test_net_mlp.cpp)
 target_link_libraries(test-net-mlp ${AWNN_LIBS}  gtest)
 add_test(test-net-mlp test-net-mlp)
 
+add_executable(test-net-mlp-cifar test_net_mlp_cifar.cpp)
+target_link_libraries(test-net-mlp-cifar ${AWNN_LIBS}  gtest)
+add_test(test-net-mlp-cifar test-net-mlp-cifar)
+
 add_executable(test-dtype-list test_dtype_list.cpp)
 target_link_libraries(test-dtype-list ${AWNN_LIBS}  gtest)
 add_test(test-dtype-list test-dtype-list)

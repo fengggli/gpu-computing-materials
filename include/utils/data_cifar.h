@@ -19,6 +19,10 @@
 status_t cifar_open(data_loader_t *loader, const char *input_folder);
 status_t cifar_close(data_loader_t *loader);
 
+
+// Split  trainset to train/val
+status_t cifar_split_train(data_loader_t *loader, uint train_sz, uint val_sz);
+
 /*
  * Get a train batch
  *

@@ -13,9 +13,15 @@
 const uint C = 3;
 const uint H = 32;
 const uint W = 32;
-// cifar 10 training set is organized as 5 batches
+
+// cifar 10 training set will be split into train/val
 static const uint nr_train_img = 50000;
 static const uint nr_test_img = 10000;
+
+// default train/val split, can be overwritten with cifar_split_train
+static const uint nr_default_train_sz = 49000;
+static const uint nr_default_val_sz = 1000;
+
 
 // Read byte stream
 void read_image(FILE *file, label_t *label, char *buffer) {
@@ -92,6 +98,19 @@ status_t cifar_open(data_loader_t *loader, const char *input_folder) {
   fclose(data_file);
 
   mem_free(buffer_str);
+
+  // by default set train/val split
+  cifar_split_train(loader, nr_default_train_sz, nr_default_val_sz);
+  return S_OK;
+}
+
+status_t cifar_split_train(data_loader_t *loader, uint train_sz, uint validation_sz){
+  if(train_sz + validation_sz > nr_train_img){
+    PERR("train_sz + val_sz > nr_train_img");
+    return S_ERR;
+  }
+  loader->train_split = train_sz;
+  loader->val_split = nr_train_img - validation_sz;
   return S_OK;
 }
 
@@ -110,7 +129,7 @@ uint get_train_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
   uint i_start = batch_id * batch_sz;
   uint i_end = (batch_id + 1) * batch_sz;
 
-  if (i_end > nr_train_img) i_end = nr_train_img;
+  if (i_end > loader->train_split) i_end = loader->train_split;
   uint nr_imgs = i_end - i_start;
 
   uint shape_batch[] = {nr_imgs, C, H, W};
