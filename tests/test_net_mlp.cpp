@@ -6,8 +6,8 @@
  */
 #include "awnn/data_utils.h"
 #include "awnn/net_mlp.h"
-#include "awnn/weight_init.h"
 #include "awnn/solver.h"
+#include "utils/weight_init.h"
 
 #include "gtest/gtest.h"
 #include "test_util.h"

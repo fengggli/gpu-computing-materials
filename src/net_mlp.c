@@ -2,14 +2,14 @@
 // Created by lifen on 3/25/19.
 //
 
+#include "awnn/net_mlp.h"
 #include <stdlib.h>
 #include <string.h>
 #include "awnn/layer_fc.h"
 #include "awnn/layer_sandwich.h"
 #include "awnn/loss_softmax.h"
-#include "awnn/net_mlp.h"
 #include "awnn/tensor.h"
-#include "awnn/weight_init.h"
+#include "utils/weight_init.h"
 
 status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
                   uint output_dim, uint nr_hidden_layers, uint hidden_dims[],
@@ -76,7 +76,8 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
     net_attach_param(model->list_all_params, b_name, b, db);
 
     // weight init
-    weight_init_fc(w, b);
+    double weight_scale = 0.01;
+    weight_init_fc(w, b, weight_scale);
 
     // prepare layer output
     uint out_shape[] = {max_batch_sz, fan_out};

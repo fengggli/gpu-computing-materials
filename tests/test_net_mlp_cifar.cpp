@@ -7,8 +7,8 @@
 #include "awnn/data_utils.h"
 #include "awnn/net_mlp.h"
 #include "awnn/solver.h"
-#include "awnn/weight_init.h"
 #include "utils/data_cifar.h"
+#include "utils/weight_init.h"
 
 #include "gtest/gtest.h"
 #include "test_util.h"
