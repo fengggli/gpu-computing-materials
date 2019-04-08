@@ -69,7 +69,7 @@ TEST_F(NetMLPTest, CifarTest) {
   // overfit small data;
   uint train_sz = 50;
   uint val_sz = 1000;
-  T learning_rate = 0.01;
+  T learning_rate = 0.1;
 
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 

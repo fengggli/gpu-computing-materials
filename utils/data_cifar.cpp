@@ -22,6 +22,10 @@ static const uint nr_test_img = 10000;
 static const uint nr_default_train_sz = 49000;
 static const uint nr_default_val_sz = 1000;
 
+// mean value from deep 500 dataset/cifar.py
+static const double channel_mean[] = {0.4914, 0.4822, 0.4465};
+static const double channel_std[] = {0.2023, 0.1994, 0.2010};
+
 
 // Read byte stream
 void read_image(FILE *file, label_t *label, char *buffer) {
@@ -36,9 +40,13 @@ void read_image(FILE *file, label_t *label, char *buffer) {
 // TODO: substract mean
 inline void preprocess_data(char *buffer_str, T *buffer_float, size_t nr_elem) {
   for (uint i = 0; i < nr_elem; i++) {
+    uint channel_id = i/(H*W);
     // buffer_float[i] = T(buffer_str[i]);
-    // normalize to (0, 255) -> (-1, 1)
-    buffer_float[i] = 2.0* ((unsigned char)(buffer_str[i])/255.0);
+    // normalize to (0, 255) -> (0, 1), then rescale to N(0,1)
+    double byte_value = ((unsigned char)(buffer_str[i])/255.0);
+    double this_value = (byte_value - channel_mean[channel_id])/channel_std[channel_id];
+    // PINF("value %.3f normalized to %.3f", byte_value, this_value);
+    buffer_float[i] = this_value;
   }
 }
 
