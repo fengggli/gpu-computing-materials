@@ -37,9 +37,11 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
 
   // fill cache
   // NOTE, the order matters should be x, w, flattened_x
-  lcache_push(cache, x);
-  lcache_push(cache, w);
-  lcache_push(cache, flattened_x);
+  if(cache) {
+    lcache_push(cache, x);
+    lcache_push(cache, w);
+    lcache_push(cache, flattened_x);
+  }
 
   tensor_destroy(&tpose);
   tensor_destroy(&out);
