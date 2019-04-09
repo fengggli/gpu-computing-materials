@@ -37,9 +37,11 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
 
   // fill cache
   // NOTE, the order matters should be x, w, flattened_x
-  lcache_push(cache, x);
-  lcache_push(cache, w);
-  lcache_push(cache, flattened_x);
+  if(cache) {
+    lcache_push(cache, x);
+    lcache_push(cache, w);
+    lcache_push(cache, flattened_x);
+  }
 
   tensor_destroy(&tpose);
   tensor_destroy(&out);
@@ -111,13 +113,24 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
 }
 
 
-
-
-status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t const *cache, conv_param_t const conv_params, tensor_t const dout) {
-  status_t ret = S_ERR;
+/**
+ * creates 4 new chunks of memory
+ *  * dout_reshaped
+ *  * x_cols_T
+ *  * w_T
+ *  * t : x_cols converted back to tensor form
+ *
+ * @param dx
+ * @param dw
+ * @param cache
+ * @param conv_params
+ * @param dout
+ * @return
+ */
+status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache, conv_param_t const conv_params, tensor_t const dout) {
   tensor_t x, w, x_cols;
 
-  // NOTE : the order matters, should be flattened_x, w, x (reverse of forward)
+  // NOTE : the order of pop matters, should be flattened_x, w, x (reverse of forward)
   x_cols = lcache_pop(cache);
   w = lcache_pop(cache);
   x = lcache_pop(cache);
@@ -152,17 +165,20 @@ status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t const *cache, c
   tensor_t dx_cols = tensor_make(dx_cols_shape, ARRAY_SIZE(dx_cols_shape));
   tensor_matmul(w_T, dout_reshaped, dx_cols);
 
-
-
   // then we convert it back to tensor form
   tensor_t t = col2im(dx_cols, x.dim.dims[0], x.dim.dims[1], x.dim.dims[2], x.dim.dims[3], filter_height, filter_width, conv_params.padding, conv_params.stride);
 
-  tensor_dump(t);
-
+  // copy date into dw (assumption is that dw is already correct shape)
   uint capacity = tensor_get_capacity(t);
   for (int i = 0; i < capacity; ++i) {
     dx.data[i] = t.data[i];
   }
+
+
+  tensor_destroy(&dout_reshaped);
+  tensor_destroy(&x_cols_T);
+  tensor_destroy(&w_T);
+  tensor_destroy(&t);
 
   return S_OK;
 }
@@ -186,7 +202,7 @@ tensor_t col2im(tensor_t cols, uint N, uint C, uint H, uint W, uint field_height
   uint WW = (W + 2 * padding - field_width) / stride + 1;
 
   uint x_padded_shape[] = { N, C, H + 2 * padding, W + 2 * padding };
-  tensor_t x_padded = tensor_make_scalar(x_padded_shape, ARRAY_SIZE(x_padded_shape), 0);
+  tensor_t x_padded = tensor_make_scalar(x_padded_shape, ARRAY_SIZE(x_padded_shape), 0);                                    // new mem created by returned
 
   col2im_inner(cols, x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
   if (padding) {

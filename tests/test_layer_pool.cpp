@@ -162,7 +162,7 @@ TEST_F(LayerGlobalAvgPoolTest, BackwardDevice) {
 }
 #endif
 
-// TODO: check with cudnn
+// TODO : check with cudnn
 // TODO : document tests
 TEST_F(LayerGlobalAvgPoolTest, CheckLcache) {
   EXPECT_EQ(cache.count, 0);  // backward needs to call lcache_free_all(cache);
