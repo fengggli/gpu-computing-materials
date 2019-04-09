@@ -78,7 +78,7 @@ status_t cifar_open(data_loader_t *loader, const char *input_folder) {
   for (uint itemid = 0; itemid < nr_train_img; ++itemid) {
     read_image(data_file, &label, buffer_str);
     loader->label_train[itemid] = label;
-    preprocess_data(buffer_str, &loader->data_train[itemid], bytes_per_img);
+    preprocess_data(buffer_str, &loader->data_train[itemid*bytes_per_img], bytes_per_img);
   }
   fclose(data_file);
 
@@ -103,7 +103,7 @@ status_t cifar_open(data_loader_t *loader, const char *input_folder) {
   for (uint itemid = 0; itemid < nr_test_img; ++itemid) {
     read_image(data_file, &label, buffer_str);
     loader->label_test[itemid] = label;
-    preprocess_data(buffer_str, &loader->data_test[itemid], bytes_per_img);
+    preprocess_data(buffer_str, &loader->data_test[itemid*bytes_per_img], bytes_per_img);
   }
   fclose(data_file);
 

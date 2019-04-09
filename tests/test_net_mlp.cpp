@@ -7,6 +7,7 @@
 #include "awnn/data_utils.h"
 #include "awnn/net_mlp.h"
 #include "awnn/solver.h"
+#include "utils/debug.h"
 #include "utils/weight_init.h"
 
 #include "gtest/gtest.h"
@@ -144,9 +145,8 @@ TEST_F(NetMLPTest, Loss) {
 }
 
 // do a single update with sgd
-TEST_F(NetMLPTest, Update){
-
-  T learning_rate = 0.1;
+TEST_F(NetMLPTest, Update) {
+  T learning_rate = 0.01;
   param_t *p_param;
   // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
   list_for_each_entry(p_param, model.list_all_params, list) {

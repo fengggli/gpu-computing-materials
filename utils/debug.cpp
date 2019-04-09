@@ -21,5 +21,5 @@ void dump_tensor_stats(tensor_t t, const char* name) {
     sum += (t.data[i] - mean) * (t.data[i] - mean);
   }
   double std = sqrt(sum / (capacity - 1));
-  PNOTICE("[Tensor %s]: mean = %.2e, std = %.2e", name, mean, std);
+  PNOTICE("[Tensor(%p) %s]: mean = %.2e, std = %.2e", t.data, name, mean, std);
 }

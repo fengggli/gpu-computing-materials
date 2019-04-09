@@ -76,9 +76,9 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
     net_attach_param(model->list_all_params, b_name, b, db);
 
     // weight init
-    double weight_scale = 0.01;
-    weight_init_fc(w, b, weight_scale);
-    // weight_init_fc_kaiming(w, b);
+    //double weight_scale = 0.1;
+    //weight_init_fc(w, b, weight_scale);
+    weight_init_fc_kaiming(w, b);
 
     // prepare layer output
     uint out_shape[] = {max_batch_sz, fan_out};

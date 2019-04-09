@@ -79,6 +79,8 @@ add_library(awnn_utils
   utils/weight_init.cpp
   utils/debug.cpp)
 
+target_link_libraries(awnn_utils awnn_core)
+
 set(AWNN_LIBS "awnn_core" "awnn_utils")
 
 if(USE_CUDA)

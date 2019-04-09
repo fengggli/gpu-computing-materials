@@ -64,9 +64,9 @@ TEST_F(NetMLPTest, CifarTest) {
 
     PINF("[Epoch %d, Iteration %u/%u]", cur_epoch, cur_batch,
          iterations_per_epoch);
-    EXPECT_EQ(batch_sz,
-              get_train_batch(&loader, &x, &labels, cur_batch, batch_sz));
+    uint cnt_read = get_train_batch(&loader, &x, &labels, cur_batch, batch_sz);
 
+    EXPECT_EQ(batch_sz, cnt_read);
     param_t *p_param;
 #ifdef PRINT_STAT
     PINF("Before");
