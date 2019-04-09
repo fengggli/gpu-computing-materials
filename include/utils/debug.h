@@ -13,29 +13,27 @@
 #include <execinfo.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "awnn/tensor.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
 /* Obtain a backtrace and print it to stdout. */
-static void print_trace (void)
-{
+static void print_trace(void) {
   void *array[10];
   size_t size;
   char **strings;
   size_t i;
 
-  size = backtrace (array, 10);
-  strings = backtrace_symbols (array, size);
+  size = backtrace(array, 10);
+  strings = backtrace_symbols(array, size);
 
-  printf ("Obtained %zd stack frames.\n", size);
+  printf("Obtained %zd stack frames.\n", size);
 
-  for (i = 0; i < size; i++)
-     printf ("%s\n", strings[i]);
+  for (i = 0; i < size; i++) printf("%s\n", strings[i]);
 
-  free (strings);
+  free(strings);
 }
 
 static inline int list_get_count(struct list_head *head) {
@@ -48,6 +46,9 @@ static inline int list_get_count(struct list_head *head) {
   PSTR("\n");
   return count;
 }
+
+/* Show tensor std, variance, etc */
+void dump_tensor_stats(tensor_t, const char *name);
 
 #ifdef __cplusplus
 }

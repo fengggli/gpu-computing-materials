@@ -76,7 +76,8 @@ target_link_libraries(awnn_core PUBLIC ${AWNN_DEP_LIBS})
 
 add_library(awnn_utils
   utils/data_cifar.cpp
-  utils/weight_init.cpp)
+  utils/weight_init.cpp
+  utils/debug.cpp)
 
 set(AWNN_LIBS "awnn_core" "awnn_utils")
 

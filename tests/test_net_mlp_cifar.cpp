@@ -8,10 +8,12 @@
 #include "awnn/net_mlp.h"
 #include "awnn/solver.h"
 #include "utils/data_cifar.h"
+#include "utils/debug.h"
 #include "utils/weight_init.h"
 
 #include "gtest/gtest.h"
 #include "test_util.h"
+#define PRINT_STAT
 
 namespace {
 
@@ -46,7 +48,7 @@ TEST_F(NetMLPTest, CifarTest) {
 
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
-  uint nr_epoches = 20;
+  uint nr_epoches = 2;
 
   uint iterations_per_epoch = train_sz / batch_sz;
   if (iterations_per_epoch == 0) iterations_per_epoch = 1;
@@ -65,11 +67,41 @@ TEST_F(NetMLPTest, CifarTest) {
     EXPECT_EQ(batch_sz,
               get_train_batch(&loader, &x, &labels, cur_batch, batch_sz));
 
+    param_t *p_param;
+#ifdef PRINT_STAT
+    PINF("Before");
+    // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
+    list_for_each_entry(p_param, model.list_all_params, list) {
+      tensor_t param = p_param->data;
+      tensor_t dparam = p_param->diff;
+      dump_tensor_stats(param, p_param->name);
+
+      char diff_name[MAX_STR_LENGTH] = "";
+      snprintf(diff_name, MAX_STR_LENGTH, "%s-diff", p_param->name);
+      dump_tensor_stats(dparam, diff_name);
+    }
+
+#endif
+
     mlp_loss(&model, x, labels, &loss);
+
+#ifdef PRINT_STAT
+    PINF("After");
+    // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
+    list_for_each_entry(p_param, model.list_all_params, list) {
+      tensor_t param = p_param->data;
+      tensor_t dparam = p_param->diff;
+      dump_tensor_stats(param, p_param->name);
+
+      char diff_name[MAX_STR_LENGTH] = "";
+      snprintf(diff_name, MAX_STR_LENGTH, "%s-diff", p_param->name);
+      dump_tensor_stats(dparam, diff_name);
+    }
+
+#endif
 
     PINF("Loss %.2f", loss);
 
-    param_t *p_param;
     // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
     list_for_each_entry(p_param, model.list_all_params, list) {
       PINF("updating %s...", p_param->name);
