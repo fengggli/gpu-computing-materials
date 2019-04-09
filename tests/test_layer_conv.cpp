@@ -266,7 +266,6 @@ TEST_F(LayerConvTest, col2im) {
   tensor_fill_list(ref, ref_values, array_size(ref_values));
 
   EXPECT_LT(tensor_rel_error(ref, x_padded), 1e-7);
-
 }
 
 TEST_F(LayerConvTest, col2im_inner) {
