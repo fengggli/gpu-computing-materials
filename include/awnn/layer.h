@@ -19,8 +19,6 @@
  * but the count and all_tensors will be populated inside the forward.
  * The reason is that different layers require different number of caches
  *
- * Backward pass needs to delete the cache
- *
  * */
 typedef struct {
   uint count;  // number of tensors

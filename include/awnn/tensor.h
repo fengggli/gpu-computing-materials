@@ -83,8 +83,7 @@ void tensor_destroy(tensor_t *ptr_t);
 
 // TODO: fill random values
 void tensor_fill_random(tensor_t t, uint seed);
-void tensor_fill_random_uniform(tensor_t t, double low, double high,
-uint seed);
+void tensor_fill_random_uniform(tensor_t t, double low, double high, uint seed);
 void tensor_fill_linspace(tensor_t t, T const start, T const stop);
 void tensor_fill_scalar(tensor_t t, T s);
 void tensor_fill_patterned(tensor_t t);  // debug use
@@ -161,6 +160,7 @@ static inline void _add(T *to, T *from, uint len) {
 static inline void _sub(T *to, T *from, uint len) {
   uint i;
   for (i = 0; i < len; i++) {
+    // PWRN("(%.3e) -(%.3e)", to[i], from[i]);
     to[i] -= from[i];
   }
 }
@@ -180,7 +180,7 @@ static inline void _div(T *to, T *from, uint len) {
 // Iterate tensor elems
 // declare  T *pelem and uint i before use
 #define tensor_for_each_entry(pdata, i, t) \
-  for (i = 0, (pdata) = (t).data; i < tensor_get_capacity(t); i++)
+  for (i = 0, (pdata) = (t).data; i < tensor_get_capacity(t); i++, pdata++)
 
 /*
  * Device support

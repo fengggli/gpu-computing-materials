@@ -2,12 +2,12 @@
 // Created by lifen on 3/25/19.
 //
 
-#include "awnn/net_mlp.h"
 #include <stdlib.h>
 #include <string.h>
 #include "awnn/layer_fc.h"
 #include "awnn/layer_sandwich.h"
 #include "awnn/loss_softmax.h"
+#include "awnn/net_mlp.h"
 #include "awnn/tensor.h"
 #include "utils/weight_init.h"
 
@@ -78,6 +78,7 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
     // weight init
     double weight_scale = 0.01;
     weight_init_fc(w, b, weight_scale);
+    // weight_init_fc_kaiming(w, b);
 
     // prepare layer output
     uint out_shape[] = {max_batch_sz, fan_out};
@@ -134,8 +135,7 @@ tensor_t mlp_scores(model_t const *model, tensor_t x) {
     snprintf(cache_name, MAX_STR_LENGTH, "fc%u.cache", i);
     cache = net_get_cache(model->list_layer_cache, cache_name);
 
-    // TODO: need to track y and cache;
-    if (i == 0) {
+    if (i != model->nr_hidden_layers) {  // last layer doesn't have relu
       AWNN_CHECK_EQ(S_OK,
                     layer_fc_relu_forward(layer_input, w, b, cache, layer_out));
     } else {
@@ -198,7 +198,7 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
     cache = net_get_cache(model->list_layer_cache, cache_name);
 
     // TODO: need to track y and cache;
-    if (i == 0) {
+    if (i != model->nr_hidden_layers) {
       AWNN_CHECK_EQ(S_OK, layer_fc_relu_backward(din, dw, db, cache, dout));
     } else {
       AWNN_CHECK_EQ(S_OK, layer_fc_backward(din, dw, db, cache, dout));

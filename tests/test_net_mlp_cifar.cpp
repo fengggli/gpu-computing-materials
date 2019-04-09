@@ -48,7 +48,7 @@ TEST_F(NetMLPTest, CifarTest) {
 
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
-  uint nr_epoches = 2;
+  uint nr_epoches = 20;
 
   uint iterations_per_epoch = train_sz / batch_sz;
   if (iterations_per_epoch == 0) iterations_per_epoch = 1;
