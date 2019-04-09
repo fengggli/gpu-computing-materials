@@ -19,6 +19,9 @@ endif()
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_SHARED_LINKER_FLAGS "-rdynamic")
 
+set(GCC_COVERAGE_COMPILE_FLAGS "-Wall -Wextra -Wconversion -pedantic")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}" )
+
 project(awnn LANGUAGES C CXX)
 
 ## cuda
