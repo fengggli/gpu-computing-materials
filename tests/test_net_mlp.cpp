@@ -4,8 +4,10 @@
  * Author: Feng Li
  * e-mail: fengggli@yahoo.com
  */
+#include "awnn/data_utils.h"
 #include "awnn/net_mlp.h"
-#include "awnn/weight_init.h"
+#include "awnn/solver.h"
+#include "utils/weight_init.h"
 
 #include "gtest/gtest.h"
 #include "test_util.h"
@@ -138,6 +140,19 @@ TEST_F(NetMLPTest, Loss) {
     EXPECT_LT(tensor_rel_error(dparam_ref, dparam), 1e-7);
     tensor_destroy(&dparam_ref);
     PINF("Gradient check of %s passed", p_param->name);
+  }
+}
+
+// do a single update with sgd
+TEST_F(NetMLPTest, Update){
+
+  T learning_rate = 0.1;
+  param_t *p_param;
+  // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
+  list_for_each_entry(p_param, model.list_all_params, list) {
+    PINF("updating %s...", p_param->name);
+    // sgd
+    sgd_update(p_param, learning_rate);
   }
 }
 

@@ -13,16 +13,18 @@ Current
 
   Ask Feng for access.
 
+Working in progress
+--------------------
+
+1. Reporting statistics in MLP. For now loss does change as expected.
+2. Convnet
+
+
 TODO List
 ----------
 
-* Utility:
-
-  show show backtrace (https://www.gnu.org/software/libc/manual/html_node/Backtraces.html)
-
 * Layers
 
-  * conv2d
   * batchnorm
 
 * Net
@@ -33,25 +35,48 @@ TODO List
 
 * Utility
 
-  1. solver
-  2. reporting
+  * reporting
 
 * Initializer (kaiming initialization)
 
-* Data
-
 * Others
 
-
-Working in progress
---------------------
-
-1. Conv2d and global pool in gpu (Chris and Yuankun).
-2. solver.
+  * show show backtrace (https://www.gnu.org/software/libc/manual/html_node/Backtraces.html)
 
 =========
 Previous
 =========
+
+0.4.4
+======
+
+:Date 2019-04-08
+
+Added
+-------
+
+1. cifar Data loader:
+
+  * Use data/cifar10/get_cifar10.sh to download data.
+  * preprocess: normailzed, and with channel mean substracted.
+  * train/validation split
+
+2. Solver(main for loop):
+
+  * feed batches from loader, forward/backward and gradient updates(test/test_net_mlp_cifar)
+
+2. Weight init
+
+  * Kaiming init and weight-scale based init.
+  * Extract this part to utils/ since we use distribution from stl.
+
+3. Doc
+
+  * Added the network memory allocation figure.
+
+4. Cuda
+
+  * naiive CUDA pooling layer, set USE_CUDA=on to enable
 
 0.4.3
 =======

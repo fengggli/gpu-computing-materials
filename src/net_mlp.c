@@ -2,13 +2,14 @@
 // Created by lifen on 3/25/19.
 //
 
+#include "awnn/net_mlp.h"
 #include <stdlib.h>
 #include <string.h>
 #include "awnn/layer_fc.h"
 #include "awnn/layer_sandwich.h"
 #include "awnn/loss_softmax.h"
-#include "awnn/net_mlp.h"
 #include "awnn/tensor.h"
+#include "utils/weight_init.h"
 
 status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
                   uint output_dim, uint nr_hidden_layers, uint hidden_dims[],
@@ -21,8 +22,12 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
   model->output_dim = output_dim;
   model->nr_hidden_layers = nr_hidden_layers;
   model->reg = reg;
-  for (uint i = 0; i < nr_hidden_layers; ++i)
-    model->hidden_dims[i] = hidden_dims[i];
+  for (uint i = 0; i < MAX_DIM; ++i) {
+    if (i < nr_hidden_layers)
+      model->hidden_dims[i] = hidden_dims[i];
+    else
+      model->hidden_dims[i] = 0;
+  }
 
   // init all list structure
   init_list_head(model->list_all_params);
@@ -70,6 +75,10 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
     snprintf(b_name, MAX_STR_LENGTH, "fc%u.bias", i);
     net_attach_param(model->list_all_params, b_name, b, db);
 
+    // weight init
+    double weight_scale = 0.01;
+    weight_init_fc(w, b, weight_scale);
+
     // prepare layer output
     uint out_shape[] = {max_batch_sz, fan_out};
     tensor_t out = tensor_make(out_shape, 2);
@@ -100,6 +109,7 @@ status_t mlp_finalize(model_t *model) {
   net_free_params(model->list_layer_out);
   // net_free_params(model->list_layer_in); // TODO: fix the double free here.
   net_free_params(model->list_all_params);
+  return S_OK;
 }
 
 tensor_t mlp_scores(model_t const *model, tensor_t x) {
