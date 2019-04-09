@@ -37,9 +37,11 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
 
   // fill cache
   // NOTE, the order matters should be x, w, flattened_x
-  lcache_push(cache, x);
-  lcache_push(cache, w);
-  lcache_push(cache, flattened_x);
+  if(cache) {
+    lcache_push(cache, x);
+    lcache_push(cache, w);
+    lcache_push(cache, flattened_x);
+  }
 
   tensor_destroy(&tpose);
   tensor_destroy(&out);
@@ -125,7 +127,7 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
  * @param dout
  * @return
  */
-status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t const *cache, conv_param_t const conv_params, tensor_t const dout) {
+status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache, conv_param_t const conv_params, tensor_t const dout) {
   tensor_t x, w, x_cols;
 
   // NOTE : the order of pop matters, should be flattened_x, w, x (reverse of forward)

@@ -40,7 +40,7 @@ protected:
   }
 };
 
-TEST_F(LayerConvTest, DISABLED_Backward){
+TEST_F(LayerConvTest, Backward){
   conv_param_t params;
 
   params.stride=2;
@@ -90,7 +90,7 @@ TEST_F(LayerConvTest, DISABLED_Backward){
   // evaluate gradient of x
   eval_numerical_gradient(
       [&](tensor_t const in, tensor_t out) {
-        convolution_forward(in, w_copy, NULL, params, out);
+        convolution_forward(in, w_copy, nullptr, params, out);
       },
       x, dy, dx_ref);
   EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
@@ -99,7 +99,7 @@ TEST_F(LayerConvTest, DISABLED_Backward){
   // evaluate gradient of w
   eval_numerical_gradient(
       [&](tensor_t const in, tensor_t out) {
-        convolution_forward(x_copy, in , NULL, params, out);
+        convolution_forward(x_copy, in, nullptr, params, out);
       },
       w, dy, dw_ref);
   EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-7);
@@ -288,7 +288,7 @@ TEST_F(LayerConvTest, col2im_inner) {
 
   col2im_inner(cols, x_padded, 4, 3, 5, 5, 5, 5, 3, 3, 1, 1);
 
-  tensor_print_flat(x_padded);
+//  tensor_print_flat(x_padded);
 //  tensor_dump(x_padded);
   EXPECT_LT(tensor_rel_error(ref, x_padded), 1e-7);
 }
@@ -600,7 +600,6 @@ TEST_F(LayerConvTest, Forward){
 
   status_t ret = convolution_forward(x, w, &cache, conv_params, y);// forward function should allocate and populate cache;
   EXPECT_EQ(ret, S_OK);
-  tensor_dump(y);
 
   tensor_t y_ref = tensor_make_alike(y);
   T value_list[] =  {0.012401913875598115, -0.009877806404122181, -0.08387191755612806, -0.11092160471107837, 0.16027088700772907, 0.166610967979389, 0.17847626058152372, 0.1800463746779536, 0.30813986013986006, 0.3430997423629002, 0.4408244387191755, 0.47101435406698555, -0.8805358851674642, -0.9314354066985646, -1.0912889216047112, -1.1469584100110415, 0.6410835480309163, 0.618803827751196, 0.5448097165991902, 0.5177600294442398, 2.162702981229297, 2.1690430622009567, 2.1809083548030914, 2.1824784688995216};
