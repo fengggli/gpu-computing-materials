@@ -84,7 +84,42 @@ tensor_t im2col(tensor_t const x, tensor_t const w, conv_param_t const params) {
   return cols;
 }
 
-
+/**
+ * The primary purpose of this function is to take the padded tensor, which potentially
+ * has many dimensions, and convert it into the flattened view.  The flattened "cols" tensor
+ * is arranged such that the filters are laid out along each row.
+ *
+ * So a single row represents the data in the original input that a single filter would touch.
+ * This is true for each channel as well, and for each image.
+ *
+ * Multiple channels will extend the number of rows, with each channel grouped into a block
+ * of rows, and then the next channel as the next block.  If there are multiple images, this
+ * pattern will be repeated.
+ *
+ * In the GPU, this function could likely use shared memory because elements are *** sometimes ***
+ * accessed repeatedly due to the fact that the filters frequently overlap (depending on the stride
+ * and filter size).
+ *
+ * In cases where the data does not overlap, shared memory usage would actually result in a slower
+ * kernel due to an extra pair of copies into shmem and back to global, but this could be a point
+ * of optimization... if there is a big overlap, the reuse of elements could make shared mem
+ * usage worth while.
+ *
+ *
+ * @param cols
+ * @param x_padded
+ * @param N
+ * @param C
+ * @param H
+ * @param W
+ * @param HH
+ * @param WW
+ * @param filter_height
+ * @param filter_width
+ * @param padding
+ * @param stride
+ * @return
+ */
 // note that this strides along columns of the target "cols" tensor
 // possibly could be re-written to take advantage of
 status_t im2col_inner(tensor_t cols, tensor_t x_padded,

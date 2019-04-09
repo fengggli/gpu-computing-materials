@@ -18,11 +18,11 @@ protected:
   // You can remove any or all of the following functions if its body
   // is empty.
 
-  LayerConvTest() {
+  LayerConvTestDevice() {
     // You can do set-up work for each test here.
   }
 
-  ~LayerConvTest() override {
+  ~LayerConvTestDevice() override {
     // You can do clean-up work that doesn't throw exceptions here.
   }
 
@@ -39,6 +39,7 @@ protected:
      // before the destructor).
   }
 };
+
 
 TEST_F(LayerConvTest, Backward){
   conv_param_t params;
@@ -181,7 +182,6 @@ TEST_F(LayerConvTest, forward_caches_proper_values) {
   EXPECT_LT(tensor_rel_error(w_cached, w_cached_ref), 1e-15);
   EXPECT_LT(tensor_rel_error(w_cached, w), 1e-15);
 }
-
 
 TEST_F(LayerConvTest, Backward_precalculated_numerical_numpy) {
   tensor_t x, w, dout, dx_num, dw_num;
@@ -610,19 +610,8 @@ TEST_F(LayerConvTest, Forward){
   PINF("Consistent with expected results");
 }
 
-
-// TODO: check with cudnn
-
 TEST_F(LayerConvTest,CheckLcache){
 //  EXPECT_EQ(cache.count, 0); // backward needs to pop all all caches and destroy them
-}
-
-
-
-TEST_F(LayerConvTest, Destroy) {
-//  tensor_destroy(x);
-//  tensor_destroy(w);
-//  lcache_free_all(&cache);
 }
 
 
