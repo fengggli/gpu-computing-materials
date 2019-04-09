@@ -99,7 +99,7 @@ T tensor_get_sum(tensor_t t) {
   return ret;
 }
 
-void _tensor_fill_random(tensor_t t, uint seed) {
+void tensor_fill_random(tensor_t t, uint seed) {
   srand(seed);
   uint capacity = dim_get_capacity(t.dim);
   uint i;
@@ -108,7 +108,19 @@ void _tensor_fill_random(tensor_t t, uint seed) {
   }
 }
 
-void _tensor_fill_patterned(tensor_t t) {
+void tensor_fill_random_uniform(tensor_t t, T const low, T const high,
+                                uint seed) {
+  assert(high > low);
+  srand(seed);
+  uint capacity = dim_get_capacity(t.dim);
+  uint i;
+  for (i = 0; i < capacity; i++) {
+    double scale = (T)rand() / (T)RAND_MAX;  // 0~1
+    t.data[i] = low + (high - low) * scale;
+  }
+}
+
+void tensor_fill_patterned(tensor_t t) {
   uint capacity = dim_get_capacity(t.dim);
   uint i;
 
@@ -165,7 +177,7 @@ tensor_t tensor_make_empty_with_dim(dim_t dim) {
 
 tensor_t tensor_make_random(uint const shape[], uint const ndims, int seed) {
   tensor_t t = tensor_make(shape, ndims);
-  _tensor_fill_random(t, seed);
+  tensor_fill_random(t, seed);
   return t;
 }
 
@@ -201,20 +213,20 @@ tensor_t tensor_make_transpose(tensor_t const t) {
 }
 
 /* TODO @brief fill a tensor with single scalar*/
-static void _tensor_fill_scalar(tensor_t t, T s) {
+void tensor_fill_scalar(tensor_t t, T s) {
   uint capacity = tensor_get_capacity(t);
   for (uint i = 0; i < capacity; i++) t.data[i] = s;
 }
 
 tensor_t tensor_make_scalar_alike(tensor_t t, T scalar) {
   tensor_t tmp = _tensor_make(t.dim);
-  _tensor_fill_scalar(tmp, scalar);
+  tensor_fill_scalar(tmp, scalar);
   return tmp;
 }
 
 tensor_t tensor_make_scalar(uint const shape[], uint const ndims, T s) {
   tensor_t t = tensor_make(shape, ndims);
-  _tensor_fill_scalar(t, s);
+  tensor_fill_scalar(t, s);
   return t;
 }
 
@@ -225,7 +237,7 @@ tensor_t tensor_make_sum(tensor_t const t, uint const axis_id) {
   new_dim.dims[axis_id] = 1;
 
   tensor_t t_ret = _tensor_make(new_dim);
-  _tensor_fill_scalar(t_ret, 0.0);
+  tensor_fill_scalar(t_ret, 0.0);
 
   uint slice_capacity = tensor_get_capacity(t) / nr_slices;
 
@@ -235,49 +247,47 @@ tensor_t tensor_make_sum(tensor_t const t, uint const axis_id) {
   return t_ret;
 }
 
-status_t _tensor_fill_linspace(tensor_t t, float const start,
-                               float const stop) {
+void tensor_fill_linspace(tensor_t t, T const start, T const stop) {
   uint i;
   uint capacity = dim_get_capacity(t.dim);
   if (stop <= start) {
     PERR("Wrong linspace");
-    return S_ERR;
+    return;
   }
   T step = (stop - start) / ((T)capacity - 1);
   for (i = 0; i < capacity; i++) {
     t.data[i] = start + i * step;
   }
-  return S_OK;
 }
 
 tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[],
                               uint const ndims) {
   tensor_t t = tensor_make(shape, ndims);
-  _tensor_fill_linspace(t, start, stop);
+  tensor_fill_linspace(t, start, stop);
   return t;
 }
 
 tensor_t tensor_make_zeros(uint const shape[], uint const ndims) {
   tensor_t t = tensor_make(shape, ndims);
-  _tensor_fill_scalar(t, 0.0);
+  tensor_fill_scalar(t, 0.0);
   return t;
 }
 tensor_t tensor_make_ones(uint const shape[], uint const ndims) {
   tensor_t t = tensor_make(shape, ndims);
-  _tensor_fill_scalar(t, 1.0);
+  tensor_fill_scalar(t, 1.0);
   return t;
 }
 
 tensor_t tensor_make_linspace_alike(T const start, T const stop,
                                     tensor_t const t) {
   tensor_t ret = _tensor_make(t.dim);
-  _tensor_fill_linspace(ret, start, stop);
+  tensor_fill_linspace(ret, start, stop);
   return ret;
 }
 
 tensor_t tensor_make_patterned(uint const shape[], uint const ndims) {
   tensor_t t = tensor_make(shape, ndims);
-  _tensor_fill_patterned(t);
+  tensor_fill_patterned(t);
   return t;
 }
 
@@ -296,8 +306,8 @@ tensor_t tensor_make_padded_square_input(tensor_t t, uint p, float pad_val) {
 
   for (int i = 0; i < N; i++)
     for (int j = 0; j < C; j++)
-      for(int k = 0; k < HH; k++)
-        for(int l = 0; l < WW; l++) {
+      for (int k = 0; k < HH; k++)
+        for (int l = 0; l < WW; l++) {
           uint target_idx = i * C * HH * WW + j * HH * WW + k * WW + l;
           if (k < p) {
             n.data[target_idx] = pad_val;
@@ -405,8 +415,7 @@ T tensor_rel_error(tensor_t x, tensor_t ref) {
   return norm_diff / norm_ref;
 }
 
-void tensor_destroy(tensor_t* t){
+void tensor_destroy(tensor_t* t) {
   mem_free(t->data);
   t->data = NULL;
 }
-

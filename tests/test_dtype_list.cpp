@@ -10,6 +10,7 @@
 
 #include "test_util.h"
 #include "gtest/gtest.h"
+#include "utils/debug.h"
 
 namespace {
 
@@ -61,6 +62,7 @@ TEST_F(DtypeListTest, TestList) {
     EXPECT_EQ(0,1);
   }
 
+
   struct fake_struct *p_struct;
   list_for_each_entry(p_struct, &head, list){
     EXPECT_EQ(0,1);
@@ -75,6 +77,8 @@ TEST_F(DtypeListTest, TestList) {
     p_elem->id = i;
     list_add(&p_elem->list, &head);
   }
+
+  EXPECT_EQ(10000,list_get_count(&head));
 
   // check each value of list
   int cnt = 0;

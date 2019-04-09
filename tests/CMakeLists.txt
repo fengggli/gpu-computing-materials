@@ -46,14 +46,17 @@ add_executable(test-net-mlp test_net_mlp.cpp)
 target_link_libraries(test-net-mlp ${AWNN_LIBS}  gtest)
 add_test(test-net-mlp test-net-mlp)
 
+add_executable(test-net-mlp-cifar test_net_mlp_cifar.cpp)
+target_link_libraries(test-net-mlp-cifar ${AWNN_LIBS}  gtest)
+add_test(test-net-mlp-cifar test-net-mlp-cifar)
+
 add_executable(test-dtype-list test_dtype_list.cpp)
 target_link_libraries(test-dtype-list ${AWNN_LIBS}  gtest)
 add_test(test-dtype-list test-dtype-list)
 
-add_executable(test-solver test_solver.cpp)
-target_link_libraries(test-solver ${AWNN_LIBS}  gtest)
-add_test(test-solver test-solver)
-
+add_executable(test-data-cifar test_data_cifar.cpp)
+target_link_libraries(test-data-cifar ${AWNN_LIBS}  gtest)
+add_test(test-data-cifar test-data-cifar)
 
 #add_executable(test-loss-softmax-simple test_loss_softmax_simple.cpp)
 #target_link_libraries(test-loss-softmax-simple ${AWNN_LIBS}  gtest)
