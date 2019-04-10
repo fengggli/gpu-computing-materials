@@ -112,7 +112,6 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
   return S_OK;
 }
 
-
 /**
  * creates 4 new chunks of memory
  *  * dout_reshaped

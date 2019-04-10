@@ -55,6 +55,7 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
  *
  * @return S_OK if success, otherwise S_ERR or define your error type in common.h
  */
+
 status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache, conv_param_t const params, tensor_t const dout);
 
 tensor_t col2im(tensor_t cols,

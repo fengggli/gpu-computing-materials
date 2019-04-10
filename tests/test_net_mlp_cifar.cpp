@@ -8,10 +8,12 @@
 #include "awnn/net_mlp.h"
 #include "awnn/solver.h"
 #include "utils/data_cifar.h"
+#include "utils/debug.h"
 #include "utils/weight_init.h"
 
 #include "gtest/gtest.h"
 #include "test_util.h"
+#undef PRINT_STAT
 
 namespace {
 
@@ -20,11 +22,11 @@ class NetMLPTest : public ::testing::Test {};
 
 TEST_F(NetMLPTest, CifarTest) {
   static model_t model;
-  uint batch_sz = 25;
+  uint batch_sz = 100;
   uint input_dim = 3 * 32 * 32;
   uint output_dim = 10;
-  uint nr_hidden_layers = 2;
-  uint hidden_dims[] = {100, 100};
+  uint nr_hidden_layers = 4;
+  uint hidden_dims[] = {100, 100, 100, 100};
   T reg = 0;
 
   mlp_init(&model, batch_sz, input_dim, output_dim, nr_hidden_layers,
@@ -40,13 +42,13 @@ TEST_F(NetMLPTest, CifarTest) {
   EXPECT_EQ(S_OK, ret);
 
   // overfit small data;
-  uint train_sz = 50;
+  uint train_sz = 4000;
   uint val_sz = 1000;
   T learning_rate = 0.01;
 
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
-  uint nr_epoches = 20;
+  uint nr_epoches = 5;
 
   uint iterations_per_epoch = train_sz / batch_sz;
   if (iterations_per_epoch == 0) iterations_per_epoch = 1;
@@ -62,17 +64,56 @@ TEST_F(NetMLPTest, CifarTest) {
 
     PINF("[Epoch %d, Iteration %u/%u]", cur_epoch, cur_batch,
          iterations_per_epoch);
-    EXPECT_EQ(batch_sz,
-              get_train_batch(&loader, &x, &labels, cur_batch, batch_sz));
+    uint cnt_read = get_train_batch(&loader, &x, &labels, cur_batch, batch_sz);
+
+    EXPECT_EQ(batch_sz, cnt_read);
+    param_t *p_param;
+#ifdef PRINT_STAT
+    PINF("Before");
+    // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
+    list_for_each_entry(p_param, model.list_all_params, list) {
+      tensor_t param = p_param->data;
+      tensor_t dparam = p_param->diff;
+      dump_tensor_stats(param, p_param->name);
+
+      char diff_name[MAX_STR_LENGTH] = "";
+      snprintf(diff_name, MAX_STR_LENGTH, "%s-diff", p_param->name);
+      dump_tensor_stats(dparam, diff_name);
+    }
+
+#endif
 
     mlp_loss(&model, x, labels, &loss);
 
-    PINF("Loss %.2f", loss);
-
-    param_t *p_param;
+#ifdef PRINT_STAT
+    PINF("After");
     // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
     list_for_each_entry(p_param, model.list_all_params, list) {
-      PINF("updating %s...", p_param->name);
+      tensor_t param = p_param->data;
+      tensor_t dparam = p_param->diff;
+      dump_tensor_stats(param, p_param->name);
+
+      char diff_name[MAX_STR_LENGTH] = "";
+      snprintf(diff_name, MAX_STR_LENGTH, "%s-diff", p_param->name);
+      dump_tensor_stats(dparam, diff_name);
+    }
+
+#endif
+
+    PINF("Loss %.2f", loss);
+
+    // output the first/laster iteration, also in the end of each epoch
+    if (iteration == 0 || iteration == nr_iterations - 1 ||
+        cur_batch == iterations_per_epoch - 1) {
+      PINF("----------------Epoch %u ---------------", cur_epoch);
+      check_val_accuracy(&loader, val_sz, batch_sz, &model);
+      check_train_accuracy(&loader, val_sz, batch_sz, &model);
+      PINF("----------------------------------------");
+    }
+
+    // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
+    list_for_each_entry(p_param, model.list_all_params, list) {
+      PDBG("updating %s...", p_param->name);
       // sgd
       sgd_update(p_param, learning_rate);
     }
