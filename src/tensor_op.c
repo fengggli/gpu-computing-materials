@@ -11,8 +11,8 @@
 tensor_t tensor_make_transpose_3012(tensor_t t) {
   uint target_idx = 0;
   tensor_t tpose = tensor_make_copy(t);
-  for (int i = 0; i < t.dim.dims[3]; ++i) {  // for each of the new dim 0
-    for (int j = 0; j < t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2]; ++j) {
+  for (uint i = 0; i < t.dim.dims[3]; ++i) {  // for each of the new dim 0
+    for (uint j = 0; j < t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2]; ++j) {
       tpose.data[target_idx++] = t.data[i + j * t.dim.dims[3]];
     }
   }
@@ -31,8 +31,8 @@ tensor_t tensor_make_transpose_1230(tensor_t t) {
 
   tensor_t tpose = tensor_make_copy(t);
 
-  for (int i = 0; i < original_dim_0; ++i) {
-    for (int j = 0; j < original_dim_1 * original_dim_2 * original_dim_3; ++j) {
+  for (uint i = 0; i < original_dim_0; ++i) {
+    for (uint j = 0; j < original_dim_1 * original_dim_2 * original_dim_3; ++j) {
       target_idx = (i + j * original_dim_0);
       tpose.data[target_idx] = t.data[src_idx++];
     }
@@ -64,9 +64,9 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
     print_trace();
     goto end;
   }
-  int m = in1.dim.dims[0];
-  int k = in1.dim.dims[1];
-  int n = in2.dim.dims[1];
+  uint m = in1.dim.dims[0];
+  uint k = in1.dim.dims[1];
+  uint n = in2.dim.dims[1];
 
   // PDBG("mnk = [%u, %u, %u]", m,n,k);
 
@@ -78,7 +78,7 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
       in2.data, n,
       1.0, out.data, n);
 #else
-  int ii, jj, kk; // A[i.j] with B[j,k]
+  uint ii, jj, kk; // A[i.j] with B[j,k]
   for(ii = 0; ii < m; ii++){
     for(kk = 0; kk < n; kk++){
       T tmp = 0;
@@ -233,7 +233,7 @@ status_t tensor_reshape_flat_(tensor_t * t) {
 void tensor_print_flat(tensor_t t) {
   uint capacity = tensor_get_capacity(t);
   printf("[");
-  int i;
+  uint i;
   for (i = 0; i < capacity - 1; ++i) {
     printf("%.10f, ", t.data[i]);
   }
