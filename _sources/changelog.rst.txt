@@ -16,8 +16,7 @@ Current
 Working in progress
 --------------------
 
-1. Reporting statistics in MLP. For now loss does change as expected.
-2. Convnet
+* Convnet.
 
 
 TODO List
@@ -33,10 +32,6 @@ TODO List
   2. residual blocks
   3. simplified resnet
 
-* Utility
-
-  * reporting
-
 * Initializer (kaiming initialization)
 
 * Others
@@ -46,6 +41,20 @@ TODO List
 =========
 Previous
 =========
+
+0.4.5
+======
+
+:Date 2019-04-10
+
+Added
+-------
+
+* utils for debug use (tensor mean/std, etc)
+* fixed several bugs
+* utils to report statistics during training(loss, train/val accuracy).
+* results of mlp is in https://github.com/fengggli/gpu-computing-materials/pull/27/
+
 
 0.4.4
 ======
