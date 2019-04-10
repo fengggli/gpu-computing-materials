@@ -25,8 +25,8 @@ TEST_F(NetMLPTest, CifarTest) {
   uint batch_sz = 25;
   uint input_dim = 3 * 32 * 32;
   uint output_dim = 10;
-  uint nr_hidden_layers = 2;
-  uint hidden_dims[] = {100, 100};
+  uint nr_hidden_layers = 4;
+  uint hidden_dims[] = {100, 100, 100, 100};
   T reg = 0;
 
   mlp_init(&model, batch_sz, input_dim, output_dim, nr_hidden_layers,
@@ -107,7 +107,7 @@ TEST_F(NetMLPTest, CifarTest) {
 
     // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
     list_for_each_entry(p_param, model.list_all_params, list) {
-      PINF("updating %s...", p_param->name);
+      PDBG("updating %s...", p_param->name);
       // sgd
       sgd_update(p_param, learning_rate);
     }
