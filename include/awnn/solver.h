@@ -23,8 +23,10 @@ static inline void sgd_update(param_t *p_param, T learning_rate) {
   PDBG("updating %s complete.", p_param->name);
 }
 
-double check_accuracy(data_loader_t *loader, uint val_sz, uint batch_sz,
-                      model_t const *model);
+double check_val_accuracy(data_loader_t *loader, uint val_sz, uint batch_sz,
+                          model_t const *model);
+double check_train_accuracy(data_loader_t *loader, uint sample_sz,
+                            uint batch_sz, model_t const *model);
 
 #ifdef __cplusplus
 }
