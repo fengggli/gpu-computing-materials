@@ -54,7 +54,7 @@ double check_val_accuracy(data_loader_t *loader, uint val_sz, uint batch_sz,
 }
 
 /*
- * get accuracy of a sample of train data
+ * Get accuracy of a sample of train data
  */
 double check_train_accuracy(data_loader_t *loader, uint sample_sz,
                             uint batch_sz, model_t const *model) {
@@ -64,11 +64,17 @@ double check_train_accuracy(data_loader_t *loader, uint sample_sz,
   tensor_t x_train_sampled;
   label_t *labels_train_sampled;
 
+  uint train_sz = loader->train_split;
+  uint iterations_per_epoch =
+      train_sz / batch_sz;  // how many batches in each epoch
   uint nr_iterations = sample_sz / batch_sz;
 
   for (uint iteration = 0; iteration < nr_iterations; iteration++) {
-    uint nr_record = get_train_batch(
-        loader, &x_train_sampled, &labels_train_sampled, iteration, batch_sz);
+    // each time choose a random batch
+    uint batch_id = rand() % iterations_per_epoch;
+    // PINF("[---traning accuracy] [%u, %u)", batch_id, batch_id + 1);
+    uint nr_record = get_train_batch(loader, &x_train_sampled,
+                                     &labels_train_sampled, batch_id, batch_sz);
     nr_correct += _get_correct_count(x_train_sampled, labels_train_sampled,
                                      nr_record, model);
     nr_total += nr_record;
