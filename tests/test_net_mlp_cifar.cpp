@@ -22,7 +22,7 @@ class NetMLPTest : public ::testing::Test {};
 
 TEST_F(NetMLPTest, CifarTest) {
   static model_t model;
-  uint batch_sz = 25;
+  uint batch_sz = 100;
   uint input_dim = 3 * 32 * 32;
   uint output_dim = 10;
   uint nr_hidden_layers = 4;
@@ -42,13 +42,13 @@ TEST_F(NetMLPTest, CifarTest) {
   EXPECT_EQ(S_OK, ret);
 
   // overfit small data;
-  uint train_sz = 50;
+  uint train_sz = 4000;
   uint val_sz = 1000;
   T learning_rate = 0.01;
 
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
-  uint nr_epoches = 20;
+  uint nr_epoches = 5;
 
   uint iterations_per_epoch = train_sz / batch_sz;
   if (iterations_per_epoch == 0) iterations_per_epoch = 1;
@@ -102,8 +102,14 @@ TEST_F(NetMLPTest, CifarTest) {
 
     PINF("Loss %.2f", loss);
 
-    check_val_accuracy(&loader, val_sz, batch_sz, &model);
-    check_train_accuracy(&loader, val_sz, batch_sz, &model);
+    // output the first/laster iteration, also in the end of each epoch
+    if (iteration == 0 || iteration == nr_iterations - 1 ||
+        cur_batch == iterations_per_epoch - 1) {
+      PINF("----------------Epoch %u ---------------", cur_epoch);
+      check_val_accuracy(&loader, val_sz, batch_sz, &model);
+      check_train_accuracy(&loader, val_sz, batch_sz, &model);
+      PINF("----------------------------------------");
+    }
 
     // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
     list_for_each_entry(p_param, model.list_all_params, list) {

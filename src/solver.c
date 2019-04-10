@@ -72,7 +72,7 @@ double check_train_accuracy(data_loader_t *loader, uint sample_sz,
     nr_correct += _get_correct_count(x_train_sampled, labels_train_sampled,
                                      nr_record, model);
     nr_total += nr_record;
-    if(nr_record < sample_sz) break;
+    if (nr_record < batch_sz) break;
   }
 
   double accuracy = (nr_correct + 0.0) / nr_total;
