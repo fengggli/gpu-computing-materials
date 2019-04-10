@@ -304,10 +304,10 @@ tensor_t tensor_make_padded_square_input(tensor_t t, uint p, float pad_val) {
   uint new_shape[] = {N, C, HH, WW};
   tensor_t n = tensor_make(new_shape, ARRAY_SIZE(new_shape));
 
-  for (int i = 0; i < N; i++)
-    for (int j = 0; j < C; j++)
-      for (int k = 0; k < HH; k++)
-        for (int l = 0; l < WW; l++) {
+  for (uint i = 0; i < N; i++)
+    for (uint j = 0; j < C; j++)
+      for (uint k = 0; k < HH; k++)
+        for (uint l = 0; l < WW; l++) {
           uint target_idx = i * C * HH * WW + j * HH * WW + k * WW + l;
           if (k < p) {
             n.data[target_idx] = pad_val;
@@ -338,10 +338,10 @@ tensor_t tensor_make_remove_padding_square(tensor_t t, uint p) {
   uint new_shape[] = {N, C, HH, WW};
   tensor_t n = tensor_make(new_shape, ARRAY_SIZE(new_shape));
 
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < C; ++j) {
-      for (int k = 0; k < HH; ++k) {
-        for (int l = 0; l < WW; ++l) {
+  for (uint i = 0; i < N; ++i) {
+    for (uint j = 0; j < C; ++j) {
+      for (uint k = 0; k < HH; ++k) {
+        for (uint l = 0; l < WW; ++l) {
           uint target_idx = i * C * HH * WW + j * HH * WW + k * WW + l;
           uint src_idx = i * C * H * W + j * H * W + (k + p) * W + (l + p);
           n.data[target_idx] = t.data[src_idx];

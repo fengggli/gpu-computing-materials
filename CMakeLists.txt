@@ -72,7 +72,7 @@ add_library(awnn_core
   src/layer_relu.c
   src/loss_softmax.c
   src/net_mlp.c
-  src/layer_sandwich.c)
+  src/layer_sandwich.c include/cuda_defs.h)
 
 target_include_directories(awnn_core PUBLIC include)
 target_link_libraries(awnn_core PUBLIC ${AWNN_DEP_LIBS})

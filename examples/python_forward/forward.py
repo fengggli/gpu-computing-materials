@@ -94,10 +94,7 @@ def get_flattened_x(x: np.array, w: np.array, conv_param: dict):
 
 def im2col_cython(x, filter_height, filter_width, padding, stride):
 
-    N = x.shape[0]
-    C = x.shape[1]
-    H = x.shape[2]
-    W = x.shape[3]
+    N, C, H, W = x.shape
 
     HH = int((H + 2 * padding - filter_height) / stride + 1)  # number of times filter will be applied in height dimension
     WW = int((W + 2 * padding - filter_width) / stride + 1)   # number of times filter will be applied in width dimension
@@ -119,9 +116,14 @@ def im2col_cython(x, filter_height, filter_width, padding, stride):
 def im2col_cython_inner(cols, x_padded,
                         N, C, H, W, HH, WW,
                         filter_height, filter_width, padding, stride):
-    img_sz = C * x_padded.shape[2] * x_padded.shape[3];
-    chan_sz = x_padded.shape[2] * x_padded.shape[3];
-    row_sz = x_padded.shape[2];
+
+    print(cols.shape)
+    print(list(cols.flatten()))
+    print(x_padded.shape)
+    print(list(x_padded.flatten()))
+    img_sz = C * x_padded.shape[2] * x_padded.shape[3]
+    chan_sz = x_padded.shape[2] * x_padded.shape[3]
+    row_sz = x_padded.shape[2]
 
     # print(x_padded.shape)
     for c in range(C):  # for each channel
@@ -132,7 +134,7 @@ def im2col_cython_inner(cols, x_padded,
                         row = c * filter_width * filter_height + ii * filter_height + jj
                         for i in range(N):
                             col = yy * WW * N + xx * N + i
-                            test_idx = (i * img_sz) + (c * chan_sz) + (stride * yy + ii) * row_sz + stride * xx + jj;
+                            test_idx = (i * img_sz) + (c * chan_sz) + (stride * yy + ii) * row_sz + stride * xx + jj
                             # assert (x_padded[i, c, stride * yy + ii, stride * xx + jj], x_padded[test_idx])
 
                             x_p_val = x_padded[i, c, stride * yy + ii, stride * xx + jj]
@@ -142,3 +144,5 @@ def im2col_cython_inner(cols, x_padded,
                         # print()
                         # print(cols)
 
+    print(cols.shape)
+    print(list(cols.flatten()))
