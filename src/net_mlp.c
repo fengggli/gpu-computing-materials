@@ -113,7 +113,38 @@ status_t mlp_finalize(model_t *model) {
   return S_OK;
 }
 
-tensor_t mlp_scores(model_t const *model, tensor_t x) {
+tensor_t mlp_forward_infer(model_t const *model, tensor_t x) {
+  tensor_t layer_input = x;
+  tensor_t layer_out;
+  for (uint i = 0; i < model->nr_hidden_layers + 1; i++) {
+    char w_name[MAX_STR_LENGTH];
+    char b_name[MAX_STR_LENGTH];
+    snprintf(w_name, MAX_STR_LENGTH, "fc%u.weight", i);
+    snprintf(b_name, MAX_STR_LENGTH, "fc%u.bias", i);
+    tensor_t w = net_get_param(model->list_all_params, w_name)->data;
+    tensor_t b = net_get_param(model->list_all_params, b_name)->data;
+
+    // locate preallocated layer_out
+    char out_name[MAX_STR_LENGTH];
+    snprintf(out_name, MAX_STR_LENGTH, "fc%u.out", i);
+    layer_out = net_get_param(model->list_layer_out, out_name)->data;
+
+    // locate preallocated cache
+    lcache_t *cache = NULL;
+
+    if (i != model->nr_hidden_layers) {  // last layer doesn't have relu
+      AWNN_CHECK_EQ(S_OK,
+                    layer_fc_relu_forward(layer_input, w, b, cache, layer_out));
+    } else {
+      AWNN_CHECK_EQ(S_OK,
+                    layer_fc_forward(layer_input, w, b, cache, layer_out));
+    }
+    layer_input = layer_out;
+  }
+  return layer_out;
+}
+
+tensor_t mlp_forward(model_t const *model, tensor_t x) {
   tensor_t layer_input = x;
   tensor_t layer_out;
   for (uint i = 0; i < model->nr_hidden_layers + 1; i++) {
@@ -153,7 +184,7 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
                   T *ptr_loss) {
   status_t ret = S_ERR;
   T loss = 0;
-  mlp_scores(model, x);
+  mlp_forward(model, x);
   // forward
   tensor_t out;
   tensor_t dout;

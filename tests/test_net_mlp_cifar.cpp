@@ -13,7 +13,7 @@
 
 #include "gtest/gtest.h"
 #include "test_util.h"
-#define PRINT_STAT
+#undef PRINT_STAT
 
 namespace {
 
@@ -101,6 +101,8 @@ TEST_F(NetMLPTest, CifarTest) {
 #endif
 
     PINF("Loss %.2f", loss);
+
+    check_accuracy(&loader, val_sz, batch_sz, &model);
 
     // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
     list_for_each_entry(p_param, model.list_all_params, list) {

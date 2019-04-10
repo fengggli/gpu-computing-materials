@@ -5,13 +5,13 @@
 
 #include "awnn/common.h"
 #include "awnn/data_utils.h"
-#include "awnn/net.h"
+#include "awnn/net_mlp.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-static inline void sgd_update(param_t * p_param, T learning_rate){
+static inline void sgd_update(param_t *p_param, T learning_rate) {
   tensor_t param = p_param->data;
   tensor_t dparam = p_param->diff;
   T *pelem;
@@ -22,6 +22,9 @@ static inline void sgd_update(param_t * p_param, T learning_rate){
   tensor_elemwise_op_inplace(param, dparam, TENSOR_OP_SUB);
   PDBG("updating %s complete.", p_param->name);
 }
+
+double check_accuracy(data_loader_t *loader, uint val_sz, uint batch_sz,
+                      model_t const *model);
 
 #ifdef __cplusplus
 }

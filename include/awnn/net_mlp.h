@@ -53,7 +53,10 @@ status_t mlp_init(model_t *model, // output
 status_t mlp_finalize(model_t *model);
 
 /* Compute the scores for a batch or input, infer only*/
-tensor_t mlp_scores(model_t const *model, tensor_t x);
+tensor_t mlp_forward_infer(model_t const *model, tensor_t x);
+
+/* Compute the scores for a batch or input, update cache*/
+tensor_t mlp_forward(model_t const *model, tensor_t x);
 
 /* Compute loss for a batch of (x,y), do forward/backward, and update gradients*/
 status_t mlp_loss(model_t const *model, tensor_t x, label_t const labels[], T * ptr_loss);

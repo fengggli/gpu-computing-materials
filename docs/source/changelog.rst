@@ -93,7 +93,7 @@ Added
 *  macro: tensor_for_each_entry in tensor.h
 * net-mlp:
 
-  - inference-only forward - mlp_scores
+  - inference-only forward - mlp_forward
   - loss function to update the gradients mlp_loss
   - forward compared with numpy version
   - backward checked with numerical results

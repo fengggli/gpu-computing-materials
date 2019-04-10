@@ -26,7 +26,6 @@ static const uint nr_default_val_sz = 1000;
 static const double channel_mean[] = {0.4914, 0.4822, 0.4465};
 static const double channel_std[] = {0.2023, 0.1994, 0.2010};
 
-
 // Read byte stream
 void read_image(FILE *file, label_t *label, char *buffer) {
   char label_char;
@@ -40,11 +39,12 @@ void read_image(FILE *file, label_t *label, char *buffer) {
 // TODO: substract mean
 inline void preprocess_data(char *buffer_str, T *buffer_float, size_t nr_elem) {
   for (uint i = 0; i < nr_elem; i++) {
-    uint channel_id = i/(H*W);
+    uint channel_id = i / (H * W);
     // buffer_float[i] = T(buffer_str[i]);
     // normalize to (0, 255) -> (0, 1), then rescale to N(0,1)
-    double byte_value = ((unsigned char)(buffer_str[i])/255.0);
-    double this_value = (byte_value - channel_mean[channel_id])/channel_std[channel_id];
+    double byte_value = ((unsigned char)(buffer_str[i]) / 255.0);
+    double this_value =
+        (byte_value - channel_mean[channel_id]) / channel_std[channel_id];
     // PINF("value %.3f normalized to %.3f", byte_value, this_value);
     buffer_float[i] = this_value;
   }
@@ -78,7 +78,8 @@ status_t cifar_open(data_loader_t *loader, const char *input_folder) {
   for (uint itemid = 0; itemid < nr_train_img; ++itemid) {
     read_image(data_file, &label, buffer_str);
     loader->label_train[itemid] = label;
-    preprocess_data(buffer_str, &loader->data_train[itemid*bytes_per_img], bytes_per_img);
+    preprocess_data(buffer_str, &loader->data_train[itemid * bytes_per_img],
+                    bytes_per_img);
   }
   fclose(data_file);
 
@@ -103,7 +104,8 @@ status_t cifar_open(data_loader_t *loader, const char *input_folder) {
   for (uint itemid = 0; itemid < nr_test_img; ++itemid) {
     read_image(data_file, &label, buffer_str);
     loader->label_test[itemid] = label;
-    preprocess_data(buffer_str, &loader->data_test[itemid*bytes_per_img], bytes_per_img);
+    preprocess_data(buffer_str, &loader->data_test[itemid * bytes_per_img],
+                    bytes_per_img);
   }
   fclose(data_file);
 
@@ -114,8 +116,9 @@ status_t cifar_open(data_loader_t *loader, const char *input_folder) {
   return S_OK;
 }
 
-status_t cifar_split_train(data_loader_t *loader, uint train_sz, uint validation_sz){
-  if(train_sz + validation_sz > nr_train_img){
+status_t cifar_split_train(data_loader_t *loader, uint train_sz,
+                           uint validation_sz) {
+  if (train_sz + validation_sz > nr_train_img) {
     PERR("train_sz + val_sz > nr_train_img");
     return S_ERR;
   }
@@ -137,9 +140,25 @@ status_t cifar_close(data_loader_t *loader) {
 uint get_train_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
                      uint batch_id, uint batch_sz) {
   uint i_start = batch_id * batch_sz;
-  uint i_end = (batch_id + 1) * batch_sz;
+  uint i_end = i_start + batch_sz;
 
   if (i_end > loader->train_split) i_end = loader->train_split;
+  uint nr_imgs = i_end - i_start;
+
+  uint shape_batch[] = {nr_imgs, C, H, W};
+  x->dim = make_dim_from_arr(4, shape_batch);
+  x->data = loader->data_train + i_start * (C * H * W);
+  *label = loader->label_train + i_start;
+  return nr_imgs;
+}
+
+// Finer get
+uint get_validation_batch(data_loader_t const *loader, tensor_t *x,
+                          label_t **label, uint batch_id, uint batch_sz) {
+  uint i_start = batch_id * batch_sz + loader->val_split;
+  uint i_end = i_start + batch_sz;
+
+  if (i_end > nr_train_img) i_end = nr_train_img;
   uint nr_imgs = i_end - i_start;
 
   uint shape_batch[] = {nr_imgs, C, H, W};
@@ -152,7 +171,7 @@ uint get_train_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
 uint get_test_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
                     uint batch_id, uint batch_sz) {
   uint i_start = batch_id * batch_sz;
-  uint i_end = (batch_id + 1) * batch_sz;
+  uint i_end = i_start + batch_sz;
 
   if (i_end > nr_test_img) i_end = nr_test_img;
   uint nr_imgs = i_end - i_start;

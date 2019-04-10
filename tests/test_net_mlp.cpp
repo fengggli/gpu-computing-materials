@@ -81,7 +81,7 @@ TEST_F(NetMLPTest, ForwardInferOnly) {
   weight_init_linspace(b1, -0.9, 0.1);
 
   tensor_t x = tensor_make_linspace(-5.5, 4.5, x_shape, 2);
-  tensor_t score = mlp_scores(&model, x);
+  tensor_t score = mlp_forward(&model, x);
 
   tensor_t score_ref = tensor_make_alike(score);
 
