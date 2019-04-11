@@ -33,29 +33,46 @@ tensor_t tensor_make_transpose_3012(tensor_t t) {
   tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
   return tpose;
 }
-
 */
+
+
 static __global__ void _do_tensor_make_transpose_3012_device(tensor_t d_transpose, tensor_t d_src) {
   if (threadIdx.x == 0) {
     printf("entered _do_tensor_make_transpose_3012_device\n", threadIdx.x);
+    printf("transpose N=%u, C=%u, H=%u, W=%u,  src N=%u, C=%u, H=%u, W=%u\n", d_transpose.dim.dims[0], d_transpose.dim.dims[1], d_transpose.dim.dims[2], d_transpose.dim.dims[3], d_src.dim.dims[0], d_src.dim.dims[1], d_src.dim.dims[2], d_src.dim.dims[3]);
   }
+
+
+
 }
 
+
+
+
+
+/*
+ * explore different block sizes here
+ */
 tensor_t tensor_make_transpose_3012_device(tensor_t t) {
   uint const transposed_shape[] = { t.dim.dims[3], t.dim.dims[0], t.dim.dims[1], t.dim.dims[2] };
 
   tensor_t d_src = tensor_make_copy_h2d(t);
-
   tensor_t d_transposed = tensor_make_copy_h2d(t);
   tensor_reshape_(&d_transposed, transposed_shape, ARRAY_SIZE(transposed_shape));
 
-  dim3 threads(32);
+  dim3 threads(1024);
   dim3 blocks(1);
   PINF("device code is called");
   _do_tensor_make_transpose_3012_device<<<blocks, threads>>>(d_transposed, d_src);
 
   tensor_t h_transposed = tensor_make(transposed_shape, ARRAY_SIZE(transposed_shape));
   tensor_copy_d2h(h_transposed, d_transposed);
+
+
+  tensor_destroy_device(&d_src);
+  tensor_destroy_device(&d_transposed);
+
+  return h_transposed;
 }
 
 
