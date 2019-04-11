@@ -88,6 +88,7 @@ if(USE_CUDA)
     src/tensor.cu
     src/layer_pool.cu
     src/layer_conv.cu
+    src/range.cuh
   )
 
   set(AWNN_DEVICE_LIBS "awnndevicelib")
