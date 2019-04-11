@@ -126,6 +126,25 @@ TEST_F(LayerConvTestDevice, tensor_make_transpose_3012_device_2) {
     EXPECT_LT(tensor_rel_error(transpose_b_3102_dev, transpose_b_3102_ref), 1e-7);
   }
 
+  TEST_F(LayerConvTestDevice, device_padding_0) {
+    uint padding = 2;
+    T pad_val = 0;
+
+    uint shape_x[] = { 1, 1, 2, 2 };
+    T x_vals[] = { 0.20167830539004827, 0.1280517232121993, -0.4355796793875574, 0.17048535064070874 };
+    tensor_t x = tensor_make(shape_x, dim_of_shape(shape_x));
+    tensor_fill_list(x, x_vals, array_size(x_vals));
+
+    uint shape_ref[] = { 1, 1, 6, 6 };
+    T ref_vals[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.20167830539004827, 0.1280517232121993, 0.0, 0.0, 0.0, 0.0, -0.4355796793875574, 0.17048535064070874, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+    tensor_t ref = tensor_make(shape_ref, dim_of_shape(shape_ref));
+    tensor_fill_list(ref, ref_vals, array_size(ref_vals));
+
+    tensor_t padded = tensor_make_padded_square_input_device(x, padding, pad_val);
+
+    EXPECT_LT(tensor_rel_error(padded, ref), 1e-7);
+}
+
   TEST_F(LayerConvTestDevice, device_padding_1) {
     uint padding = 2;
     T pad_val = 0;

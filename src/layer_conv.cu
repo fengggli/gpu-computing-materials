@@ -9,12 +9,14 @@ template<typename T>
 using step_range = typename range_proxy<T>::step_range_proxy;
 
 template <typename T>
-__device__ step_range<T> grid_stride_range(T begin, T end) {
+static __device__ step_range<T> grid_stride_range(T begin, T end) {
     begin += blockDim.x * blockIdx.x + threadIdx.x;
     return range(begin, end).step(gridDim.x * blockDim.x);
 }
 
-
+static uint __device__ capacity(tensor_t t) {
+  return t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2] * t.dim.dims[3];
+}
 
 /*
 
@@ -75,7 +77,7 @@ static __global__ void _do_tensor_make_transpose_3012_device(tensor_t d_transpos
     printf("src N=%u, C=%u, H=%u, W=%u, transpose N=%u, C=%u, H=%u, W=%u\n", d_transpose.dim.dims[0], d_transpose.dim.dims[1], d_transpose.dim.dims[2], d_transpose.dim.dims[3], d_src.dim.dims[0], d_src.dim.dims[1], d_src.dim.dims[2], d_src.dim.dims[3]);
   }
 
-  uint n = d_src.dim.dims[0] * d_src.dim.dims[1] * d_src.dim.dims[2] * d_src.dim.dims[3];
+  uint n = capacity(d_src);
   uint group_size = d_src.dim.dims[0] * d_src.dim.dims[1] * d_src.dim.dims[2];
   uint stride = d_src.dim.dims[3];
 
@@ -123,11 +125,18 @@ tensor_t tensor_make_transpose_3012_device(tensor_t t) {
  * inner im2col, I speculate that this operation can be eliminated, I am still going to provide it in
  * the intitial cuda implementation
  */
-static __global__ void _do_tensor_make_padded_square_input_device(tensor_t padded, tensor_t src, uint p, T val)
+static __global__ void _do_tensor_make_padded_square_input_device(tensor_t d_padded, tensor_t d_src, uint p, T val)
 {
   if (threadIdx.x == 0) {
     printf("entered _do_tensor_make_padded_square_input_device\n", threadIdx.x);
   }
+
+  uint n = capacity(d_src);
+
+  for (auto i : grid_stride_range(0u, n)) {
+
+  }
+
 }
 
 tensor_t tensor_make_padded_square_input_device(tensor_t t, uint p, T val) {
@@ -144,6 +153,9 @@ tensor_t tensor_make_padded_square_input_device(tensor_t t, uint p, T val) {
 
   tensor_t h_padded = tensor_make(padded_shape, ARRAY_SIZE(padded_shape));
   tensor_copy_d2h(h_padded, d_padded);
+
+  tensor_destroy_device(&d_padded);
+  tensor_destroy_device(&d_src);
 
   return h_padded;
 }
