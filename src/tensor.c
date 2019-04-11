@@ -411,7 +411,10 @@ T tensor_rel_error(tensor_t x, tensor_t ref) {
     norm_diff += (a - r) * (a - r);
     norm_ref += (r * r);
   }
-  assert(norm_ref > 0);
+  if (norm_ref <= 0) {
+    PERR("issue detected in tensor_rel_error norm_ref <= 0")
+    return 100;
+  }
   return norm_diff / norm_ref;
 }
 

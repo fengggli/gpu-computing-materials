@@ -36,7 +36,9 @@ tensor_t tensor_make_transpose_3012(tensor_t t) {
 
 */
 static __global__ void _do_tensor_make_transpose_3012_device(tensor_t d_transpose, tensor_t d_src) {
-  printf("%d\n", threadIdx.x);
+  if (threadIdx.x == 0) {
+    printf("entered _do_tensor_make_transpose_3012_device\n", threadIdx.x);
+  }
 }
 
 tensor_t tensor_make_transpose_3012_device(tensor_t t) {
@@ -55,7 +57,6 @@ tensor_t tensor_make_transpose_3012_device(tensor_t t) {
   tensor_t h_transposed = tensor_make(transposed_shape, ARRAY_SIZE(transposed_shape));
   tensor_copy_d2h(h_transposed, d_transposed);
 }
-
 
 
 
@@ -93,29 +94,24 @@ tensor_t tensor_make_padded_square_input_device(tensor_t t, uint p, T val) {
 
 
 
-
-
-static __global__ void _do_forward_device(T *x, uint num_image, uint num_channel,
-                                          uint channel_capacity, T *y)
-{
+static __global__ void _do_im2col_device(tensor_t const x, tensor_t const w, conv_param_t const params) {
   if (threadIdx.x == 0) {
-    printf("entered _do_forward_device\n", threadIdx.x);
+    printf("entered _do_im2col_device\n", threadIdx.x);
   }
 }
-/*
- * primary entry point
- */
-status_t convolution_forward_device(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y) {
-
-  return S_ERR;
-}
-
-
 
 /*
  * This function just sets up the im2col.
  */
-tensor_t im2col_device(tensor_t const x, tensor_t const w, conv_param_t const params);
+tensor_t im2col_device(tensor_t const x, tensor_t const w, conv_param_t const params)
+{
+  // TODO: make it handler lager size
+  dim3 threads(32);
+  dim3 blocks(1);
+  PINF("device code is called");
+
+  _do_im2col_device<<<blocks, threads>>>(x, w, params);
+}
 
 
 
@@ -139,9 +135,7 @@ tensor_t im2col_device(tensor_t const x, tensor_t const w, conv_param_t const pa
  * If two loops are created (one for core elements, and one for padding elements)
  * a conditional could be avoided.
  */
-__global__ void _do_im2col_inner_device(tensor_t cols, tensor_t x_padded,
-    uint N,  uint C,  uint H,  uint W,  uint HH, uint WW,
-    uint filter_height, uint filter_width, uint padding, uint stride)
+static __global__ void _do_im2col_inner_device(tensor_t cols, tensor_t x_padded, uint N,  uint C,  uint H,  uint W,  uint HH, uint WW, uint filter_height, uint filter_width, uint padding, uint stride)
 {
   printf("%d\n", threadIdx.x);
 }
@@ -152,9 +146,7 @@ __global__ void _do_im2col_inner_device(tensor_t cols, tensor_t x_padded,
  * GPU based forward, this function will not be called, but rather the _do... function will be
  * called directly.
  */
-status_t im2col_inner_device(tensor_t cols, tensor_t x_padded,
-                             uint N,  uint C,  uint H,  uint W,  uint HH, uint WW,
-                             uint filter_height, uint filter_width, uint padding, uint stride)
+status_t im2col_inner_device(tensor_t cols, tensor_t x_padded, uint N,  uint C,  uint H,  uint W,  uint HH, uint WW, uint filter_height, uint filter_width, uint padding, uint stride)
 {
 
   tensor_t d_cols       = tensor_make_copy_h2d(cols);
@@ -178,6 +170,30 @@ status_t im2col_inner_device(tensor_t cols, tensor_t x_padded,
 
 
 
+/*
+ * Note that this is the only one that should likely remain global in the forward path.
+ * The rest should become __device__ and should be called by this function
+ */
+static __global__ void _do_convolution_forward_device(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y)
+{
+  if (threadIdx.x == 0) {
+    printf("entered _do_convolution_forward_device\n", threadIdx.x);
+  }
+}
+
+/*
+ * primary entry point for the forward function
+ */
+status_t convolution_forward_device(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y)
+{
+
+  dim3 threads(32);
+  dim3 blocks(1);
+  PINF("device code is called");
+
+  _do_convolution_forward_device<<<blocks, threads>>>(x, w, cache, params, y);
+  return S_ERR;
+}
 
 
 
@@ -186,37 +202,51 @@ status_t im2col_inner_device(tensor_t cols, tensor_t x_padded,
 
 
 
+static __global__ void _do_convolution_backward_device(tensor_t dx, tensor_t dw, lcache_t* cache, conv_param_t const params, tensor_t const dout)
+{
+  if (threadIdx.x == 0) {
+    printf("entered _do_col2im_inner_device\n");
+  }
+}
+
+status_t convolution_backward_device(tensor_t dx, tensor_t dw, lcache_t* cache, conv_param_t const params, tensor_t const dout)
+{
+  dim3 threads(32);
+  dim3 blocks(1);
+  PINF("device code is called");
+  _do_convolution_backward_device<<<blocks, threads>>>(dx, dw, cache, params, dout);
+}
 
 
 
+static __global__ void _do_col2im_device(tensor_t cols, uint N, uint C, uint H, uint W, uint field_height, uint field_width, uint padding, uint stride)
+{
+  if (threadIdx.x == 0) {
+    printf("entered _do_col2im_inner_device\n");
+  }
+}
+
+tensor_t col2im_device(tensor_t cols, uint N, uint C, uint H, uint W, uint field_height, uint field_width, uint padding, uint stride)
+{
+  dim3 threads(32);
+  dim3 blocks(1);
+  PINF("device code is called");
+  _do_col2im_device<<<blocks, threads>>>(cols, N, C, H, W, field_height, field_width, padding, stride);
+}
 
 
 
+static __global__ void _do_col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride)
+{
+  if (threadIdx.x == 0) {
+    printf("entered _do_col2im_inner_device\n");
+  }
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-status_t convolution_backward_device(tensor_t dx, tensor_t dw, lcache_t* cache, conv_param_t const params, tensor_t const dout);
-
-
-tensor_t col2im_device(tensor_t cols,
-                       uint N, uint C, uint H, uint W,
-                       uint field_height, uint field_width, uint padding, uint stride);
-
-void col2im_inner_device(tensor_t cols, tensor_t x_padded,
-                         uint N, uint C, uint H, uint W, uint HH, uint WW,
-                         uint field_height, uint field_width, uint padding, uint stride);
+void col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride) {
+  // TODO: make it handler lager size
+  dim3 threads(32);
+  dim3 blocks(1);
+  PINF("device code is called");
+  _do_col2im_inner_device<<<blocks, threads>>>(cols, x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
+}
