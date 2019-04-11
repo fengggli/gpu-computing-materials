@@ -1,49 +1,88 @@
 #include "awnn/layer_conv.h"
 #include "cuda_defs.h"
+#include "range.cuh"
 
-/*
- * For the forward operation, there are a number of "hard" operations for the GPU.
- *
- * The primary one is the transformation of the input array to a 2D array through
- * the im2col process.  This process needs.
- *
- *    * padding
- *    * im2coll
- *
- * Additional critical operations that should be enabled on the GPU are
- *
- *    * tensor transpose 3012
- *    * dot product (gonna use cublas here most likely)
- */
 
+// type alias to simplify typing...
+using namespace util::lang;
+template<typename T>
+using step_range = typename range_proxy<T>::step_range_proxy;
+
+template <typename T>
+__device__ step_range<T> grid_stride_range(T begin, T end) {
+    begin += blockDim.x * blockIdx.x + threadIdx.x;
+    return range(begin, end).step(gridDim.x * blockDim.x);
+}
 
 
 
 /*
-// used for forward
+
 tensor_t tensor_make_transpose_3012(tensor_t t) {
   uint target_idx = 0;
   tensor_t tpose = tensor_make_copy(t);
+
   for (uint i = 0; i < t.dim.dims[3]; ++i) {  // for each of the new dim 0
     for (uint j = 0; j < t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2]; ++j) {
       tpose.data[target_idx++] = t.data[i + j * t.dim.dims[3]];
     }
   }
+
   uint const shape[] = { t.dim.dims[3], t.dim.dims[0], t.dim.dims[1], t.dim.dims[2] };
   tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
   return tpose;
 }
 */
 
-
+/*
+ * In the above naive version for the CPU, we stride through the target one
+ * by one and then index into the source using knowledge about our
+ * transposition operation.
+ *
+ * Having already reduced the transposition from its original form to this
+ * more memory oriented approach, we will further reduce the problem here.
+ *
+ * In the above, the recognition that created the above loop is that the we
+ * need to stride by the original dim 3... which is what j * t.dim.dims[3],
+ * but the source was offset by i which is the number of the new dimensions.
+ * The j loop occurs t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2] times
+ * inside of i
+ *
+ * A problem that remains here is that the target index was previously based
+ * on a loop.  Now we need to base the target on some relationship to the
+ * thread location in the grid
+ *
+ * We additionally need to base the source index [i + j * t.dim.dims[3]]
+ * on some relationship to the thread
+ *
+ * gonna start by making the assumption that the target is the threadIdx.x.
+ * potentially if we can derive the mapping from the target to the source,
+ * we can do a grid stride loop here
+ *
+ * Since we are starting from the assumption that we are mapping from a
+ * known target index to a source index, we can look at the data access
+ * patters.  We can note that we are using a modulus and an integer divider
+ * to do the offsets into the source array.  Then the only question that
+ * remains is which dimension in the source array should be used
+ * to determine what we mod and divide by.
+ *
+ * I call this "group_size"  This represents the significant points in the
+ * src array where the dimensions cause use to need to offset the input.
+ */
 static __global__ void _do_tensor_make_transpose_3012_device(tensor_t d_transpose, tensor_t d_src) {
   if (threadIdx.x == 0) {
     printf("entered _do_tensor_make_transpose_3012_device\n", threadIdx.x);
-    printf("transpose N=%u, C=%u, H=%u, W=%u,  src N=%u, C=%u, H=%u, W=%u\n", d_transpose.dim.dims[0], d_transpose.dim.dims[1], d_transpose.dim.dims[2], d_transpose.dim.dims[3], d_src.dim.dims[0], d_src.dim.dims[1], d_src.dim.dims[2], d_src.dim.dims[3]);
+    printf("src N=%u, C=%u, H=%u, W=%u, transpose N=%u, C=%u, H=%u, W=%u\n", d_transpose.dim.dims[0], d_transpose.dim.dims[1], d_transpose.dim.dims[2], d_transpose.dim.dims[3], d_src.dim.dims[0], d_src.dim.dims[1], d_src.dim.dims[2], d_src.dim.dims[3]);
   }
 
+  uint n = d_src.dim.dims[0] * d_src.dim.dims[1] * d_src.dim.dims[2] * d_src.dim.dims[3];
+  uint group_size = d_src.dim.dims[0] * d_src.dim.dims[1] * d_src.dim.dims[2];
+  uint stride = d_src.dim.dims[3];
 
-
+  for (auto i : grid_stride_range(0u, n)) {
+    uint src_idx = i / group_size + (i % group_size) * stride;
+    d_transpose.data[i] = d_src.data[src_idx];
+  }
 }
 
 
