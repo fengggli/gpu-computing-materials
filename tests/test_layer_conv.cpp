@@ -18,11 +18,11 @@ protected:
   // You can remove any or all of the following functions if its body
   // is empty.
 
-  LayerConvTestDevice() {
+  LayerConvTest() {
     // You can do set-up work for each test here.
   }
 
-  ~LayerConvTestDevice() override {
+  ~LayerConvTest() override {
     // You can do clean-up work that doesn't throw exceptions here.
   }
 
