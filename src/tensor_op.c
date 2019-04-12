@@ -48,27 +48,59 @@ tensor_t tensor_make_transpose_3012(tensor_t t) {
 
 
 // used for backward
+//tensor_t tensor_make_transpose_1230(tensor_t t) {
+//  uint src_idx = 0, target_idx = 0;
+//  uint original_dim_0 = t.dim.dims[0];
+//  uint original_dim_1 = t.dim.dims[1];
+//  uint original_dim_2 = t.dim.dims[2];
+//  uint original_dim_3 = t.dim.dims[3];
+//
+//  tensor_t tpose = tensor_make_copy(t);
+//
+//  for (uint i = 0; i < original_dim_0; ++i) {
+//    for (uint j = 0; j < original_dim_1 * original_dim_2 * original_dim_3; ++j) {
+//      target_idx = (i + j * original_dim_0);
+//      tpose.data[target_idx] = t.data[src_idx++];
+////      printf("targetIdx=%u, src_idx=%u\n", target_idx, src_idx - 1);
+//    }
+//  }
+//
+//  uint const shape[] = { original_dim_1, original_dim_2, original_dim_3, original_dim_0 };
+//  tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
+//  return tpose;
+//}
+
+// used for backward
 tensor_t tensor_make_transpose_1230(tensor_t t) {
   uint src_idx = 0, target_idx = 0;
   uint original_dim_0 = t.dim.dims[0];
-  uint original_dim_1 = t.dim.dims[1];
-  uint original_dim_2 = t.dim.dims[2];
-  uint original_dim_3 = t.dim.dims[3];
+  uint og_dim_1 = t.dim.dims[1];
+  uint og_dim_2 = t.dim.dims[2];
+  uint og_dim_3 = t.dim.dims[3];
 
   tensor_t tpose = tensor_make_copy(t);
 
+  uint abc = og_dim_1 * og_dim_2 * og_dim_3;
+
+  uint iter = 0;
   for (uint i = 0; i < original_dim_0; ++i) {
-    for (uint j = 0; j < original_dim_1 * original_dim_2 * original_dim_3; ++j) {
+    for (uint j = 0; j < og_dim_1 * og_dim_2 * og_dim_3; ++j) {
+      uint tidx = (iter / abc);
+      tidx += (iter % abc) * original_dim_0;
+
       target_idx = (i + j * original_dim_0);
+      assert(tidx == target_idx);
       tpose.data[target_idx] = t.data[src_idx++];
-//      printf("targetIdx=%u, src_idx=%u\n", target_idx, src_idx - 1);
+      printf("src_idx=%u, targetIdx=%u\n", src_idx - 1, target_idx);
+      ++iter;
     }
   }
 
-  uint const shape[] = { original_dim_1, original_dim_2, original_dim_3, original_dim_0 };
+  uint const shape[] = { og_dim_1, og_dim_2, og_dim_3, original_dim_0 };
   tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
   return tpose;
 }
+
 
 // TODO:  results not correct
 status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){

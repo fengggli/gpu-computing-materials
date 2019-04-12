@@ -63,7 +63,7 @@ TEST_F(TensorOpTest, test_tpose1230_1) {
 }
 
 TEST_F(TensorOpTest, test_tpose1230_2) {
-  uint const shape_x[] = {2, 3, 4, 4}; // 2x3x4x4
+  uint const shape_x[] = { 2, 3, 4, 4 }; // 2x3x4x4
 
   tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
 

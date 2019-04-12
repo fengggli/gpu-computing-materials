@@ -395,6 +395,21 @@ static __global__ void _do_tensor_make_transpose_1230_device(tensor_t d_t, tenso
   if (threadIdx.x == 0) {
     printf("entered _do_tensor_make_transpose_1230_device\n", threadIdx.x);
   }
+
+  uint src_idx = 0, target_idx = 0;
+  uint original_dim_0 = d_src.dim.dims[0];
+  uint og_dim_1 = d_src.dim.dims[1];
+  uint og_dim_2 = d_src.dim.dims[2];
+  uint og_dim_3 = d_src.dim.dims[3];
+
+  uint n = capacity(d_src);
+  uint group_size = og_dim_1 * og_dim_2 * og_dim_3;
+  uint stride = d_src.dim.dims[0];
+
+  for (auto iter : grid_stride_range(0u, n)) {
+    target_idx = i / group_size + (i % group_size) * stride;
+    d_t.data[target_idx] = d_src.data[i];
+  }
 }
 
 tensor_t tensor_make_transpose_1230_device(tensor_t t)
