@@ -1,11 +1,15 @@
 cmake_minimum_required(VERSION 3.5)
 #set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+option(IS_CI_BUILD "Is a build for CI" OFF) # Reduce problem size if it is run in CI
 option(USE_CLANG "Use clang compiler set" OFF)
 option(USE_OPENBLAS "USE openblas for blas" OFF)
 option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_CUDA "Build with CUDA" OFF)
 option(USE_CUDNN "Build with CUDNN" OFF)
+
+
+option(USE_STRICT_CHECK "use pedantic flag" OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
@@ -21,6 +25,10 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_SHARED_LINKER_FLAGS "-rdynamic")
 
 set(GCC_COVERAGE_COMPILE_FLAGS "-Wall -Wextra -Wconversion")
+if(USE_STRICT_CHECK)
+  set(GCC_COVERAGE_COMPILE_FLAGS "-pedantic ${GCC_COVERAGE_COMPILE_FLAGS}")
+endif()
+
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 
@@ -76,8 +84,8 @@ add_library(awnn_core
   src/net.c
   src/net_mlp.c
   src/layer_sandwich.c
-  src/solver.c
-  src/net_resnet.c)
+  src/solver.c)
+  #src/net_resnet.c)
 
 target_include_directories(awnn_core PUBLIC include)
 target_link_libraries(awnn_core PUBLIC ${AWNN_DEP_LIBS})

@@ -42,13 +42,19 @@ TEST_F(NetMLPTest, CifarTest) {
   EXPECT_EQ(S_OK, ret);
 
   // overfit small data;
+#ifdef IS_CI_BUILD // make check faster
+  uint train_sz = 1000;
+  uint nr_epoches = 1;
+#else
   uint train_sz = 4000;
+  uint nr_epoches = 5;
+#endif
+
   uint val_sz = 1000;
   T learning_rate = 0.01;
 
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
-  uint nr_epoches = 5;
 
   uint iterations_per_epoch = train_sz / batch_sz;
   if (iterations_per_epoch == 0) iterations_per_epoch = 1;

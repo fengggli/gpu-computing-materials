@@ -63,7 +63,7 @@ TEST_F(UtilityTest, NumericalGradientSimple) {
   eval_numerical_gradient(func_add, x, dy, dx, 1e-5);
 
   for (uint i = 0; i < tensor_get_capacity(x); i++)
-    EXPECT_DOUBLE_EQ(val_dy, dx.data[i]);
+    EXPECT_NEAR(val_dy, dx.data[i], 1e-7);
 }
 
 }  // namespace

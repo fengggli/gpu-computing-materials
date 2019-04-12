@@ -20,32 +20,10 @@ extern "C" {
 #endif
 
 /* Obtain a backtrace and print it to stdout. */
-static void print_trace(void) {
-  void *array[10];
-  int size;
-  char **strings;
-  int i;
+void print_trace();
+int list_get_count(struct list_head *head);
 
-  size = backtrace(array, 10);
-  strings = backtrace_symbols(array, size);
 
-  printf ("Obtained %d stack frames.\n", size);
-
-  for (i = 0; i < size; i++) printf("%s\n", strings[i]);
-
-  free(strings);
-}
-
-static inline int list_get_count(struct list_head *head) {
-  struct list_head *pos;
-  int count = 0;
-  list_for_each(pos, head) {
-    PSTR("[%d]%p\t", count, pos);
-    ++count;
-  }
-  PSTR("\n");
-  return count;
-}
 
 /* Show tensor std, variance, etc */
 void dump_tensor_stats(tensor_t, const char *name);
