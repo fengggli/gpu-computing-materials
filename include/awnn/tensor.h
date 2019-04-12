@@ -102,7 +102,7 @@ static inline tensor_t tensor_make_placeholder() {
 
 tensor_t tensor_make_zeros(uint const shape[], uint const ndims);
 tensor_t tensor_make_ones(uint const shape[], uint const ndims);
-tensor_t tensor_make_random(uint const shape[], uint const ndims, int seed);
+tensor_t tensor_make_random(uint const shape[], uint const ndims, uint seed);
 tensor_t tensor_make_patterned(uint const shape[], uint const ndims);
 tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[],
                               uint const ndims);

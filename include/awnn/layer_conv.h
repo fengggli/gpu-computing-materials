@@ -7,7 +7,7 @@
 
 #pragma once
 
-
+#include "awnn/tensor.h"
 #include "awnn/layer.h"
 
 #ifdef __cplusplus
@@ -15,10 +15,9 @@ extern "C" {
 #endif
 
 typedef struct{
-  int stride;
-  int padding;
+  uint stride;
+  uint padding;
 } conv_param_t;
-
 
 /*
  * @brief forwarding for conv2d

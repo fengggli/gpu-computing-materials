@@ -42,13 +42,19 @@ TEST_F(NetMLPTest, CifarTest) {
   EXPECT_EQ(S_OK, ret);
 
   // overfit small data;
+#ifdef IS_CI_BUILD // make check faster
+  uint train_sz = 1000;
+  uint nr_epoches = 1;
+#else
   uint train_sz = 4000;
+  uint nr_epoches = 5;
+#endif
+
   uint val_sz = 1000;
   T learning_rate = 0.01;
 
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
-  uint nr_epoches = 5;
 
   uint iterations_per_epoch = train_sz / batch_sz;
   if (iterations_per_epoch == 0) iterations_per_epoch = 1;
@@ -99,15 +105,15 @@ TEST_F(NetMLPTest, CifarTest) {
     }
 
 #endif
-
     PINF("Loss %.2f", loss);
 
     // output the first/laster iteration, also in the end of each epoch
     if (iteration == 0 || iteration == nr_iterations - 1 ||
         cur_batch == iterations_per_epoch - 1) {
       PINF("----------------Epoch %u ---------------", cur_epoch);
-      check_val_accuracy(&loader, val_sz, batch_sz, &model);
-      check_train_accuracy(&loader, val_sz, batch_sz, &model);
+      check_val_accuracy(&loader, val_sz, batch_sz, &model, &mlp_forward_infer);
+      check_train_accuracy(&loader, val_sz, batch_sz, &model,
+                           &mlp_forward_infer);
       PINF("----------------------------------------");
     }
 

@@ -111,12 +111,12 @@ TEST_F(NetMLPTest, Loss) {
   label_t labels[] = {0, 5, 1};
 
   mlp_loss(&model, x, labels, &loss);
-  EXPECT_FLOAT_EQ(loss, 2.994112658);
+  EXPECT_NEAR(loss, 2.994112658, 1e-7);
 
   // test with regulizer
   model.reg = 1.0;
   mlp_loss(&model, x, labels, &loss);
-  EXPECT_FLOAT_EQ(loss, 26.11873099);
+  EXPECT_NEAR(loss, 26.11873099, 1e-7);
   PINF("Forward passed, value checked");
 
   // Check with numerical gradient
@@ -132,7 +132,7 @@ TEST_F(NetMLPTest, Loss) {
     tensor_t dparam = p_param->diff;
     tensor_t dparam_ref = tensor_make_alike(param);
     eval_numerical_gradient(
-        [model_copy, x, labels](tensor_t const in, tensor_t out) {
+        [model_copy, x, labels](tensor_t const, tensor_t out) {
           T *ptr_loss = &out.data[0];
           mlp_loss(&model_copy, x, labels, ptr_loss);
         },

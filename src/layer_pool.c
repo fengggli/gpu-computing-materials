@@ -32,7 +32,7 @@ status_t global_avg_pool_backward(tensor_t dx, lcache_t *cache,
   uint H = t.dim.dims[2];
   uint W = t.dim.dims[3];
 
-  float scale_by = 1.0 / (H * W);
+  T scale_by = 1.0 / (H * W);
   //  tensor_t scales = tensor_make_scalar_alike(t, scale_by);
 
   //  tensor_elemwise_op_inplace(scales, dy, TENSOR_OP_MUL);

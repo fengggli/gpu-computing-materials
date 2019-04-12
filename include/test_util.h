@@ -14,11 +14,11 @@
 #include <cstdio>
 #include <functional>
 
-template<uint SIZE, class T> inline uint array_size(T (&arr)[SIZE]) {
+template<uint SIZE, class T> inline uint array_size(T (&)[SIZE]) {
   return SIZE;
 }
 
-template <uint SIZE, class T> inline uint dim_of_shape(T const (&shape)[SIZE]) {
+template <uint SIZE, class T> inline uint dim_of_shape(T const (&)[SIZE]) {
   return SIZE;
 }
 

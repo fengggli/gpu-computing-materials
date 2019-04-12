@@ -48,6 +48,7 @@ TEST_F(LayerGlobalAvgPoolTest, channel_mean) {
   T* start = x.data + channel_capacity * target_channel;
 
   T res = channel_mean(start, channel_capacity);
+  PINF("channel mean, %.3f", res);
 }
 
 // TODO : document tests
@@ -56,9 +57,7 @@ TEST_F(LayerGlobalAvgPoolTest, Forward) {
   uint const shape_y[] = {6, 2, 1, 1};
 
   tensor_t in = tensor_make(shape_x, dim_of_shape(shape_x));
-  tensor_t din = tensor_make(shape_x, dim_of_shape(shape_x));
   tensor_t out = tensor_make(shape_y, dim_of_shape(shape_y));
-  tensor_t dout = tensor_make(shape_y, dim_of_shape(shape_y));
 
   status_t ret;
 

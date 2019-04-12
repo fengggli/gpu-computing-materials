@@ -1,15 +1,34 @@
+#include "awnn/net.h"
 #include "awnn/solver.h"
 #include "utils/data_cifar.h"
 
+enum{
+  CLS_ID_NULL = 10000
+};
+
+void sgd_update(param_t *p_param, T learning_rate) {
+  tensor_t param = p_param->data;
+  tensor_t dparam = p_param->diff;
+  T *pelem;
+  uint ii;
+  AWNN_CHECK_GT(learning_rate, 0);
+
+  tensor_for_each_entry(pelem, ii, dparam) { (*pelem) *= learning_rate; }
+  tensor_elemwise_op_inplace(param, dparam, TENSOR_OP_SUB);
+  PDBG("updating %s complete.", p_param->name);
+}
+
 static uint _get_correct_count(tensor_t const x, label_t const *labels,
-                               uint nr_record, model_t const *model) {
+                               uint nr_record, model_t const *model,
+                               tensor_t (*func_forward_infer)(model_t const *,
+                                                              tensor_t)) {
   AWNN_CHECK_EQ(x.dim.dims[0], nr_record);
-  tensor_t scores = mlp_forward_infer(model, x);
+  tensor_t scores = func_forward_infer(model, x);
   label_t label_predicted[nr_record];
 
   uint nr_classes = scores.dim.dims[1];
   for (uint i = 0; i < nr_record; i++) {
-    uint predicted_cls_id = -1;
+    uint predicted_cls_id = CLS_ID_NULL;
     T max_score = -1000;
 
     for (uint j = 0; j < nr_classes; j++) {
@@ -32,7 +51,9 @@ static uint _get_correct_count(tensor_t const x, label_t const *labels,
  * get accuracy of validation data
  */
 double check_val_accuracy(data_loader_t *loader, uint val_sz, uint batch_sz,
-                          model_t const *model) {
+                          model_t const *model,
+                          tensor_t (*func_forward_infer)(model_t const *,
+                                                         tensor_t)) {
   uint nr_correct = 0;
   uint nr_total = 0;
 
@@ -44,7 +65,8 @@ double check_val_accuracy(data_loader_t *loader, uint val_sz, uint batch_sz,
   for (uint iteration = 0; iteration < nr_iterations; iteration++) {
     uint nr_record =
         get_validation_batch(loader, &x_val, &labels_val, iteration, batch_sz);
-    nr_correct += _get_correct_count(x_val, labels_val, nr_record, model);
+    nr_correct += _get_correct_count(x_val, labels_val, nr_record, model,
+                                     func_forward_infer);
     nr_total += nr_record;
   }
 
@@ -57,7 +79,9 @@ double check_val_accuracy(data_loader_t *loader, uint val_sz, uint batch_sz,
  * Get accuracy of a sample of train data
  */
 double check_train_accuracy(data_loader_t *loader, uint sample_sz,
-                            uint batch_sz, model_t const *model) {
+                            uint batch_sz, model_t const *model,
+                            tensor_t (*func_forward_infer)(model_t const *,
+                                                           tensor_t)) {
   uint nr_correct = 0;
   uint nr_total = 0;
 
@@ -71,12 +95,12 @@ double check_train_accuracy(data_loader_t *loader, uint sample_sz,
 
   for (uint iteration = 0; iteration < nr_iterations; iteration++) {
     // each time choose a random batch
-    uint batch_id = rand() % iterations_per_epoch;
+    uint batch_id = (uint)rand() % iterations_per_epoch;
     // PINF("[---traning accuracy] [%u, %u)", batch_id, batch_id + 1);
     uint nr_record = get_train_batch(loader, &x_train_sampled,
                                      &labels_train_sampled, batch_id, batch_sz);
     nr_correct += _get_correct_count(x_train_sampled, labels_train_sampled,
-                                     nr_record, model);
+                                     nr_record, model, func_forward_infer);
     nr_total += nr_record;
     if (nr_record < batch_sz) break;
   }
