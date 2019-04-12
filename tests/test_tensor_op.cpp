@@ -758,7 +758,6 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test11) {
   tensor_destroy(&padded_in);
 }
 
-
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test12) {
   uint const shape[] = { 5, 4, 2, 3 };
   tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));

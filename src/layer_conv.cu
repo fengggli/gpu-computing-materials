@@ -125,16 +125,23 @@ tensor_t tensor_make_transpose_3012_device(tensor_t t) {
  * inner im2col, I speculate that this operation can be eliminated, I am still going to provide it in
  * the intitial cuda implementation
  */
-static __global__ void _do_tensor_make_padded_square_input_device(tensor_t d_padded, tensor_t d_src, uint p, T val)
+static __global__ void _do_tensor_make_padded_square_input_device(tensor_t d_padded, tensor_t d_src, uint p, T pad_val)
 {
   if (threadIdx.x == 0) {
     printf("entered _do_tensor_make_padded_square_input_device\n", threadIdx.x);
   }
 
-  uint n = capacity(d_src);
+  uint C, H, W, HH, WW;
+  C = d_src.dim.dims[1];
+  H = d_src.dim.dims[2];
+  W = d_src.dim.dims[3];
+  HH = H + 2 * p;
+  WW = W + 2 * p;
 
-  uint new_img_sz = n.dim.dims[1] * n.dim.dims[2] * n.dim.dims[3];
-  uint channel_sz = n.dim.dims[2] * n.dim.dims[3];
+  uint n = capacity(d_padded);
+
+  uint new_img_sz = d_padded.dim.dims[1] * d_padded.dim.dims[2] * d_padded.dim.dims[3];
+  uint channel_sz = d_padded.dim.dims[2] * d_padded.dim.dims[3];
 
   for (auto iter : grid_stride_range(0u, n)) {
     uint i = iter / new_img_sz;        // i is the target image
@@ -144,16 +151,16 @@ static __global__ void _do_tensor_make_padded_square_input_device(tensor_t d_pad
 
     uint target_idx = i * C * HH * WW + j * HH * WW + k * WW + l;
     if (k < p) {
-      n.data[target_idx] = pad_val;
+      d_padded.data[target_idx] = pad_val;
     } else if (k >= (H + p)) {
-      n.data[target_idx] = pad_val;
+      d_padded.data[target_idx] = pad_val;
     } else if (l < p) {
-      n.data[target_idx] = pad_val;
+      d_padded.data[target_idx] = pad_val;
     } else if (l >= (W + p)) {
-      n.data[target_idx] = pad_val;
+      d_padded.data[target_idx] = pad_val;
     } else {
       uint src_idx = i * C * H * W + j * H * W + (k - p) * W + (l - p);
-      n.data[target_idx] = t.data[src_idx];
+      d_padded.data[target_idx] = d_src.data[src_idx];
     }
   }
 }
