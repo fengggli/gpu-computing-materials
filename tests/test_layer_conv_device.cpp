@@ -45,7 +45,7 @@ namespace {
 
 
 #ifdef USE_CUDA
-TEST_F(LayerConvTestDevice, tensor_make_transpose_3012_device_1) {
+  TEST_F(LayerConvTestDevice, tensor_make_transpose_3012_device_1) {
   uint const shape_p[] = {1, 2, 3, 3}; // 1x2x3x3
 
   tensor_t p = tensor_make(shape_p, dim_of_shape(shape_p));
@@ -66,7 +66,7 @@ TEST_F(LayerConvTestDevice, tensor_make_transpose_3012_device_1) {
   tensor_destroy(&p_ref);
 }
 
-TEST_F(LayerConvTestDevice, tensor_make_transpose_3012_device_2) {
+  TEST_F(LayerConvTestDevice, tensor_make_transpose_3012_device_2) {
   uint const shape_x[] = {2, 3, 4, 4}; // 2x3x4x4
 
   tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
@@ -126,6 +126,25 @@ TEST_F(LayerConvTestDevice, tensor_make_transpose_3012_device_2) {
     EXPECT_LT(tensor_rel_error(transpose_b_3102_dev, transpose_b_3102_ref), 1e-7);
   }
 
+  TEST_F(LayerConvTestDevice, device_padding_0) {
+    uint padding = 2;
+    T pad_val = 0;
+
+    uint shape_x[] = { 1, 1, 2, 2 };
+    T x_vals[] = { 0.20167830539004827, 0.1280517232121993, -0.4355796793875574, 0.17048535064070874 };
+    tensor_t x = tensor_make(shape_x, dim_of_shape(shape_x));
+    tensor_fill_list(x, x_vals, array_size(x_vals));
+
+    uint shape_ref[] = { 1, 1, 6, 6 };
+    T ref_vals[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.20167830539004827, 0.1280517232121993, 0.0, 0.0, 0.0, 0.0, -0.4355796793875574, 0.17048535064070874, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+    tensor_t ref = tensor_make(shape_ref, dim_of_shape(shape_ref));
+    tensor_fill_list(ref, ref_vals, array_size(ref_vals));
+
+    tensor_t padded = tensor_make_padded_square_input_device(x, padding, pad_val);
+
+    EXPECT_LT(tensor_rel_error(padded, ref), 1e-7);
+}
+
   TEST_F(LayerConvTestDevice, device_padding_1) {
     uint padding = 2;
     T pad_val = 0;
@@ -162,6 +181,513 @@ TEST_F(LayerConvTestDevice, tensor_make_transpose_3012_device_2) {
     tensor_t padded = tensor_make_padded_square_input_device(x, padding, pad_val);
 
     EXPECT_LT(tensor_rel_error(padded, ref), 1e-7);
+  }
+
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test0) {
+    uint const shape[] = { 1, 1, 1, 1 };
+    tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+    uint pad_size = 0;
+    float pad_val = 0;
+
+    // 1 x 1 x 1 x 1 -> 1 x 1 x 0 x 0
+    tensor_t padded_in = tensor_make_padded_square_input_device(in, pad_size, pad_val);
+
+    tensor_dump(in);
+    tensor_dump(padded_in);
+
+    ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+    ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+    uint h = padded_in.dim.dims[2];
+    uint w = padded_in.dim.dims[3];
+    for (int i = 0; i < h; ++i) {
+      for (int j = 0; j < w; ++j) {
+        uint target_idx = i * w + j;
+        if (i < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (i >= h - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j >= w - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else {
+          uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+          ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+        }
+      }
+    }
+    tensor_destroy(&in);
+    tensor_destroy(&padded_in);
+  }
+
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test1) {
+    uint const shape[] = { 1, 1, 1, 1 };
+    tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+    uint pad_size = 1;
+    float pad_val = 0;
+
+    // 1 x 1 x 1 x 1 -> 1 x 1 x 3 x 3
+    tensor_t padded_in = tensor_make_padded_square_input_device(in, pad_size, pad_val);
+
+  //  tensor_dump(in);
+  //  tensor_dump(padded_in);
+
+    ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+    ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+    uint h = padded_in.dim.dims[2];
+    uint w = padded_in.dim.dims[3];
+    for (int i = 0; i < h; ++i) {
+      for (int j = 0; j < w; ++j) {
+        uint target_idx = i * w + j;
+        if (i < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (i >= h - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j >= w - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else {
+          uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+          ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+        }
+      }
+    }
+    tensor_destroy(&in);
+    tensor_destroy(&padded_in);
+  }
+
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test2) {
+    uint const shape[] = { 1, 1, 1, 1 };
+    tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+    uint pad_size = 2;
+    float pad_val = 0;
+
+    // 1 x 1 x 1 x 1 -> 1 x 1 x 3 x 3
+    tensor_t padded_in = tensor_make_padded_square_input_device(in, pad_size, pad_val);
+  //
+  //  tensor_dump(in);
+  //  tensor_dump(padded_in);
+
+    ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+    ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+    uint h = padded_in.dim.dims[2];
+    uint w = padded_in.dim.dims[3];
+    for (int i = 0; i < h; ++i) {
+      for (int j = 0; j < w; ++j) {
+        uint target_idx = i * w + j;
+        if (i < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (i >= h - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j >= w - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else {
+          uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+          ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+        }
+      }
+    }
+    tensor_destroy(&in);
+    tensor_destroy(&padded_in);
+  }
+
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test3) {
+    uint const shape[] = { 1, 1, 1, 2 };
+    tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+    uint pad_size = 1;
+    float pad_val = 0;
+
+    // 1 x 1 x 1 x 1 -> 1 x 1 x 3 x 3
+    tensor_t padded_in = tensor_make_padded_square_input_device(in, pad_size, pad_val);
+
+  //  tensor_dump(in);
+  //  tensor_dump(padded_in);
+
+    ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+    ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+    uint h = padded_in.dim.dims[2];
+    uint w = padded_in.dim.dims[3];
+    for (int i = 0; i < h; ++i) {
+      for (int j = 0; j < w; ++j) {
+        uint target_idx = i * w + j;
+        if (i < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (i >= h - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j >= w - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else {
+          uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+          ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+        }
+      }
+    }
+    tensor_destroy(&in);
+    tensor_destroy(&padded_in);
+  }
+
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test4) {
+    uint const shape[] = { 1, 1, 2, 2 };
+    tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+    uint pad_size = 1;
+    float pad_val = 0;
+
+    // 1 x 1 x 2 x 2 -> 1 x 1 x 4 x 4
+    tensor_t padded_in = tensor_make_padded_square_input_device(in, pad_size, pad_val);
+
+  //  tensor_dump(in);
+  //  tensor_dump(padded_in);
+
+    ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+    ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+    uint h = padded_in.dim.dims[2];
+    uint w = padded_in.dim.dims[3];
+    for (int i = 0; i < h; ++i) {
+      for (int j = 0; j < w; ++j) {
+        uint target_idx = i * w + j;
+        if (i < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (i >= h - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j >= w - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else {
+          uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+          ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+        }
+      }
+    }
+    tensor_destroy(&in);
+    tensor_destroy(&padded_in);
+  }
+
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test5) {
+    uint const shape[] = { 1, 1, 2, 2 };
+    tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+    uint pad_size = 2;
+    float pad_val = 0;
+
+    // 1 x 1 x 2 x 2 -> 1 x 1 x 6 x 6
+    tensor_t padded_in = tensor_make_padded_square_input_device(in, pad_size, pad_val);
+
+  //  tensor_dump(in);
+  //  tensor_dump(padded_in);
+
+    ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+    ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+    uint h = padded_in.dim.dims[2];
+    uint w = padded_in.dim.dims[3];
+    for (int i = 0; i < h; ++i) {
+      for (int j = 0; j < w; ++j) {
+        uint target_idx = i * w + j;
+        if (i < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (i >= h - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j >= w - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else {
+          uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+          ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+        }
+      }
+    }
+    tensor_destroy(&in);
+    tensor_destroy(&padded_in);
+  }
+
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test6) {
+    uint const shape[] = { 1, 1, 3, 2 };
+    tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+    uint pad_size = 1;
+    float pad_val = 0;
+
+    // 1 x 1 x 3 x 2 -> 1 x 1 x 5 x 4
+    tensor_t padded_in = tensor_make_padded_square_input_device(in, pad_size, pad_val);
+
+  //  tensor_dump(in);
+  //  tensor_dump(padded_in);
+
+    ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+    ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+    uint h = padded_in.dim.dims[2];
+    uint w = padded_in.dim.dims[3];
+    for (int i = 0; i < h; ++i) {
+      for (int j = 0; j < w; ++j) {
+        uint target_idx = i * w + j;
+        if (i < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (i >= h - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j >= w - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else {
+          uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+          ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+        }
+      }
+    }
+    tensor_destroy(&in);
+    tensor_destroy(&padded_in);
+  }
+
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test7) {
+    uint const shape[] = { 1, 1, 3, 2 };
+    tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+    uint pad_size = 2;
+    float pad_val = 0;
+
+    // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
+    tensor_t padded_in = tensor_make_padded_square_input_device(in, pad_size, pad_val);
+
+  //  tensor_dump(in);
+  //  tensor_dump(padded_in);
+
+    ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+    ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+    uint h = padded_in.dim.dims[2];
+    uint w = padded_in.dim.dims[3];
+    for (int i = 0; i < h; ++i) {
+      for (int j = 0; j < w; ++j) {
+        uint target_idx = i * w + j;
+        if (i < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (i >= h - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j >= w - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else {
+          uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+          ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+        }
+      }
+    }
+    tensor_destroy(&in);
+    tensor_destroy(&padded_in);
+  }
+
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test8) {
+    uint const shape[] = { 1, 1, 2, 3 };
+    tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+    uint pad_size = 2;
+    float pad_val = 0;
+
+    // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
+    tensor_t padded_in = tensor_make_padded_square_input_device(in, pad_size, pad_val);
+
+  //  tensor_dump(in);
+  //  tensor_dump(padded_in);
+
+    ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+    ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+    uint h = padded_in.dim.dims[2];
+    uint w = padded_in.dim.dims[3];
+    for (int i = 0; i < h; ++i) {
+      for (int j = 0; j < w; ++j) {
+        uint target_idx = i * w + j;
+        if (i < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (i >= h - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j >= w - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else {
+          uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+          ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+        }
+      }
+    }
+    tensor_destroy(&in);
+    tensor_destroy(&padded_in);
+  }
+
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test9) {
+    uint const shape[] = { 1, 2, 2, 3 };
+    tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+    uint pad_size = 1;
+    float pad_val = 0;
+
+    // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
+    tensor_t padded_in = tensor_make_padded_square_input_device(in, pad_size, pad_val);
+
+  //  tensor_dump(in);
+  //  tensor_dump(padded_in);
+
+    ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+    ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+    uint h = padded_in.dim.dims[2];
+    uint w = padded_in.dim.dims[3];
+    for (int i = 0; i < h; ++i) {
+      for (int j = 0; j < w; ++j) {
+        uint target_idx = i * w + j;
+        if (i < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (i >= h - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j >= w - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else {
+          uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+          ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+        }
+      }
+    }
+    tensor_destroy(&in);
+    tensor_destroy(&padded_in);
+  }
+
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test10) {
+    uint const shape[] = { 2, 1, 2, 3 };
+    tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+    uint pad_size = 1;
+    float pad_val = 0;
+
+    // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
+    tensor_t padded_in = tensor_make_padded_square_input_device(in, pad_size, pad_val);
+
+  //  tensor_dump(in);
+  //  tensor_dump(padded_in);
+
+    ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+    ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+    uint h = padded_in.dim.dims[2];
+    uint w = padded_in.dim.dims[3];
+    for (int i = 0; i < h; ++i) {
+      for (int j = 0; j < w; ++j) {
+        uint target_idx = i * w + j;
+        if (i < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (i >= h - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j >= w - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else {
+          uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+          ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+        }
+      }
+    }
+    tensor_destroy(&in);
+    tensor_destroy(&padded_in);
+  }
+
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test11) {
+    uint const shape[] = { 2, 2, 2, 3 };
+    tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+    uint pad_size = 1;
+    float pad_val = 0;
+
+    // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
+    tensor_t padded_in = tensor_make_padded_square_input_device(in, pad_size, pad_val);
+
+  //  tensor_dump(in);
+  //  tensor_dump(padded_in);
+
+    ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+    ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+    uint h = padded_in.dim.dims[2];
+    uint w = padded_in.dim.dims[3];
+    for (int i = 0; i < h; ++i) {
+      for (int j = 0; j < w; ++j) {
+        uint target_idx = i * w + j;
+        if (i < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (i >= h - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j >= w - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else {
+          uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+          ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+        }
+      }
+    }
+    tensor_destroy(&in);
+    tensor_destroy(&padded_in);
+  }
+
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test12) {
+    uint const shape[] = { 5, 4, 2, 3 };
+    tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+    uint pad_size = 1;
+    float pad_val = 0;
+
+    // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
+    tensor_t padded_in = tensor_make_padded_square_input_device(in, pad_size, pad_val);
+
+  //  tensor_dump(in);
+  //  tensor_dump(padded_in);
+
+    ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+    ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+    uint h = padded_in.dim.dims[2];
+    uint w = padded_in.dim.dims[3];
+    for (int i = 0; i < h; ++i) {
+      for (int j = 0; j < w; ++j) {
+        uint target_idx = i * w + j;
+        if (i < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (i >= h - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j < pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else if (j >= w - pad_size) {
+          ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+        } else {
+          uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+          ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+        }
+      }
+    }
+    tensor_destroy(&in);
+    tensor_destroy(&padded_in);
   }
 
   TEST_F(LayerConvTestDevice, im2col_inner_device_1) {
@@ -221,7 +747,7 @@ TEST_F(LayerConvTestDevice, tensor_make_transpose_3012_device_2) {
   }
 
   TEST_F(LayerConvTestDevice, convolution_forward_device) {
-
+    ASSERT_FALSE(1);
   }
 
 

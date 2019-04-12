@@ -19,7 +19,7 @@ class TestConvBackward(TestCase):
 
     def test_padding_example(self):
         p = 2
-        x = np.random.randn(4, 3, 5, 5)
+        x = np.random.randn(1, 1, 2, 2)
         print(x.shape)
         print(list(x.flatten()))
         x_padded = np.pad(x, ((0, 0), (0, 0), (p, p), (p, p)), mode='constant')
