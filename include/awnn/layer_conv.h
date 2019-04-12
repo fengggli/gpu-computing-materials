@@ -87,7 +87,7 @@ void col2im_inner_device(tensor_t cols, tensor_t x_padded,
                          uint N, uint C, uint H, uint W, uint HH, uint WW,
                          uint field_height, uint field_width, uint padding, uint stride);
 
-tensor_t tensor_make_remove_padding_square_device(tensor_t t, uint p, T val);
+tensor_t tensor_make_remove_padding_square_device(tensor_t t, uint p);
 
 tensor_t tensor_make_transpose_1230_device(tensor_t t);
 

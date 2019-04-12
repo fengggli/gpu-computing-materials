@@ -309,17 +309,36 @@ status_t convolution_backward_device(tensor_t dx, tensor_t dw, lcache_t* cache, 
  * inner im2col, I speculate that this operation can be eliminated, I am still going to provide it in
  * the intitial cuda implementation
  */
-static __global__ void _do_tensor_make_remove_padding_square_device(tensor_t d_padded, tensor_t d_src, uint p, T pad_val)
+static __global__ void _do_tensor_make_remove_padding_square_device(tensor_t d_padded, tensor_t d_src, uint p)
 {
   if (threadIdx.x == 0) {
     printf("entered _do_tensor_make_remove_padding_square_device\n", threadIdx.x);
   }
+  uint C, H, W, HH, WW;
+  C = d_src.dim.dims[1];
+  H = d_src.dim.dims[2];
+  W = d_src.dim.dims[3];
+  HH = H - 2 * p;
+  WW = W - 2 * p;
 
+  uint n = capacity(d_padded);
 
+  uint new_img_sz = d_padded.dim.dims[1] * d_padded.dim.dims[2] * d_padded.dim.dims[3];
+  uint channel_sz = d_padded.dim.dims[2] * d_padded.dim.dims[3];
+
+  for (auto iter : grid_stride_range(0u, n)) {
+    uint i = iter / new_img_sz;        // i is the target image
+    uint j = (iter / channel_sz) % C;  // j is the channel in the image
+    uint k = (iter / WW) % HH;         // k is the row in the image
+    uint l = (iter % WW);              // l is the col in the current image
+
+    uint target_idx = i * C * HH * WW + j * HH * WW + k * WW + l;
+    uint src_idx = i * C * H * W + j * H * W + (k + p) * W + (l + p);
+    d_padded.data[target_idx] = d_src.data[src_idx];
+  }
 }
 
-tensor_t tensor_make_remove_padding_square_device(tensor_t t, uint p, T val) {
-
+tensor_t tensor_make_remove_padding_square_device(tensor_t t, uint p) {
   uint padded_shape[] = { t.dim.dims[0], t.dim.dims[1], t.dim.dims[2] - 2 * p, t.dim.dims[3] - 2 * p };
   tensor_t d_out = tensor_make_device(padded_shape, ARRAY_SIZE(padded_shape));
   tensor_t d_src = tensor_make_copy_h2d(t);
@@ -327,7 +346,7 @@ tensor_t tensor_make_remove_padding_square_device(tensor_t t, uint p, T val) {
   dim3 threads(32);
   dim3 blocks(1);
   PINF("device code is called");
-  _do_tensor_make_remove_padding_square_device<<<blocks, threads>>>(d_out, d_src, p, val);
+  _do_tensor_make_remove_padding_square_device<<<blocks, threads>>>(d_out, d_src, p);
 
   tensor_t h_out = tensor_make(padded_shape, ARRAY_SIZE(padded_shape));
   tensor_copy_d2h(h_out, d_out);
