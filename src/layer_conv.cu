@@ -87,10 +87,6 @@ static __global__ void _do_tensor_make_transpose_3012_device(tensor_t d_transpos
   }
 }
 
-
-
-
-
 /*
  * explore different block sizes here
  */
@@ -115,7 +111,6 @@ tensor_t tensor_make_transpose_3012_device(tensor_t t) {
 
   return h_transposed;
 }
-
 
 
 /**
@@ -187,7 +182,6 @@ tensor_t tensor_make_padded_square_input_device(tensor_t t, uint p, T val) {
 }
 
 
-
 static __global__ void _do_im2col_device(tensor_t const x, tensor_t const w, conv_param_t const params) {
   if (threadIdx.x == 0) {
     printf("entered _do_im2col_device\n", threadIdx.x);
@@ -206,8 +200,6 @@ tensor_t im2col_device(tensor_t const x, tensor_t const w, conv_param_t const pa
 
   _do_im2col_device<<<blocks, threads>>>(x, w, params);
 }
-
-
 
 
 /**
@@ -262,8 +254,6 @@ status_t im2col_inner_device(tensor_t cols, tensor_t x_padded, uint N,  uint C, 
 }
 
 
-
-
 /*
  * Note that this is the only one that should likely remain global in the forward path.
  * The rest should become __device__ and should be called by this function
@@ -312,6 +302,42 @@ status_t convolution_backward_device(tensor_t dx, tensor_t dw, lcache_t* cache, 
 }
 
 
+/**
+ * TODO
+ *
+ * This function should just do the padding operation in parallel.  Although below in my notes of the
+ * inner im2col, I speculate that this operation can be eliminated, I am still going to provide it in
+ * the intitial cuda implementation
+ */
+static __global__ void _do_tensor_make_remove_padding_square_device(tensor_t d_padded, tensor_t d_src, uint p, T pad_val)
+{
+  if (threadIdx.x == 0) {
+    printf("entered _do_tensor_make_remove_padding_square_device\n", threadIdx.x);
+  }
+
+
+}
+
+tensor_t tensor_make_remove_padding_square_device(tensor_t t, uint p, T val) {
+
+  uint padded_shape[] = { t.dim.dims[0], t.dim.dims[1], t.dim.dims[2] - 2 * p, t.dim.dims[3] - 2 * p };
+  tensor_t d_out = tensor_make_device(padded_shape, ARRAY_SIZE(padded_shape));
+  tensor_t d_src = tensor_make_copy_h2d(t);
+
+  dim3 threads(32);
+  dim3 blocks(1);
+  PINF("device code is called");
+  _do_tensor_make_remove_padding_square_device<<<blocks, threads>>>(d_out, d_src, p, val);
+
+  tensor_t h_out = tensor_make(padded_shape, ARRAY_SIZE(padded_shape));
+  tensor_copy_d2h(h_out, d_out);
+
+  tensor_destroy_device(&d_out);
+  tensor_destroy_device(&d_src);
+
+  return h_out;
+}
+
 
 static __global__ void _do_col2im_device(tensor_t cols, uint N, uint C, uint H, uint W, uint field_height, uint field_width, uint padding, uint stride)
 {
@@ -329,7 +355,6 @@ tensor_t col2im_device(tensor_t cols, uint N, uint C, uint H, uint W, uint field
 }
 
 
-
 static __global__ void _do_col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride)
 {
   if (threadIdx.x == 0) {
@@ -343,4 +368,34 @@ void col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint 
   dim3 blocks(1);
   PINF("device code is called");
   _do_col2im_inner_device<<<blocks, threads>>>(cols, x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
+}
+
+
+static __global__ void _do_tensor_make_transpose_1230_device(tensor_t d_t, tensor_t d_src)
+{
+  if (threadIdx.x == 0) {
+    printf("entered _do_tensor_make_transpose_1230_device\n", threadIdx.x);
+  }
+}
+
+tensor_t tensor_make_transpose_1230_device(tensor_t t)
+{
+  uint const transposed_shape[] = { t.dim.dims[1], t.dim.dims[2], t.dim.dims[3], t.dim.dims[0] };
+
+  tensor_t d_src = tensor_make_copy_h2d(t);
+  tensor_t d_transposed = tensor_make_copy_h2d(t);
+  tensor_reshape_(&d_transposed, transposed_shape, ARRAY_SIZE(transposed_shape));
+
+  dim3 threads(1024);
+  dim3 blocks(1);
+  PINF("device code is called");
+  _do_tensor_make_transpose_1230_device<<<blocks, threads>>>(d_transposed, d_src);
+
+  tensor_t h_transposed = tensor_make(transposed_shape, ARRAY_SIZE(transposed_shape));
+  tensor_copy_d2h(h_transposed, d_transposed);
+
+  tensor_destroy_device(&d_src);
+  tensor_destroy_device(&d_transposed);
+
+  return h_transposed;
 }
