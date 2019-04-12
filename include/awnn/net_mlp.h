@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-typedef struct {
+typedef struct model {
   uint input_dim;
   uint output_dim;
   uint nr_hidden_layers;
@@ -26,10 +26,10 @@ typedef struct {
   uint max_batch_sz;
   T reg;
 
-  struct list_head list_all_params[1]; // list of all learnable params
-  struct list_head list_layer_out[1]; // list of output of each layer
-  struct list_head list_layer_in[1]; // list of input of each layer
-  struct list_head list_layer_cache[1]; // list of layer cache.
+  struct list_head list_all_params[1];   // list of all learnable params
+  struct list_head list_layer_out[1];    // list of output of each layer
+  struct list_head list_layer_in[1];     // list of input of each layer
+  struct list_head list_layer_cache[1];  // list of layer cache.
 } model_t;
 
 /*
@@ -39,13 +39,11 @@ typedef struct {
  *  1. weight/bias for each hidden layer
  * TODO: allocate space for cache
  */
-status_t mlp_init(model_t *model, // output
-    uint max_batch_sz,
-    uint input_dim, //
-    uint output_dim,
-    uint nr_hidden_layers,
-    uint hidden_dim[],
-    T reg);
+status_t mlp_init(model_t *model,  // output
+                  uint max_batch_sz,
+                  uint input_dim,  //
+                  uint output_dim, uint nr_hidden_layers, uint hidden_dim[],
+                  T reg);
 
 /*
  * @brief Destroy a mlp model
@@ -58,10 +56,11 @@ tensor_t mlp_forward_infer(model_t const *model, tensor_t x);
 /* Compute the scores for a batch or input, update cache*/
 tensor_t mlp_forward(model_t const *model, tensor_t x);
 
-/* Compute loss for a batch of (x,y), do forward/backward, and update gradients*/
-status_t mlp_loss(model_t const *model, tensor_t x, label_t const labels[], T * ptr_loss);
+/* Compute loss for a batch of (x,y), do forward/backward, and update
+ * gradients*/
+status_t mlp_loss(model_t const *model, tensor_t x, label_t const labels[],
+                  T *ptr_loss);
 
 #ifdef __cplusplus
 }
 #endif
-

@@ -106,8 +106,9 @@ TEST_F(NetMLPTest, CifarTest) {
     if (iteration == 0 || iteration == nr_iterations - 1 ||
         cur_batch == iterations_per_epoch - 1) {
       PINF("----------------Epoch %u ---------------", cur_epoch);
-      check_val_accuracy(&loader, val_sz, batch_sz, &model);
-      check_train_accuracy(&loader, val_sz, batch_sz, &model);
+      check_val_accuracy(&loader, val_sz, batch_sz, &model, &mlp_forward_infer);
+      check_train_accuracy(&loader, val_sz, batch_sz, &model,
+                           &mlp_forward_infer);
       PINF("----------------------------------------");
     }
 
