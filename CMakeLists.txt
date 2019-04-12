@@ -20,7 +20,7 @@ endif()
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_SHARED_LINKER_FLAGS "-rdynamic")
 
-set(GCC_COVERAGE_COMPILE_FLAGS "-Wall -Wextra -Wconversion -pedantic")
+set(GCC_COVERAGE_COMPILE_FLAGS "-Wall -Wextra -Wconversion")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 
@@ -73,6 +73,7 @@ add_library(awnn_core
   src/layer_fc.c
   src/layer_relu.c
   src/loss_softmax.c
+  src/net.c
   src/net_mlp.c
   src/layer_sandwich.c
   src/solver.c

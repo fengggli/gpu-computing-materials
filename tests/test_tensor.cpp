@@ -172,7 +172,7 @@ TEST_F(TensorTest, RelError) {
   t2.data[0] += 0.001;
   T err_3 = tensor_rel_error(t1, t2);
 
-  EXPECT_FLOAT_EQ(0.0, err_1);
+  EXPECT_DOUBLE_EQ(0.0, err_1);
   EXPECT_LT(err_1, err_2);
   EXPECT_LT(err_2, err_3);
 

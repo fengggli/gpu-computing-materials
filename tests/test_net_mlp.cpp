@@ -111,12 +111,12 @@ TEST_F(NetMLPTest, Loss) {
   label_t labels[] = {0, 5, 1};
 
   mlp_loss(&model, x, labels, &loss);
-  EXPECT_FLOAT_EQ(loss, 2.994112658);
+  EXPECT_DOUBLE_EQ(loss, 2.994112658);
 
   // test with regulizer
   model.reg = 1.0;
   mlp_loss(&model, x, labels, &loss);
-  EXPECT_FLOAT_EQ(loss, 26.11873099);
+  EXPECT_DOUBLE_EQ(loss, 26.11873099);
   PINF("Forward passed, value checked");
 
   // Check with numerical gradient

@@ -2,6 +2,10 @@
 #include "awnn/solver.h"
 #include "utils/data_cifar.h"
 
+enum{
+  CLS_ID_NULL = 10000
+};
+
 void sgd_update(param_t *p_param, T learning_rate) {
   tensor_t param = p_param->data;
   tensor_t dparam = p_param->diff;
@@ -24,7 +28,7 @@ static uint _get_correct_count(tensor_t const x, label_t const *labels,
 
   uint nr_classes = scores.dim.dims[1];
   for (uint i = 0; i < nr_record; i++) {
-    uint predicted_cls_id = -1;
+    uint predicted_cls_id = CLS_ID_NULL;
     T max_score = -1000;
 
     for (uint j = 0; j < nr_classes; j++) {
@@ -91,7 +95,7 @@ double check_train_accuracy(data_loader_t *loader, uint sample_sz,
 
   for (uint iteration = 0; iteration < nr_iterations; iteration++) {
     // each time choose a random batch
-    uint batch_id = rand() % iterations_per_epoch;
+    uint batch_id = (uint)rand() % iterations_per_epoch;
     // PINF("[---traning accuracy] [%u, %u)", batch_id, batch_id + 1);
     uint nr_record = get_train_batch(loader, &x_train_sampled,
                                      &labels_train_sampled, batch_id, batch_sz);

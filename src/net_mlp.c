@@ -202,7 +202,8 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
   AWNN_CHECK_EQ(S_OK, loss_softmax(out, labels, &loss, mode, dout));
 
   // backprop
-  for (int i = model->nr_hidden_layers; i >= 0; i--) {
+  uint i = model->nr_hidden_layers;
+  do{
     // locate preallocated layer_in gradient
     char in_name[MAX_STR_LENGTH];
     snprintf(in_name, MAX_STR_LENGTH, "fc%u.in", i);
@@ -241,7 +242,10 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
     uint ii;  // for iteration
     tensor_for_each_entry(pelem, ii, tmp) { (*pelem) *= model->reg; }
     tensor_elemwise_op_inplace(dw, tmp, TENSOR_OP_ADD);
-  }
+
+    i--;
+  } while( i!=0);
+
   *ptr_loss = loss;
   ret = S_OK;
   return ret;

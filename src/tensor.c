@@ -19,7 +19,7 @@ dim_t make_dim(int ndims, ...) {
   assert(ndims <= MAX_DIM);
   for (i = 0; i < MAX_DIM; i++) {
     if (i < ndims)
-      dim.dims[i] = va_arg(vl, int);
+      dim.dims[i] = va_arg(vl, uint);
     else
       dim.dims[i] = 0;
   }
@@ -150,7 +150,7 @@ tensor_t _tensor_make(dim_t dim) {
 }
 
 tensor_t tensor_make(uint const shape[], uint const ndims) {
-  int i;
+  uint i;
   dim_t dim;
 
   if (ndims == 0) {
@@ -175,7 +175,7 @@ tensor_t tensor_make_empty_with_dim(dim_t dim) {
   return empty;
 }
 
-tensor_t tensor_make_random(uint const shape[], uint const ndims, int seed) {
+tensor_t tensor_make_random(uint const shape[], uint const ndims, uint seed) {
   tensor_t t = tensor_make(shape, ndims);
   tensor_fill_random(t, seed);
   return t;
@@ -304,10 +304,10 @@ tensor_t tensor_make_padded_square_input(tensor_t t, uint p, float pad_val) {
   uint new_shape[] = {N, C, HH, WW};
   tensor_t n = tensor_make(new_shape, ARRAY_SIZE(new_shape));
 
-  for (int i = 0; i < N; i++)
-    for (int j = 0; j < C; j++)
-      for (int k = 0; k < HH; k++)
-        for (int l = 0; l < WW; l++) {
+  for (uint i = 0; i < N; i++)
+    for (uint j = 0; j < C; j++)
+      for (uint k = 0; k < HH; k++)
+        for (uint l = 0; l < WW; l++) {
           uint target_idx = i * C * HH * WW + j * HH * WW + k * WW + l;
           if (k < p) {
             n.data[target_idx] = pad_val;
@@ -338,10 +338,10 @@ tensor_t tensor_make_remove_padding_square(tensor_t t, uint p) {
   uint new_shape[] = {N, C, HH, WW};
   tensor_t n = tensor_make(new_shape, ARRAY_SIZE(new_shape));
 
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < C; ++j) {
-      for (int k = 0; k < HH; ++k) {
-        for (int l = 0; l < WW; ++l) {
+  for (uint i = 0; i < N; ++i) {
+    for (uint j = 0; j < C; ++j) {
+      for (uint k = 0; k < HH; ++k) {
+        for (uint l = 0; l < WW; ++l) {
           uint target_idx = i * C * HH * WW + j * HH * WW + k * WW + l;
           uint src_idx = i * C * H * W + j * H * W + (k + p) * W + (l + p);
           n.data[target_idx] = t.data[src_idx];
@@ -367,7 +367,7 @@ T* tensor_get_elem_ptr(tensor_t const t, dim_t const loc) {
   return t.data + offset;
 }
 
-static void _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity) {
+static void _dump(T* data, dim_t dim, uint cur_dim_id, uint cur_capacity) {
   uint i;
   for (i = 0; i < dim.dims[cur_dim_id]; i++) {
     if (cur_dim_id + 1 == dim_get_ndims(dim)) {  // this is the vector

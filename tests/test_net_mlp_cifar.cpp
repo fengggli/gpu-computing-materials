@@ -99,7 +99,6 @@ TEST_F(NetMLPTest, CifarTest) {
     }
 
 #endif
-
     PINF("Loss %.2f", loss);
 
     // output the first/laster iteration, also in the end of each epoch

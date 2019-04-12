@@ -43,11 +43,6 @@ protected:
   // Objects declared here can be used by all tests.
 };
 
-TEST_F(LostSoftmaxTest, Loss) {
-  uint nr_images = 3073;
-  uint nr_classes = 10;
-}
-
 TEST_F(LostSoftmaxTest, OneImg) {
 
   uint nr_classes = 3;
@@ -114,6 +109,7 @@ TEST_F(LostSoftmaxTest, MultiImg) {
 
   tensor_t dx = tensor_make_alike(x); // this is not actually required for inference
   ret = loss_softmax(x, real_labels, &loss, MODE_TRAIN, dx);
+  EXPECT_EQ(ret, S_OK);
 
   auto func_softmax = [real_labels, dx](tensor_t const input, tensor_t output) {
     T ref_loss;

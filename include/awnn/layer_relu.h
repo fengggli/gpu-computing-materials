@@ -5,6 +5,8 @@
  * e-mail: fengggli@yahoo.com
  */
 #pragma once
+
+#include "awnn/tensor.h"
 #include "awnn/layer.h"
 
 #ifdef __cplusplus

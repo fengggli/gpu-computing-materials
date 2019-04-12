@@ -7,11 +7,13 @@
 
 #pragma once
 
+#include "awnn/tensor.h"
 #include "awnn/layer.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 /*
  * @brief Fully connected layer implementation
  *
