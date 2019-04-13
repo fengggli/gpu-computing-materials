@@ -391,6 +391,57 @@ TEST_F(LayerConvTest, im2col_inner_1)
   EXPECT_LT(tensor_rel_error(ref, cols), 1e-7);
 }
 
+TEST_F(LayerConvTest, im2col_inner_2_from_picture)
+{
+  uint C = 2, H = 3, HH = 2, N = 1, W = 3, WW = 2, filter_height = 2, filter_width = 2, padding = 0, stride = 1;
+
+  uint cols_shape[] = { 8, 4 };
+  tensor_t cols = tensor_make_scalar(cols_shape, dim_of_shape(cols_shape), 0);
+
+  uint x_pad_shape[] = { 1, 2, 3, 3 };
+  T x_pad_vals[] = { 1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2 };
+  tensor_t x_padded = tensor_make(x_pad_shape, dim_of_shape(x_pad_shape));
+  tensor_fill_list(x_padded, x_pad_vals, array_size(x_pad_vals));
+
+  uint ref_shape[] = { 8, 4 };
+  T ref_vals[] = { 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 2, 3, 1, 0, 3, 2, 0, 1, 1, 0, 2, 1, 0, 1, 1, 2 };
+  tensor_t ref = tensor_make(ref_shape, dim_of_shape(ref_shape));
+  tensor_fill_list(ref, ref_vals, array_size(ref_vals));
+
+  /////////////////////////////////////////////////////////////////
+  im2col_inner(cols, x_padded, N, C, H, W, HH, WW,
+      filter_height, filter_width, padding, stride);
+  ////////////////////////////////////////////////////////////////
+
+  EXPECT_LT(tensor_rel_error(ref, cols), 1e-7);
+}
+
+
+TEST_F(LayerConvTest, im2col_inner_3)
+{
+  uint C = 2, H = 3, HH = 2, N = 1, W = 3, WW = 2, filter_height = 2, filter_width = 2, padding = 0, stride = 1;
+
+  uint cols_shape[] = { 8, 4 };
+  tensor_t cols = tensor_make_scalar(cols_shape, dim_of_shape(cols_shape), 0);
+
+  uint x_pad_shape[] = { 1, 2, 3, 3 };
+  T x_pad_vals[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+  tensor_t x_padded = tensor_make(x_pad_shape, dim_of_shape(x_pad_shape));
+  tensor_fill_list(x_padded, x_pad_vals, array_size(x_pad_vals));
+
+  uint ref_shape[] = { 8, 4 };
+  T ref_vals[] = { 1, 2, 4, 5, 2, 3, 5, 6, 4, 5, 7, 8, 5, 6, 8, 9, 10, 11, 13, 14, 11, 12, 14, 15, 13, 14, 16, 17, 14, 15, 17, 18 };
+  tensor_t ref = tensor_make(ref_shape, dim_of_shape(ref_shape));
+  tensor_fill_list(ref, ref_vals, array_size(ref_vals));
+
+  /////////////////////////////////////////////////////////////////
+  im2col_inner(cols, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, padding, stride);
+  ////////////////////////////////////////////////////////////////
+
+  EXPECT_LT(tensor_rel_error(ref, cols), 1e-7);
+}
+
+
 TEST_F(LayerConvTest, im2col_dot_operation) {
   conv_param_t conv_params = {1, 0};
 

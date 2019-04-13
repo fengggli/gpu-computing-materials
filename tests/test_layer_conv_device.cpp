@@ -1048,7 +1048,7 @@ namespace {
     PINF("Consistent with expected results");
   }
   
-  TEST_F(LayerConvTest, im2col_inner_2)
+  TEST_F(LayerConvTestDevice, im2col_inner_2)
   {
     uint C = 3, H = 4, HH = 2, N = 2, W = 4, WW = 2, filter_height = 4, filter_width = 4, padding = 1, stride = 2;
   

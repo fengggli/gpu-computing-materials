@@ -146,6 +146,8 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
   uint new_img_sz = x_padded.dim.dims[1] * x_padded.dim.dims[2] * x_padded.dim.dims[3];
   uint channel_sz = x_padded.dim.dims[2] * x_padded.dim.dims[3];
 
+  uint filter_size = filter_height * filter_width;
+
 
   uint iter = 0;
   for (uint i = 0; i < N; i++){
@@ -158,13 +160,22 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
           uint kk = (iter / WW) % HH;   // kk is the row in the image
           uint ll = (iter % WW);  // ll is the col in the current image
 
-          for (uint ii = 0; ii < filter_height; ii++) {  // for each row of filter
-            for (uint jj = 0; jj < filter_width; jj++) {  // for each col of filter
-              uint row = c * filter_width * filter_height + ii * filter_height + jj;
+          uint target_row = iter / filter_size;
+          uint target_col = iter % filter_size;
+          uint target_idx = target_row * filter_size + target_col;
+
+          uint src_row;
+          uint src_col;
+          uint src_idx;
+
+          for (uint f_row = 0; f_row < filter_height; f_row++) {  // for each row of filter
+            for (uint f_col = 0; f_col < filter_width; f_col++) {  // for each col of filter
+              uint row = c * filter_width * filter_height + f_row * filter_height + f_col;
               uint col = yy * WW * N + xx * N + i;
               uint target_idx = row * cols_d_1 + col;
-              uint src_idx = (i * img_sz) + (c * chan_sz) + (stride * yy + ii) * row_sz + stride * xx + jj;
+              uint src_idx = (i * img_sz) + (c * chan_sz) + (stride * yy + f_row) * row_sz + stride * xx + f_col;
               cols.data[target_idx] = x_padded.data[src_idx];
+              printf("target_idx=%u, src_idx=%u, val=%f, row=%u, col=%u\n", target_idx, src_idx, cols.data[target_idx], row, col);
             }
           }
           ++iter;
