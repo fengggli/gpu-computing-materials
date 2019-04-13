@@ -374,19 +374,49 @@ tensor_t col2im_device(tensor_t cols, uint N, uint C, uint H, uint W, uint field
 }
 
 
-static __global__ void _do_col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride)
+/*
+ * This function can be optimized with shared memory but first thing is
+ * getting it to work.
+ */
+static __global__ void _do_col2im_inner_device(tensor_t d_cols, tensor_t d_x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride)
 {
   if (threadIdx.x == 0) {
     printf("entered _do_col2im_inner_device\n");
   }
+
+  uint img_sz = C * d_x_padded.dim.dims[2] * d_x_padded.dim.dims[3];
+  uint chan_sz = d_x_padded.dim.dims[2] * d_x_padded.dim.dims[3];
+  uint row_sz = d_x_padded.dim.dims[2];
+
+//  for (uint c = 0; c < C; c++) // for each channel
+//    for (uint yy = 0; yy < HH; yy++) // stride over rows
+//      for (uint xx = 0; xx < WW; xx++) // stride over cols
+//        for (uint ii = 0; ii < filter_height; ii++) // for each row of filter
+//          for (uint jj = 0; jj < filter_width; jj++){ // for each col of filter
+//            uint row = c * filter_width * filter_height + ii * filter_height + jj;
+//            for (uint i = 0; i < N; i++){
+//              uint col = yy * WW * N + xx * N + i;
+//              uint target_idx = row * d_cols.dim.dims[1] + col;
+//              uint src_idx = (i * img_sz) + (c * chan_sz) + (stride * yy + ii) * row_sz + stride * xx + jj;
+//              d_cols.data[target_idx] = d_x_padded.data[src_idx];
+//            }
+//          }
 }
 
 void col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride) {
+  tensor_t d_cols       = tensor_make_copy_h2d(cols);
+  tensor_t d_x_padded   = tensor_make_copy_h2d(x_padded);
+
   // TODO: make it handler lager size
   dim3 threads(32);
   dim3 blocks(1);
   PINF("device code is called");
-  _do_col2im_inner_device<<<blocks, threads>>>(cols, x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
+  _do_col2im_inner_device<<<blocks, threads>>>(d_cols, d_x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
+
+  tensor_copy_d2h(cols, d_cols);
+
+  tensor_destroy_device(&d_cols);
+  tensor_destroy_device(&d_x_padded);
 }
 
 
@@ -394,6 +424,21 @@ static __global__ void _do_tensor_make_transpose_1230_device(tensor_t d_t, tenso
 {
   if (threadIdx.x == 0) {
     printf("entered _do_tensor_make_transpose_1230_device\n", threadIdx.x);
+  }
+
+  uint src_idx = 0, target_idx = 0;
+  uint original_dim_0 = d_src.dim.dims[0];
+  uint og_dim_1 = d_src.dim.dims[1];
+  uint og_dim_2 = d_src.dim.dims[2];
+  uint og_dim_3 = d_src.dim.dims[3];
+
+  uint n = capacity(d_src);
+  uint group_size = og_dim_1 * og_dim_2 * og_dim_3;
+  uint stride = d_src.dim.dims[0];
+
+  for (auto i : grid_stride_range(0u, n)) {
+    target_idx = i / group_size + (i % group_size) * stride;
+    d_t.data[target_idx] = d_src.data[i];
   }
 }
 

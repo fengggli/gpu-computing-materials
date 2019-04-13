@@ -104,21 +104,6 @@ tensor_t im2col(tensor_t const x, tensor_t const w, conv_param_t const params) {
  * kernel due to an extra pair of copies into shmem and back to global, but this could be a point
  * of optimization... if there is a big overlap, the reuse of elements could make shared mem
  * usage worth while.
- *
- *
- * @param cols
- * @param x_padded
- * @param N
- * @param C
- * @param H
- * @param W
- * @param HH
- * @param WW
- * @param filter_height
- * @param filter_width
- * @param padding
- * @param stride
- * @return
  */
 // note that this strides along columns of the target "cols" tensor
 // possibly could be re-written to take advantage of
