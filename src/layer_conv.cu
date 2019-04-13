@@ -223,7 +223,9 @@ tensor_t im2col_device(tensor_t const x, tensor_t const w, conv_param_t const pa
  */
 static __global__ void _do_im2col_inner_device(tensor_t cols, tensor_t x_padded, uint N,  uint C,  uint H,  uint W,  uint HH, uint WW, uint filter_height, uint filter_width, uint padding, uint stride)
 {
-  printf("%d\n", threadIdx.x);
+  if (threadIdx.x == 0) {
+    printf("entered _do_im2col_inner_device\n", threadIdx.x);
+  }
 }
 
 /**
@@ -392,6 +394,7 @@ static __global__ void _do_col2im_inner_device(tensor_t d_cols, tensor_t d_x_pad
 //    for (uint yy = 0; yy < HH; yy++) // stride over rows
 //      for (uint xx = 0; xx < WW; xx++) // stride over cols
 //        for (uint ii = 0; ii < filter_height; ii++) // for each row of filter
+
 //          for (uint jj = 0; jj < filter_width; jj++){ // for each col of filter
 //            uint row = c * filter_width * filter_height + ii * filter_height + jj;
 //            for (uint i = 0; i < N; i++){
@@ -406,6 +409,8 @@ static __global__ void _do_col2im_inner_device(tensor_t d_cols, tensor_t d_x_pad
 void col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride) {
   tensor_t d_cols       = tensor_make_copy_h2d(cols);
   tensor_t d_x_padded   = tensor_make_copy_h2d(x_padded);
+
+  assert(padding * padding == cols.dim.dims[1]);
 
   // TODO: make it handler lager size
   dim3 threads(32);

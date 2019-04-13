@@ -1026,7 +1026,8 @@ namespace {
   }
 
   TEST_F(LayerConvTestDevice, im2col_inner_device_1) {
-    uint C = 2, H = 3, HH = 2, N = 1, W = 3, WW = 2, filter_height = 2, filter_width = 2, padding = 0, stride = 1;
+    uint C = 2, H = 3, HH = 2, N = 1, W = 3, WW = 2, 
+      filter_height = 2, filter_width = 2, padding = 0, stride = 1;
 
     uint shape_cols[] = { 8, 4 };
     uint shape_x_padded[] = { 1, 2, 3, 3 };
@@ -1054,7 +1055,7 @@ namespace {
     uint img_sz = 4;
     uint nr_in_channel = 3;
     uint fil_sz = 4;
-    uint nr_filter =3;
+    uint nr_filter = 3;
     uint sz_out = 1 + (img_sz + 2 * conv_params.padding - fil_sz) / conv_params.stride;
 
     uint const shape_x[] = { num_img, nr_in_channel, img_sz, img_sz }; // 2x3x4x4
@@ -1084,8 +1085,6 @@ namespace {
   TEST_F(LayerConvTestDevice, convolution_forward_device) {
     ASSERT_FALSE(1);
   }
-
-
 
   /*
    * why is this passing?

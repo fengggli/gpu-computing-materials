@@ -216,7 +216,7 @@ status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache, conv_pa
   return x_padded[:, :, padding:-padding, padding:-padding]
   return x_padded
  */
-tensor_t col2im(tensor_t cols, uint N, uint C, uint H, uint W, uint field_height, uint field_width, uint padding, uint stride)
+tensor_t col2im(tensor_t dx_cols, uint N, uint C, uint H, uint W, uint field_height, uint field_width, uint padding, uint stride)
 {
   uint HH = (H + 2 * padding - field_height) / stride + 1;
   uint WW = (W + 2 * padding - field_width) / stride + 1;
@@ -224,7 +224,7 @@ tensor_t col2im(tensor_t cols, uint N, uint C, uint H, uint W, uint field_height
   uint x_padded_shape[] = { N, C, H + 2 * padding, W + 2 * padding };
   tensor_t x_padded = tensor_make_scalar(x_padded_shape, ARRAY_SIZE(x_padded_shape), 0);                                    // new mem created by returned
 
-  col2im_inner(cols, x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
+  col2im_inner(dx_cols, x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
   if (padding) {
     tensor_t padding_removed = tensor_make_remove_padding_square(x_padded, padding);
     tensor_destroy(&x_padded);
@@ -245,9 +245,15 @@ tensor_t col2im(tensor_t cols, uint N, uint C, uint H, uint W, uint field_height
                             col = yy * WW * N + xx * N + i
                             x_padded[i, c, stride * yy + ii, stride * xx + jj] += cols[row, col]
  */
-void col2im_inner(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW,
+void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW,
                   uint field_height, uint field_width, uint padding, uint stride)
 {
+  uint dx_col_d_1 = dx_cols.dim.dims[1];
+  uint x_p_d_1 = x_padded.dim.dims[1];
+  uint x_p_d_2 = x_padded.dim.dims[2];
+  uint x_p_d_3 = x_padded.dim.dims[3];
+
+
   for (int c = 0; c < C; ++c) {
     for (int ii = 0; ii < field_height; ++ii) {
       for (int jj = 0; jj < field_width; ++jj) {
@@ -256,13 +262,13 @@ void col2im_inner(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint
           for (int xx = 0; xx < WW; ++xx) {
             for (int i = 0; i < N; ++i) {
               uint col = yy * WW * N + xx * N + i;
-              uint src_idx = row * cols.dim.dims[1] + col;
+              uint src_idx = row * dx_col_d_1 + col;
               uint target_idx =
-                  i * x_padded.dim.dims[1] * x_padded.dim.dims[2] * x_padded.dim.dims[3]
-                  + c * x_padded.dim.dims[2] * x_padded.dim.dims[3]
-                  + (stride * yy + ii) * x_padded.dim.dims[3]
+                  i * x_p_d_1 * x_p_d_2 * x_p_d_3
+                  + c * x_p_d_2 * x_p_d_3
+                  + (stride * yy + ii) * x_p_d_3
                   + stride * xx + jj;
-              x_padded.data[target_idx] += cols.data[src_idx];
+              x_padded.data[target_idx] += dx_cols.data[src_idx];
             }
           }
         }
