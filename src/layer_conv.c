@@ -149,7 +149,8 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
   uint filter_size = filter_height * filter_width;
 
   uint filters_per_channel = HH * WW;
-  uint filters_per_image = N * C * filters_per_channel;
+  uint filters_per_image = C * filters_per_channel;
+  uint total_filters = N * filters_per_image;
 
 
   uint iter = 0;
@@ -159,7 +160,7 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
         for (uint k = 0; k < WW; k++) {  // total strides needed over cols
 
           uint nn = iter / filters_per_image;  // ii is the target image
-          uint cc = iter / filters_per_channel;  // jj is the channel in the image
+          uint cc = (iter / filters_per_channel) % C;  // jj is the channel in the image
           uint jj = (iter / WW) % HH;
           uint kk = (iter % WW);
 
@@ -172,16 +173,16 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
             for (uint f_col = 0; f_col < filter_width; ++f_col) {  // for each col of filter
 
 
-              uint t_row = iter / filter_size;
-              uint t_col = iter % filter_size;
-              uint t_idx = t_row * filter_size + t_col;
+//              uint t_row = iter / filter_size;
+//              uint t_col = iter % filter_size;
+//              uint t_idx = t_row * filter_size + t_col;
 
               uint row = c * filter_width * filter_height + f_row * filter_height + f_col;
               uint col = j * WW * N + k * N + n;
               uint target_idx = row * cols_d_1 + col;
               uint src_idx = (n * img_sz) + (c * chan_sz) + (stride * j + f_row) * row_sz + stride * k + f_col;
               cols.data[target_idx] = x_padded.data[src_idx];
-              printf("t_row=%u, t_col=%u, t_idx=%u, target_idx=%u, src_idx=%u, val=%f, row=%u, col=%u\n", t_row, t_col, t_idx, target_idx, src_idx, cols.data[target_idx], row, col);
+//              printf("t_row=%u, t_col=%u, t_idx=%u, target_idx=%u, src_idx=%u, val=%f, row=%u, col=%u\n", t_row, t_col, t_idx, target_idx, src_idx, cols.data[target_idx], row, col);
             }
           }
           ++iter;

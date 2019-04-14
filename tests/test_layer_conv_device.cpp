@@ -1048,7 +1048,7 @@ namespace {
     PINF("Consistent with expected results");
   }
   
-  TEST_F(LayerConvTestDevice, im2col_inner_2)
+  TEST_F(LayerConvTestDevice, im2col_inner_device_2)
   {
     uint C = 3, H = 4, HH = 2, N = 2, W = 4, WW = 2, filter_height = 4, filter_width = 4, padding = 1, stride = 2;
   
@@ -1094,7 +1094,10 @@ namespace {
     lcache_t cache;
     make_empty_lcache(&cache);
 
+    /////////////////////////////////////////////////////////////////
     tensor_t ret = im2col_device(x, w, conv_params);// forward function should allocate and populate cache;
+    /////////////////////////////////////////////////////////////////
+
     uint const shape_ref[] = { 384 };
     tensor_reshape_(&ret, shape_ref, dim_of_shape(shape_ref));
 
@@ -1149,7 +1152,9 @@ namespace {
     tensor_t dx = tensor_make_alike(x);
     tensor_t dw = tensor_make_alike(w);
 
+    /////////////////////////////////////////////////////////////////
     ret = convolution_backward_device(dx, dw, &cache, params, dy); // backward needs to call free_lcache(cache);
+    /////////////////////////////////////////////////////////////////
     EXPECT_EQ(ret, S_OK);
 
     /* II. Numerical check */
