@@ -186,6 +186,49 @@ static __global__ void _do_im2col_device(tensor_t const x, tensor_t const w, con
   if (threadIdx.x == 0) {
     printf("entered _do_im2col_device\n", threadIdx.x);
   }
+  uint cols_d_1 = cols.dim.dims[1];
+  uint img_sz = C * x_padded.dim.dims[2] * x_padded.dim.dims[3];
+  uint chan_sz = x_padded.dim.dims[2] * x_padded.dim.dims[3];
+  uint row_sz = x_padded.dim.dims[2];
+
+  uint new_img_sz = x_padded.dim.dims[0] * x_padded.dim.dims[1] * x_padded.dim.dims[2] * x_padded.dim.dims[3];
+  uint channel_sz = x_padded.dim.dims[2] * x_padded.dim.dims[3];
+
+  uint filter_size = filter_height * filter_width;
+
+  uint filters_per_channel = HH * WW;
+  uint filters_per_image = C * filters_per_channel;
+  uint total_filters = N * filters_per_image;
+
+  uint iter = 0;
+  for (auto iter : grid_stride_range(0u, total_filters)) {
+
+          uint n = iter / filters_per_image;  // ii is the target image
+          uint c = iter / filters_per_channel;  // jj is the channel in the image
+          uint j = (iter / WW) % HH;
+          uint k = (iter % WW);
+
+          for (uint f_row = 0; f_row < filter_height; ++f_row) {  // for each row of filter (relative row)
+            for (uint f_col = 0; f_col < filter_width; ++f_col) {  // for each col of filter
+
+
+              uint t_row = iter / filter_size;
+              uint t_col = iter % filter_size;
+              uint t_idx = t_row * filter_size + t_col;
+
+              uint row = c * filter_width * filter_height + f_row * filter_height + f_col;
+              uint col = j * WW * N + k * N + n;
+              uint target_idx = row * cols_d_1 + col;
+              uint src_idx = (n * img_sz) + (c * chan_sz) + (stride * j + f_row) * row_sz + stride * k + f_col;
+              cols.data[target_idx] = x_padded.data[src_idx];
+              printf("t_row=%u, t_col=%u, t_idx=%u, target_idx=%u, src_idx=%u, val=%f, row=%u, col=%u\n", t_row, t_col, t_idx, target_idx, src_idx, cols.data[target_idx], row, col);
+            }
+          }
+          ++iter;
+        }
+      }
+    }
+  }
 }
 
 /*
