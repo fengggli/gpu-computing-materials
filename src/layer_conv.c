@@ -168,23 +168,31 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
           assert(jj == j);
           assert(kk == k);
 
+          uint t_row = iter / filter_size;
+          uint t_col = iter % filter_size;
+          uint t_idx = t_row * filter_size + t_col; // t_idx target index
+
+          // HH, WW : filter_per_row how many sliding windows you can have in each direction (2x2)
+
           for (uint f_row = 0; f_row < filter_height; ++f_row) {  // for each row of filter (relative row)
             for (uint f_col = 0; f_col < filter_width; ++f_col) {  // for each col of filter
 
-
-              uint t_row = iter / filter_size;
-              uint t_col = iter % filter_size;
-              uint t_idx = t_row * filter_size + t_col;
+              // locate the window
+              uint window_index_linear = t_idx / filter_size;
+              uint window_index_r  = window_index_linear / HH;
+              uint windows_index_c = window_index_linear % WW;
+              // index of the first elem
+              uint first_elem = (window_index_r) * stride * H + windows_index_c * stride;
 
               uint row = c * filter_width * filter_height + f_row * filter_height + f_col;
               uint col = j * WW * N + k * N + n;
               uint target_idx = row * cols_d_1 + col;
               uint src_idx = (n * img_sz) + (c * chan_sz) + (stride * j + f_row) * row_sz + stride * k + f_col;
               cols.data[target_idx] = x_padded.data[src_idx];
-              printf("t_row=%u, t_col=%u, t_idx=%u, target_idx=%u, src_idx=%u, val=%f, row=%u, col=%u\n", t_row, t_col, t_idx, target_idx, src_idx, cols.data[target_idx], row, col);
+              printf("window_index_r=%u, windows_index_c=%u, window_idx_linear=%u, first_elem=%u, t_row=%u, t_col=%u, t_idx=%u, target_idx=%u, src_idx=%u, val=%f, row=%u, col=%u\n", window_index_r, windows_index_c, window_index_linear, first_elem, t_row, t_col, t_idx, target_idx, src_idx, cols.data[target_idx], row, col);
+              ++iter;
             }
           }
-          ++iter;
         }
       }
     }
@@ -314,6 +322,9 @@ void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, u
   uint x_p_d_2 = x_padded.dim.dims[2];
   uint x_p_d_3 = x_padded.dim.dims[3];
 
+  printf("N=%u, C=%u, HH=%u, WW=%u, field_height=%u, field_width=%u, stride=%u, dx_cols_d1=%u, x_p_d1=%u, x_p_d2=%u, x_p_d3=%u",
+      N, C, HH, WW, field_height, field_width, stride, dx_col_d_1, x_p_d_1, x_p_d_2, x_p_d_3);
+
 
   for (int c = 0; c < C; ++c) {
     for (int ii = 0; ii < field_height; ++ii) {
@@ -329,6 +340,8 @@ void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, u
                   + c * x_p_d_2 * x_p_d_3
                   + (stride * yy + ii) * x_p_d_3
                   + stride * xx + jj;
+
+              printf("src_idx=%u, target_idx=%u\n", src_idx, target_idx);
               x_padded.data[target_idx] += dx_cols.data[src_idx];
             }
           }
