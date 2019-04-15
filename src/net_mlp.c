@@ -134,7 +134,7 @@ tensor_t mlp_forward_infer(model_t const *model, tensor_t x) {
 
     if (i != model->nr_hidden_layers) {  // last layer doesn't have relu
       AWNN_CHECK_EQ(S_OK,
-                    layer_fc_relu_forward(layer_input, w, b, cache, layer_out));
+                    fc_relu_forward(layer_input, w, b, cache, layer_out));
     } else {
       AWNN_CHECK_EQ(S_OK,
                     layer_fc_forward(layer_input, w, b, cache, layer_out));
@@ -168,7 +168,7 @@ tensor_t mlp_forward(model_t const *model, tensor_t x) {
 
     if (i != model->nr_hidden_layers) {  // last layer doesn't have relu
       AWNN_CHECK_EQ(S_OK,
-                    layer_fc_relu_forward(layer_input, w, b, cache, layer_out));
+                    fc_relu_forward(layer_input, w, b, cache, layer_out));
     } else {
       AWNN_CHECK_EQ(S_OK,
                     layer_fc_forward(layer_input, w, b, cache, layer_out));
@@ -231,7 +231,7 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
 
     // TODO: need to track y and cache;
     if (i != model->nr_hidden_layers) {
-      AWNN_CHECK_EQ(S_OK, layer_fc_relu_backward(din, dw, db, cache, dout));
+      AWNN_CHECK_EQ(S_OK, fc_relu_backward(din, dw, db, cache, dout));
     } else {
       AWNN_CHECK_EQ(S_OK, layer_fc_backward(din, dw, db, cache, dout));
     }

@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-typedef struct{
+typedef struct conv_param{
   uint stride;
   uint padding;
 } conv_param_t;
