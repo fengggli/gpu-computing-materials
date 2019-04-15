@@ -149,7 +149,8 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
   uint filter_size = filter_height * filter_width;
 
   uint filters_per_channel = HH * WW;
-  uint filters_per_image = N * C * filters_per_channel;
+  uint filters_per_image = C * filters_per_channel;
+  uint total_filters = N * filters_per_image;
 
 
   uint iter = 0;
@@ -158,24 +159,22 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
       for (uint j = 0; j < HH; j++) {  // total strides needed over rows
         for (uint k = 0; k < WW; k++) {  // total strides needed over cols
 
-          uint nn = iter / filters_per_image;  // ii is the target image
-          uint cc = iter / filters_per_channel;  // jj is the channel in the image
-          uint jj = (iter / WW) % HH;
-          uint kk = (iter % WW);
-
-          assert(nn == n);
-          assert(cc == c);
-          assert(jj == j);
-          assert(kk == k);
-
-          uint t_row = iter / filter_size;
-          uint t_col = iter % filter_size;
-          uint t_idx = t_row * filter_size + t_col; // t_idx target index
-
-          // HH, WW : filter_per_row how many sliding windows you can have in each direction (2x2)
-
           for (uint f_row = 0; f_row < filter_height; ++f_row) {  // for each row of filter (relative row)
             for (uint f_col = 0; f_col < filter_width; ++f_col) {  // for each col of filter
+
+              uint nn = iter / filters_per_image;  // ii is the target image
+              uint cc = (iter / filters_per_channel) % C;  // jj is the channel in the image
+              uint jj = (iter / WW) % HH;
+              uint kk = (iter % WW);
+
+              assert(nn == n);
+              assert(cc == c);
+              assert(jj == j);
+              assert(kk == k);
+
+              uint t_row = iter / filter_size;
+              uint t_col = iter % filter_size;
+              uint t_idx = t_row * filter_size + t_col; // t_idx target index
 
               // locate the window
               uint window_index_linear = t_idx / filter_size;
@@ -193,6 +192,7 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
               ++iter;
             }
           }
+
         }
       }
     }
