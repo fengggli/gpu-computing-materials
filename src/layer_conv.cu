@@ -221,7 +221,9 @@ tensor_t im2col_device(tensor_t const x, tensor_t const w, conv_param_t const pa
  * If two loops are created (one for core elements, and one for padding elements)
  * a conditional could be avoided.
  */
-static __global__ void _do_im2col_inner_device(tensor_t cols, tensor_t x_padded, uint N,  uint C,  uint H,  uint W,  uint HH, uint WW, uint filter_height, uint filter_width, uint padding, uint stride)
+static __global__ void _do_im2col_inner_device_naive_thread_per_filter(
+    tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH,
+    uint WW, uint filter_height, uint filter_width, uint padding, uint stride)
 {
   if (threadIdx.x == 0) {
     printf("entered _do_im2col_inner_device\n", threadIdx.x);
