@@ -49,7 +49,7 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
     tensor_t din;
     if (i == 0) {
       uint in_shape[] = {max_batch_sz, fan_in};
-      in = tensor_make_placeholder();
+      in = tensor_make_placeholder(in_shape, 2);
       din = tensor_make(in_shape, 2);
     } else {
       in = out_prev;

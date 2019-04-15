@@ -46,3 +46,7 @@ status_t weight_init_fc(tensor_t weight, tensor_t bias, T weight_scale) {
   tensor_fill_scalar(bias, 0.0);
   return S_OK;
 }
+
+status_t weight_init_kaiming(tensor_t weight) {
+  return S_OK;
+}

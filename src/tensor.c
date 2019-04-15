@@ -149,6 +149,27 @@ tensor_t _tensor_make(dim_t dim) {
   return t;
 }
 
+tensor_t tensor_make_placeholder(uint const shape[], uint const ndims){
+  uint i;
+  dim_t dim;
+
+  if (ndims == 0) {
+    PINF("make zero");
+    dim = make_dim(0, 0);
+  }
+
+  for (i = 0; i < MAX_DIM; i++) {
+    if (i < ndims)
+      dim.dims[i] = shape[i];
+    else
+      dim.dims[i] = 0;
+  }
+  tensor_t ret;
+  ret.dim = dim;
+  ret.mem_type = EMPTY_MEM;
+  return ret;
+}
+
 tensor_t tensor_make(uint const shape[], uint const ndims) {
   uint i;
   dim_t dim;
