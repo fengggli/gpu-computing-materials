@@ -14,22 +14,22 @@
 #include "awnn/tensor.h"
 #include "utils/list.h"
 
+#define MAX_STAGES (5)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-static const uint MAX_STAGES = 5;
 
 typedef enum {
   NORMALIZE_NONE = 0,
   NORMALIZE_BATCH = 1,
 } normalize_method_t;
 
-typedef struct {
-  uint input_dim;
+typedef struct model {
+  dim_t input_dim;
   uint output_dim;
-  uint nr_hidden_layers;
-  uint hidden_dims[MAX_DIM];
-  uint max_batch_sz;
+  uint nr_stages;
+  uint nr_blocks[MAX_STAGES];
   T reg;
 
   struct list_head list_all_params[1];   // list of all learnable params
@@ -40,9 +40,8 @@ typedef struct {
 
 status_t resnet_init(
     model_t *model,  // output
-    uint max_batch_sz,
-    uint input_dim[3],  // C,H,W
-    uint output_dim,    // nr_classes
+    dim_t input_dim,
+    uint output_dim,  // nr_classes
     uint nr_stages,
     uint nr_blocks[MAX_STAGES],  // how many residual blocks in each stage
     T reg, normalize_method_t normalize_method);

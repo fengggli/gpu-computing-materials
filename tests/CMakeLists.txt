@@ -62,6 +62,11 @@ add_executable(test-layer-sandwich test_layer_sandwich.cpp)
 target_link_libraries(test-layer-sandwich ${AWNN_LIBS}  gtest)
 add_test(test-layer-sandwich test-layer-sandwich)
 
+add_executable(test-net-resnet test_net_resnet.cpp)
+target_link_libraries(test-net-resnet ${AWNN_LIBS}  gtest)
+add_test(test-net-resnet test-net-resnet)
+
+
 
 #add_executable(test-loss-softmax-simple test_loss_softmax_simple.cpp)
 #target_link_libraries(test-loss-softmax-simple ${AWNN_LIBS}  gtest)

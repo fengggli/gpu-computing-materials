@@ -84,8 +84,8 @@ add_library(awnn_core
   src/net.c
   src/net_mlp.c
   src/layer_sandwich.c
-  src/solver.c)
-  #src/net_resnet.c)
+  src/solver.c
+  src/net_resnet.c)
 
 target_include_directories(awnn_core PUBLIC include)
 target_link_libraries(awnn_core PUBLIC ${AWNN_DEP_LIBS})
