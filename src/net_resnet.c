@@ -1,7 +1,11 @@
 /*
  * Resnet
  */
+#include "awnn/layer_pool.h"
+#include "awnn/layer_sandwich.h"
 #include "awnn/net_resnet.h"
+
+static conv_param_t conv_param;
 
 status_t resnet_init(
     model_t *model,   // output
@@ -23,6 +27,9 @@ status_t resnet_init(
       model->nr_blocks[i] = 0;
   }
 
+  conv_param.stride = 1;
+  conv_param.padding = 1;
+
   // init all list structure
   init_list_head(model->list_all_params);
   init_list_head(model->list_layer_out);
@@ -40,6 +47,8 @@ status_t resnet_init(
   uint C = input_dim.dims[1];  // 3.
   uint H = input_dim.dims[2];
 
+  uint filter_sz = 3;
+  uint nr_filter = 16;
   /*
    * I.  preparation
    */
@@ -50,7 +59,7 @@ status_t resnet_init(
   net_attach_param(model->list_layer_in, in_name, in, din);
 
   // prepare and init weights
-  uint w_shape[] = {16, C, 3, 3};
+  uint w_shape[] = {nr_filter, C, filter_sz, filter_sz};
   tensor_t w = tensor_make(w_shape, 4);
   tensor_t dw = tensor_make(w_shape, 4);
   char w_name[MAX_STR_LENGTH];
@@ -59,7 +68,10 @@ status_t resnet_init(
   weight_init_kaiming(w);  // TODO: init
 
   // layer out
-  uint out_shape[] = {N, 16, 3, 3};
+  uint feature_sz =
+      1 + (H + 2 * conv_param.padding - filter_sz) / conv_param.stride;
+  AWNN_CHECK_EQ(feature_sz, 32);
+  uint out_shape[] = {N, nr_filter, feature_sz, feature_sz};
   out = tensor_make(out_shape, 4);
   dout = tensor_make(out_shape, 4);
   snprintf(out_name, MAX_STR_LENGTH, "conv1.out");
@@ -86,11 +98,11 @@ status_t resnet_init(
       net_attach_param(model->list_layer_in, in_name, in, din);
 
       // weight
-      uint w_shape[] = {16, C, 3,3};
+      uint w_shape[] = {nr_filter, C, filter_sz, filter_sz};
 
       tensor_t w1 = tensor_make(w_shape, 4);
       tensor_t dw1 = tensor_make_alike(w1);
-      char w1_name[MAX_STR_LENGTH]; 
+      char w1_name[MAX_STR_LENGTH];
       snprintf(w1_name, MAX_STR_LENGTH, "%s.conv1.weight", prefix);
       net_attach_param(model->list_all_params, w1_name, w1, dw1);
 
@@ -101,14 +113,17 @@ status_t resnet_init(
       net_attach_param(model->list_all_params, w2_name, w2, dw2);
 
       // out
-      uint out_shape[] = {N, 16, 3, 3};
+      uint feature_sz =
+          1 + (H + 2 * conv_param.padding - filter_sz) / conv_param.stride;
+      AWNN_CHECK_EQ(feature_sz, 32);
+      uint out_shape[] = {N, nr_filter, feature_sz, feature_sz};
       out = tensor_make(out_shape, 4);
       dout = tensor_make(out_shape, 4);
       snprintf(out_name, MAX_STR_LENGTH, "%s.out", prefix);
       net_attach_param(model->list_layer_out, out_name, out, dout);
 
       // cache
-      snprintf(cache_name, MAX_STR_LENGTH, "%s.cache",prefix);
+      snprintf(cache_name, MAX_STR_LENGTH, "%s.cache", prefix);
       net_attach_cache(model->list_layer_cache, cache_name);
     }
   }
@@ -145,6 +160,12 @@ status_t resnet_init(
   tensor_t dw_fc = tensor_make_alike(w_fc);
   net_attach_param(model->list_all_params, "fc.weight", w_fc, dw_fc);
 
+  // bias
+  uint bias_shape_fc[] = {output_dim};
+  tensor_t b_fc = tensor_make(bias_shape_fc, 1);
+  tensor_t db_fc = tensor_make_alike(b_fc);
+  net_attach_param(model->list_all_params, "fc.bias", b_fc, db_fc);
+
   // out
   uint fc_shape[] = {N, output_dim};
   out = tensor_make(fc_shape, 2);
@@ -171,12 +192,82 @@ status_t resnet_finalize(model_t *model) {
 }
 
 /* Compute the scores for a batch or input, infer only*/
-status_t resnet_forward_infer(model_t const *model, tensor_t x) {
-  return S_ERR;
+tensor_t _do_resnet_forward(model_t const *model, tensor_t x,
+                            awnn_mode_t mode) {
+  tensor_t layer_in = x;
+  tensor_t layer_out;
+  tensor_t w = net_get_param(model->list_all_params, "conv1.weight")->data;
+  layer_out = net_get_param(model->list_layer_out, "conv1.out")->data;
+
+  lcache_t *cache;
+  if (mode == MODE_TRAIN)
+    cache = net_get_cache(model->list_layer_cache, "conv1.cache");
+  else
+    cache = NULL;
+  convolution_forward(layer_in, w, cache, conv_param, layer_out);
+  layer_in = layer_out;
+
+  /*
+   * II.  main stage
+   */
+  for (uint i_stage = 1; i_stage <= model->nr_stages; i_stage++) {
+    for (uint i_blk = 0; i_blk < model->nr_blocks[i_stage - 1]; i_blk++) {
+      char prefix[MAX_STR_LENGTH];
+      snprintf(prefix, MAX_STR_LENGTH, "layer%u.%u", i_stage, i_blk);
+
+      char w1_name[MAX_STR_LENGTH], w2_name[MAX_STR_LENGTH];
+      snprintf(w1_name, MAX_STR_LENGTH, "%s.conv1.weight", prefix);
+      snprintf(w2_name, MAX_STR_LENGTH, "%s.conv2.weight", prefix);
+      tensor_t w1 = net_get_param(model->list_all_params, w1_name)->data;
+      tensor_t w2 = net_get_param(model->list_all_params, w2_name)->data;
+
+      // locate preallocated layer_out
+      char out_name[MAX_STR_LENGTH];
+      snprintf(out_name, MAX_STR_LENGTH, "%s.out", prefix);
+      layer_out = net_get_param(model->list_layer_out, out_name)->data;
+
+      char cache_name[MAX_STR_LENGTH];
+      snprintf(cache_name, MAX_STR_LENGTH, "%s.cache", prefix);
+      if (mode == MODE_TRAIN)
+        cache = net_get_cache(model->list_layer_cache, cache_name);
+      else
+        cache = NULL;
+      residual_basic_no_bn_forward(layer_in, w1, w2, cache, conv_param,
+                                   layer_out);
+      layer_in = layer_out;
+    }
+  }
+
+  /* Pool */
+  layer_out = net_get_param(model->list_layer_out, "pool.out")->data;
+
+  if (mode == MODE_TRAIN)
+    cache = net_get_cache(model->list_layer_cache, "pool.cache");
+  else
+    cache = NULL;
+  global_avg_pool_forward(layer_in, cache, layer_out);
+  layer_in = layer_out;
+
+  /* FC */
+  tensor_t w_fc = net_get_param(model->list_all_params, "fc.weight")->data;
+  tensor_t b_fc = net_get_param(model->list_all_params, "fc.bias")->data;
+  layer_out = net_get_param(model->list_layer_out, "fc.out")->data;
+  if (mode == MODE_TRAIN)
+    cache = net_get_cache(model->list_layer_cache, "fc.cache");
+  else
+    cache = NULL;
+  layer_fc_forward(layer_in, w_fc, b_fc, cache, layer_out);
+
+  return layer_out;
 }
 
-/* Compute the scores for a batch or input, update cache*/
-status_t resnet_forward(model_t const *model, tensor_t x) { return S_ERR; }
+tensor_t resnet_forward_infer(model_t const *model, tensor_t x) {
+  return _do_resnet_forward(model, x, MODE_INFER);
+}
+
+tensor_t resnet_forward(model_t const *model, tensor_t x) {
+  return _do_resnet_forward(model, x, MODE_TRAIN);
+}
 
 /* Compute loss for a batch of (x,y), do forward/backward, and update
  * gradients*/

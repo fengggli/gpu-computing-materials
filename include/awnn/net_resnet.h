@@ -52,10 +52,10 @@ status_t resnet_init(
 status_t resnet_finalize(model_t *model);
 
 /* Compute the scores for a batch or input, infer only*/
-status_t resnet_forward_infer(model_t const *model, tensor_t x);
+tensor_t resnet_forward_infer(model_t const *model, tensor_t x);
 
 /* Compute the scores for a batch or input, update cache*/
-status_t resnet_forward(model_t const *model, tensor_t x);
+tensor_t resnet_forward(model_t const *model, tensor_t x);
 
 /* Compute loss for a batch of (x,y), do forward/backward, and update
  * gradients*/

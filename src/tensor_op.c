@@ -209,7 +209,7 @@ status_t tensor_reshape_(tensor_t* ptr_t, uint const shape[], uint const ndims){
     dim_dump(ptr_t->dim);
     PERR("requested dimension: ");
     dim_dump(req_dim);
-
+    print_trace();
     return S_BAD_DIM;
   }
   ptr_t->dim = req_dim;
