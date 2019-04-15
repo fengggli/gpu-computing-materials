@@ -41,6 +41,8 @@ enum {
 
 void print_trace();
 
+#define AWNN_NO_USE(a) (void)(a)
+
 #define AWNN_CHECK_EQ(a, b)                                         \
   if ((a) != (b)) {                                                 \
     PERR("Value (%lu) != %lu", (unsigned long)a, (unsigned long)b); \

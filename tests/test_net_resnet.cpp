@@ -47,6 +47,7 @@ TEST_F(NetResnetTest, Construct) {
 }
 TEST_F(NetResnetTest, ForwardInferOnly) {
   tensor_t x = tensor_make_linspace(-5.5, 4.5, model.input_dim.dims, 4);
+
   tensor_t score = resnet_forward_infer(&model, x);
 }
 TEST_F(NetResnetTest, Destroy) { resnet_finalize(&model); }

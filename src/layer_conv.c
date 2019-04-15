@@ -30,7 +30,7 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
   // copy transposed to y
   y.dim = tpose.dim;
   uint sz = dim_get_capacity(tpose.dim);
-  for (int i = 0; i < sz; ++i) {
+  for (uint i = 0; i < sz; ++i) {
     y.data[i] = tpose.data[i];
   }
   y.mem_type = tpose.mem_type;
@@ -90,6 +90,9 @@ tensor_t im2col(tensor_t const x, tensor_t const w, conv_param_t const params) {
 status_t im2col_inner(tensor_t cols, tensor_t x_padded,
                       uint N, uint C, uint H, uint W, uint HH, uint WW,
                       uint filter_height, uint filter_width, uint padding, uint stride){
+  AWNN_NO_USE(H);
+  AWNN_NO_USE(W);
+  AWNN_NO_USE(padding);
 
   uint img_sz = C * x_padded.dim.dims[2] * x_padded.dim.dims[3];
   uint chan_sz = x_padded.dim.dims[2] * x_padded.dim.dims[3];
@@ -169,7 +172,7 @@ status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache, conv_pa
 
   // copy date into dw (assumption is that dw is already correct shape)
   uint capacity = tensor_get_capacity(t);
-  for (int i = 0; i < capacity; ++i) {
+  for (uint i = 0; i < capacity; ++i) {
     dx.data[i] = t.data[i];
   }
 
@@ -227,13 +230,16 @@ tensor_t col2im(tensor_t cols, uint N, uint C, uint H, uint W, uint field_height
 void col2im_inner(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW,
                   uint field_height, uint field_width, uint padding, uint stride)
 {
-  for (int c = 0; c < C; ++c) {
-    for (int ii = 0; ii < field_height; ++ii) {
-      for (int jj = 0; jj < field_width; ++jj) {
+  AWNN_NO_USE(H);
+  AWNN_NO_USE(W);
+  AWNN_NO_USE(padding);
+  for (uint c = 0; c < C; ++c) {
+    for (uint ii = 0; ii < field_height; ++ii) {
+      for (uint jj = 0; jj < field_width; ++jj) {
         uint row = c * field_width * field_height + ii * field_height + jj;
-        for (int yy = 0; yy < HH; ++yy) {
-          for (int xx = 0; xx < WW; ++xx) {
-            for (int i = 0; i < N; ++i) {
+        for (uint yy = 0; yy < HH; ++yy) {
+          for (uint xx = 0; xx < WW; ++xx) {
+            for (uint i = 0; i < N; ++i) {
               uint col = yy * WW * N + xx * N + i;
               uint src_idx = row * cols.dim.dims[1] + col;
               uint target_idx =
