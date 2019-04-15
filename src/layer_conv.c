@@ -152,7 +152,7 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
   uint filters_per_image = C * filters_per_channel;
   uint total_filters = N * filters_per_image;
 
-
+  // TODO deal with last week's time sheet
   uint iter = 0;
   for (uint n = 0; n < N; n++){
     for (uint c = 0; c < C; c++){ // for each channel
@@ -162,15 +162,15 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
           for (uint f_row = 0; f_row < filter_height; ++f_row) {  // for each row of filter (relative row)
             for (uint f_col = 0; f_col < filter_width; ++f_col) {  // for each col of filter
 
-              uint nn = iter / filters_per_image;  // ii is the target image
-              uint cc = (iter / filters_per_channel) % C;  // jj is the channel in the image
-              uint jj = (iter / WW) % HH;
-              uint kk = (iter % WW);
+              uint nn = iter / (filters_per_image * filter_size);  // nn is the target image
+              uint cc = (iter / (filters_per_channel * filter_size)) % C;  // cc is the channel of the target filter
+//              uint jj = (iter / WW) % HH; // jj is the target filter row
+//              uint kk = (iter % WW);
 
               assert(nn == n);
               assert(cc == c);
-              assert(jj == j);
-              assert(kk == k);
+
+//              assert(kk == k);
 
               uint t_row = iter / filter_size;
               uint t_col = iter % filter_size;
@@ -180,6 +180,10 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
               uint window_index_linear = t_idx / filter_size;
               uint window_index_r  = window_index_linear / HH;
               uint windows_index_c = window_index_linear % WW;
+
+              uint jj = window_index_r % WW;
+              assert(jj == j);
+
               // index of the first elem
               uint first_elem = (window_index_r) * stride * H + windows_index_c * stride;
 
@@ -188,7 +192,7 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
               uint target_idx = row * cols_d_1 + col;
               uint src_idx = (n * img_sz) + (c * chan_sz) + (stride * j + f_row) * row_sz + stride * k + f_col;
               cols.data[target_idx] = x_padded.data[src_idx];
-              printf("window_index_r=%u, windows_index_c=%u, window_idx_linear=%u, first_elem=%u, t_row=%u, t_col=%u, t_idx=%u, target_idx=%u, src_idx=%u, val=%f, row=%u, col=%u\n", window_index_r, windows_index_c, window_index_linear, first_elem, t_row, t_col, t_idx, target_idx, src_idx, cols.data[target_idx], row, col);
+              printf("n=%u, c=%u, j=%u, k=%u, window_index_r=%u, windows_index_c=%u, window_idx_linear=%u, first_elem=%u, t_row=%u, t_col=%u, t_idx=%u, target_idx=%u, src_idx=%u, val=%f, row=%u, col=%u\n", n, c, j, k, window_index_r, windows_index_c, window_index_linear, first_elem, t_row, t_col, t_idx, target_idx, src_idx, cols.data[target_idx], row, col);
               ++iter;
             }
           }
