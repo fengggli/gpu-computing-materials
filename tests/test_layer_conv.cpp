@@ -4,11 +4,10 @@
  * Author: Feng Li
  * e-mail: fengggli@yahoo.com
  */
-
-#include "test_util.h"
 #include "awnn/layer_conv.h"
 #include "awnn/tensor.h"
 #include "gtest/gtest.h"
+#include "test_util.h"
 
 namespace {
 
@@ -612,6 +611,125 @@ TEST_F(LayerConvTest, Forward){
 
 
 // TODO: check with cudnn
+#ifdef USE_CUDA
+TEST_F(LayerConvTest, ConvForwardcudnn) {
+  conv_param_t conv_params;
+
+  conv_params.stride=1;
+  conv_params.padding=0;
+
+  uint nr_img = 1;
+  uint sz_img = 4;
+  uint nr_in_channel = 32;
+
+  uint nr_filter = 32;
+  uint sz_filter = 1;
+
+  uint sz_out = 1 + (sz_img + 2 * conv_params.padding - sz_filter) / conv_params.stride;
+//  EXPECT_EQ(2, sz_out);
+
+  uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img}; // 1, 32, 4, 4
+  uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; // 32, 32, 1, 1
+  uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out}; // ?
+
+  tensor_t x = tensor_make_linspace(0.1, 0.3, shape_x, dim_of_shape(shape_x));
+  tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
+  tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
+
+  lcache_t cache;
+  make_empty_lcache(&cache);
+
+  status_t ret = convolution_forward_cudnn(x, w, &cache, conv_params, y);
+//  ret = global_avg_pool_forward_device(
+//      x, &cache, y);  // foward function should allocate and populate cache;
+  EXPECT_EQ(ret, S_OK);
+
+#if 0
+  // check forward value
+  tensor_t y_ref = tensor_make_alike(y);
+  T value_list[] = {0.10817717, 0.12487223, 0.14156729, 0.15826235,
+                    0.17495741, 0.19165247, 0.20834753, 0.22504259,
+                    0.24173765, 0.25843271, 0.27512777, 0.29182283};
+  tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
+  EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
+#endif
+}
+
+#if 0
+TEST_F(LayerConvTest, ConvBackwardcudnn) {
+  uint const shape_x[] = {1, 32, 4, 4};  // N, C, H, W
+//  uint const shape_y[] = {6, 2, 1, 1};
+
+  tensor_t x = tensor_make_linspace(0.1, 0.3, shape_x, dim_of_shape(shape_x));
+  tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
+
+  status_t ret;
+
+  int algo = 0;
+  int mathType = 0;
+  int benchmark = 0;
+  int* dimA = shape_x;
+  int padA[] = {0, 0};
+  int convstrideA[] = {1, 1};
+  //batch size and feature layers must be multiples of 4 or 32 when using int8x4 or int8x32 respectively
+  int filterdimA[] = {32, 32, 1, 1};
+  cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
+
+  int device;
+  struct cudaDeviceProp devProp;
+  cudaGetDevice(&device);
+  cudaGetDeviceProperties(&devProp, device);
+  int deviceVer = devProp.major * 10 + devProp.minor;
+
+  printf("Testing single precision, forward\n");
+  ret = doTest<float>(algo, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
+  EXPECT_EQ(ret, S_OK);
+
+  algo = 1;
+  printf("Testing single precision, backward_data\n");
+  ret = doTest<float>(algo, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
+
+  algo = 2;
+  printf("Testing single precision, backward_weight\n");
+  ret = doTest<float>(algo, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
+
+#if 0
+  // check forward value
+  tensor_t y_ref = tensor_make_alike(y);
+  T value_list[] = {0.10817717, 0.12487223, 0.14156729, 0.15826235,
+                    0.17495741, 0.19165247, 0.20834753, 0.22504259,
+                    0.24173765, 0.25843271, 0.27512777, 0.29182283};
+  tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
+  EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
+
+  // input for backward
+  tensor_t dy = tensor_make_linspace(-0.1, 0.5, shape_y,
+                                     dim_of_shape(shape_y));  // some fake data
+
+  // output for backward
+  tensor_t dx = tensor_make_alike(x);
+
+  ret = global_avg_pool_backward_device(
+      dx, &cache, dy);  // backward needs to call lcache_free_all(cache);
+  EXPECT_EQ(ret, S_OK);
+
+  /* II. Numerical check */
+  // variable
+  tensor_t dx_ref = tensor_make_alike(x);
+
+  // evaluate gradient of x
+  eval_numerical_gradient(
+      [](tensor_t const in, tensor_t out) {
+        global_avg_pool_forward(in, NULL, out);
+      },
+      x, dy, dx_ref);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
+  PINF("gradient check of x... is ok");
+#endif
+}
+#endif
+
+#endif
 
 TEST_F(LayerConvTest,CheckLcache){
 //  EXPECT_EQ(cache.count, 0); // backward needs to pop all all caches and destroy them

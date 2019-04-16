@@ -17,7 +17,7 @@ target_link_libraries(test-tensor-op ${AWNN_LIBS}  gtest)
 add_test(test-tensor-op test-tensor-op)
 
 add_executable(test-layer-conv test_layer_conv.cpp)
-target_link_libraries(test-layer-conv ${AWNN_LIBS}  gtest)
+target_link_libraries(test-layer-conv ${AWNN_LIBS}  ${AWNN_DEVICE_LIBS} gtest)
 add_test(test-layer-conv test-layer-conv)
 
 add_executable(test-layer-pool test_layer_pool.cpp)

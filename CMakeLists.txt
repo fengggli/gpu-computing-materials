@@ -109,7 +109,10 @@ set(AWNN_LIBS "awnn_core" "awnn_utils")
 if(USE_CUDA)
   cuda_add_library(awnndevicelib
     src/tensor.cu
-    src/layer_pool.cu)
+    src/layer_pool.cu
+    src/layer_conv_cudnn.cu)
+
+  target_link_libraries(awnndevicelib cudart cudnn cublas)
 
   set(AWNN_DEVICE_LIBS "awnndevicelib")
 endif(USE_CUDA)
