@@ -52,26 +52,24 @@ TEST_F(NetResnetTest, ForwardInferOnly) {
 }
 
 /* Check both forward/backward*/
-TEST_F(NetResnetTest, Loss) {
+TEST_F(NetResnetTest, DISABLED_Loss) {
   T loss = 0;
 
   tensor_t x = tensor_make_linspace(-5.5, 4.5, model.input_dim.dims, 4);
   label_t labels[] = {0, 5, 1};
 
-  uint nr_iterations = 10;
-  for (uint i = 0; i < nr_iterations; i++) {
-    resnet_loss(&model, x, labels, &loss);
-    PINF("Loss without regulizer: %.3f", loss);
-  }
+  model.reg = 0;
+  resnet_loss(&model, x, labels, &loss);
+  PINF("Loss without regulizer: %.3f", loss);
 
-  /*
   // test with regulizer
-  model.reg = 1.0;
+  model.reg = 1;
   resnet_loss(&model, x, labels, &loss);
   PINF("Loss with regulizer: %.3f", loss);
   // EXPECT_NEAR(loss, 26.11873099, 1e-7);
   PINF("Forward/backward finished");
 
+  /*
   // Check with numerical gradient
   model_t model_copy = model;
   uint y_shape[] = {1};
@@ -96,6 +94,20 @@ TEST_F(NetResnetTest, Loss) {
     PINF("Gradient check of %s passed", p_param->name);
   }
   */
+}
+
+/* Check both forward/backward*/
+TEST_F(NetResnetTest, Measure) {
+  T loss = 0;
+
+  tensor_t x = tensor_make_linspace(-5.5, 4.5, model.input_dim.dims, 4);
+  label_t labels[] = {0, 5, 1};
+
+  uint nr_iterations = 10;
+  for (uint i = 0; i < nr_iterations; i++) {
+    resnet_loss(&model, x, labels, &loss);
+    PINF("Loss without regulizer: %.3f", loss);
+  }
 }
 
 TEST_F(NetResnetTest, Destroy) { resnet_finalize(&model); }

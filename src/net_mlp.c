@@ -235,12 +235,7 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
     }
 
     // add gradient for regulizer term
-    tensor_t tmp = tensor_make_copy(w);
-    T *pelem;
-    uint ii;  // for iteration
-    tensor_for_each_entry(pelem, ii, tmp) { (*pelem) *= model->reg; }
-    tensor_elemwise_op_inplace(dw, tmp, TENSOR_OP_ADD);
-    tensor_destroy(&tmp);
+    update_regulizer_gradient(w, dw, model->reg);
 
     if (i == 0) break;
     i--;

@@ -302,8 +302,10 @@ status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
   tensor_t dw_fc = net_get_param(model->list_all_params, "fc.weight")->diff;
   tensor_t w_fc = net_get_param(model->list_all_params, "fc.weight")->data;
   tensor_t db_fc = net_get_param(model->list_all_params, "fc.bias")->diff;
-  layer_fc_backward(din, dw_fc, db_fc, cache, dout);
   loss += 0.5 * (model->reg) * tensor_sum_of_square(w_fc);
+
+  layer_fc_backward(din, dw_fc, db_fc, cache, dout);
+  update_regulizer_gradient(w_fc, dw_fc, model->reg);
   dout = din;
 
   /* Pool*/
@@ -337,6 +339,9 @@ status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
       snprintf(cache_name, MAX_STR_LENGTH, "%s.cache", prefix);
       cache = net_get_cache(model->list_layer_cache, cache_name);
       residual_basic_no_bn_backward(din, dw1, dw2, cache, conv_param, dout);
+
+      update_regulizer_gradient(w1, dw1, model->reg);
+      update_regulizer_gradient(w2, dw2, model->reg);
       dout = din;
     }
   }
@@ -349,6 +354,7 @@ status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
   cache = net_get_cache(model->list_layer_cache, "conv1.cache");
   convolution_backward(din, dw, cache, conv_param, dout);
   // TODO: regulizer
+  update_regulizer_gradient(w, dw, model->reg);
 
   *ptr_loss = loss;
   return S_OK;
