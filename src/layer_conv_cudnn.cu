@@ -906,9 +906,31 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
   int deviceVer = devProp.major * 10 + devProp.minor;
 #endif
 
-  printf("Testing single precision using cudnn forward\n");
+  printf("Testing using cudnn forward\n");
   int algo = 0;
   status_t ret = doTest<T>(algo, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
+
+  return ret;
+}
+
+status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache, conv_param_t const params, tensor_t const dout){
+  int mathType = 0;
+  int benchmark = 0;
+  int dimA[] = {1, 32, 4, 4};  // N, C, H, W;
+  int padA[] = {(int)params.padding, (int)params.padding};
+  int convstrideA[] = {(int)params.stride, (int)params.stride};
+  //batch size and feature layers must be multiples of 4 or 32 when using int8x4 or int8x32 respectively
+  //int filterdimA[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; //k, c, r, s
+  int filterdimA[] = {32, 32, 1, 1}; //k, c, r, s
+  cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
+
+  printf("Testing using cudnn backward\n");
+  int algo = 1;
+  status_t ret = doTest<T>(algo, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
+
+  algo = 2;
+  printf("Testing single precision, backward_weight\n");
+  ret = doTest<T>(algo, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
 
   return ret;
 }

@@ -630,7 +630,7 @@ TEST_F(LayerConvTest, ConvForwardcudnn) {
 
   uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img}; // 1, 32, 4, 4
   uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; // 32, 32, 1, 1
-  uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out}; // ?
+  uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out}; // 1, 32,
 
   tensor_t x = tensor_make_linspace(0.1, 0.3, shape_x, dim_of_shape(shape_x));
   tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
@@ -640,8 +640,6 @@ TEST_F(LayerConvTest, ConvForwardcudnn) {
   make_empty_lcache(&cache);
 
   status_t ret = convolution_forward_cudnn(x, w, &cache, conv_params, y);
-//  ret = global_avg_pool_forward_device(
-//      x, &cache, y);  // foward function should allocate and populate cache;
   EXPECT_EQ(ret, S_OK);
 
 #if 0
@@ -655,43 +653,38 @@ TEST_F(LayerConvTest, ConvForwardcudnn) {
 #endif
 }
 
-#if 0
 TEST_F(LayerConvTest, ConvBackwardcudnn) {
-  uint const shape_x[] = {1, 32, 4, 4};  // N, C, H, W
-//  uint const shape_y[] = {6, 2, 1, 1};
+  conv_param_t conv_params;
+
+  conv_params.stride=1;
+  conv_params.padding=0;
+
+  uint nr_img = 1;
+  uint sz_img = 4;
+  uint nr_in_channel = 32;
+
+  uint nr_filter = 32;
+  uint sz_filter = 1;
+
+  uint sz_out = 1 + (sz_img + 2 * conv_params.padding - sz_filter) / conv_params.stride;
+//  EXPECT_EQ(2, sz_out);
+
+  uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img}; // 1, 32, 4, 4
+  uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; // 32, 32, 1, 1
+  uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out}; // 1, 32,
 
   tensor_t x = tensor_make_linspace(0.1, 0.3, shape_x, dim_of_shape(shape_x));
+  tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
   tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
 
-  status_t ret;
+  lcache_t cache;
+  make_empty_lcache(&cache);
 
-  int algo = 0;
-  int mathType = 0;
-  int benchmark = 0;
-  int* dimA = shape_x;
-  int padA[] = {0, 0};
-  int convstrideA[] = {1, 1};
-  //batch size and feature layers must be multiples of 4 or 32 when using int8x4 or int8x32 respectively
-  int filterdimA[] = {32, 32, 1, 1};
-  cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
-
-  int device;
-  struct cudaDeviceProp devProp;
-  cudaGetDevice(&device);
-  cudaGetDeviceProperties(&devProp, device);
-  int deviceVer = devProp.major * 10 + devProp.minor;
-
-  printf("Testing single precision, forward\n");
-  ret = doTest<float>(algo, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
+  status_t ret = convolution_forward_cudnn(x, w, &cache, conv_params, y);
   EXPECT_EQ(ret, S_OK);
 
-  algo = 1;
-  printf("Testing single precision, backward_data\n");
-  ret = doTest<float>(algo, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
-
-  algo = 2;
-  printf("Testing single precision, backward_weight\n");
-  ret = doTest<float>(algo, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
+  ret = convolution_backward_cudnn(x, w, &cache, conv_params, y);
+  EXPECT_EQ(ret, S_OK);
 
 #if 0
   // check forward value
@@ -727,7 +720,6 @@ TEST_F(LayerConvTest, ConvBackwardcudnn) {
   PINF("gradient check of x... is ok");
 #endif
 }
-#endif
 
 #endif
 
