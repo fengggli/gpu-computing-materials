@@ -300,8 +300,10 @@ status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
   din = net_get_param(model->list_layer_in, "fc.in")->diff;
   cache = net_get_cache(model->list_layer_cache, "fc.cache");
   tensor_t dw_fc = net_get_param(model->list_all_params, "fc.weight")->diff;
+  tensor_t w_fc = net_get_param(model->list_all_params, "fc.weight")->data;
   tensor_t db_fc = net_get_param(model->list_all_params, "fc.bias")->diff;
   layer_fc_backward(din, dw_fc, db_fc, cache, dout);
+  loss += 0.5 * (model->reg) * tensor_sum_of_square(w_fc);
   dout = din;
 
   /* Pool*/
@@ -326,6 +328,10 @@ status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
       snprintf(w2_name, MAX_STR_LENGTH, "%s.conv2.weight", prefix);
       tensor_t dw1 = net_get_param(model->list_all_params, w1_name)->diff;
       tensor_t dw2 = net_get_param(model->list_all_params, w2_name)->diff;
+      tensor_t w1 = net_get_param(model->list_all_params, w1_name)->data;
+      tensor_t w2 = net_get_param(model->list_all_params, w2_name)->data;
+      loss += 0.5 * (model->reg) * tensor_sum_of_square(w1);
+      loss += 0.5 * (model->reg) * tensor_sum_of_square(w2);
 
       char cache_name[MAX_STR_LENGTH];
       snprintf(cache_name, MAX_STR_LENGTH, "%s.cache", prefix);
@@ -337,6 +343,8 @@ status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
   /* Preparation stage */
   din = net_get_param(model->list_layer_out, "conv1.out")->diff;
   tensor_t dw = net_get_param(model->list_all_params, "conv1.weight")->diff;
+  tensor_t w = net_get_param(model->list_all_params, "conv1.weight")->data;
+  loss += 0.5 * (model->reg) * tensor_sum_of_square(w);
 
   cache = net_get_cache(model->list_layer_cache, "conv1.cache");
   convolution_backward(din, dw, cache, conv_param, dout);
