@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5)
 
 option(IS_CI_BUILD "Is a build for CI" OFF) # Reduce problem size if it is run in CI
 option(USE_CLANG "Use clang compiler set" OFF)
-option(USE_OPENBLAS "USE openblas for blas" OFF)
+option(USE_OPENBLAS "USE openblas for blas" ON)
 option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_CUDA "Build with CUDA" OFF)
 option(USE_CUDNN "Build with CUDNN" OFF)
@@ -62,7 +62,7 @@ if(USE_OPENBLAS)
     message(FATAL_ERROR "in sievert, run:
     sudo apt-get install libopenblas-dev")
   endif()
-  set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS} openblas)
+  set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS} cblas blas)
 endif()
 
 configure_file (
