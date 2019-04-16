@@ -408,8 +408,7 @@ TEST_F(LayerConvTest, im2col_inner_2_from_picture)
   tensor_fill_list(ref, ref_vals, array_size(ref_vals));
 
   /////////////////////////////////////////////////////////////////
-  im2col_inner(cols, x_padded, N, C, H, W, HH, WW,
-      filter_height, filter_width, padding, stride);
+  im2col_inner(cols, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, padding, stride);
   ////////////////////////////////////////////////////////////////
 
   EXPECT_LT(tensor_rel_error(ref, cols), 1e-7);

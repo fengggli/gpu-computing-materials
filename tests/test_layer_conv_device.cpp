@@ -1044,11 +1044,41 @@ namespace {
 
     im2col_inner_device(cols, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, padding, stride);
 
+//    tensor_dump(x_padded);
+    tensor_print_flat(x_padded);
+
     EXPECT_LT(tensor_rel_error(cols_ref, cols), 1e-7);
     PINF("Consistent with expected results");
   }
-  
-  TEST_F(LayerConvTestDevice, im2col_inner_device_2)
+
+TEST_F(LayerConvTestDevice, im2col_inner_device_2) {
+  uint C = 2, H = 3, HH = 2, N = 1, W = 3, WW = 2,
+      filter_height = 2, filter_width = 2, padding = 0, stride = 1;
+
+  uint shape_cols[] = { 8, 4 };
+  uint shape_x_padded[] = { 1, 2, 3, 3 };
+
+  tensor_t cols = tensor_make_scalar(shape_cols, dim_of_shape(shape_cols), 0);
+
+  T x_padded_vals[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18  };
+  tensor_t x_padded = tensor_make(shape_x_padded, dim_of_shape(shape_x_padded));
+  tensor_fill_list(x_padded, x_padded_vals, array_size(x_padded_vals));
+
+  tensor_t cols_ref = tensor_make_alike(cols);
+  T value_list[] = { 1, 2, 4, 5, 2, 3, 5, 6, 4, 5, 7, 8, 5, 6, 8, 9, 10, 11, 13, 14, 11, 12, 14, 15, 13, 14, 16, 17, 14, 15, 17, 18  };
+  tensor_fill_list(cols_ref, value_list, array_size(value_list));
+
+  im2col_inner_device(cols, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, padding, stride);
+
+//    tensor_dump(x_padded);
+  tensor_print_flat(cols);
+
+  EXPECT_LT(tensor_rel_error(cols_ref, cols), 1e-7);
+  PINF("Consistent with expected results");
+}
+
+
+  TEST_F(LayerConvTestDevice, im2col_inner_device_3)
   {
     uint C = 3, H = 4, HH = 2, N = 2, W = 4, WW = 2, filter_height = 4, filter_width = 4, padding = 1, stride = 2;
   
