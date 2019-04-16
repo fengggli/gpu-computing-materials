@@ -59,11 +59,10 @@ TEST_F(NetResnetTest, Loss) {
   label_t labels[] = {0, 5, 1};
 
   uint nr_iterations = 10;
-  for(uint i = 0; i< nr_iterations; i++) {
+  for (uint i = 0; i < nr_iterations; i++) {
     resnet_loss(&model, x, labels, &loss);
-    // PINF("Loss without regulizer: %.3f", loss);
+    PINF("Loss without regulizer: %.3f", loss);
   }
-
 
   /*
   // test with regulizer

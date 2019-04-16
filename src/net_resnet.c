@@ -5,6 +5,7 @@
 #include "awnn/layer_sandwich.h"
 #include "awnn/loss_softmax.h"
 #include "awnn/net_resnet.h"
+#include "utils/weight_init.h"
 
 static conv_param_t conv_param;
 
@@ -66,7 +67,7 @@ status_t resnet_init(
   char w_name[MAX_STR_LENGTH];
   snprintf(w_name, MAX_STR_LENGTH, "conv1.weight");
   net_attach_param(model->list_all_params, w_name, w, dw);
-  weight_init_kaiming(w);  // TODO: init
+  weight_init_kaiming(w);
 
   // layer out
   uint feature_sz =
@@ -112,6 +113,9 @@ status_t resnet_init(
       char w2_name[MAX_STR_LENGTH];
       snprintf(w2_name, MAX_STR_LENGTH, "%s.conv2.weight", prefix);
       net_attach_param(model->list_all_params, w2_name, w2, dw2);
+
+      weight_init_kaiming(w1);
+      weight_init_kaiming(w2);
 
       // out
       uint feature_sz =
@@ -166,6 +170,8 @@ status_t resnet_init(
   tensor_t b_fc = tensor_make(bias_shape_fc, 1);
   tensor_t db_fc = tensor_make_alike(b_fc);
   net_attach_param(model->list_all_params, "fc.bias", b_fc, db_fc);
+
+  weight_init_fc_kaiming(w_fc, b_fc);
 
   // out
   uint fc_shape[] = {N, output_dim};
