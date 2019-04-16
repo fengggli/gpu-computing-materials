@@ -3,6 +3,7 @@
  */
 #include "awnn/layer_pool.h"
 #include "awnn/layer_sandwich.h"
+#include "awnn/loss_softmax.h"
 #include "awnn/net_resnet.h"
 
 static conv_param_t conv_param;
@@ -87,7 +88,7 @@ status_t resnet_init(
    * II.  main stage
    */
   for (uint i_stage = 1; i_stage <= nr_stages; i_stage++) {
-    for (uint i_blk = 0; i_blk < nr_blocks[i_stage - 1]; i_blk++) {
+    for (uint i_blk = 1; i_blk <= nr_blocks[i_stage - 1]; i_blk++) {
       char prefix[MAX_STR_LENGTH];
       snprintf(prefix, MAX_STR_LENGTH, "layer%u.%u", i_stage, i_blk);
 
@@ -211,7 +212,7 @@ tensor_t _do_resnet_forward(model_t const *model, tensor_t x,
    * II.  main stage
    */
   for (uint i_stage = 1; i_stage <= model->nr_stages; i_stage++) {
-    for (uint i_blk = 0; i_blk < model->nr_blocks[i_stage - 1]; i_blk++) {
+    for (uint i_blk = 1; i_blk <= model->nr_blocks[i_stage - 1]; i_blk++) {
       char prefix[MAX_STR_LENGTH];
       snprintf(prefix, MAX_STR_LENGTH, "layer%u.%u", i_stage, i_blk);
 
@@ -273,5 +274,68 @@ tensor_t resnet_forward(model_t const *model, tensor_t x) {
  * gradients*/
 status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
                      T *ptr_loss) {
-  return S_ERR;
+  T loss = 0;
+
+  resnet_forward(model, x);
+
+  tensor_t out, dout, din;
+  lcache_t *cache;
+
+  // PINF("out score is %s", out_name);
+  param_t *param_score = net_get_param(model->list_layer_out, "fc.out");
+  AWNN_CHECK_NE(NULL, labels);
+  out = param_score->data;
+  dout = param_score->diff;
+
+  awnn_mode_t mode = MODE_TRAIN;
+  AWNN_CHECK_EQ(S_OK, loss_softmax(out, labels, &loss, mode, dout));
+
+  /* FC */
+  din = net_get_param(model->list_layer_in, "fc.in")->diff;
+  cache = net_get_cache(model->list_layer_cache, "fc.cache");
+  tensor_t dw_fc = net_get_param(model->list_all_params, "fc.weight")->diff;
+  tensor_t db_fc = net_get_param(model->list_all_params, "fc.bias")->diff;
+  layer_fc_backward(din, dw_fc, db_fc, cache, dout);
+  dout = din;
+
+  /* Pool*/
+  din = net_get_param(model->list_layer_in, "pool.in")->diff;
+  cache = net_get_cache(model->list_layer_cache, "pool.cache");
+  global_avg_pool_forward(din, cache, dout);
+  dout = din;
+
+  /* residual blocks*/
+  for (uint i_stage = model->nr_stages; i_stage != 0; i_stage--) {
+    for (uint i_blk = model->nr_blocks[i_stage - 1]; i_blk != 0; i_blk--) {
+      char prefix[MAX_STR_LENGTH];
+      snprintf(prefix, MAX_STR_LENGTH, "layer%u.%u", i_stage, i_blk);
+
+      // locate preallocated in
+      char in_name[MAX_STR_LENGTH];
+      snprintf(in_name, MAX_STR_LENGTH, "%s.in", prefix);
+      din = net_get_param(model->list_layer_in, in_name)->diff;
+
+      char w1_name[MAX_STR_LENGTH], w2_name[MAX_STR_LENGTH];
+      snprintf(w1_name, MAX_STR_LENGTH, "%s.conv1.weight", prefix);
+      snprintf(w2_name, MAX_STR_LENGTH, "%s.conv2.weight", prefix);
+      tensor_t dw1 = net_get_param(model->list_all_params, w1_name)->diff;
+      tensor_t dw2 = net_get_param(model->list_all_params, w2_name)->diff;
+
+      char cache_name[MAX_STR_LENGTH];
+      snprintf(cache_name, MAX_STR_LENGTH, "%s.cache", prefix);
+      cache = net_get_cache(model->list_layer_cache, cache_name);
+      residual_basic_no_bn_backward(din, dw1, dw2, cache, conv_param, dout);
+      dout = din;
+    }
+  }
+  /* Preparation stage */
+  din = net_get_param(model->list_layer_out, "conv1.out")->diff;
+  tensor_t dw = net_get_param(model->list_all_params, "conv1.weight")->diff;
+
+  cache = net_get_cache(model->list_layer_cache, "conv1.cache");
+  convolution_backward(din, dw, cache, conv_param, dout);
+  // TODO: regulizer
+
+  *ptr_loss = loss;
+  return S_OK;
 }
