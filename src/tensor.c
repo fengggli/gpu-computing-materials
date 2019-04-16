@@ -375,34 +375,6 @@ tensor_t tensor_make_padded_square_input(tensor_t t, uint p, float pad_val) {
 //  return n;
 //}
 
-//tensor_t tensor_make_remove_padding_square(tensor_t t, uint p) {
-//  uint N, C, H, W, HH, WW;
-//  N = t.dim.dims[0];
-//  C = t.dim.dims[1];
-//  H = t.dim.dims[2];
-//  W = t.dim.dims[3];
-//  HH = H - 2 * p;
-//  WW = W - 2 * p;
-//
-//  uint new_shape[] = {N, C, HH, WW};
-//  tensor_t n = tensor_make(new_shape, ARRAY_SIZE(new_shape));
-//
-//  for (uint i = 0; i < N; ++i) {
-//    for (uint j = 0; j < C; ++j) {
-//      for (uint k = 0; k < HH; ++k) {
-//        for (uint l = 0; l < WW; ++l) {
-//          uint target_idx = i * C * HH * WW + j * HH * WW + k * WW + l;
-//          uint src_idx = i * C * H * W + j * H * W + (k + p) * W + (l + p);
-//          n.data[target_idx] = t.data[src_idx];
-//        }
-//      }
-//    }
-//  }
-//
-//  return n;
-//}
-
-
 tensor_t tensor_make_remove_padding_square(tensor_t t, uint p) {
   uint N, C, H, W, HH, WW;
   N = t.dim.dims[0];
@@ -415,28 +387,13 @@ tensor_t tensor_make_remove_padding_square(tensor_t t, uint p) {
   uint new_shape[] = {N, C, HH, WW};
   tensor_t n = tensor_make(new_shape, ARRAY_SIZE(new_shape));
 
-  uint capacity = tensor_get_capacity(n);
-  uint iter = 0;
-  uint new_img_sz = n.dim.dims[1] * n.dim.dims[2] * n.dim.dims[3];
-  uint channel_sz = n.dim.dims[2] * n.dim.dims[3];
-
   for (uint i = 0; i < N; ++i) {
     for (uint j = 0; j < C; ++j) {
       for (uint k = 0; k < HH; ++k) {
         for (uint l = 0; l < WW; ++l) {
-          uint ii = iter / new_img_sz; // ii is the target image
-          uint jj = (iter / channel_sz) % C; // jj is the channel in the image
-          uint kk = (iter / WW) % HH; // kk is the row in the image
-          uint ll = (iter % WW); // ll is the col in the current image
-          assert(ii == i);
-          assert(jj == j);
-          assert(kk == k);
-          assert(ll == l);
           uint target_idx = i * C * HH * WW + j * HH * WW + k * WW + l;
           uint src_idx = i * C * H * W + j * H * W + (k + p) * W + (l + p);
           n.data[target_idx] = t.data[src_idx];
-
-          ++iter;
         }
       }
     }
@@ -444,6 +401,49 @@ tensor_t tensor_make_remove_padding_square(tensor_t t, uint p) {
 
   return n;
 }
+
+
+//tensor_t tensor_make_remove_padding_square(tensor_t t, uint p) {
+//  uint N, C, H, W, HH, WW;
+//  N = t.dim.dims[0];
+//  C = t.dim.dims[1];
+//  H = t.dim.dims[2];
+//  W = t.dim.dims[3];
+//  HH = H - 2 * p;
+//  WW = W - 2 * p;
+//
+//  uint new_shape[] = {N, C, HH, WW};
+//  tensor_t n = tensor_make(new_shape, ARRAY_SIZE(new_shape));
+//
+//  uint capacity = tensor_get_capacity(n);
+//  uint iter = 0;
+//  uint new_img_sz = n.dim.dims[1] * n.dim.dims[2] * n.dim.dims[3];
+//  uint channel_sz = n.dim.dims[2] * n.dim.dims[3];
+//
+//  for (uint i = 0; i < N; ++i) {
+//    for (uint j = 0; j < C; ++j) {
+//      for (uint k = 0; k < HH; ++k) {
+//        for (uint l = 0; l < WW; ++l) {
+//          uint ii = iter / new_img_sz; // ii is the target image
+//          uint jj = (iter / channel_sz) % C; // jj is the channel in the image
+//          uint kk = (iter / WW) % HH; // kk is the row in the image
+//          uint ll = (iter % WW); // ll is the col in the current image
+//          assert(ii == i);
+//          assert(jj == j);
+//          assert(kk == k);
+//          assert(ll == l);
+//          uint target_idx = i * C * HH * WW + j * HH * WW + k * WW + l;
+//          uint src_idx = i * C * H * W + j * H * W + (k + p) * W + (l + p);
+//          n.data[target_idx] = t.data[src_idx];
+//
+//          ++iter;
+//        }
+//      }
+//    }
+//  }
+//
+//  return n;
+//}
 
 T* tensor_get_elem_ptr(tensor_t const t, dim_t const loc) {
   uint index_dim;

@@ -117,8 +117,10 @@ def im2col_cython_inner(cols, x_padded,
                         N, C, H, W, HH, WW,
                         filter_height, filter_width, padding, stride):
 
+    print("\ncols")
     print(cols.shape)
     print(list(cols.flatten()))
+    print("x_padded")
     print(x_padded.shape)
     print(list(x_padded.flatten()))
     img_sz = C * x_padded.shape[2] * x_padded.shape[3]
@@ -144,5 +146,6 @@ def im2col_cython_inner(cols, x_padded,
                         # print()
                         # print(cols)
 
+    print("cols after")
     print(cols.shape)
     print(list(cols.flatten()))
