@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5)
 
 option(IS_CI_BUILD "Is a build for CI" OFF) # Reduce problem size if it is run in CI
 option(USE_CLANG "Use clang compiler set" OFF)
-option(USE_OPENBLAS "USE openblas for blas" ON)
+option(USE_OPENBLAS "USE openblas for blas" OFF)
 option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_CUDA "Build with CUDA" OFF)
 option(USE_CUDNN "Build with CUDNN" OFF)
@@ -55,14 +55,20 @@ include(CheckIncludeFiles)
 
 #TODO support MLK? source /opt/intel/mkl/bin/mklvars.sh intel64")
 if(USE_OPENBLAS)
-  CHECK_INCLUDE_FILES("cblas.h" HAVE_CBLAS)
-  if(HAVE_CBLAS)
-    message("has cblas!")
+  CHECK_INCLUDE_FILES("openblas/cblas.h" HAVE_CBLAS_OPENBLAS)  # ubuntu 1604
+  CHECK_INCLUDE_FILES("cblas.h" HAVE_CBLAS) # my arch
+  if(HAVE_CBLAS_OPENBLAS)
+    message("has cblas in ubuntu!")
+    set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS}  blas)
+  elseif(HAVE_CBLAS)
+    message("has cblas in archlinux!")
+    set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS} cblas blas)
+
   else()
     message(FATAL_ERROR "in sievert, run:
-    sudo apt-get install libopenblas-dev")
+    [ubuntu] sudo apt-get install libopenblas-dev
+    [arch]: sudo pacman cblas openblas")
   endif()
-  set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS} cblas blas)
 endif()
 
 configure_file (
