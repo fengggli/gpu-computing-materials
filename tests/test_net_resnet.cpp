@@ -58,10 +58,14 @@ TEST_F(NetResnetTest, Loss) {
   tensor_t x = tensor_make_linspace(-5.5, 4.5, model.input_dim.dims, 4);
   label_t labels[] = {0, 5, 1};
 
-  resnet_loss(&model, x, labels, &loss);
-  // EXPECT_NEAR(loss, 2.994112658, 1e-7);
-  PINF("Loss without regulizer: %.3f", loss);
+  uint nr_iterations = 10;
+  for(uint i = 0; i< nr_iterations; i++) {
+    resnet_loss(&model, x, labels, &loss);
+    // PINF("Loss without regulizer: %.3f", loss);
+  }
 
+
+  /*
   // test with regulizer
   model.reg = 1.0;
   resnet_loss(&model, x, labels, &loss);
@@ -69,7 +73,6 @@ TEST_F(NetResnetTest, Loss) {
   // EXPECT_NEAR(loss, 26.11873099, 1e-7);
   PINF("Forward/backward finished");
 
-  /*
   // Check with numerical gradient
   model_t model_copy = model;
   uint y_shape[] = {1};
