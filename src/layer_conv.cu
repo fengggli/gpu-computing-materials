@@ -242,7 +242,6 @@ static __global__ void _do_im2col_inner_device_naive_thread_per_filter(
   uint filters_per_image = C * filters_per_channel;
   uint total_filters = N * filters_per_image;
 
-  uint iter = 0;
   for (auto iter : grid_stride_range(0u, total_filters)) {
 
     uint n = iter / filters_per_image;  // ii is the target image
@@ -253,11 +252,6 @@ static __global__ void _do_im2col_inner_device_naive_thread_per_filter(
     for (uint f_row = 0; f_row < filter_height; ++f_row) {  // for each row of filter (relative row)
       for (uint f_col = 0; f_col < filter_width; ++f_col) {  // for each col of filter
 
-
-//        uint t_row = iter / filter_size;
-//        uint t_col = iter % filter_size;
-//        uint t_idx = t_row * filter_size + t_col;
-
         uint row = c * filter_width * filter_height + f_row * filter_height + f_col;
         uint col = j * WW * N + k * N + n;
         uint target_idx = row * cols_d_1 + col;
@@ -266,10 +260,95 @@ static __global__ void _do_im2col_inner_device_naive_thread_per_filter(
 //        printf("t_row=%u, t_col=%u, t_idx=%u, target_idx=%u, src_idx=%u, val=%f, row=%u, col=%u\n", t_row, t_col, t_idx, target_idx, src_idx, cols.data[target_idx], row, col);
       }
     }
-    ++iter;
   }
 }
 
+
+/**
+ * This function does a transformation of the input image batch (which
+ * already has padding) to a flattened and stretched out version which
+ * is arranged in such a way that the filters in the convolution apply
+ * to each row in the new 2D array.
+ *
+ * The purpose of this is so that we can do a multiplication by dot
+ * product with the filters.
+ *
+ * The mapping is between a 4D object to a 2D object, where each row
+ * represents 1 stretched out filter, and each col represents one of
+ * the elements that filter will apply to.
+ *
+ * The mapping between the two is not trivial however due to a needing
+ * to map the index in the GPU to a the particular 4D idx in a filter.
+ * Since the filters overlap, and there is a stride to account for,
+ * the mapping has a sort of jumping behavior as the filter windows
+ * "butt" up against the walls.
+ *
+ * My solution here required converting the 1D global threadIdx to
+ * the 4D index of a particular filter though a bunch of operations.
+ * The operations may not seem straight forward but the general idea
+ * is to find the particular filter using our target index, then
+ * target specific elements in that filter using real offsets in the
+ * original 4D domain.
+ *
+ * It could also be though of as a 6D to 1D transformation because
+ * the number of applications of the filters in a specific channel
+ * can be thought of as 2D, and as such replace the normal height and
+ * width elements... then the final 2D comes from the height and width
+ * of the filters themselves.
+ *
+ *
+ * This is (should be, need to prove) a significant improvement over
+ * the previous version of this kernel.  Instead of allocating one
+ * thread per filter, I allocate 1 thread per element.  This means
+ * a significantly higher degree of parallelism can be achieved.
+ */
+static __global__ void _do_im2col_inner_device_thread_per_element(
+    tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH,
+    uint WW, uint filter_height, uint filter_width, uint padding, uint stride)
+{
+
+  uint cols_d_1 = cols.dim.dims[1];
+  uint img_sz = C * x_padded.dim.dims[2] * x_padded.dim.dims[3];
+  uint chan_sz = x_padded.dim.dims[2] * x_padded.dim.dims[3];
+  uint row_sz = x_padded.dim.dims[2];
+
+  uint filter_size = filter_height * filter_width;
+
+  uint filters_per_channel = HH * WW;
+  uint filters_per_image = C * filters_per_channel;
+  uint total_filters = N * filters_per_image;
+  uint total_elements = filter_size * total_filters;
+
+  if (threadIdx.x == 0) {
+    printf("entered _do_im2col_inner_device_thread_per_element\n", threadIdx.x);
+    printf("filters_per_chan=%u, filters_per_img=%u, total_filters=%u\n", filters_per_channel, filters_per_image, total_filters);
+  }
+
+  for (auto iter : grid_stride_range(0u, total_elements)) {
+    uint n = iter / (filters_per_image * filter_size);  // nn is the target image
+    uint c = (iter / (filters_per_channel * filter_size)) % C;  // cc is the channel of the target filter
+
+    // locate the window
+    uint window_index_linear = iter / filter_size;
+    uint window_index_r  = (window_index_linear / HH) % WW;
+    uint windows_index_c = window_index_linear % WW;
+
+    // row and column in a particular filter
+    uint f_row = (iter / filter_width) % filter_width;
+    uint f_col = iter % filter_width;
+
+    // offset the filter col and row by the dimensions of the real image
+    uint row = c * filter_width * filter_height + f_row * filter_height + f_col;
+    uint col = window_index_r * WW * N + windows_index_c * N + n;
+
+    // get src index and target idx
+    uint src_idx = (n * img_sz) + (c * chan_sz) + (stride * window_index_r + f_row) * row_sz + stride * windows_index_c + f_col;
+    uint target_idx = row * cols_d_1 + col;
+
+    cols.data[target_idx] = x_padded.data[src_idx];
+    printf("n=%u, c=%u, window_index_r=%u, windows_index_c=%u, window_idx_linear=%u, f_row=%u, f_col=%u, first_elem=%u, target_idx=%u, src_idx=%u, val=%f, row=%u, col=%u\n", n, c, window_index_r, windows_index_c, window_index_linear, f_row, f_col, first_elem, target_idx, src_idx, cols.data[target_idx], row, col);
+  }
+}
 
 /**
  * im2col_inner_device is a setup function for the real call to actually launch the kernel.
@@ -288,7 +367,7 @@ status_t im2col_inner_device(tensor_t cols, tensor_t x_padded, uint N,  uint C, 
   dim3 blocks(1);
   PINF("device code is called");
 
-  _do_im2col_inner_device<<<blocks, threads>>>(d_cols, d_x_padded, N, C, H, W, HH, WW, filter_height, filter_width, padding, stride);
+  _do_im2col_inner_device_thread_per_element<<<blocks, threads>>>(d_cols, d_x_padded, N, C, H, W, HH, WW, filter_height, filter_width, padding, stride);
 
   tensor_copy_d2h(cols, d_cols);
 

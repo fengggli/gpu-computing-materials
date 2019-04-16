@@ -187,7 +187,7 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
 
               // index of the first elem
               uint first_elem = window_index_r * stride * W + windows_index_c * stride;
-              uint ff_row = (iter / filter_width) % filters_per_channel;
+              uint ff_row = (iter / filter_width) % filter_width;
               assert(ff_row == f_row);
               uint ff_col = iter % filter_width;
               assert(ff_col == f_col);
