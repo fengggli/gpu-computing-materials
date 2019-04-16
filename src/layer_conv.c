@@ -167,36 +167,38 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
 //              uint jj = (iter / WW) % HH; // jj is the target filter row
 //              uint kk = (iter % WW);
 
-              assert(nn == n);
-              assert(cc == c);
-
-//              assert(kk == k);
-
+              // TODO delete these unused elements
               uint t_row = iter / filter_size;
               uint t_col = iter % filter_size;
               uint t_idx = t_row * filter_size + t_col; // t_idx target index
+              assert(t_idx == iter);
 
               // locate the window
-              uint window_index_linear = t_idx / filter_size;
-              uint window_index_r  = window_index_linear / HH;
+              uint window_index_linear = iter / filter_size;
+              uint window_index_r  = (window_index_linear / HH) % WW;
               uint windows_index_c = window_index_linear % WW;
 
-              uint jj = window_index_r % WW;
-              assert(jj == j);
+              assert(nn == n);
+              assert(cc == c);
+              assert(window_index_r == j);
+              assert(windows_index_c == k);
 
               // index of the first elem
-              uint first_elem = (window_index_r) * stride * H + windows_index_c * stride;
+              uint first_elem = window_index_r * stride * H + windows_index_c * stride;
+              uint ff_row = (iter / filter_width) % filters_per_channel;
+              assert(ff_row == f_row);
+              uint ff_col = iter % filter_width;
+              assert(ff_col == f_col);
 
               uint row = c * filter_width * filter_height + f_row * filter_height + f_col;
               uint col = j * WW * N + k * N + n;
               uint target_idx = row * cols_d_1 + col;
               uint src_idx = (n * img_sz) + (c * chan_sz) + (stride * j + f_row) * row_sz + stride * k + f_col;
               cols.data[target_idx] = x_padded.data[src_idx];
-              printf("n=%u, c=%u, j=%u, k=%u, window_index_r=%u, windows_index_c=%u, window_idx_linear=%u, first_elem=%u, t_row=%u, t_col=%u, t_idx=%u, target_idx=%u, src_idx=%u, val=%f, row=%u, col=%u\n", n, c, j, k, window_index_r, windows_index_c, window_index_linear, first_elem, t_row, t_col, t_idx, target_idx, src_idx, cols.data[target_idx], row, col);
+              printf("n=%u, c=%u, j=%u, k=%u, window_index_r=%u, windows_index_c=%u, window_idx_linear=%u, f_row=%u, f_col=%u, first_elem=%u, t_row=%u, t_col=%u, t_idx=%u, target_idx=%u, src_idx=%u, val=%f, row=%u, col=%u\n", n, c, j, k, window_index_r, windows_index_c, window_index_linear, f_row, f_col, first_elem, t_row, t_col, t_idx, target_idx, src_idx, cols.data[target_idx], row, col);
               ++iter;
             }
           }
-
         }
       }
     }
