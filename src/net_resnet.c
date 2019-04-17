@@ -211,7 +211,7 @@ tensor_t _do_resnet_forward(model_t const *model, tensor_t x,
     cache = net_get_cache(model->list_layer_cache, "conv1.cache");
   else
     cache = NULL;
-  convolution_forward(layer_in, w, cache, conv_param, layer_out);
+  conv_relu_forward(layer_in, w, cache, conv_param, layer_out);
   layer_in = layer_out;
 
   /*
@@ -352,7 +352,7 @@ status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
   loss += 0.5 * (model->reg) * tensor_sum_of_square(w);
 
   cache = net_get_cache(model->list_layer_cache, "conv1.cache");
-  convolution_backward(din, dw, cache, conv_param, dout);
+  conv_relu_backward(din, dw, cache, conv_param, dout);
   // TODO: regulizer
   update_regulizer_gradient(w, dw, model->reg);
 

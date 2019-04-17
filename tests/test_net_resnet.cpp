@@ -31,7 +31,7 @@ TEST_F(NetResnetTest, Construct) {
   dim_t input_dim = make_dim_from_arr(array_size(input_shape), input_shape);
   uint output_dim = 10;
   uint nr_stages = 1;
-  uint nr_blocks[MAX_STAGES] = {2};
+  uint nr_blocks[MAX_STAGES] = {1};
   T reg = 0;
   normalize_method_t normalize_method = NORMALIZE_NONE;  // no batchnorm now
 
@@ -46,28 +46,61 @@ TEST_F(NetResnetTest, Construct) {
             */
 }
 TEST_F(NetResnetTest, ForwardInferOnly) {
-  tensor_t x = tensor_make_linspace(-5.5, 4.5, model.input_dim.dims, 4);
+  tensor_t w0 = net_get_param(model.list_all_params, "conv1.weight")->data;
+  tensor_t w1 =
+      net_get_param(model.list_all_params, "layer1.1.conv1.weight")->data;
+  tensor_t w2 =
+      net_get_param(model.list_all_params, "layer1.1.conv2.weight")->data;
+  tensor_t w_fc = net_get_param(model.list_all_params, "fc.weight")->data;
+  tensor_t b_fc = net_get_param(model.list_all_params, "fc.bias")->data;
+
+  // fill some init values as in cs231n
+  tensor_t x = tensor_make_linspace(-0.2, 0.3, model.input_dim.dims, 4);
+
+  weight_init_linspace(w0, -0.7, 0.3);
+  weight_init_linspace(w1, -0.7, 0.3);
+  weight_init_linspace(w2, -0.7, 0.3);
+  weight_init_linspace(w_fc, -0.7, 0.3);
+  weight_init_linspace(b_fc, -0.7, 0.3);
 
   tensor_t score = resnet_forward_infer(&model, x);
+  tensor_t score_ref = tensor_make_alike(score);
+
+  T value_list[] = {
+      81.32275804, 84.57773448, 87.83271092,  91.08768737,  94.34266381,
+      97.59764025, 100.8526167, 104.10759314, 107.36256958, 110.61754603,
+      8.74922391,  9.22185456,  9.69448521,   10.16711586,  10.63974651,
+      11.11237715, 11.5850078,  12.05763845,  12.5302691,   13.00289975,
+      37.25164058, 38.81409578, 40.37655098,  41.93900617,  43.50146137,
+      45.06391657, 46.62637176, 48.18882696,  49.75128216,  51.31373735};
+
+  tensor_fill_list(score_ref, value_list, dim_of_shape(value_list));
+
+  EXPECT_LT(tensor_rel_error(score_ref, score), 1e-7);
+  if (tensor_rel_error(score_ref, score) > 1e-7) {
+    tensor_dump(score);
+    tensor_dump(score_ref);
+  }
 }
 
 /* Check both forward/backward*/
 TEST_F(NetResnetTest, DISABLED_Loss) {
   T loss = 0;
 
-  tensor_t x = tensor_make_linspace(-5.5, 4.5, model.input_dim.dims, 4);
+  // fill some init values as in cs231n
+  tensor_t x = tensor_make_linspace(-0.2, 0.3, model.input_dim.dims, 4);
+
   label_t labels[] = {0, 5, 1};
 
   model.reg = 0;
   resnet_loss(&model, x, labels, &loss);
-  PINF("Loss without regulizer: %.3f", loss);
+  EXPECT_NEAR(loss, 14.975702563, 1e-7);
 
   // test with regulizer
-  model.reg = 1;
+  model.reg = 1.0;
   resnet_loss(&model, x, labels, &loss);
-  PINF("Loss with regulizer: %.3f", loss);
-  // EXPECT_NEAR(loss, 26.11873099, 1e-7);
-  PINF("Forward/backward finished");
+  EXPECT_NEAR(loss, 335.9764923, 1e-7);
+  PINF("Loss checked");
 
   /*
   // Check with numerical gradient

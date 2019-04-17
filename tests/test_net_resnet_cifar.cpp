@@ -46,7 +46,7 @@ TEST_F(NetMLPTest, CifarTest) {
 
   // overfit small data;
 #ifdef IS_CI_BUILD  // make check faster
-  uint train_sz = 1000;
+  uint train_sz = 2;
   uint nr_epoches = 1;
 #else
   uint train_sz = 4000;
