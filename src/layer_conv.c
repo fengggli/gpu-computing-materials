@@ -424,13 +424,13 @@ void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, u
         for (uint fj = 0; fj < field_width; ++fj) {
           uint row = c * field_width * field_height + fi * field_width + fj;
 
+          uint ii = iter / C_fh_fw_HH_WW;  // ii is the target image
+          uint cc = (iter / (field_height * field_width * HH * WW)) % C;  // jj is the channel in the image
+          uint fii = iter / (HH * WW * field_width) % field_height;
+          uint fjj = (iter / (HH * WW)) % field_width;
+
           for (uint h = 0; h < HH; ++h) {
             for (uint w = 0; w < WW; ++w) {
-
-              uint ii = iter / C_fh_fw_HH_WW;  // ii is the target image
-              uint cc = (iter / (field_height * field_width * HH * WW)) % C;  // jj is the channel in the image
-              uint fii = iter / (HH * WW * field_width) % field_height;
-              uint fjj = (iter / (HH * WW)) % field_width;
 
               assert(ii == i);
               assert(cc == c);

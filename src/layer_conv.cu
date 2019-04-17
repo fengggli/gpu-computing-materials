@@ -496,33 +496,70 @@ tensor_t col2im_device(tensor_t cols, uint N, uint C, uint H, uint W, uint field
 
 
 /*
- * This function can be optimized with shared memory but first thing is
- * getting it to work.
+ * The purpose of this function is to take a flattened 2D matrix and
+ * expand it back into the 4D space it originated in.
+ *
+ * The intuition comes from the fact that when we collapsed the 4D
+ * space to 2D in the im2col operation, we were particularly interested
+ * taking elements related to a single application of a filter and
+ * spreading them out in a row of a 2D matrix.
+ *
+ * Now we are interested in taking those elements and putting them
+ * back to where they came from.  This is a non-trivial operation
+ * however due to the reality that we need to consider that when
+ * we performed the im2col operation, we duplicate elements.  So
+ * when we return those elements back, we have to recombine the
+ * related elements.
+ *
+ * Additionally, the same considerations must be made regarding the
+ * strategy we have to follow.  Since elements in the target are
+ * repeatedly accessed when we recombine elements, this operation
+ * should be a good target for usage of shared memory.  However
+ * since the operation is so complex, I have chosen to approach
+ * this with multiple phases, just like the im2col above.
+ *
+ * This particular version is the "most naive." Each thread is
+ * responsible for a substantial amount of work.  Note that each
+ * thread carries out all the work in the 2 inner for loops.
  */
-static __global__ void _do_col2im_inner_device(tensor_t d_cols, tensor_t d_x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride)
+static __global__ void _do_col2im_inner_device(tensor_t dx_cols, tensor_t d_x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride)
 {
   if (threadIdx.x == 0) {
     printf("entered _do_col2im_inner_device\n");
   }
 
-  uint img_sz = C * d_x_padded.dim.dims[2] * d_x_padded.dim.dims[3];
-  uint chan_sz = d_x_padded.dim.dims[2] * d_x_padded.dim.dims[3];
-  uint row_sz = d_x_padded.dim.dims[2];
+  uint dx_col_d1  = dx_cols.dim.dims[1];
+  uint x_p_d1     = x_padded.dim.dims[1];
+  uint x_p_d2     = x_padded.dim.dims[2];
+  uint x_p_d3     = x_padded.dim.dims[3];
 
-//  for (uint c = 0; c < C; c++) // for each channel
-//    for (uint yy = 0; yy < HH; yy++) // stride over rows
-//      for (uint xx = 0; xx < WW; xx++) // stride over cols
-//        for (uint ii = 0; ii < filter_height; ii++) // for each row of filter
+  uint C_fh_fw_HH_WW = C * field_height * field_width * HH * WW;
 
-//          for (uint jj = 0; jj < filter_width; jj++){ // for each col of filter
-//            uint row = c * filter_width * filter_height + ii * filter_height + jj;
-//            for (uint i = 0; i < N; i++){
-//              uint col = yy * WW * N + xx * N + i;
-//              uint target_idx = row * d_cols.dim.dims[1] + col;
-//              uint src_idx = (i * img_sz) + (c * chan_sz) + (stride * yy + ii) * row_sz + stride * xx + jj;
-//              d_cols.data[target_idx] = d_x_padded.data[src_idx];
-//            }
-//          }
+//  printf("\n(N=%u, C=%u, H=%u, W=%u, HH=%u, WW=%u, field_h=%u, field_w=%u, p=%u, stride=%u)\n", N, C, H, W, HH, WW, field_height, field_width, padding, stride);
+
+
+  for (auto iter : grid_stride_range(0u, total_filters)) {
+    uint row = c * field_width * field_height + fi * field_width + fj;
+
+    uint i = iter / C_fh_fw_HH_WW;  // ii is the target image
+    uint c = (iter / (field_height * field_width * HH * WW)) % C;  // jj is the channel in the image
+    uint fi = iter / (HH * WW * field_width) % field_height;
+    uint fj = (iter / (HH * WW)) % field_width;
+
+    for (uint h = 0; h < HH; ++h) {
+      for (uint w = 0; w < WW; ++w) {
+//        printf("iter=%u, i=%u, c=%u, fi=%u, fj=%u, h=%u, w=%u\n", iter, i, c, fi, fj, h, w);
+        uint col = h * WW * N + w * N + i;
+        uint src_idx = row * dx_col_d1 + col;
+        uint target_idx =
+            i * x_p_d1 * x_p_d2 * x_p_d3
+            + c * x_p_d2 * x_p_d3
+            + (stride * h + fi) * x_p_d3
+            + stride * w + fj;
+        x_padded.data[target_idx] += dx_cols.data[src_idx];
+      }
+
+  }
 }
 
 void col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride) {
