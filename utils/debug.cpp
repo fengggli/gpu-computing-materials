@@ -8,6 +8,7 @@
 #include "awnn/logging.h"
 #include "utils/debug.h"
 
+// To get linenumber: addr2line -e tests/test-net-resnet 0x46d7d3
 void print_trace(void) {
   void *array[10];
   int size;
@@ -17,7 +18,7 @@ void print_trace(void) {
   size = backtrace(array, 10);
   strings = backtrace_symbols(array, size);
 
-  printf ("Obtained %d stack frames.\n", size);
+  printf("Obtained %d stack frames.\n", size);
 
   for (i = 0; i < size; i++) printf("%s\n", strings[i]);
 
@@ -35,7 +36,7 @@ int list_get_count(struct list_head *head) {
   return count;
 }
 
-void dump_tensor_stats(tensor_t t, const char* name) {
+void dump_tensor_stats(tensor_t t, const char *name) {
   uint capacity = tensor_get_capacity(t);
   double sum = 0;
   for (uint i = 0; i < capacity; i++) {

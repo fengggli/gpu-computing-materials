@@ -39,10 +39,15 @@ enum {
   MODE_INFER = 1,
 };
 
-#define AWNN_CHECK_EQ(a, b)              \
-  if ((a) != (b)) {                      \
-    PERR("Expect equal value, but not"); \
-    exit(-1);                            \
+void print_trace();
+
+#define AWNN_NO_USE(a) (void)(a)
+
+#define AWNN_CHECK_EQ(a, b)                                         \
+  if ((a) != (b)) {                                                 \
+    PERR("Value (%lu) != %lu", (unsigned long)a, (unsigned long)b); \
+    print_trace();                                                  \
+    exit(-1);                                                       \
   }
 
 #define AWNN_CHECK_NE(a, b)                \

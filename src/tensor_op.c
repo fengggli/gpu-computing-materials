@@ -72,11 +72,12 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
 
 #ifdef USE_OPENBLAS
   // https://software.intel.com/en-us/mkl-tutorial-c-multiplying-matrices-using-dgemm
-  cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-      m, n, k,
-      1, in1.data, k,
-      in2.data, n,
-      1.0, out.data, n);
+  tensor_fill_scalar(out, 0.0);
+  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+      (int)m, (int)n, (int)k,
+      1, in1.data, (int)k,
+      in2.data, (int)n,
+      1.0, out.data, (int)n);
 #else
   uint ii, jj, kk; // A[i.j] with B[j,k]
   for(ii = 0; ii < m; ii++){
@@ -209,7 +210,7 @@ status_t tensor_reshape_(tensor_t* ptr_t, uint const shape[], uint const ndims){
     dim_dump(ptr_t->dim);
     PERR("requested dimension: ");
     dim_dump(req_dim);
-
+    print_trace();
     return S_BAD_DIM;
   }
   ptr_t->dim = req_dim;

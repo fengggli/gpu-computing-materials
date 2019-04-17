@@ -42,6 +42,15 @@ TODO List
 Previous
 =========
 
+0.4.6
+======
+:Data 2019-04-15
+
+Added
+-------
+
+* residual block and simple resnet. See https://github.com/fengggli/gpu-computing-materials/pull/37.
+
 0.4.5
 ======
 

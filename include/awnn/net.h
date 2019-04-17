@@ -110,6 +110,8 @@ static inline lcache_t *net_get_cache(struct list_head const *l_cache,
   return NULL;
 }
 
+void update_regulizer_gradient(tensor_t x, tensor_t dx, T reg);
+
 #ifdef __cplusplus
 }
 #endif

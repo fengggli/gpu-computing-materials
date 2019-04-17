@@ -94,11 +94,7 @@ void tensor_fill_patterned(tensor_t t);  // debug use
 void tensor_fill_list(tensor_t const, T const value_list[],
                       uint const length_of_value_list);
 
-static inline tensor_t tensor_make_placeholder() {
-  tensor_t ret;
-  ret.mem_type = EMPTY_MEM;
-  return ret;
-}
+tensor_t tensor_make_placeholder(uint const shape[], uint const ndims);
 
 tensor_t tensor_make_zeros(uint const shape[], uint const ndims);
 tensor_t tensor_make_ones(uint const shape[], uint const ndims);

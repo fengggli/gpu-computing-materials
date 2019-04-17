@@ -58,6 +58,18 @@ add_executable(test-data-cifar test_data_cifar.cpp)
 target_link_libraries(test-data-cifar ${AWNN_LIBS}  gtest)
 add_test(test-data-cifar test-data-cifar)
 
+add_executable(test-layer-sandwich test_layer_sandwich.cpp)
+target_link_libraries(test-layer-sandwich ${AWNN_LIBS}  gtest)
+add_test(test-layer-sandwich test-layer-sandwich)
+
+add_executable(test-net-resnet test_net_resnet.cpp)
+target_link_libraries(test-net-resnet ${AWNN_LIBS}  gtest)
+add_test(test-net-resnet test-net-resnet)
+
+add_executable(test-net-resnet-cifar test_net_resnet_cifar.cpp)
+target_link_libraries(test-net-resnet-cifar ${AWNN_LIBS} gtest)
+# add_test(test-net-resnet-cifar test-net-resnet-cifar) # this uses a lot of mem
+
 #add_executable(test-loss-softmax-simple test_loss_softmax_simple.cpp)
 #target_link_libraries(test-loss-softmax-simple ${AWNN_LIBS}  gtest)
 #add_test(test-loss-softmax-simple test-loss-softmax-simple)

@@ -49,7 +49,7 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
     tensor_t din;
     if (i == 0) {
       uint in_shape[] = {max_batch_sz, fan_in};
-      in = tensor_make_placeholder();
+      in = tensor_make_placeholder(in_shape, 2);
       din = tensor_make(in_shape, 2);
     } else {
       in = out_prev;
@@ -76,8 +76,8 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
     net_attach_param(model->list_all_params, b_name, b, db);
 
     // weight init
-    //double weight_scale = 0.1;
-    //weight_init_fc(w, b, weight_scale);
+    // double weight_scale = 0.1;
+    // weight_init_fc(w, b, weight_scale);
     weight_init_fc_kaiming(w, b);
 
     // prepare layer output
@@ -133,8 +133,7 @@ tensor_t mlp_forward_infer(model_t const *model, tensor_t x) {
     lcache_t *cache = NULL;
 
     if (i != model->nr_hidden_layers) {  // last layer doesn't have relu
-      AWNN_CHECK_EQ(S_OK,
-                    layer_fc_relu_forward(layer_input, w, b, cache, layer_out));
+      AWNN_CHECK_EQ(S_OK, fc_relu_forward(layer_input, w, b, cache, layer_out));
     } else {
       AWNN_CHECK_EQ(S_OK,
                     layer_fc_forward(layer_input, w, b, cache, layer_out));
@@ -167,8 +166,7 @@ tensor_t mlp_forward(model_t const *model, tensor_t x) {
     cache = net_get_cache(model->list_layer_cache, cache_name);
 
     if (i != model->nr_hidden_layers) {  // last layer doesn't have relu
-      AWNN_CHECK_EQ(S_OK,
-                    layer_fc_relu_forward(layer_input, w, b, cache, layer_out));
+      AWNN_CHECK_EQ(S_OK, fc_relu_forward(layer_input, w, b, cache, layer_out));
     } else {
       AWNN_CHECK_EQ(S_OK,
                     layer_fc_forward(layer_input, w, b, cache, layer_out));
@@ -203,7 +201,7 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
 
   // backprop
   uint i = model->nr_hidden_layers;
-  while(1){
+  while (1) {
     // locate preallocated layer_in gradient
     char in_name[MAX_STR_LENGTH];
     snprintf(in_name, MAX_STR_LENGTH, "fc%u.in", i);
@@ -231,21 +229,17 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
 
     // TODO: need to track y and cache;
     if (i != model->nr_hidden_layers) {
-      AWNN_CHECK_EQ(S_OK, layer_fc_relu_backward(din, dw, db, cache, dout));
+      AWNN_CHECK_EQ(S_OK, fc_relu_backward(din, dw, db, cache, dout));
     } else {
       AWNN_CHECK_EQ(S_OK, layer_fc_backward(din, dw, db, cache, dout));
     }
 
     // add gradient for regulizer term
-    tensor_t tmp = tensor_make_copy(w);
-    T *pelem;
-    uint ii;  // for iteration
-    tensor_for_each_entry(pelem, ii, tmp) { (*pelem) *= model->reg; }
-    tensor_elemwise_op_inplace(dw, tmp, TENSOR_OP_ADD);
+    update_regulizer_gradient(w, dw, model->reg);
 
-    if(i == 0) break;
+    if (i == 0) break;
     i--;
-  } 
+  }
 
   *ptr_loss = loss;
   ret = S_OK;

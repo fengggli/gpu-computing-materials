@@ -22,9 +22,9 @@ else()
 endif()
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_SHARED_LINKER_FLAGS "-rdynamic")
 
-set(GCC_COVERAGE_COMPILE_FLAGS "-Wall -Wextra -Wconversion")
+
+set(GCC_COVERAGE_COMPILE_FLAGS "-Wall -Wextra -Wconversion -rdynamic")
 if(USE_STRICT_CHECK)
   set(GCC_COVERAGE_COMPILE_FLAGS "-pedantic ${GCC_COVERAGE_COMPILE_FLAGS}")
 endif()
@@ -56,14 +56,20 @@ include(CheckIncludeFiles)
 
 #TODO support MLK? source /opt/intel/mkl/bin/mklvars.sh intel64")
 if(USE_OPENBLAS)
-  CHECK_INCLUDE_FILES("cblas.h" HAVE_CBLAS)
-  if(HAVE_CBLAS)
-    message("has cblas!")
+  CHECK_INCLUDE_FILES("openblas/cblas.h" HAVE_CBLAS_OPENBLAS)  # ubuntu 1604
+  CHECK_INCLUDE_FILES("cblas.h" HAVE_CBLAS) # my arch
+  if(HAVE_CBLAS_OPENBLAS)
+    message("has cblas in ubuntu!")
+    set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS}  blas)
+  elseif(HAVE_CBLAS)
+    message("has cblas in archlinux!")
+    set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS} cblas blas)
+
   else()
     message(FATAL_ERROR "in sievert, run:
-    sudo apt-get install libopenblas-dev")
+    [ubuntu] sudo apt-get install libopenblas-dev
+    [arch]: sudo pacman cblas openblas")
   endif()
-  set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS} openblas)
 endif()
 
 configure_file (
@@ -84,8 +90,8 @@ add_library(awnn_core
   src/net.c
   src/net_mlp.c
   src/layer_sandwich.c
-  src/solver.c)
-  #src/net_resnet.c)
+  src/solver.c
+  src/net_resnet.c)
 
 target_include_directories(awnn_core PUBLIC include)
 target_link_libraries(awnn_core PUBLIC ${AWNN_DEP_LIBS})
