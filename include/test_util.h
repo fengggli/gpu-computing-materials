@@ -45,10 +45,7 @@ status_t eval_numerical_gradient(
   // return S_OK;
   uint capacity = tensor_get_capacity(x);
   for (uint i = 0; i < capacity; i++) {
-    PINF("[--numerical check]: [%d ] (%u, %u)",i/(capacity/100) , i, capacity);
-/*    if(i%(capacity/100) == 0){*/
-      //PINF("[numerical check]: [%d ] (%u, %u)",i/(capacity/100) , i, capacity);
-    /*}*/
+    // PINF("[--numerical check]: [%d ] (%u, %u)",i/(capacity/100) , i, capacity);
     PDBG("\n\n===================================================");
     PDBG("calculating dx at flat position [%d]...", i);
     T old_value = x.data[i];
