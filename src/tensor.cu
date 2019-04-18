@@ -1,5 +1,4 @@
 #include "awnn/tensor.h"
-#include "cuda_defs.h"
 
 void* mem_alloc_device(size_t size) {
   T* d_data;
@@ -30,7 +29,6 @@ tensor_t tensor_make_device(uint const shape[], uint const ndims) {
 
   return t_device;
 }
-
 
 tensor_t tensor_make_copy_h2d(tensor_t t_host) {
   uint capacity = tensor_get_capacity(t_host);

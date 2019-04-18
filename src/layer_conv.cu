@@ -1,7 +1,6 @@
 #include "awnn/layer_conv.h"
-#include "cuda_defs.h"
 #include "range.cuh"
-
+#include "awnn/common.h"
 
 // type alias to simplify typing...
 using namespace util::lang;
@@ -15,7 +14,32 @@ static __device__ step_range<T> grid_stride_range(T begin, T end) {
 }
 
 static uint __device__ capacity(tensor_t t) {
-  return t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2] * t.dim.dims[3];
+  uint c = 0;
+
+  if (t.dim.dims[0] == 0) {
+    return c;
+  } else {
+    c = t.dim.dims[0];
+  }
+
+  for (int i = 1; i < MAX_DIM; ++i) {
+    if (t.dim.dims[i] == 0) {
+      return c;
+    }
+    c *= t.dim.dims[i];
+  }
+
+  return c;
+}
+
+static __global__ void print_tensor_device(tensor_t t) {
+  if (threadIdx.x == 0) {
+    printf("entered print_tensor_device capacity t= %u\n", threadIdx.x, capacity(t));
+    for (int i = 0; i < capacity(t); ++i) {
+      printf("data[%u] = %f ", i, t.data[i]);
+    }
+  }
+  printf("\n");
 }
 
 /*
@@ -118,7 +142,7 @@ tensor_t tensor_make_transpose_3012_device(tensor_t t) {
  *
  * This function should just do the padding operation in parallel.  Although below in my notes of the
  * inner im2col, I speculate that this operation can be eliminated, I am still going to provide it in
- * the intitial cuda implementation
+ * the initial cuda implementation
  */
 static __global__ void _do_tensor_make_padded_square_input_device(tensor_t d_padded, tensor_t d_src, uint p, T pad_val)
 {
@@ -348,17 +372,18 @@ static __global__ void _do_im2col_inner_device_thread_per_element(
 }
 
 /**
- * im2col_inner_device is a setup function for the real call to actually launch the kernel.
- * For now, it will allocate and de-allocate / transfer mem to and from the GPU. In the pure
- * GPU based forward, this function will not be called, but rather the _do... function will be
- * called directly.
+ * im2col_inner_device is a setup function for the real call to
+ * actually launch the kernel. For now, it will allocate and
+ * de-allocate / transfer mem to and from the GPU. In the pure
+ * GPU based forward, this function will not be called, but
+ * rather the _do... function will be called directly.
  */
 status_t im2col_inner_device(tensor_t cols, tensor_t x_padded, uint N,  uint C,  uint H,  uint W,  uint HH, uint WW, uint filter_height, uint filter_width, uint padding, uint stride)
 {
 
   tensor_t d_cols       = tensor_make_copy_h2d(cols);
   tensor_t d_x_padded   = tensor_make_copy_h2d(x_padded);
-
+  cudaDeviceSynchronize();
   // TODO: make it handler lager size
   dim3 threads(32);
   dim3 blocks(1);
@@ -522,33 +547,28 @@ tensor_t col2im_device(tensor_t cols, uint N, uint C, uint H, uint W, uint field
  * responsible for a substantial amount of work.  Note that each
  * thread carries out all the work in the 2 inner for loops.
  */
-static __global__ void _do_col2im_inner_device(tensor_t dx_cols, tensor_t d_x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride)
+static __global__ void _do_col2im_inner_device(tensor_t d_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride)
 {
   if (threadIdx.x == 0) {
     printf("entered _do_col2im_inner_device\n");
   }
 
-  uint dx_col_d1  = dx_cols.dim.dims[1];
+  uint dx_col_d1  = d_cols.dim.dims[1];
   uint x_p_d1     = x_padded.dim.dims[1];
   uint x_p_d2     = x_padded.dim.dims[2];
   uint x_p_d3     = x_padded.dim.dims[3];
 
-  uint C_fh_fw_HH_WW = C * field_height * field_width * HH * WW;
+  for (auto iter : grid_stride_range(0u, N * C * field_width * field_height)) {
 
-//  printf("\n(N=%u, C=%u, H=%u, W=%u, HH=%u, WW=%u, field_h=%u, field_w=%u, p=%u, stride=%u)\n", N, C, H, W, HH, WW, field_height, field_width, padding, stride);
+    uint i = iter / (C * field_height * field_width);
+    uint c = (iter / (field_height * field_width)) % C;  // jj is the channel in the image
+    uint fi = iter / (field_width) % field_height;
+    uint fj = iter % field_width;
 
-
-  for (auto iter : grid_stride_range(0u, total_filters)) {
     uint row = c * field_width * field_height + fi * field_width + fj;
-
-    uint i = iter / C_fh_fw_HH_WW;  // ii is the target image
-    uint c = (iter / (field_height * field_width * HH * WW)) % C;  // jj is the channel in the image
-    uint fi = iter / (HH * WW * field_width) % field_height;
-    uint fj = (iter / (HH * WW)) % field_width;
 
     for (uint h = 0; h < HH; ++h) {
       for (uint w = 0; w < WW; ++w) {
-//        printf("iter=%u, i=%u, c=%u, fi=%u, fj=%u, h=%u, w=%u\n", iter, i, c, fi, fj, h, w);
         uint col = h * WW * N + w * N + i;
         uint src_idx = row * dx_col_d1 + col;
         uint target_idx =
@@ -556,25 +576,27 @@ static __global__ void _do_col2im_inner_device(tensor_t dx_cols, tensor_t d_x_pa
             + c * x_p_d2 * x_p_d3
             + (stride * h + fi) * x_p_d3
             + stride * w + fj;
-        x_padded.data[target_idx] += dx_cols.data[src_idx];
+        x_padded.data[target_idx] += d_cols.data[src_idx];
       }
-
+    }
   }
+
 }
 
 void col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride) {
   tensor_t d_cols       = tensor_make_copy_h2d(cols);
   tensor_t d_x_padded   = tensor_make_copy_h2d(x_padded);
 
-  assert(padding * padding == cols.dim.dims[1]);
+//  print_tensor_device<<<1, 1>>>(d_cols);
+//  print_tensor_device<<<1, 1>>>(d_x_padded);
 
   // TODO: make it handler lager size
-  dim3 threads(32);
+  dim3 threads(1);
   dim3 blocks(1);
   PINF("device code is called");
   _do_col2im_inner_device<<<blocks, threads>>>(d_cols, d_x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
 
-  tensor_copy_d2h(cols, d_cols);
+  tensor_copy_d2h(x_padded, d_x_padded);
 
   tensor_destroy_device(&d_cols);
   tensor_destroy_device(&d_x_padded);
@@ -587,8 +609,8 @@ static __global__ void _do_tensor_make_transpose_1230_device(tensor_t d_t, tenso
     printf("entered _do_tensor_make_transpose_1230_device\n", threadIdx.x);
   }
 
-  uint src_idx = 0, target_idx = 0;
-  uint original_dim_0 = d_src.dim.dims[0];
+  uint target_idx = 0;
+
   uint og_dim_1 = d_src.dim.dims[1];
   uint og_dim_2 = d_src.dim.dims[2];
   uint og_dim_3 = d_src.dim.dims[3];

@@ -462,7 +462,7 @@ TEST_F(LayerConvTest, im2col_numerical2) {
 
 TEST_F(LayerConvTest, im2col_inner_1)
 {
-  uint C = 3, H = 4, HH = 2, N = 2, W = 4, WW = 2, filter_height = 4, filter_width = 4, padding = 1, stride = 2;
+  uint N = 2, C = 3, H = 4, HH = 2, W = 4, WW = 2, filter_height = 4, filter_width = 4, padding = 1, stride = 2;
 
   uint cols_shape[] = { 48, 8 };
   tensor_t cols = tensor_make_scalar(cols_shape, dim_of_shape(cols_shape), 0);
@@ -486,7 +486,7 @@ TEST_F(LayerConvTest, im2col_inner_1)
 
 TEST_F(LayerConvTest, im2col_inner_2_from_picture)
 {
-  uint C = 2, H = 3, HH = 2, N = 1, W = 3, WW = 2, filter_height = 2, filter_width = 2, padding = 0, stride = 1;
+  uint N = 1, C = 2, H = 3, W = 3, HH = 2, WW = 2, filter_height = 2, filter_width = 2, padding = 0, stride = 1;
 
   uint cols_shape[] = { 8, 4 };
   tensor_t cols = tensor_make_scalar(cols_shape, dim_of_shape(cols_shape), 0);
