@@ -41,6 +41,8 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
     lcache_push(cache, x);
     lcache_push(cache, w);
     lcache_push(cache, flattened_x);
+  } else {
+    tensor_destroy(&flattened_x);
   }
 
   tensor_destroy(&reshaped_w);
@@ -182,6 +184,8 @@ status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache, conv_pa
   tensor_destroy(&x_cols_T);
   tensor_destroy(&w_T);
   tensor_destroy(&t);
+  tensor_destroy(&x_cols);
+  tensor_destroy(&dx_cols);
 
   return S_OK;
 }

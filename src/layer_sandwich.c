@@ -90,6 +90,7 @@ status_t residual_basic_no_bn_forward(tensor_t x, tensor_t w1, tensor_t w2,
   tensor_t tmp = tensor_make_alike(y);
   conv_relu_forward(x, w1, cache, params, tmp);
   conv_iden_relu_forward(tmp, x, w2, cache, params, y);
+  tensor_destroy(&tmp);
 
   return S_OK;
 }

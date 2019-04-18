@@ -81,10 +81,11 @@ TEST_F(NetResnetTest, ForwardInferOnly) {
     tensor_dump(score);
     tensor_dump(score_ref);
   }
+  tensor_destroy(&x);
 }
 
 /* Check both forward/backward*/
-TEST_F(NetResnetTest, DISABLED_Loss) {
+TEST_F(NetResnetTest, Loss) {
   T loss = 0;
 
   // fill some init values as in cs231n

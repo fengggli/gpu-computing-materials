@@ -19,6 +19,7 @@ static inline void* mem_alloc(size_t size) {
   void* ret = malloc(size);
   if (!ret) {
     PERR("Allocation faild\n");
+    print_trace();
   }
   return ret;
 }

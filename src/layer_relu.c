@@ -14,7 +14,8 @@ status_t layer_relu_forward(tensor_t const x, lcache_t *cache, tensor_t y) {
 
   if (cache) {
     lcache_push(cache, mask);
-  }
+  } else
+    tensor_destroy(&mask);
 
   ret = S_OK;
   return ret;

@@ -70,6 +70,10 @@ add_executable(test-net-resnet-cifar test_net_resnet_cifar.cpp)
 target_link_libraries(test-net-resnet-cifar ${AWNN_LIBS} gtest)
 # add_test(test-net-resnet-cifar test-net-resnet-cifar) # this uses a lot of mem
 
+# test memory leaks
+add_executable(test-net-resnet-mem test_net_resnet_mem.cpp)
+target_link_libraries(test-net-resnet-mem ${AWNN_LIBS} gtest)
+
 #add_executable(test-loss-softmax-simple test_loss_softmax_simple.cpp)
 #target_link_libraries(test-loss-softmax-simple ${AWNN_LIBS}  gtest)
 #add_test(test-loss-softmax-simple test-loss-softmax-simple)
