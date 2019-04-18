@@ -85,7 +85,7 @@ TEST_F(NetResnetTest, ForwardInferOnly) {
 }
 
 /* Check both forward/backward*/
-TEST_F(NetResnetTest, Loss) {
+TEST_F(NetResnetTest, DISABLED_Loss) {
   T loss = 0;
 
   // fill some init values as in cs231n
@@ -103,7 +103,6 @@ TEST_F(NetResnetTest, Loss) {
   EXPECT_NEAR(loss, 335.9764923, 1e-7);
   PINF("Loss checked");
 
-  /*
   // Check with numerical gradient
   model_t model_copy = model;
   uint y_shape[] = {1};
@@ -127,7 +126,6 @@ TEST_F(NetResnetTest, Loss) {
     tensor_destroy(&dparam_ref);
     PINF("Gradient check of %s passed", p_param->name);
   }
-  */
 }
 
 /* Check both forward/backward*/
