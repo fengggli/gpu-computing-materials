@@ -276,25 +276,10 @@ tensor_t resnet_forward(model_t const *model, tensor_t x) {
   return _do_resnet_forward(model, x, MODE_TRAIN);
 }
 
-/* Compute loss for a batch of (x,y), do forward/backward, and update
- * gradients*/
-status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
-                     T *ptr_loss) {
+status_t resnet_backward(model_t const *model, tensor_t dout, T *ptr_loss) {
   T loss = 0;
-
-  resnet_forward(model, x);
-
-  tensor_t out, dout, din;
+  tensor_t din;
   lcache_t *cache;
-
-  // PINF("out score is %s", out_name);
-  param_t *param_score = net_get_param(model->list_layer_out, "fc.out");
-  AWNN_CHECK_NE(NULL, labels);
-  out = param_score->data;
-  dout = param_score->diff;
-
-  awnn_mode_t mode = MODE_TRAIN;
-  AWNN_CHECK_EQ(S_OK, loss_softmax(out, labels, &loss, mode, dout));
 
   /* FC */
   din = net_get_param(model->list_layer_in, "fc.in")->diff;
@@ -355,7 +340,32 @@ status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
   conv_relu_backward(din, dw, cache, conv_param, dout);
   // TODO: regulizer
   update_regulizer_gradient(w, dw, model->reg);
-
   *ptr_loss = loss;
+  return S_OK;
+}
+
+/**
+ * Compute loss for a batch of (x,y), do forward/backward, and update
+ * gradients*/
+status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
+                     T *ptr_loss) {
+  T loss_classify, loss_reg;
+  tensor_t out, dout;
+
+  // Forward
+  resnet_forward(model, x);
+
+  // Softmax
+  param_t *param_score = net_get_param(model->list_layer_out, "fc.out");
+  AWNN_CHECK_NE(NULL, labels);
+  out = param_score->data;
+  dout = param_score->diff;
+  AWNN_CHECK_EQ(S_OK,
+                loss_softmax(out, labels, &loss_classify, MODE_TRAIN, dout));
+
+  // Backward
+  AWNN_CHECK_EQ(S_OK, resnet_backward(model, dout, &loss_reg));
+
+  *ptr_loss = loss_classify + loss_reg;
   return S_OK;
 }

@@ -31,7 +31,7 @@ TEST_F(NetMLPTest, CifarTest) {
   uint train_sz = 4000;
   // uint train_sz = 4000;
   uint nr_epoches = 5;
-  uint batch_sz = 16;
+  uint batch_sz = 128;
 #endif
 
   uint input_shape[] = {batch_sz, 3, 32, 32};

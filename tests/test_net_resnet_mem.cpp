@@ -42,7 +42,8 @@ void test_loss() {
 }
 void test_cifar() {
   static model_t model;
-  uint batch_sz = 2;
+  uint train_sz = 64;
+  uint batch_sz = 16;
 
   uint input_shape[] = {batch_sz, 3, 32, 32};
   dim_t input_dim = make_dim_from_arr(array_size(input_shape), input_shape);
@@ -65,7 +66,6 @@ void test_cifar() {
   AWNN_CHECK_EQ(S_OK, ret);
 
   // overfit small data;
-  uint train_sz = 4;
   uint nr_epoches = 1;
 
   uint val_sz = 2;
