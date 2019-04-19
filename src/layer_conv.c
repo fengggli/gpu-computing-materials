@@ -359,67 +359,6 @@ tensor_t col2im(tensor_t dx_cols, uint N, uint C, uint H, uint W, uint field_hei
  * collapsed dimensions.  This will allow us to parallelize
  * the algorithm in a very naive way.
  */
-void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW,
-                  uint field_height, uint field_width, uint padding, uint stride)
-{
-  uint dx_col_d1  = dx_cols.dim.dims[1];
-  uint x_p_d1     = x_padded.dim.dims[1];
-  uint x_p_d2     = x_padded.dim.dims[2];
-  uint x_p_d3     = x_padded.dim.dims[3];
-
-  printf("\n(N=%u, C=%u, H=%u, W=%u, HH=%u, WW=%u, field_h=%u, field_w=%u, p=%u, stride=%u)\n", N, C, H, W, HH, WW, field_height, field_width, padding, stride);
-
-  uint iter = 0;
-  uint outer_count = 0;
-  for (uint i = 0; i < N; ++i) { // for each image
-    for (uint c = 0; c < C; ++c) {  // for each channel
-      for (uint fi = 0; fi < field_height; ++fi) {
-        for (uint fj = 0; fj < field_width; ++fj) {
-          outer_count++;
-          uint row = c * field_width * field_height + fi * field_width + fj;
-
-          uint ii = iter / (C * field_height * field_width);
-          uint cc = (iter / (field_height * field_width)) % C;  // jj is the channel in the image
-          uint fii = iter / (field_width) % field_height;
-          uint fjj = iter % field_width;
-
-          for (uint h = 0; h < HH; ++h) {
-            for (uint w = 0; w < WW; ++w) {
-
-              assert(ii == i);
-              assert(cc == c);
-              assert(fii == fi);
-              assert(fjj == fj);
-
-              printf("iter=%u, ii=%u, i=%u, cc=%u, c=%u, fii=%u, fi=%u, fjj=%u, fj=%u, h=%u, w=%u\n", iter, ii, i, cc, c, fii, fi, fjj, fj, h, w);
-              uint col = h * WW * N + w * N + i;
-              uint src_idx = row * dx_col_d1 + col;
-              uint target_idx =
-                  i * x_p_d1 * x_p_d2 * x_p_d3
-                  + c * x_p_d2 * x_p_d3
-                  + (stride * h + fi) * x_p_d3
-                  + stride * w + fj;
-//              printf("x_padded.data[%u]=%f added to dx_cols.data[%u]=%f --> ", target_idx, x_padded.data[target_idx], src_idx, dx_cols.data[src_idx]);
-              x_padded.data[target_idx] += dx_cols.data[src_idx];
-//              printf("%f\n", x_padded.data[target_idx]);
-            }
-          }
-          ++iter;
-        }
-      }
-    }
-  }
-  printf("outer count = %u\n", outer_count);
-//  printf("after x_padded");
-//  tensor_print_flat(x_padded);
-}
-
-/*
- * this version gets us closer to the upgraded version mapping
- * the entire iter space to the ii, cc, fii, fjj elements.
- *
- * It does not calculate the h and w from iter yet.
- */
 //void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW,
 //                  uint field_height, uint field_width, uint padding, uint stride)
 //{
@@ -427,8 +366,6 @@ void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, u
 //  uint x_p_d1     = x_padded.dim.dims[1];
 //  uint x_p_d2     = x_padded.dim.dims[2];
 //  uint x_p_d3     = x_padded.dim.dims[3];
-//
-//  uint C_fh_fw_HH_WW = C * field_height * field_width * HH * WW;
 //
 //  printf("\n(N=%u, C=%u, H=%u, W=%u, HH=%u, WW=%u, field_h=%u, field_w=%u, p=%u, stride=%u)\n", N, C, H, W, HH, WW, field_height, field_width, padding, stride);
 //
@@ -439,22 +376,22 @@ void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, u
 //      for (uint fi = 0; fi < field_height; ++fi) {
 //        for (uint fj = 0; fj < field_width; ++fj) {
 //          outer_count++;
+//          uint row = c * field_width * field_height + fi * field_width + fj;
+//
+//          uint ii = iter / (C * field_height * field_width);
+//          uint cc = (iter / (field_height * field_width)) % C;  // jj is the channel in the image
+//          uint fii = iter / (field_width) % field_height;
+//          uint fjj = iter % field_width;
 //
 //          for (uint h = 0; h < HH; ++h) {
 //            for (uint w = 0; w < WW; ++w) {
-//              uint ii = iter / C_fh_fw_HH_WW;  // ii is the target image
-//              uint cc = (iter / (field_height * field_width * HH * WW)) % C;  // jj is the channel in the image
-//              uint fii = iter / (HH * WW * field_width) % field_height;
-//              uint fjj = (iter / (HH * WW)) % field_width;
-//
-//              uint row = c * field_width * field_height + fi * field_width + fj;
 //
 //              assert(ii == i);
 //              assert(cc == c);
 //              assert(fii == fi);
 //              assert(fjj == fj);
 //
-//              printf("iter=%u, i=%u, c=%u, fi=%u, fj=%u, h=%u, w=%u\n", iter, i, c, fi, fj, h, w);
+//              printf("iter=%u, ii=%u, i=%u, cc=%u, c=%u, fii=%u, fi=%u, fjj=%u, fj=%u, h=%u, w=%u\n", iter, ii, i, cc, c, fii, fi, fjj, fj, h, w);
 //              uint col = h * WW * N + w * N + i;
 //              uint src_idx = row * dx_col_d1 + col;
 //              uint target_idx =
@@ -462,12 +399,12 @@ void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, u
 //                  + c * x_p_d2 * x_p_d3
 //                  + (stride * h + fi) * x_p_d3
 //                  + stride * w + fj;
-//              printf("x_padded.data[%u]=%f added to dx_cols.data[%u]=%f --> ", target_idx, x_padded.data[target_idx], src_idx, dx_cols.data[src_idx]);
+////              printf("x_padded.data[%u]=%f added to dx_cols.data[%u]=%f --> ", target_idx, x_padded.data[target_idx], src_idx, dx_cols.data[src_idx]);
 //              x_padded.data[target_idx] += dx_cols.data[src_idx];
-//              printf("%f\n", x_padded.data[target_idx]);
-//              ++iter;
+////              printf("%f\n", x_padded.data[target_idx]);
 //            }
 //          }
+//          ++iter;
 //        }
 //      }
 //    }
@@ -476,3 +413,71 @@ void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, u
 ////  printf("after x_padded");
 ////  tensor_print_flat(x_padded);
 //}
+
+/*
+ * this version gets us closer to the upgraded version mapping
+ * the entire iter space to the ii, cc, fii, fjj elements.
+ *
+ * It does not calculate the h and w from iter yet.
+ */
+void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW,
+                  uint field_height, uint field_width, uint padding, uint stride)
+{
+  uint dx_col_d1  = dx_cols.dim.dims[1];
+  uint x_p_d1     = x_padded.dim.dims[1];
+  uint x_p_d2     = x_padded.dim.dims[2];
+  uint x_p_d3     = x_padded.dim.dims[3];
+
+  uint C_fh_fw_HH_WW = C * field_height * field_width * HH * WW;
+
+  printf("\n(N=%u, C=%u, H=%u, W=%u, HH=%u, WW=%u, field_h=%u, field_w=%u, p=%u, stride=%u)\n", N, C, H, W, HH, WW, field_height, field_width, padding, stride);
+
+  uint iter = 0;
+  for (uint ia = 0; ia < N; ++ia) { // for each image
+    for (uint ca = 0; ca < C; ++ca) {  // for each channel
+      for (uint fia = 0; fia < field_height; ++fia) {
+        for (uint fja = 0; fja < field_width; ++fja) {
+
+          for (uint h = 0; h < HH; ++h) {
+            for (uint w = 0; w < WW; ++w) {
+              uint i = iter / C_fh_fw_HH_WW;  // ii is the target image
+              uint c = (iter / (field_height * field_width * HH * WW)) % C;  // jj is the channel in the image
+              uint fi = iter / (HH * WW * field_width) % field_height;
+              uint fj = (iter / (HH * WW)) % field_width;
+              uint hh = (iter / WW) % HH;
+              uint ww = iter % WW;
+
+              uint row = c * field_width * field_height + fi * field_width + fj;
+
+//              assert(ii == i);
+//              assert(cc == c);
+//              assert(fii == fi);
+//              assert(fjj == fj);
+              assert(hh == h);
+              assert(ww == w);
+
+              printf("iter=%u, i=%u, c=%u, fi=%u, fj=%u, h=%u, w=%u\n", iter, i, c, fi, fj, h, w);
+              uint col = h * WW * N + w * N + i;
+              uint src_idx = row * dx_col_d1 + col;
+              uint target_idx =
+                  i * x_p_d1 * x_p_d2 * x_p_d3
+                  + c * x_p_d2 * x_p_d3
+                  + (stride * h + fi) * x_p_d3
+                  + stride * w + fj;
+//              printf("x_padded.data[%u]=%f added to dx_cols.data[%u]=%f --> ", target_idx, x_padded.data[target_idx], src_idx, dx_cols.data[src_idx]);
+              x_padded.data[target_idx] += dx_cols.data[src_idx];
+              printf("%f\n", x_padded.data[target_idx]);
+              ++iter;
+            }
+          }
+        }
+      }
+    }
+  }
+  printf("iter=%u, C_fh_fw_HH_WW=%u\n", iter, C_fh_fw_HH_WW);
+
+//  assert(iter == C_fh_fw_HH_WW);
+
+//  printf("after x_padded");
+//  tensor_print_flat(x_padded);
+}

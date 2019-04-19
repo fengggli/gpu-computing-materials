@@ -547,6 +547,43 @@ tensor_t col2im_device(tensor_t cols, uint N, uint C, uint H, uint W, uint field
  * responsible for a substantial amount of work.  Note that each
  * thread carries out all the work in the 2 inner for loops.
  */
+//static __global__ void _do_col2im_inner_device(tensor_t d_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride)
+//{
+//  if (threadIdx.x == 0) {
+//    printf("entered _do_col2im_inner_device\n");
+//  }
+//
+//  uint dx_col_d1  = d_cols.dim.dims[1];
+//  uint x_p_d1     = x_padded.dim.dims[1];
+//  uint x_p_d2     = x_padded.dim.dims[2];
+//  uint x_p_d3     = x_padded.dim.dims[3];
+//
+//  for (auto iter : grid_stride_range(0u, N * C * field_width * field_height)) {
+//
+//    uint i = iter / (C * field_height * field_width);
+//    uint c = (iter / (field_height * field_width)) % C;  // jj is the channel in the image
+//    uint fi = iter / (field_width) % field_height;
+//    uint fj = iter % field_width;
+//
+//    uint row = c * field_width * field_height + fi * field_width + fj;
+//
+//    for (uint h = 0; h < HH; ++h) {
+//      for (uint w = 0; w < WW; ++w) {
+//        uint col = h * WW * N + w * N + i;
+//        uint src_idx = row * dx_col_d1 + col;
+//        uint target_idx =
+//            i * x_p_d1 * x_p_d2 * x_p_d3
+//            + c * x_p_d2 * x_p_d3
+//            + (stride * h + fi) * x_p_d3
+//            + stride * w + fj;
+//
+//          atomicAdd(&(x_padded.data[target_idx]), d_cols.data[src_idx]);
+//      }
+//    }
+//  }
+//}
+
+
 static __global__ void _do_col2im_inner_device(tensor_t d_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride)
 {
   if (threadIdx.x == 0) {
@@ -558,30 +595,32 @@ static __global__ void _do_col2im_inner_device(tensor_t d_cols, tensor_t x_padde
   uint x_p_d2     = x_padded.dim.dims[2];
   uint x_p_d3     = x_padded.dim.dims[3];
 
-  for (auto iter : grid_stride_range(0u, N * C * field_width * field_height)) {
+  uint C_fh_fw_HH_WW = C * field_height * field_width * HH * WW;
 
-    uint i = iter / (C * field_height * field_width);
-    uint c = (iter / (field_height * field_width)) % C;  // jj is the channel in the image
-    uint fi = iter / (field_width) % field_height;
-    uint fj = iter % field_width;
+  for (auto iter : grid_stride_range(0u, N * C * H * W * field_height * field_width)) {
+
+    uint i = iter / C_fh_fw_HH_WW;  // ii is the target image
+    uint c = (iter / (field_height * field_width * HH * WW)) % C;  // jj is the channel in the image
+    uint fi = iter / (HH * WW * field_width) % field_height;
+    uint fj = (iter / (HH * WW)) % field_width;
+    uint h = (iter / WW) % HH;
+    uint w = iter % WW;
 
     uint row = c * field_width * field_height + fi * field_width + fj;
 
-    for (uint h = 0; h < HH; ++h) {
-      for (uint w = 0; w < WW; ++w) {
-        uint col = h * WW * N + w * N + i;
-        uint src_idx = row * dx_col_d1 + col;
-        uint target_idx =
-            i * x_p_d1 * x_p_d2 * x_p_d3
-            + c * x_p_d2 * x_p_d3
-            + (stride * h + fi) * x_p_d3
-            + stride * w + fj;
-        x_padded.data[target_idx] += d_cols.data[src_idx];
-      }
-    }
-  }
+    uint col = h * WW * N + w * N + i;
+    uint src_idx = row * dx_col_d1 + col;
+    uint target_idx =
+        i * x_p_d1 * x_p_d2 * x_p_d3
+        + c * x_p_d2 * x_p_d3
+        + (stride * h + fi) * x_p_d3
+        + stride * w + fj;
 
+    atomicAdd(&(x_padded.data[target_idx]), d_cols.data[src_idx]);
+  }
 }
+
+
 
 void col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride) {
   tensor_t d_cols       = tensor_make_copy_h2d(cols);
@@ -592,7 +631,7 @@ void col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint 
 
   // TODO: make it handler lager size
   dim3 threads(1);
-  dim3 blocks(1);
+  dim3 blocks(1024);
   PINF("device code is called");
   _do_col2im_inner_device<<<blocks, threads>>>(d_cols, d_x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
 
