@@ -83,8 +83,6 @@ TEST_F(NetResnetTest, ForwardInferOnly) {
   }
   tensor_destroy(&x);
 }
-
-/* Check both forward/backward*/
 TEST_F(NetResnetTest, DISABLED_Loss) {
   T loss = 0;
 
@@ -102,9 +100,21 @@ TEST_F(NetResnetTest, DISABLED_Loss) {
   resnet_loss(&model, x, labels, &loss);
   EXPECT_NEAR(loss, 335.9764923, 1e-7);
   PINF("Loss checked");
+}
+
+/* Check both forward/backward*/
+TEST_F(NetResnetTest, BackNumerical) {
+  T loss = 0;
+
+  // fill some init values as in cs231n
+  tensor_t x = tensor_make_linspace(-0.2, 0.3, model.input_dim.dims, 4);
+
+  label_t labels[] = {0, 5, 1};
+
+  model.reg = 0;
 
   // Check with numerical gradient
-  model_t model_copy = model;
+  model_t *ptr_model = &model;
   uint y_shape[] = {1};
   tensor_t dy = tensor_make_ones(y_shape, dim_of_shape(y_shape));
   dy.data[0] = 1.0;  // the y is the loss, no upper layer
@@ -116,9 +126,9 @@ TEST_F(NetResnetTest, DISABLED_Loss) {
     tensor_t dparam = p_param->diff;
     tensor_t dparam_ref = tensor_make_alike(param);
     eval_numerical_gradient(
-        [model_copy, x, labels](tensor_t const, tensor_t out) {
+        [ptr_model, x, labels](tensor_t const, tensor_t out) {
           T *ptr_loss = &out.data[0];
-          resnet_loss(&model_copy, x, labels, ptr_loss);
+          resnet_loss(ptr_model, x, labels, ptr_loss);
         },
         param, dy, dparam_ref);
 

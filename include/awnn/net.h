@@ -84,7 +84,8 @@ static inline void net_attach_cache(struct list_head *l_cache, char *name) {
   p_cache->count = 0;
   init_list_head(&p_cache->list);
   list_add_tail(&p_cache->list, l_cache);  // add to the net's global list
-  PINF("-- attaching cache:  %s", p_cache->name);
+  PINF("-- attaching cache:  %s, str start at %p", p_cache->name,
+       (void *)p_cache->name);
 }
 
 static inline void net_free_cache(struct list_head *l_cache) {
@@ -104,7 +105,9 @@ static inline void net_free_cache(struct list_head *l_cache) {
 static inline lcache_t *net_get_cache(struct list_head const *l_cache,
                                       char const *name) {
   lcache_t *p_cache;
+  PWRN("\n\n-----iterating cache-------------");
   list_for_each_entry(p_cache, l_cache, list) {
+    PWRN("-------now %s", p_cache->name);
     if (strcmp(name, p_cache->name) == 0) return p_cache;
   }
   return NULL;

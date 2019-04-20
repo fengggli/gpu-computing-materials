@@ -296,6 +296,8 @@ status_t resnet_backward(model_t const *model, tensor_t dout, T *ptr_loss) {
   /* Pool*/
   din = net_get_param(model->list_layer_in, "pool.in")->diff;
   cache = net_get_cache(model->list_layer_cache, "pool.cache");
+  assert(cache != NULL);
+
   global_avg_pool_forward(din, cache, dout);
   dout = din;
 
@@ -350,6 +352,7 @@ status_t resnet_backward(model_t const *model, tensor_t dout, T *ptr_loss) {
 status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
                      T *ptr_loss) {
   T loss_classify, loss_reg;
+  PDBG("========= loss ==========");
   tensor_t out, dout;
 
   // Forward
