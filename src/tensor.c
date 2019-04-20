@@ -108,7 +108,7 @@ void tensor_fill_random(tensor_t t, uint seed) {
   }
 }
 
-void tensor_fill_random_uniform(tensor_t t, T const low, T const high,
+void tensor_fill_random_uniform(tensor_t t, double const low, double const high,
                                 uint seed) {
   assert(high > low);
   srand(seed);
