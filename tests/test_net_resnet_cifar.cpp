@@ -55,7 +55,7 @@ TEST_F(NetMLPTest, CifarTest) {
   EXPECT_EQ(S_OK, ret);
 
   uint val_sz = 1000;
-  T learning_rate = 0.01;
+  T learning_rate = 0.1;
 
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
@@ -125,7 +125,8 @@ TEST_F(NetMLPTest, CifarTest) {
     list_for_each_entry(p_param, model.list_all_params, list) {
       PDBG("updating %s...", p_param->name);
       // sgd
-      sgd_update(p_param, learning_rate);
+      // sgd_update(p_param, learning_rate);
+      sgd_update_momentum(p_param, learning_rate, 0.9);
     }
   }
   cifar_close(&loader);

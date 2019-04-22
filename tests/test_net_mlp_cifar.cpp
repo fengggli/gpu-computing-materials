@@ -51,7 +51,7 @@ TEST_F(NetMLPTest, CifarTest) {
 #endif
 
   uint val_sz = 1000;
-  T learning_rate = 0.01;
+  T learning_rate = 0.1;
 
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 

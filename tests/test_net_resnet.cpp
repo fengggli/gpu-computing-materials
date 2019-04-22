@@ -109,7 +109,6 @@ TEST_F(NetResnetTest, DISABLED_BackNumerical) {
 
   label_t labels[] = {0, 5, 1};
 
-  model.reg = 0;
 
   // Check with numerical gradient
   model_t *ptr_model = &model;
@@ -117,6 +116,7 @@ TEST_F(NetResnetTest, DISABLED_BackNumerical) {
   tensor_t dy = tensor_make_ones(y_shape, dim_of_shape(y_shape));
   dy.data[0] = 1.0;  // the y is the loss, no upper layer
 
+  model.reg = 1.0;
   param_t *p_param;
   // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
   list_for_each_entry(p_param, model.list_all_params, list) {

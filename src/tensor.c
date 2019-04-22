@@ -167,6 +167,7 @@ tensor_t tensor_make_placeholder(uint const shape[], uint const ndims){
   tensor_t ret;
   ret.dim = dim;
   ret.mem_type = EMPTY_MEM;
+  ret.data = NULL;
   return ret;
 }
 
@@ -209,6 +210,11 @@ tensor_t tensor_make_copy(tensor_t t) {
 }
 
 tensor_t tensor_make_alike(tensor_t t) { return _tensor_make(t.dim); }
+tensor_t tensor_make_zeros_alike(tensor_t t) {
+  tensor_t ret = _tensor_make(t.dim);
+  tensor_fill_scalar(ret, 0.0);
+  return ret;
+}
 
 tensor_t tensor_make_transpose(tensor_t const t) {
   uint i, j;
@@ -440,6 +446,8 @@ T tensor_rel_error(tensor_t x, tensor_t ref) {
 }
 
 void tensor_destroy(tensor_t* t) {
+  if (t->mem_type == CPU_MEM)
+    ;
   mem_free(t->data);
   t->data = NULL;
 }

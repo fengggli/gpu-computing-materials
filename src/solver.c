@@ -18,6 +18,27 @@ void sgd_update(param_t *p_param, T learning_rate) {
   PDBG("updating %s complete.", p_param->name);
 }
 
+void sgd_update_momentum(param_t *p_param, T learning_rate, T momentum) {
+  tensor_t param = p_param->data;
+  tensor_t dparam = p_param->diff;
+  tensor_t *ptr_velocity = &(p_param->velocity);
+  if (p_param->velocity.mem_type == EMPTY_MEM) {
+    *ptr_velocity = tensor_make_zeros_alike(param);
+  }
+  tensor_t velocity = *ptr_velocity;
+
+  T *pelem;
+  uint ii;
+  AWNN_CHECK_GT(learning_rate, 0);
+
+  tensor_for_each_entry(pelem, ii, dparam) { (*pelem) *= learning_rate; }
+  tensor_for_each_entry(pelem, ii, velocity) { (*pelem) *= momentum; }
+  tensor_elemwise_op_inplace(velocity, dparam, TENSOR_OP_SUB);
+
+  tensor_elemwise_op_inplace(param, velocity, TENSOR_OP_ADD);
+  PDBG("updating %s complete.", p_param->name);
+}
+
 static uint _get_correct_count(tensor_t const x, label_t const *labels,
                                uint nr_record, model_t const *model,
                                tensor_t (*func_forward_infer)(model_t const *,

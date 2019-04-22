@@ -23,6 +23,9 @@ typedef struct param {
   tensor_t data;
   tensor_t diff;
 
+  // TODO: This can be saved in disk actually.
+  tensor_t velocity;  // For momemtum sgd
+
   struct list_head list;
 } param_t;
 
@@ -33,6 +36,8 @@ static inline void net_attach_param(struct list_head *l_params, char *name,
   strncpy(p_param->name, name, MAX_STR_LENGTH);
   p_param->data = data;
   p_param->diff = diff;
+  p_param->velocity =
+      tensor_make_placeholder(data.dim.dims, tensor_get_ndims(data));
   init_list_head(&p_param->list);
   list_add_tail(&p_param->list, l_params);
   PINF("-- attaching %s [%u, %u, %u, %u], addr %p", p_param->name,
@@ -52,6 +57,7 @@ static inline void net_free_params(struct list_head *l_params) {
       PINF("-- freeing %s at %p", p_param->name, p_param->data.data);
       tensor_destroy(&p_param->data);
       tensor_destroy(&p_param->diff);
+      tensor_destroy(&p_param->velocity);
     }
     mem_free(p_param);
   }
