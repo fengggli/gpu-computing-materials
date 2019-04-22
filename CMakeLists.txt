@@ -7,6 +7,7 @@ option(USE_OPENBLAS "USE openblas for blas" OFF)
 option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_CUDA "Build with CUDA" OFF)
 option(USE_CUDNN "Build with CUDNN" OFF)
+option(USE_NNPACK "Build with NNPACK" OFF)
 
 
 option(USE_STRICT_CHECK "use pedantic flag" OFF)
@@ -111,20 +112,16 @@ if(USE_CUDA)
     src/layer_pool.cu)
 
   set(AWNN_DEVICE_LIBS "awnndevicelib")
-
 endif(USE_CUDA)
 
 if(USE_CUDA AND USE_CUDNN)
   add_subdirectory(examples/mnistCUDNN)
 endif()
 
-# message("AWNNLIBS is ${AWNN_LIBS}")
-
+# nnpack and gtest
+add_subdirectory(extern)
 
 if(BUILD_TEST)
-#  add_subdirectory(/usr/src/gtest ${CMAKE_CURRENT_BINARY_DIR}/gtest)
-  add_subdirectory(extern/googletest extern/googletest)
   enable_testing()
   add_subdirectory(tests)
 endif()
-

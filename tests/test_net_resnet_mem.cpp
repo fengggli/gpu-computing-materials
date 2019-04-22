@@ -1,60 +1,77 @@
 /*
- * Description:
+ * Description: This will test possible memory leak
  *
  * Author: Feng Li
  * e-mail: fengggli@yahoo.com
  */
 #include "awnn/data_utils.h"
-#include "awnn/net_mlp.h"
+#include "awnn/net_resnet.h"
 #include "awnn/solver.h"
 #include "utils/data_cifar.h"
 #include "utils/debug.h"
 #include "utils/weight_init.h"
 
-#include "gtest/gtest.h"
 #include "test_util.h"
 #undef PRINT_STAT
-
-namespace {
-
-// The fixture for testing class Foo.
-class NetMLPTest : public ::testing::Test {};
-
-TEST_F(NetMLPTest, CifarTest) {
-  static model_t model;
-  uint batch_sz = 100;
-  uint input_dim = 3 * 32 * 32;
+void test_loss() {
+  model_t model;
+  uint batch_sz = 3;
+  uint input_shape[] = {batch_sz, 3, 32, 32};
+  dim_t input_dim = make_dim_from_arr(array_size(input_shape), input_shape);
   uint output_dim = 10;
-  uint nr_hidden_layers = 4;
-  uint hidden_dims[] = {100, 100, 100, 100};
+  uint nr_stages = 1;
+  uint nr_blocks[MAX_STAGES] = {1};
   T reg = 0;
+  normalize_method_t normalize_method = NORMALIZE_NONE;  // no batchnorm now
 
-  mlp_init(&model, batch_sz, input_dim, output_dim, nr_hidden_layers,
-           hidden_dims, reg);
+  resnet_init(&model, input_dim, output_dim, nr_stages, nr_blocks, reg,
+              normalize_method);
+  T loss = 0;
 
-  EXPECT_EQ((void *)0, (void *)net_get_param(model.list_all_params,
-                                             "W3"));  // unexisting param
-  EXPECT_NE((void *)0,
-            (void *)net_get_param(model.list_all_params, "fc0.weight"));
+  tensor_t x = tensor_make_linspace(-5.5, 4.5, model.input_dim.dims, 4);
+  label_t labels[] = {0, 5, 1};
+
+  uint nr_iterations = 2;
+  for (uint i = 0; i < nr_iterations; i++) {
+    resnet_loss(&model, x, labels, &loss);
+    PINF("Loss without regulizer: %.3f", loss);
+  }
+
+  tensor_destroy(&x);
+  resnet_finalize(&model);
+}
+void test_cifar() {
+  static model_t model;
+  uint train_sz = 64;
+  uint batch_sz = 16;
+
+  uint input_shape[] = {batch_sz, 3, 32, 32};
+  dim_t input_dim = make_dim_from_arr(array_size(input_shape), input_shape);
+  uint output_dim = 10;
+  uint nr_stages = 1;
+  uint nr_blocks[MAX_STAGES] = {2};
+  T reg = 0;
+  normalize_method_t normalize_method = NORMALIZE_NONE;  // no batchnorm now
+
+  resnet_init(&model, input_dim, output_dim, nr_stages, nr_blocks, reg,
+              normalize_method);
+
+  AWNN_CHECK_EQ((void *)0, (void *)net_get_param(model.list_all_params,
+                                                 "W3"));  // unexisting param
+  AWNN_CHECK_NE((void *)0,
+                (void *)net_get_param(model.list_all_params, "conv1.weight"));
 
   data_loader_t loader;
   status_t ret = cifar_open(&loader, CIFAR_PATH);
-  EXPECT_EQ(S_OK, ret);
+  AWNN_CHECK_EQ(S_OK, ret);
 
   // overfit small data;
-#ifdef IS_CI_BUILD // make check faster
-  uint train_sz = 1000;
   uint nr_epoches = 1;
-#else
-  uint train_sz = 4000;
-  uint nr_epoches = 5;
-#endif
 
-  uint val_sz = 1000;
-  T learning_rate = 0.1;
+  uint val_sz = 2;
+  T learning_rate = 0.01;
 
-  EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
-
+  AWNN_CHECK_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
   uint iterations_per_epoch = train_sz / batch_sz;
   if (iterations_per_epoch == 0) iterations_per_epoch = 1;
@@ -72,7 +89,7 @@ TEST_F(NetMLPTest, CifarTest) {
          iterations_per_epoch);
     uint cnt_read = get_train_batch(&loader, &x, &labels, cur_batch, batch_sz);
 
-    EXPECT_EQ(batch_sz, cnt_read);
+    AWNN_CHECK_EQ(batch_sz, cnt_read);
     param_t *p_param;
 #ifdef PRINT_STAT
     PINF("Before");
@@ -89,7 +106,7 @@ TEST_F(NetMLPTest, CifarTest) {
 
 #endif
 
-    mlp_loss(&model, x, labels, &loss);
+    resnet_loss(&model, x, labels, &loss);
 
 #ifdef PRINT_STAT
     PINF("After");
@@ -111,9 +128,10 @@ TEST_F(NetMLPTest, CifarTest) {
     if (iteration == 0 || iteration == nr_iterations - 1 ||
         cur_batch == iterations_per_epoch - 1) {
       PINF("----------------Epoch %u ---------------", cur_epoch);
-      check_val_accuracy(&loader, val_sz, batch_sz, &model, &mlp_forward_infer);
+      check_val_accuracy(&loader, val_sz, batch_sz, &model,
+                         &resnet_forward_infer);
       check_train_accuracy(&loader, val_sz, batch_sz, &model,
-                           &mlp_forward_infer);
+                           &resnet_forward_infer);
       PINF("----------------------------------------");
     }
 
@@ -125,12 +143,10 @@ TEST_F(NetMLPTest, CifarTest) {
     }
   }
   cifar_close(&loader);
-  mlp_finalize(&model);
+  resnet_finalize(&model);
 }
 
-}  // namespace
-
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+int main() {
+  // test_loss();
+  test_cifar();
 }

@@ -22,7 +22,17 @@ class NetMLPTest : public ::testing::Test {};
 
 TEST_F(NetMLPTest, CifarTest) {
   static model_t model;
+  // overfit small data;
+#ifdef IS_CI_BUILD  // make check faster
+  uint train_sz = 2;
+  uint nr_epoches = 1;
   uint batch_sz = 2;
+#else
+  uint train_sz = 4000;
+  // uint train_sz = 4000;
+  uint nr_epoches = 5;
+  uint batch_sz = 128;
+#endif
 
   uint input_shape[] = {batch_sz, 3, 32, 32};
   dim_t input_dim = make_dim_from_arr(array_size(input_shape), input_shape);
@@ -38,23 +48,14 @@ TEST_F(NetMLPTest, CifarTest) {
   EXPECT_EQ((void *)0, (void *)net_get_param(model.list_all_params,
                                              "W3"));  // unexisting param
   EXPECT_NE((void *)0,
-            (void *)net_get_param(model.list_all_params, "fc0.weight"));
+            (void *)net_get_param(model.list_all_params, "conv1.weight"));
 
   data_loader_t loader;
   status_t ret = cifar_open(&loader, CIFAR_PATH);
   EXPECT_EQ(S_OK, ret);
 
-  // overfit small data;
-#ifdef IS_CI_BUILD  // make check faster
-  uint train_sz = 2;
-  uint nr_epoches = 1;
-#else
-  uint train_sz = 4000;
-  uint nr_epoches = 5;
-#endif
-
   uint val_sz = 1000;
-  T learning_rate = 0.01;
+  T learning_rate = 0.1;
 
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
@@ -124,7 +125,8 @@ TEST_F(NetMLPTest, CifarTest) {
     list_for_each_entry(p_param, model.list_all_params, list) {
       PDBG("updating %s...", p_param->name);
       // sgd
-      sgd_update(p_param, learning_rate);
+      // sgd_update(p_param, learning_rate);
+      sgd_update_momentum(p_param, learning_rate, 0.9);
     }
   }
   cifar_close(&loader);

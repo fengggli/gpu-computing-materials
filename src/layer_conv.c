@@ -6,26 +6,31 @@
 status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cache, conv_param_t const params, tensor_t y){
 
   // 1. flatten the input into vectors which represent the filters
-  tensor_t flattened_x = im2col(x, w, params);
+  tensor_t flattened_x = im2col(x, w, params);  // NxCxHxW -> C*HH*WW x NxH'xW'
 
   // 2. setup and apply filters
   // TODO : const input is preventing reshape, but this memory doesn't need to be allocated
   //        w is just used as a multiplier, but it needs to be reshaped.
-  uint const reshaped_w_shape[] = { w.dim.dims[0], w.dim.dims[1] * w.dim.dims[2] * w.dim.dims[3] };
+  uint const reshaped_w_shape[] = {
+      w.dim.dims[0],
+      w.dim.dims[1] * w.dim.dims[2] * w.dim.dims[3]};  // (F, CxHHxWW)
   tensor_t reshaped_w = tensor_make_copy(w);
   tensor_reshape_(&reshaped_w, reshaped_w_shape, ARRAY_SIZE(reshaped_w_shape));
 
-  uint const out_shape[] = { w.dim.dims[0], flattened_x.dim.dims[1] };
+  uint const out_shape[] = {w.dim.dims[0],
+                            flattened_x.dim.dims[1]};  // (F, NxH'xW')
   tensor_t out = tensor_make(out_shape, ARRAY_SIZE(out_shape));
 
   // apply here !!!
   tensor_matmul(reshaped_w, flattened_x, out);
 
-  uint const out_shape_2[] = { w.dim.dims[0], y.dim.dims[2], y.dim.dims[3], x.dim.dims[0] };
-  tensor_reshape_(&out, out_shape_2, ARRAY_SIZE(out_shape_2));
+  uint const out_shape_2[] = {w.dim.dims[0], y.dim.dims[2], y.dim.dims[3],
+                              x.dim.dims[0]};  // F x H' x W' x N
+  tensor_reshape_(&out, out_shape_2,
+                  ARRAY_SIZE(out_shape_2));  // (F x N*H'*W') -> (F x H'xW'xN)
 
   // 3. transpose output
-  tensor_t tpose = tensor_make_transpose_3012(out);
+  tensor_t tpose = tensor_make_transpose_3012(out);  // Nx F x H' x W'
 
   // copy transposed to y
   y.dim = tpose.dim;
@@ -41,6 +46,8 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
     lcache_push(cache, x);
     lcache_push(cache, w);
     lcache_push(cache, flattened_x);
+  } else {
+    tensor_destroy(&flattened_x);
   }
 
   tensor_destroy(&reshaped_w);
@@ -143,8 +150,11 @@ status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache, conv_pa
   uint filter_height = w.dim.dims[2];
   uint filter_width = w.dim.dims[3];
 
-  tensor_t dout_reshaped = tensor_make_transpose_1230(dout);
-  uint dout_2d_shape[] = { num_filters, dout_reshaped.dim.dims[1] * dout_reshaped.dim.dims[2] * dout_reshaped.dim.dims[3] };
+  tensor_t dout_reshaped =
+      tensor_make_transpose_1230(dout);  // (N,F,H',W') -> (F, H',W',N)
+  uint dout_2d_shape[] = {
+      num_filters, dout_reshaped.dim.dims[1] * dout_reshaped.dim.dims[2] *
+                       dout_reshaped.dim.dims[3]};  // (F, H'xW'xN)
   tensor_reshape_(&dout_reshaped, dout_2d_shape, ARRAY_SIZE(dout_2d_shape));
 
   tensor_t x_cols_T = tensor_make_transpose(x_cols);
@@ -182,6 +192,8 @@ status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache, conv_pa
   tensor_destroy(&x_cols_T);
   tensor_destroy(&w_T);
   tensor_destroy(&t);
+  tensor_destroy(&x_cols);
+  tensor_destroy(&dx_cols);
 
   return S_OK;
 }

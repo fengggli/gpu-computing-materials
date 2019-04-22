@@ -14,6 +14,7 @@ extern "C" {
 #endif
 
 void sgd_update(param_t *p_param, T learning_rate);
+void sgd_update_momentum(param_t *p_param, T learning_rate, T momentum);
 
 double check_val_accuracy(data_loader_t *loader, uint val_sz, uint batch_sz,
                           model_t const *model,

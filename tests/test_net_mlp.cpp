@@ -152,7 +152,8 @@ TEST_F(NetMLPTest, Update) {
   list_for_each_entry(p_param, model.list_all_params, list) {
     PINF("updating %s...", p_param->name);
     // sgd
-    sgd_update(p_param, learning_rate);
+    // sgd_update(p_param, learning_rate);
+    sgd_update_momentum(p_param, learning_rate, 0.9);
   }
 }
 

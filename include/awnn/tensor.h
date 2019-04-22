@@ -104,6 +104,7 @@ tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[],
                               uint const ndims);
 /* a new tensor, and it has same shape as the original */
 tensor_t tensor_make_alike(tensor_t t);
+tensor_t tensor_make_zeros_alike(tensor_t t);
 /* a new tensor, and it has same shape as the original, and it's filled with
  * linspace */
 tensor_t tensor_make_linspace_alike(T const start, T const stop,
