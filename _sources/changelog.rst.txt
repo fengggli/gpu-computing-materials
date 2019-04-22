@@ -16,31 +16,26 @@ Current
 Working in progress
 --------------------
 
-* Convnet.
-
+* Batchnorm
+* More measurement
 
 TODO List
 ----------
 
-* Layers
-
-  * batchnorm
-
-* Net
-
-  1. Lenet
-  2. residual blocks
-  3. simplified resnet
-
-* Initializer (kaiming initialization)
-
-* Others
-
-  * show show backtrace (https://www.gnu.org/software/libc/manual/html_node/Backtraces.html)
+* Theoretical model.
+* Parallize it.
 
 =========
 Previous
 =========
+
+0.4.7
+======
+:Data 2019-04-22
+
+* Simplified resnet(https://github.com/fengggli/gpu-computing-materials/pull/38)
+* Fix memory leaks, and some obvious optimization.
+* Initializer (kaiming initialization)
 
 0.4.6
 ======
