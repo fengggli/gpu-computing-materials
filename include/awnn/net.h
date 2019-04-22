@@ -104,13 +104,18 @@ static inline void net_free_cache(struct list_head *l_cache) {
 /* Get the entry of a specific cache*/
 static inline lcache_t *net_get_cache(struct list_head const *l_cache,
                                       char const *name) {
+  int cache_found = 0;
   lcache_t *p_cache;
-  PWRN("\n\n-----iterating cache-------------");
+  PDBG("\n\n-----Searching %s from cache-------------", name);
   list_for_each_entry(p_cache, l_cache, list) {
-    PWRN("-------now %s", p_cache->name);
-    if (strcmp(name, p_cache->name) == 0) return p_cache;
+    PDBG("-------now %s", p_cache->name);
+    if (strcmp(name, p_cache->name) == 0) {
+      PDBG("Cache found with %u entries", p_cache->count);
+      cache_found = 1;
+      break;
+    }
   }
-  return NULL;
+  return cache_found ? p_cache : NULL;
 }
 
 void update_regulizer_gradient(tensor_t x, tensor_t dx, T reg);

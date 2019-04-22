@@ -83,7 +83,7 @@ TEST_F(NetResnetTest, ForwardInferOnly) {
   }
   tensor_destroy(&x);
 }
-TEST_F(NetResnetTest, DISABLED_Loss) {
+TEST_F(NetResnetTest, Loss) {
   T loss = 0;
 
   // fill some init values as in cs231n
@@ -102,10 +102,8 @@ TEST_F(NetResnetTest, DISABLED_Loss) {
   PINF("Loss checked");
 }
 
-/* Check both forward/backward*/
-TEST_F(NetResnetTest, BackNumerical) {
-  T loss = 0;
-
+/* Check both forward/backward, time consuming*/
+TEST_F(NetResnetTest, DISABLED_BackNumerical) {
   // fill some init values as in cs231n
   tensor_t x = tensor_make_linspace(-0.2, 0.3, model.input_dim.dims, 4);
 

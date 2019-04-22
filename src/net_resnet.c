@@ -16,6 +16,7 @@ status_t resnet_init(
     uint nr_stages,
     uint nr_blocks[MAX_STAGES],  // how many residual blocks in each stage
     T reg, normalize_method_t normalize_method) {
+  AWNN_NO_USE(normalize_method);
   // save this configuration
   model->input_dim = input_dim;
   model->output_dim = output_dim;
@@ -298,7 +299,7 @@ status_t resnet_backward(model_t const *model, tensor_t dout, T *ptr_loss) {
   cache = net_get_cache(model->list_layer_cache, "pool.cache");
   assert(cache != NULL);
 
-  global_avg_pool_forward(din, cache, dout);
+  global_avg_pool_backward(din, cache, dout);
   dout = din;
 
   /* residual blocks*/
@@ -352,7 +353,7 @@ status_t resnet_backward(model_t const *model, tensor_t dout, T *ptr_loss) {
 status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
                      T *ptr_loss) {
   T loss_classify, loss_reg;
-  PDBG("========= loss ==========");
+  PDBG("========= Forwarding ==========");
   tensor_t out, dout;
 
   // Forward
@@ -363,10 +364,12 @@ status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
   AWNN_CHECK_NE(NULL, labels);
   out = param_score->data;
   dout = param_score->diff;
+  PDBG("========= Softmax ==========");
   AWNN_CHECK_EQ(S_OK,
                 loss_softmax(out, labels, &loss_classify, MODE_TRAIN, dout));
 
   // Backward
+  PDBG("========= Backwarding ==========");
   AWNN_CHECK_EQ(S_OK, resnet_backward(model, dout, &loss_reg));
 
   *ptr_loss = loss_classify + loss_reg;
