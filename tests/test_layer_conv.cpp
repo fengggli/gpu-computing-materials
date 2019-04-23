@@ -643,7 +643,7 @@ TEST_F(LayerConvTest, ConvForwardcudnn) {
   uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; // 32, 32, 1, 1
   uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out}; // 1, 32,
 
-  tensor_t x = tensor_make_linspace(0.1, 0.3, shape_x, dim_of_shape(shape_x));
+  tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
   tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
   tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
 
@@ -696,7 +696,7 @@ TEST_F(LayerConvTest, ConvBackwardcudnn) {
   uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; // 32, 32, 1, 1
   uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out}; // 1, 32,
 
-  tensor_t x = tensor_make_linspace(0.1, 0.3, shape_x, dim_of_shape(shape_x));
+  tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
   tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
   tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
 
