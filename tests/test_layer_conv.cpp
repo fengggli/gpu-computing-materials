@@ -639,9 +639,10 @@ TEST_F(LayerConvTest, ConvForwardcudnn) {
   uint sz_out = 1 + (sz_img + 2 * conv_params.padding - sz_filter) / conv_params.stride;
   EXPECT_EQ(2, sz_out);
 
-  uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img}; // 1, 32, 4, 4
-  uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; // 32, 32, 1, 1
-  uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out}; // 1, 32,
+  uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img};  // 2x3x4x4
+  uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter,
+                          sz_filter};                          // 3x3x4x4
+  uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out};  // 2x3x2x2
 
   tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
   tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
@@ -715,7 +716,7 @@ TEST_F(LayerConvTest, ConvBackwardcudnn) {
   ret = convolution_backward_cudnn_data(dx, w, &cache, conv_params, dy);
   EXPECT_EQ(ret, S_OK);
 
-  ret = convolution_backward_cudnn_weight(dx, w, &cache, conv_params, dy);
+  ret = convolution_backward_cudnn_weight(x, dw, &cache, conv_params, dy);
   EXPECT_EQ(ret, S_OK);
 
 #if 1
