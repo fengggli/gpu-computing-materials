@@ -675,10 +675,9 @@ TEST_F(LayerConvTest, ConvBackwardcudnn) {
   uint nr_filter = 32;
   uint sz_filter = 1;
 #endif
-  conv_param_t params;
 
-  params.stride=2;
-  params.padding=1;
+  conv_params.stride=2;
+  conv_params.padding=1;
 
   uint nr_img = 2;
   uint sz_img = 4;
@@ -686,7 +685,7 @@ TEST_F(LayerConvTest, ConvBackwardcudnn) {
   uint sz_filter = 4;
   uint nr_filter = 3;
 
-  uint sz_out = 1 + (sz_img + 2 * params.padding - sz_filter) / params.stride;
+  uint sz_out = 1 + (sz_img + 2 * conv_params.padding - sz_filter) / conv_params.stride;
   EXPECT_EQ(2, sz_out);
 
   uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img}; // 1, 32, 4, 4
@@ -709,7 +708,7 @@ TEST_F(LayerConvTest, ConvBackwardcudnn) {
   tensor_t dx = tensor_make_alike(x);
   tensor_t dw = tensor_make_alike(w);
 
-  ret = convolution_backward_cudnn(dx, dw, &cache, params, dy);
+  ret = convolution_backward_cudnn(dx, dw, &cache, conv_params, dy);
   EXPECT_EQ(ret, S_OK);
 
 #if 1
@@ -725,7 +724,7 @@ TEST_F(LayerConvTest, ConvBackwardcudnn) {
   // evaluate gradient of x
   eval_numerical_gradient(
       [&](tensor_t const in, tensor_t out) {
-        convolution_forward(in, w_copy, nullptr, params, out);
+        convolution_forward(in, w_copy, nullptr, conv_params, out);
       },
       x, dy, dx_ref);
   EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
@@ -734,7 +733,7 @@ TEST_F(LayerConvTest, ConvBackwardcudnn) {
   // evaluate gradient of w
   eval_numerical_gradient(
       [&](tensor_t const in, tensor_t out) {
-        convolution_forward(x_copy, in, nullptr, params, out);
+        convolution_forward(x_copy, in, nullptr, conv_params, out);
       },
       w, dy, dw_ref);
   EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-7);
