@@ -1254,11 +1254,11 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
   int mathType = 0;
   int benchmark = 0;
 //  int dimA[] = {1, 32, 4, 4};  // N, C, H, W;
-  int dimA[] = {x.dim.dims[0], x.dim.dims[1], x.dim.dims[2], x.dim.dims[3]};  // N, C, H, W;
+  int dimA[] = {(int)x.dim.dims[0], (int)x.dim.dims[1], (int)x.dim.dims[2], (int)x.dim.dims[3]};  // N, C, H, W;
   int padA[] = {(int)params.padding, (int)params.padding};
   int convstrideA[] = {(int)params.stride, (int)params.stride};
   // batch size and feature layers must be multiples of 4 or 32 when using int8x4 or int8x32 respectively
-  int filterdimA[] = {w.dim.dims[0], w.dim.dims[1], w.dim.dims[2], w.dim.dims[3]}; //k, c, r, s
+  int filterdimA[] = {(int)w.dim.dims[0], (int)w.dim.dims[1], (int)w.dim.dims[2], (int)w.dim.dims[3]}; //k, c, r, s
 //  int filterdimA[] = {32, 32, 1, 1}; //k, c, r, s
   cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
 
@@ -1284,11 +1284,11 @@ status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache, c
   int mathType = 0;
   int benchmark = 0;
 //  int dimA[] = {1, 32, 4, 4};  // N, C, H, W;
-  int dimA[] = {dx.dim.dims[0], dx.dim.dims[1], dx.dim.dims[2], dx.dim.dims[3]};  // N, C, H, W;
+  int dimA[] = {(int)dx.dim.dims[0], (int)dx.dim.dims[1], (int)dx.dim.dims[2], (int)dx.dim.dims[3]};  // N, C, H, W;
   int padA[] = {(int)params.padding, (int)params.padding};
   int convstrideA[] = {(int)params.stride, (int)params.stride};
   //batch size and feature layers must be multiples of 4 or 32 when using int8x4 or int8x32 respectively
-  int filterdimA[] = {dw.dim.dims[0], dw.dim.dims[1], dw.dim.dims[2], dw.dim.dims[3]}; //k, c, r, s
+  int filterdimA[] = {(int)dw.dim.dims[0], (int)dw.dim.dims[1], (int)dw.dim.dims[2], (int)dw.dim.dims[3]}; //k, c, r, s
 //  int filterdimA[] = {32, 32, 1, 1}; //k, c, r, s
   cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
 
