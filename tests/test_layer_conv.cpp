@@ -614,6 +614,7 @@ TEST_F(LayerConvTest, Forward){
 #ifdef USE_CUDA
 TEST_F(LayerConvTest, ConvForwardcudnn) {
   conv_param_t conv_params;
+
 #if 0
   conv_params.stride=1;
   conv_params.padding=0;
@@ -625,6 +626,7 @@ TEST_F(LayerConvTest, ConvForwardcudnn) {
   uint nr_filter = 32;
   uint sz_filter = 1;
 #endif
+
   conv_params.stride=2;
   conv_params.padding=1;
 
@@ -708,7 +710,10 @@ TEST_F(LayerConvTest, ConvBackwardcudnn) {
   tensor_t dx = tensor_make_alike(x);
   tensor_t dw = tensor_make_alike(w);
 
-  ret = convolution_backward_cudnn(dx, dw, &cache, conv_params, dy);
+  ret = convolution_backward_cudnn_data(dx, w, &cache, conv_params, dy);
+  EXPECT_EQ(ret, S_OK);
+
+  ret = convolution_backward_cudnn_weight(dx, w, &cache, conv_params, dy);
   EXPECT_EQ(ret, S_OK);
 
 #if 1
