@@ -475,9 +475,9 @@ int doConv(
   int outsize = outstrideA[0]*outdimA[0];
   T_ELEM* hostOfromdev = (T_ELEM*)calloc (outsize, sizeof(hostO[0]) );
 
-  //  cudnnConvolutionFwdAlgo_t algo =
-  //  CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
-  cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_GEMM;
+  cudnnConvolutionFwdAlgo_t algo =
+      CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
+  //  cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_GEMM;
 
   void *workSpace = 0;
   size_t workSpaceSize;
@@ -553,9 +553,7 @@ int doDgrad(
 
   int insize = strideA[0]*dimA[0];
   T_ELEM* hostIfromdev = (T_ELEM*)calloc (insize, sizeof(hostI[0]) );
-  //  cudnnConvolutionBwdDataAlgo_t algo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
-  cudnnConvolutionBwdDataAlgo_t algo =
-      CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT_TILING;
+  cudnnConvolutionBwdDataAlgo_t algo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
 
   void *workSpace = 0;
   size_t workSpaceSize;
@@ -629,10 +627,7 @@ int doWgrad(
 
   int filsize = filterdimA[0]*filterdimA[1]*filterdimA[2]*filterdimA[3];
   T_ELEM* hostFfromdev = (T_ELEM*)calloc (filsize, sizeof(hostF[0]) );
-  //  cudnnConvolutionBwdFilterAlgo_t algo =
-  //  CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
-  cudnnConvolutionBwdDataAlgo_t algo =
-      CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT_TILING;
+  cudnnConvolutionBwdFilterAlgo_t algo = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
 
   void *workSpace = 0;
   size_t workSpaceSize;
