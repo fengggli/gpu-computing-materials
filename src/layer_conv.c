@@ -30,7 +30,7 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
   // copy transposed to y
   y.dim = tpose.dim;
   uint sz = dim_get_capacity(tpose.dim);
-  for (int i = 0; i < sz; ++i) {
+  for (uint i = 0; i < sz; ++i) {
     y.data[i] = tpose.data[i];
   }
   y.mem_type = tpose.mem_type;
@@ -50,7 +50,9 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
 
 
 tensor_t im2col(tensor_t const x, tensor_t const w, conv_param_t const params) {
-  uint N, C, H, W, filter_height, filter_width, stride, pad;
+  uint N, C, H, W, filter_height, filter_width;
+  int stride, pad;
+
   N = x.dim.dims[0];
   C = x.dim.dims[1];
   H = x.dim.dims[2];
@@ -135,7 +137,7 @@ tensor_t im2col(tensor_t const x, tensor_t const w, conv_param_t const params) {
 //}
 status_t im2col_inner(tensor_t cols, tensor_t x_padded,
                       uint N, uint C, uint H, uint W, uint HH, uint WW,
-                      uint filter_height, uint filter_width, uint padding, uint stride){
+                      uint filter_height, uint filter_width, int padding, int stride){
 
   uint cols_d_1 = cols.dim.dims[1];
   uint img_sz = C * x_padded.dim.dims[2] * x_padded.dim.dims[3];
@@ -183,7 +185,6 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
               assert(windows_index_c == k);
 
               // index of the first elem
-              uint first_elem = window_index_r * stride * W + windows_index_c * stride;
               uint ff_row = (iter / filter_width) % filter_width;
               assert(ff_row == f_row);
               uint ff_col = iter % filter_width;
@@ -290,7 +291,7 @@ status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache, conv_pa
   return x_padded[:, :, padding:-padding, padding:-padding]
   return x_padded
  */
-tensor_t col2im(tensor_t dx_cols, uint N, uint C, uint H, uint W, uint field_height, uint field_width, uint padding, uint stride)
+tensor_t col2im(tensor_t dx_cols, uint N, uint C, uint H, uint W, uint field_height, uint field_width, int padding, int stride)
 {
   uint HH = (H + 2 * padding - field_height) / stride + 1;
   uint WW = (W + 2 * padding - field_width) / stride + 1;
@@ -421,7 +422,7 @@ tensor_t col2im(tensor_t dx_cols, uint N, uint C, uint H, uint W, uint field_hei
  * It does not calculate the h and w from iter yet.
  */
 void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW,
-                  uint field_height, uint field_width, uint padding, uint stride)
+                  uint field_height, uint field_width, int padding, int stride)
 {
   uint dx_col_d1  = dx_cols.dim.dims[1];
   uint x_p_d1     = x_padded.dim.dims[1];

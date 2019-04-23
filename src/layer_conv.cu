@@ -1,6 +1,7 @@
-#include "awnn/layer_conv.h"
 #include "range.cuh"
+#include "awnn/layer_conv.h"
 #include "awnn/common.h"
+#include "awnndevice/cublas_utils.cuh"
 
 // type alias to simplify typing...
 using namespace util::lang;
@@ -206,26 +207,6 @@ tensor_t tensor_make_padded_square_input_device(tensor_t t, uint p, T val) {
 }
 
 
-static __global__ void _do_im2col_device(tensor_t const x, tensor_t const w, conv_param_t const params) {
-  if (threadIdx.x == 0) {
-    printf("entered _do_im2col_device\n", threadIdx.x);
-  }
-}
-
-/*
- * This function just sets up the im2col.
- */
-tensor_t im2col_device(tensor_t const x, tensor_t const w, conv_param_t const params)
-{
-  // TODO: make it handler lager size
-  dim3 threads(32);
-  dim3 blocks(1);
-  PINF("device code is called");
-
-  _do_im2col_device<<<blocks, threads>>>(x, w, params);
-}
-
-
 /**
  * TODO
  *
@@ -412,20 +393,110 @@ static __global__ void _do_convolution_forward_device(tensor_t const x, tensor_t
 }
 
 /*
- * primary entry point for the forward function
+ * The assumption I am making here is that the tensors and other elements
+ * that are necessary are already allocated on the GPU.
  */
 status_t convolution_forward_device(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y)
 {
 
-  dim3 threads(32);
-  dim3 blocks(1);
-  PINF("device code is called");
+//    // 1. flatten the input into vectors which represent the filters
+//    tensor_t flattened_x = im2col(x, w, params);
+//
+//    // 2. setup and apply filters
+//    // TODO : const input is preventing reshape, but this memory doesn't need to be allocated
+//    //        w is just used as a multiplier, but it needs to be reshaped.
+//    uint const reshaped_w_shape[] = { w.dim.dims[0], w.dim.dims[1] * w.dim.dims[2] * w.dim.dims[3] };
+//    tensor_t reshaped_w = tensor_make_copy(w);
+//    tensor_reshape_(&reshaped_w, reshaped_w_shape, ARRAY_SIZE(reshaped_w_shape));
+//
+//    uint const out_shape[] = { w.dim.dims[0], flattened_x.dim.dims[1] };
+//    tensor_t out = tensor_make(out_shape, ARRAY_SIZE(out_shape));
+//
+//    // apply here !!!
+//    tensor_matmul(reshaped_w, flattened_x, out);
+//
+//    uint const out_shape_2[] = { w.dim.dims[0], y.dim.dims[2], y.dim.dims[3], x.dim.dims[0] };
+//    tensor_reshape_(&out, out_shape_2, ARRAY_SIZE(out_shape_2));
+//
+//    // 3. transpose output
+//    tensor_t tpose = tensor_make_transpose_3012(out);
+//
+//    // copy transposed to y
+//    y.dim = tpose.dim;
+//    uint sz = dim_get_capacity(tpose.dim);
+//    for (int i = 0; i < sz; ++i) {
+//      y.data[i] = tpose.data[i];
+//    }
+//    y.mem_type = tpose.mem_type;
+//
+//    // fill cache
+//    // NOTE, the order matters should be x, w, flattened_x
+//    if(cache) {
+//      lcache_push(cache, x);
+//      lcache_push(cache, w);
+//      lcache_push(cache, flattened_x);
+//    }
+//
+//    tensor_destroy(&tpose);
+//    tensor_destroy(&out);
+//    return S_OK;
 
-  _do_convolution_forward_device<<<blocks, threads>>>(x, w, cache, params, y);
+
+//  dim3 threads(32);
+//  dim3 blocks(1);
+//  PINF("device code is called");
+//
+//  _do_convolution_forward_device<<<blocks, threads>>>(x, w, cache, params, y);
   return S_ERR;
 }
 
 
+// TODO
+status_t convolution_forward_device_harness(tensor_t hx, tensor_t hw, lcache_t * hcache, conv_param_t hparams, tensor_t hy) {
+  tensor_t x = tensor_make_copy_h2d(hx);
+  tensor_t w = tensor_make_copy_h2d(hw);
+  tensor_t y = tensor_make_copy_h2d(hy);
+
+//  tensor_t flat_x = im2col_device(x, w, hparams);
+
+
+  tensor_destroy_device(&x);
+  tensor_destroy_device(&w);
+  tensor_destroy_device(&y);
+}
+
+
+
+
+
+tensor_t matrix_dot_cublas_harness(tensor_t hx, tensor_t hy) {
+  assert(hx.mem_type == CPU_MEM);
+  assert(hy.mem_type == CPU_MEM);
+  // TODO assert both are 2x2
+
+  uint res_shape[] = { hx.dim.dims[0], hy.dim.dims[1] };
+  tensor_make_device(res_shape, ARRAY_SIZE(res_shape));
+}
+
+
+static __global__ void _do_im2col_device(tensor_t const x, tensor_t const w, conv_param_t const params) {
+  if (threadIdx.x == 0) {
+    printf("entered _do_im2col_device\n", threadIdx.x);
+  }
+}
+
+/*
+ * This function just sets up the im2col.
+ */
+tensor_t im2col_device(tensor_t const x, tensor_t const w, conv_param_t const params)
+{
+  // TODO: make it handler lager size
+  dim3 threads(32);
+  dim3 blocks(1);
+  PINF("device code is called");
+
+  _do_im2col_device<<<blocks, threads>>>(x, w, params);
+}
 
 
 
@@ -547,44 +618,48 @@ tensor_t col2im_device(tensor_t cols, uint N, uint C, uint H, uint W, uint field
  * responsible for a substantial amount of work.  Note that each
  * thread carries out all the work in the 2 inner for loops.
  */
-//static __global__ void _do_col2im_inner_device(tensor_t d_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride)
-//{
-//  if (threadIdx.x == 0) {
-//    printf("entered _do_col2im_inner_device\n");
-//  }
-//
-//  uint dx_col_d1  = d_cols.dim.dims[1];
-//  uint x_p_d1     = x_padded.dim.dims[1];
-//  uint x_p_d2     = x_padded.dim.dims[2];
-//  uint x_p_d3     = x_padded.dim.dims[3];
-//
-//  for (auto iter : grid_stride_range(0u, N * C * field_width * field_height)) {
-//
-//    uint i = iter / (C * field_height * field_width);
-//    uint c = (iter / (field_height * field_width)) % C;  // jj is the channel in the image
-//    uint fi = iter / (field_width) % field_height;
-//    uint fj = iter % field_width;
-//
-//    uint row = c * field_width * field_height + fi * field_width + fj;
-//
-//    for (uint h = 0; h < HH; ++h) {
-//      for (uint w = 0; w < WW; ++w) {
-//        uint col = h * WW * N + w * N + i;
-//        uint src_idx = row * dx_col_d1 + col;
-//        uint target_idx =
-//            i * x_p_d1 * x_p_d2 * x_p_d3
-//            + c * x_p_d2 * x_p_d3
-//            + (stride * h + fi) * x_p_d3
-//            + stride * w + fj;
-//
-//          atomicAdd(&(x_padded.data[target_idx]), d_cols.data[src_idx]);
-//      }
-//    }
-//  }
-//}
+static __global__ void _do_col2im_inner_device_thread_per_filter(
+    tensor_t d_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH,
+    uint WW, uint field_height, uint field_width, uint padding, uint stride)
+{
+  if (threadIdx.x == 0) {
+    printf("entered _do_col2im_inner_device\n");
+  }
+
+  uint dx_col_d1  = d_cols.dim.dims[1];
+  uint x_p_d1     = x_padded.dim.dims[1];
+  uint x_p_d2     = x_padded.dim.dims[2];
+  uint x_p_d3     = x_padded.dim.dims[3];
+
+  for (auto iter : grid_stride_range(0u, N * C * field_width * field_height)) {
+
+    uint i = iter / (C * field_height * field_width);
+    uint c = (iter / (field_height * field_width)) % C;  // jj is the channel in the image
+    uint fi = iter / (field_width) % field_height;
+    uint fj = iter % field_width;
+
+    uint row = c * field_width * field_height + fi * field_width + fj;
+
+    for (uint h = 0; h < HH; ++h) {
+      for (uint w = 0; w < WW; ++w) {
+        uint col = h * WW * N + w * N + i;
+        uint src_idx = row * dx_col_d1 + col;
+        uint target_idx =
+            i * x_p_d1 * x_p_d2 * x_p_d3
+            + c * x_p_d2 * x_p_d3
+            + (stride * h + fi) * x_p_d3
+            + stride * w + fj;
+
+//          atomicAdd(&(x_padded.data[target_idx]), d_cols.data[src_idx]); // TODO fix this
+      }
+    }
+  }
+}
 
 
-static __global__ void _do_col2im_inner_device(tensor_t d_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride)
+static __global__ void _do_col2im_inner_device_thread_per_element(
+    tensor_t d_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH,
+    uint WW, uint field_height, uint field_width, uint padding, uint stride)
 {
   if (threadIdx.x == 0) {
     printf("entered _do_col2im_inner_device\n");
@@ -616,11 +691,9 @@ static __global__ void _do_col2im_inner_device(tensor_t d_cols, tensor_t x_padde
         + (stride * h + fi) * x_p_d3
         + stride * w + fj;
 
-    atomicAdd(&(x_padded.data[target_idx]), d_cols.data[src_idx]);
+//    atomicAdd(&(x_padded.data[target_idx]), d_cols.data[src_idx]); // TODO fix this
   }
 }
-
-
 
 void col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride) {
   tensor_t d_cols       = tensor_make_copy_h2d(cols);
@@ -633,7 +706,7 @@ void col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint 
   dim3 threads(1);
   dim3 blocks(1024);
   PINF("device code is called");
-  _do_col2im_inner_device<<<blocks, threads>>>(d_cols, d_x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
+  _do_col2im_inner_device_thread_per_element<<<blocks, threads>>>(d_cols, d_x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
 
   tensor_copy_d2h(x_padded, d_x_padded);
 

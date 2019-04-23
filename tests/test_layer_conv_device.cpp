@@ -753,9 +753,6 @@ namespace {
     tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
     tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x2x2 -> 1x1x4x4
 
-    uint new_h = padded_in.dim.dims[2];
-    uint new_w = padded_in.dim.dims[3];
-
     tensor_t out = tensor_make_remove_padding_square_device(padded_in, pad_size);
 
     //  tensor_dump(in);
@@ -781,9 +778,6 @@ namespace {
     tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
     tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x3x2 -> 1x1x5x4
 
-    uint new_h = padded_in.dim.dims[2];
-    uint new_w = padded_in.dim.dims[3];
-
     tensor_t out = tensor_make_remove_padding_square_device(padded_in, pad_size);
 
     //  tensor_dump(in);
@@ -808,9 +802,6 @@ namespace {
     uint const in_shape[] = { 1, 1, 2, 3 };
     tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
     tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x2x3 -> 1x1x4x5
-
-    uint new_h = padded_in.dim.dims[2];
-    uint new_w = padded_in.dim.dims[3];
 
     tensor_t out = tensor_make_remove_padding_square_device(padded_in, pad_size);
 
@@ -865,9 +856,6 @@ namespace {
     tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
     tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x2x3 -> 1x1x6x7
 
-    uint new_h = padded_in.dim.dims[2];
-    uint new_w = padded_in.dim.dims[3];
-
     tensor_t out = tensor_make_remove_padding_square_device(padded_in, pad_size);
 
     //  tensor_dump(in);
@@ -921,9 +909,6 @@ namespace {
     tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
     tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x2x3x2 -> 1x2x5x4
 
-    uint new_h = padded_in.dim.dims[2];
-    uint new_w = padded_in.dim.dims[3];
-
     tensor_t out = tensor_make_remove_padding_square_device(padded_in, pad_size);
 
     //  tensor_dump(in);
@@ -976,9 +961,6 @@ namespace {
     uint const in_shape[] = { 2, 2, 2, 2 };
     tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
     tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 2x2x2x2 -> 2x2x4x4
-
-    uint new_h = padded_in.dim.dims[2];
-    uint new_w = padded_in.dim.dims[3];
 
     tensor_t out = tensor_make_remove_padding_square_device(padded_in, pad_size);
 
