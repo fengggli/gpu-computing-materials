@@ -79,8 +79,8 @@ TEST_F(LayerFcTest, Forward){
   /* II. Check with expected results */
   tensor_t y_ref = tensor_make_alike(y);
   // values from fc assignment in cs231n
-  T value_list[] = {1.49834967, 1.70660132, 1.91485297,
-                    3.25553199, 3.5141327,  3.77273342};
+  double value_list[] = {1.49834967, 1.70660132, 1.91485297,
+                         3.25553199, 3.5141327,  3.77273342};
   tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
 
   EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);

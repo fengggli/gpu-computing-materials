@@ -108,7 +108,7 @@ void tensor_fill_random(tensor_t t, uint seed) {
   }
 }
 
-void tensor_fill_random_uniform(tensor_t t, T const low, T const high,
+void tensor_fill_random_uniform(tensor_t t, double const low, double const high,
                                 uint seed) {
   assert(high > low);
   srand(seed);
@@ -129,7 +129,7 @@ void tensor_fill_patterned(tensor_t t) {
   }
 }
 
-void tensor_fill_list(tensor_t const t, T const value_list[],
+void tensor_fill_list(tensor_t const t, double const value_list[],
                       uint const length_of_value_list) {
   assert(length_of_value_list <= tensor_get_capacity(t));
   for (uint i = 0; i < length_of_value_list; i++) {

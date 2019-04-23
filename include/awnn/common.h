@@ -19,8 +19,12 @@ extern "C" {
 #endif
 
 typedef unsigned int uint;
-// typedef float T;
+
+#ifdef AWNN_USE_FLT32
+typedef float T;
+#else
 typedef double T;
+#endif
 
 typedef unsigned int label_t;
 label_t *label_make_random(uint nr_elem, uint range);

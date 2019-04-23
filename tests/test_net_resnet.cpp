@@ -66,7 +66,7 @@ TEST_F(NetResnetTest, ForwardInferOnly) {
   tensor_t score = resnet_forward_infer(&model, x);
   tensor_t score_ref = tensor_make_alike(score);
 
-  T value_list[] = {
+  double value_list[] = {
       81.32275804, 84.57773448, 87.83271092,  91.08768737,  94.34266381,
       97.59764025, 100.8526167, 104.10759314, 107.36256958, 110.61754603,
       8.74922391,  9.22185456,  9.69448521,   10.16711586,  10.63974651,
@@ -130,7 +130,7 @@ TEST_F(NetResnetTest, DISABLED_BackNumerical) {
         },
         param, dy, dparam_ref);
 
-    EXPECT_LT(tensor_rel_error(dparam_ref, dparam), 1e-7);
+    EXPECT_LT(tensor_rel_error(dparam_ref, dparam), 1e-5);
     tensor_destroy(&dparam_ref);
     PINF("Gradient check of %s passed", p_param->name);
   }

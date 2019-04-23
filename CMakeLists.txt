@@ -8,7 +8,7 @@ option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_CUDA "Build with CUDA" OFF)
 option(USE_CUDNN "Build with CUDNN" OFF)
 option(USE_NNPACK "Build with NNPACK" OFF)
-
+option(AWNN_USE_FLT32 "Use single precision floating point" OFF)
 
 option(USE_STRICT_CHECK "use pedantic flag" OFF)
 

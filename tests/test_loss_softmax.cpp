@@ -52,8 +52,8 @@ TEST_F(LostSoftmaxTest, OneImg) {
       nr_images, nr_classes}; // e.g. nr_images images, nr_classes features (softmax usually
                               // follows fc, which is already flattened to 2d)
   tensor_t x = tensor_make(shape_x, dim_of_shape(shape_x));
-  T const value_list[] = {-2.85, 0.86, 0.28, -2.85, 0.86, 0.28};
-  //T const value_list[] = {-2.85, 0.86, -2.85, 0.86};
+  double const value_list[] = {-2.85, 0.86, 0.28, -2.85, 0.86, 0.28};
+  // double const value_list[] = {-2.85, 0.86, -2.85, 0.86};
   tensor_fill_list(x, value_list, nr_images*nr_classes);
 
   status_t ret;

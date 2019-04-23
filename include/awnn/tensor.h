@@ -91,7 +91,7 @@ void tensor_fill_patterned(tensor_t t);  // debug use
 /* @brief fill tensor buffer with list of values
  *
  * Value_list length needs to be no larger than tensor capacity*/
-void tensor_fill_list(tensor_t const, T const value_list[],
+void tensor_fill_list(tensor_t const, double const value_list[],
                       uint const length_of_value_list);
 
 tensor_t tensor_make_placeholder(uint const shape[], uint const ndims);

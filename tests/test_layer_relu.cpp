@@ -72,7 +72,7 @@ TEST_F(LayerReluTest, Forward) {
   /* II. Check with expected results */
   tensor_t y_ref = tensor_make_alike(y);
   // values from fc assignment in cs231n
-  T value_list[] = {
+  double value_list[] = {
       0,          0,          0,          0,          0.,         0.,
       0.04545455, 0.13636364, 0.22727273, 0.31818182, 0.40909091, 0.5,
   };
