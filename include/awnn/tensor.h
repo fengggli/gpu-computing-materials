@@ -83,8 +83,7 @@ void tensor_destroy(tensor_t *ptr_t);
 
 // TODO: fill random values
 void tensor_fill_random(tensor_t t, uint seed);
-void tensor_fill_random_uniform(tensor_t t, double low, double high,
-uint seed);
+void tensor_fill_random_uniform(tensor_t t, double low, double high, uint seed);
 void tensor_fill_linspace(tensor_t t, T const start, T const stop);
 void tensor_fill_scalar(tensor_t t, T s);
 void tensor_fill_patterned(tensor_t t);  // debug use

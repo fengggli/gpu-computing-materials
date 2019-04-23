@@ -91,7 +91,7 @@ tensor_t tensor_make_transpose_1230(tensor_t t) {
       target_idx = (i + j * original_dim_0);
       assert(tidx == target_idx);
       tpose.data[target_idx] = t.data[src_idx++];
-      printf("src_idx=%u, targetIdx=%u\n", src_idx - 1, target_idx);
+//      printf("src_idx=%u, targetIdx=%u\n", src_idx - 1, target_idx);
       ++iter;
     }
   }

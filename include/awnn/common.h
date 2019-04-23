@@ -19,7 +19,6 @@ extern "C" {
 #endif
 
 typedef unsigned int uint;
-// typedef float T;
 typedef double T;
 
 typedef unsigned int label_t;

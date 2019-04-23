@@ -1,7 +1,6 @@
 #include "awnn/layer_conv.h"
-#include "cuda_defs.h"
 #include "range.cuh"
-
+#include "awnn/common.h"
 
 // type alias to simplify typing...
 using namespace util::lang;
@@ -15,7 +14,32 @@ static __device__ step_range<T> grid_stride_range(T begin, T end) {
 }
 
 static uint __device__ capacity(tensor_t t) {
-  return t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2] * t.dim.dims[3];
+  uint c = 0;
+
+  if (t.dim.dims[0] == 0) {
+    return c;
+  } else {
+    c = t.dim.dims[0];
+  }
+
+  for (int i = 1; i < MAX_DIM; ++i) {
+    if (t.dim.dims[i] == 0) {
+      return c;
+    }
+    c *= t.dim.dims[i];
+  }
+
+  return c;
+}
+
+static __global__ void print_tensor_device(tensor_t t) {
+  if (threadIdx.x == 0) {
+    printf("entered print_tensor_device capacity t= %u\n", threadIdx.x, capacity(t));
+    for (int i = 0; i < capacity(t); ++i) {
+      printf("data[%u] = %f ", i, t.data[i]);
+    }
+  }
+  printf("\n");
 }
 
 /*
@@ -118,7 +142,7 @@ tensor_t tensor_make_transpose_3012_device(tensor_t t) {
  *
  * This function should just do the padding operation in parallel.  Although below in my notes of the
  * inner im2col, I speculate that this operation can be eliminated, I am still going to provide it in
- * the intitial cuda implementation
+ * the initial cuda implementation
  */
 static __global__ void _do_tensor_make_padded_square_input_device(tensor_t d_padded, tensor_t d_src, uint p, T pad_val)
 {
@@ -228,19 +252,14 @@ static __global__ void _do_im2col_inner_device_naive_thread_per_filter(
   if (threadIdx.x == 0) {
     printf("entered _do_im2col_inner_device\n", threadIdx.x);
   }
-  uint cols_d_1 = cols.dim.dims[1];
-  uint img_sz = C * x_padded.dim.dims[2] * x_padded.dim.dims[3];
-  uint chan_sz = x_padded.dim.dims[2] * x_padded.dim.dims[3];
-  uint row_sz = x_padded.dim.dims[2];
+  uint cols_d1  = cols.dim.dims[1];
+  uint img_sz   = C * x_padded.dim.dims[2] * x_padded.dim.dims[3];
+  uint chan_sz  = x_padded.dim.dims[2] * x_padded.dim.dims[3];
+  uint row_sz   = x_padded.dim.dims[2];
 
-  uint new_img_sz = x_padded.dim.dims[0] * x_padded.dim.dims[1] * x_padded.dim.dims[2] * x_padded.dim.dims[3];
-  uint channel_sz = x_padded.dim.dims[2] * x_padded.dim.dims[3];
-
-  uint filter_size = filter_height * filter_width;
-
-  uint filters_per_channel = HH * WW;
-  uint filters_per_image = C * filters_per_channel;
-  uint total_filters = N * filters_per_image;
+  uint filters_per_channel  = HH * WW;
+  uint filters_per_image    = C * filters_per_channel;
+  uint total_filters        = N * filters_per_image;
 
   for (auto iter : grid_stride_range(0u, total_filters)) {
 
@@ -252,12 +271,13 @@ static __global__ void _do_im2col_inner_device_naive_thread_per_filter(
     for (uint f_row = 0; f_row < filter_height; ++f_row) {  // for each row of filter (relative row)
       for (uint f_col = 0; f_col < filter_width; ++f_col) {  // for each col of filter
 
-        uint row = c * filter_width * filter_height + f_row * filter_height + f_col;
+        uint row = c * filter_width * filter_height + f_row * filter_width + f_col;
         uint col = j * WW * N + k * N + n;
-        uint target_idx = row * cols_d_1 + col;
+        uint target_idx = row * cols_d1 + col;
         uint src_idx = (n * img_sz) + (c * chan_sz) + (stride * j + f_row) * row_sz + stride * k + f_col;
-        cols.data[target_idx] = x_padded.data[src_idx];
+
 //        printf("t_row=%u, t_col=%u, t_idx=%u, target_idx=%u, src_idx=%u, val=%f, row=%u, col=%u\n", t_row, t_col, t_idx, target_idx, src_idx, cols.data[target_idx], row, col);
+        cols.data[target_idx] = x_padded.data[src_idx];
       }
     }
   }
@@ -338,30 +358,32 @@ static __global__ void _do_im2col_inner_device_thread_per_element(
     uint f_col = iter % filter_width;
 
     // offset the filter col and row by the dimensions of the real image
-    uint row = c * filter_width * filter_height + f_row * filter_height + f_col;
+    uint row = c * filter_width * filter_height + f_row * filter_width + f_col;
     uint col = window_index_r * WW * N + windows_index_c * N + n;
 
     // get src index and target idx
     uint src_idx = (n * img_sz) + (c * chan_sz) + (stride * window_index_r + f_row) * row_sz + stride * windows_index_c + f_col;
     uint target_idx = row * cols_d_1 + col;
 
-    cols.data[target_idx] = x_padded.data[src_idx];
-    printf("n=%u, c=%u, window_index_r=%u, windows_index_c=%u, window_idx_linear=%u, f_row=%u, f_col=%u, first_elem=%u, target_idx=%u, src_idx=%u, val=%f, row=%u, col=%u\n", n, c, window_index_r, windows_index_c, window_index_linear, f_row, f_col, first_elem, target_idx, src_idx, cols.data[target_idx], row, col);
+//    printf("n=%u, c=%u, window_index_r=%u, windows_index_c=%u, window_idx_linear=%u, f_row=%u, f_col=%u, first_elem=%u, target_idx=%u, src_idx=%u, val=%f, row=%u, col=%u\n", n, c, window_index_r, windows_index_c, window_index_linear, f_row, f_col, first_elem, target_idx, src_idx, cols.data[target_idx], row, col);
+
+    cols.data[target_idx] = x_padded.data[src_idx]; // do copy
   }
 }
 
 /**
- * im2col_inner_device is a setup function for the real call to actually launch the kernel.
- * For now, it will allocate and de-allocate / transfer mem to and from the GPU. In the pure
- * GPU based forward, this function will not be called, but rather the _do... function will be
- * called directly.
+ * im2col_inner_device is a setup function for the real call to
+ * actually launch the kernel. For now, it will allocate and
+ * de-allocate / transfer mem to and from the GPU. In the pure
+ * GPU based forward, this function will not be called, but
+ * rather the _do... function will be called directly.
  */
 status_t im2col_inner_device(tensor_t cols, tensor_t x_padded, uint N,  uint C,  uint H,  uint W,  uint HH, uint WW, uint filter_height, uint filter_width, uint padding, uint stride)
 {
 
   tensor_t d_cols       = tensor_make_copy_h2d(cols);
   tensor_t d_x_padded   = tensor_make_copy_h2d(x_padded);
-
+  cudaDeviceSynchronize();
   // TODO: make it handler lager size
   dim3 threads(32);
   dim3 blocks(1);
@@ -499,48 +521,121 @@ tensor_t col2im_device(tensor_t cols, uint N, uint C, uint H, uint W, uint field
 
 
 /*
- * This function can be optimized with shared memory but first thing is
- * getting it to work.
+ * The purpose of this function is to take a flattened 2D matrix and
+ * expand it back into the 4D space it originated in.
+ *
+ * The intuition comes from the fact that when we collapsed the 4D
+ * space to 2D in the im2col operation, we were particularly interested
+ * taking elements related to a single application of a filter and
+ * spreading them out in a row of a 2D matrix.
+ *
+ * Now we are interested in taking those elements and putting them
+ * back to where they came from.  This is a non-trivial operation
+ * however due to the reality that we need to consider that when
+ * we performed the im2col operation, we duplicate elements.  So
+ * when we return those elements back, we have to recombine the
+ * related elements.
+ *
+ * Additionally, the same considerations must be made regarding the
+ * strategy we have to follow.  Since elements in the target are
+ * repeatedly accessed when we recombine elements, this operation
+ * should be a good target for usage of shared memory.  However
+ * since the operation is so complex, I have chosen to approach
+ * this with multiple phases, just like the im2col above.
+ *
+ * This particular version is the "most naive." Each thread is
+ * responsible for a substantial amount of work.  Note that each
+ * thread carries out all the work in the 2 inner for loops.
  */
-static __global__ void _do_col2im_inner_device(tensor_t d_cols, tensor_t d_x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride)
+//static __global__ void _do_col2im_inner_device(tensor_t d_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride)
+//{
+//  if (threadIdx.x == 0) {
+//    printf("entered _do_col2im_inner_device\n");
+//  }
+//
+//  uint dx_col_d1  = d_cols.dim.dims[1];
+//  uint x_p_d1     = x_padded.dim.dims[1];
+//  uint x_p_d2     = x_padded.dim.dims[2];
+//  uint x_p_d3     = x_padded.dim.dims[3];
+//
+//  for (auto iter : grid_stride_range(0u, N * C * field_width * field_height)) {
+//
+//    uint i = iter / (C * field_height * field_width);
+//    uint c = (iter / (field_height * field_width)) % C;  // jj is the channel in the image
+//    uint fi = iter / (field_width) % field_height;
+//    uint fj = iter % field_width;
+//
+//    uint row = c * field_width * field_height + fi * field_width + fj;
+//
+//    for (uint h = 0; h < HH; ++h) {
+//      for (uint w = 0; w < WW; ++w) {
+//        uint col = h * WW * N + w * N + i;
+//        uint src_idx = row * dx_col_d1 + col;
+//        uint target_idx =
+//            i * x_p_d1 * x_p_d2 * x_p_d3
+//            + c * x_p_d2 * x_p_d3
+//            + (stride * h + fi) * x_p_d3
+//            + stride * w + fj;
+//
+//          atomicAdd(&(x_padded.data[target_idx]), d_cols.data[src_idx]);
+//      }
+//    }
+//  }
+//}
+
+
+static __global__ void _do_col2im_inner_device(tensor_t d_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride)
 {
   if (threadIdx.x == 0) {
     printf("entered _do_col2im_inner_device\n");
   }
 
-  uint img_sz = C * d_x_padded.dim.dims[2] * d_x_padded.dim.dims[3];
-  uint chan_sz = d_x_padded.dim.dims[2] * d_x_padded.dim.dims[3];
-  uint row_sz = d_x_padded.dim.dims[2];
+  uint dx_col_d1  = d_cols.dim.dims[1];
+  uint x_p_d1     = x_padded.dim.dims[1];
+  uint x_p_d2     = x_padded.dim.dims[2];
+  uint x_p_d3     = x_padded.dim.dims[3];
 
-//  for (uint c = 0; c < C; c++) // for each channel
-//    for (uint yy = 0; yy < HH; yy++) // stride over rows
-//      for (uint xx = 0; xx < WW; xx++) // stride over cols
-//        for (uint ii = 0; ii < filter_height; ii++) // for each row of filter
+  uint C_fh_fw_HH_WW = C * field_height * field_width * HH * WW;
 
-//          for (uint jj = 0; jj < filter_width; jj++){ // for each col of filter
-//            uint row = c * filter_width * filter_height + ii * filter_height + jj;
-//            for (uint i = 0; i < N; i++){
-//              uint col = yy * WW * N + xx * N + i;
-//              uint target_idx = row * d_cols.dim.dims[1] + col;
-//              uint src_idx = (i * img_sz) + (c * chan_sz) + (stride * yy + ii) * row_sz + stride * xx + jj;
-//              d_cols.data[target_idx] = d_x_padded.data[src_idx];
-//            }
-//          }
+  for (auto iter : grid_stride_range(0u, N * C * H * W * field_height * field_width)) {
+
+    uint i = iter / C_fh_fw_HH_WW;  // ii is the target image
+    uint c = (iter / (field_height * field_width * HH * WW)) % C;  // jj is the channel in the image
+    uint fi = iter / (HH * WW * field_width) % field_height;
+    uint fj = (iter / (HH * WW)) % field_width;
+    uint h = (iter / WW) % HH;
+    uint w = iter % WW;
+
+    uint row = c * field_width * field_height + fi * field_width + fj;
+
+    uint col = h * WW * N + w * N + i;
+    uint src_idx = row * dx_col_d1 + col;
+    uint target_idx =
+        i * x_p_d1 * x_p_d2 * x_p_d3
+        + c * x_p_d2 * x_p_d3
+        + (stride * h + fi) * x_p_d3
+        + stride * w + fj;
+
+    atomicAdd(&(x_padded.data[target_idx]), d_cols.data[src_idx]);
+  }
 }
+
+
 
 void col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW, uint field_height, uint field_width, uint padding, uint stride) {
   tensor_t d_cols       = tensor_make_copy_h2d(cols);
   tensor_t d_x_padded   = tensor_make_copy_h2d(x_padded);
 
-  assert(padding * padding == cols.dim.dims[1]);
+//  print_tensor_device<<<1, 1>>>(d_cols);
+//  print_tensor_device<<<1, 1>>>(d_x_padded);
 
   // TODO: make it handler lager size
-  dim3 threads(32);
-  dim3 blocks(1);
+  dim3 threads(1);
+  dim3 blocks(1024);
   PINF("device code is called");
   _do_col2im_inner_device<<<blocks, threads>>>(d_cols, d_x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
 
-  tensor_copy_d2h(cols, d_cols);
+  tensor_copy_d2h(x_padded, d_x_padded);
 
   tensor_destroy_device(&d_cols);
   tensor_destroy_device(&d_x_padded);
@@ -553,8 +648,8 @@ static __global__ void _do_tensor_make_transpose_1230_device(tensor_t d_t, tenso
     printf("entered _do_tensor_make_transpose_1230_device\n", threadIdx.x);
   }
 
-  uint src_idx = 0, target_idx = 0;
-  uint original_dim_0 = d_src.dim.dims[0];
+  uint target_idx = 0;
+
   uint og_dim_1 = d_src.dim.dims[1];
   uint og_dim_2 = d_src.dim.dims[2];
   uint og_dim_3 = d_src.dim.dims[3];

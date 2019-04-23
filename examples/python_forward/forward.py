@@ -105,7 +105,7 @@ def im2col_cython(x, filter_height, filter_width, padding, stride):
     # print(x_padded)
 
     # when creating our columns array, we are sizing it based on
-    # (Channels * filter size, number of images * total filter applications
+    # (Channels * filter size, number of images * filter applications (reduced)
     cols = np.zeros((C * filter_height * filter_width, N * HH * WW), dtype=x.dtype)  # field_height and width are filter
 
     im2col_cython_inner(cols, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, padding, stride)
@@ -117,12 +117,13 @@ def im2col_cython_inner(cols, x_padded,
                         N, C, H, W, HH, WW,
                         filter_height, filter_width, padding, stride):
 
-    print("\ncols")
-    print(cols.shape)
-    print(list(cols.flatten()))
-    print("x_padded")
-    print(x_padded.shape)
-    print(list(x_padded.flatten()))
+    # print("\ncols")
+    # print(cols.shape)
+    # print(list(cols.flatten()))
+    # print("x_padded")
+    # print(x_padded.shape)
+    # print(list(x_padded.flatten()))
+
     img_sz = C * x_padded.shape[2] * x_padded.shape[3]
     chan_sz = x_padded.shape[2] * x_padded.shape[3]
     row_sz = x_padded.shape[2]
@@ -133,7 +134,7 @@ def im2col_cython_inner(cols, x_padded,
             for xx in range(WW):
                 for ii in range(filter_height):
                     for jj in range(filter_width):
-                        row = c * filter_width * filter_height + ii * filter_height + jj
+                        row = c * filter_width * filter_height + ii * filter_width + jj  # just changed this to filter_width
                         for i in range(N):
                             col = yy * WW * N + xx * N + i
                             test_idx = (i * img_sz) + (c * chan_sz) + (stride * yy + ii) * row_sz + stride * xx + jj
@@ -146,6 +147,6 @@ def im2col_cython_inner(cols, x_padded,
                         # print()
                         # print(cols)
 
-    print("cols after")
-    print(cols.shape)
-    print(list(cols.flatten()))
+    # print("cols after")
+    # print(cols.shape)
+    # print(list(cols.flatten()))
