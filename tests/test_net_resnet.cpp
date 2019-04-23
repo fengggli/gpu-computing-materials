@@ -143,11 +143,15 @@ TEST_F(NetResnetTest, Measure) {
   tensor_t x = tensor_make_linspace(-5.5, 4.5, model.input_dim.dims, 4);
   label_t labels[] = {0, 5, 1};
 
-  uint nr_iterations = 10;
+  time_point_t t_begin, t_end;
+  get_cur_time(t_begin);
+  uint nr_iterations = 100;
   for (uint i = 0; i < nr_iterations; i++) {
     resnet_loss(&model, x, labels, &loss);
     PINF("Loss without regulizer: %.3f", loss);
   }
+  get_cur_time(t_end);
+  print_time_in_ms(t_begin, t_end);
 }
 
 TEST_F(NetResnetTest, Destroy) { resnet_finalize(&model); }

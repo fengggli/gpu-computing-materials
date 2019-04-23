@@ -80,6 +80,11 @@ configure_file (
 
 include_directories(include ${PROJECT_BINARY_DIR})
 
+if(USE_NNPACK)
+
+  include_directories(deps/pthreadpool/include extern/NNPACK/include/)
+
+endif()
 add_library(awnn_core
   src/tensor.c
   src/tensor_op.c

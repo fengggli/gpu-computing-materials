@@ -1,7 +1,7 @@
 #include "awnn/layer_conv.h"
 #ifdef USE_NNPACK
-#include "../deps/pthreadpool/include/pthreadpool.h"
-#include "../extern/NNPACK/include/nnpack.h"
+#include "pthreadpool.h"
+#include "nnpack.h"
 #endif
 
 #include <awnn/memory.h>
@@ -278,18 +278,18 @@ status_t convolution_forward_nnpack(tensor_t const x, tensor_t const w,
                                     tensor_t y) {
 #ifndef AWNN_USE_FLT32
   PERR("nnpack doesn's support double");
-  return S_ERR:
+  return S_ERR;
 #else
 
   enum nnp_status status;
   uint batch_size = x.dim.dims[0];
   uint input_channels = x.dim.dims[1];
   uint output_channels = w.dim.dims[0];
-  struct nnp_size input_size, output_size, kernel_size;
+  struct nnp_size input_size, kernel_size;
   input_size.height = x.dim.dims[2];
   input_size.width = x.dim.dims[3];
-  output_size.height = y.dim.dims[2];
-  output_size.width = y.dim.dims[3];
+  /*output_size.height = y.dim.dims[2];*/
+  /*output_size.width = y.dim.dims[3];*/
   struct nnp_padding pad;
   pad.bottom = params.padding;
   pad.top = params.padding;
@@ -304,7 +304,7 @@ status_t convolution_forward_nnpack(tensor_t const x, tensor_t const w,
 
   const float *input = x.data;
   const float *kernel = w.data;
-  uint bias_shape = {output_channels};
+  uint bias_shape[] = {output_channels};
   tensor_t t_bias = tensor_make_zeros(bias_shape, 1);
   const float *bias = t_bias.data;
   float *output = y.data;
