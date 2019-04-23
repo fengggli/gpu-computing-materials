@@ -614,7 +614,7 @@ TEST_F(LayerConvTest, Forward){
 #ifdef USE_CUDA
 TEST_F(LayerConvTest, ConvForwardcudnn) {
   conv_param_t conv_params;
-
+#if 0
   conv_params.stride=1;
   conv_params.padding=0;
 
@@ -624,9 +624,18 @@ TEST_F(LayerConvTest, ConvForwardcudnn) {
 
   uint nr_filter = 32;
   uint sz_filter = 1;
+#endif
+  conv_params.stride=2;
+  conv_params.padding=1;
+
+  uint nr_img = 2;
+  uint sz_img = 4;
+  uint nr_in_channel = 3;
+  uint sz_filter = 4;
+  uint nr_filter = 3;
 
   uint sz_out = 1 + (sz_img + 2 * conv_params.padding - sz_filter) / conv_params.stride;
-//  EXPECT_EQ(2, sz_out);
+  EXPECT_EQ(2, sz_out);
 
   uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img}; // 1, 32, 4, 4
   uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; // 32, 32, 1, 1
@@ -642,20 +651,20 @@ TEST_F(LayerConvTest, ConvForwardcudnn) {
   status_t ret = convolution_forward_cudnn(x, w, &cache, conv_params, y);
   EXPECT_EQ(ret, S_OK);
 
-#if 0
-  // check forward value
+#if 1
   tensor_t y_ref = tensor_make_alike(y);
-  T value_list[] = {0.10817717, 0.12487223, 0.14156729, 0.15826235,
-                    0.17495741, 0.19165247, 0.20834753, 0.22504259,
-                    0.24173765, 0.25843271, 0.27512777, 0.29182283};
-  tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
+  T value_list[] =  {0.012401913875598115, -0.009877806404122181, -0.08387191755612806, -0.11092160471107837, 0.16027088700772907, 0.166610967979389, 0.17847626058152372, 0.1800463746779536, 0.30813986013986006, 0.3430997423629002, 0.4408244387191755, 0.47101435406698555, -0.8805358851674642, -0.9314354066985646, -1.0912889216047112, -1.1469584100110415, 0.6410835480309163, 0.618803827751196, 0.5448097165991902, 0.5177600294442398, 2.162702981229297, 2.1690430622009567, 2.1809083548030914, 2.1824784688995216};
+
+  tensor_fill_list(y_ref, value_list, array_size(value_list));
+
   EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
+  PINF("Cudnn_forward Consistent with expected results");
 #endif
 }
 
 TEST_F(LayerConvTest, ConvBackwardcudnn) {
   conv_param_t conv_params;
-
+#if 0
   conv_params.stride=1;
   conv_params.padding=0;
 
@@ -665,9 +674,20 @@ TEST_F(LayerConvTest, ConvBackwardcudnn) {
 
   uint nr_filter = 32;
   uint sz_filter = 1;
+#endif
+  conv_param_t params;
 
-  uint sz_out = 1 + (sz_img + 2 * conv_params.padding - sz_filter) / conv_params.stride;
-//  EXPECT_EQ(2, sz_out);
+  params.stride=2;
+  params.padding=1;
+
+  uint nr_img = 2;
+  uint sz_img = 4;
+  uint nr_in_channel = 3;
+  uint sz_filter = 4;
+  uint nr_filter = 3;
+
+  uint sz_out = 1 + (sz_img + 2 * params.padding - sz_filter) / params.stride;
+  EXPECT_EQ(2, sz_out);
 
   uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img}; // 1, 32, 4, 4
   uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; // 32, 32, 1, 1
@@ -683,41 +703,44 @@ TEST_F(LayerConvTest, ConvBackwardcudnn) {
   status_t ret = convolution_forward_cudnn(x, w, &cache, conv_params, y);
   EXPECT_EQ(ret, S_OK);
 
-  ret = convolution_backward_cudnn(x, w, &cache, conv_params, y);
-  EXPECT_EQ(ret, S_OK);
-
-#if 0
-  // check forward value
-  tensor_t y_ref = tensor_make_alike(y);
-  T value_list[] = {0.10817717, 0.12487223, 0.14156729, 0.15826235,
-                    0.17495741, 0.19165247, 0.20834753, 0.22504259,
-                    0.24173765, 0.25843271, 0.27512777, 0.29182283};
-  tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
-  EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
-
   // input for backward
-  tensor_t dy = tensor_make_linspace(-0.1, 0.5, shape_y,
-                                     dim_of_shape(shape_y));  // some fake data
+  tensor_t dy = tensor_make_linspace(-0.1, 0.5, shape_y, dim_of_shape(shape_y));
 
-  // output for backward
   tensor_t dx = tensor_make_alike(x);
+  tensor_t dw = tensor_make_alike(w);
 
-  ret = global_avg_pool_backward_device(
-      dx, &cache, dy);  // backward needs to call lcache_free_all(cache);
+  ret = convolution_backward_cudnn(dx, dw, &cache, params, dy);
   EXPECT_EQ(ret, S_OK);
 
+#if 1
   /* II. Numerical check */
+  // I had to make this copy since lambda doesn't allow me to use global
   // variable
+  tensor_t x_copy = tensor_make_copy(x);
+  tensor_t w_copy = tensor_make_copy(w);
+
   tensor_t dx_ref = tensor_make_alike(x);
+  tensor_t dw_ref = tensor_make_alike(w);
 
   // evaluate gradient of x
   eval_numerical_gradient(
-      [](tensor_t const in, tensor_t out) {
-        global_avg_pool_forward(in, NULL, out);
+      [&](tensor_t const in, tensor_t out) {
+        convolution_forward(in, w_copy, nullptr, params, out);
       },
       x, dy, dx_ref);
   EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
-  PINF("gradient check of x... is ok");
+  PINF("cudnn gradient check of x... is ok");
+
+  // evaluate gradient of w
+  eval_numerical_gradient(
+      [&](tensor_t const in, tensor_t out) {
+        convolution_forward(x_copy, in, nullptr, params, out);
+      },
+      w, dy, dw_ref);
+  EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-7);
+  PINF("cudnn gradient check of w... is ok");
+
+  EXPECT_EQ(ret, S_OK);
 #endif
 }
 

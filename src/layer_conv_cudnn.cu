@@ -886,16 +886,380 @@ status_t doTest(int algo, int* dimA, int* padA, int* convstrideA, int* filterdim
   return S_OK;
 }
 
+template <typename T_ELEM>
+status_t doForward(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y,
+    int* dimA, int* padA, int* convstrideA, int* filterdimA, cudnnTensorFormat_t filterFormat, cudnnDataType_t dataType, int mathType, int benchmark) {
+
+  cudnnHandle_t handle_;
+  T_ELEM* devPtrI=NULL;
+  T_ELEM* devPtrF=NULL;
+  T_ELEM* devPtrO=NULL;
+  T_ELEM* hostI=NULL;
+  T_ELEM* hostF=NULL;
+  T_ELEM* hostO=NULL;
+
+  cudnnTensorDescriptor_t cudnnIdesc;
+  cudnnFilterDescriptor_t cudnnFdesc;
+  cudnnTensorDescriptor_t cudnnOdesc;
+  cudnnConvolutionDescriptor_t cudnnConvDesc;
+
+  int convDim = 2;
+
+  float alpha = 1.0f;
+  float beta = 0.0;
+  int numErrors = 0;
+  int dilationA[] = {1, 1};
+  int insize = 0;
+  int filtersize = 0;
+  int outdimA[] = {1, 8, 30, 30}; //put a random value here.
+  int outsize = 0;
+
+  int dimA_padded[4];
+  int outdimA_padded[4];
+  int filterdimA_padded[4];
+  int strideA_padded[4];
+  int outstrideA_padded[4];
+  int filterstrideA_padded[4];
+
+  outdimA[0] = dimA[0];
+  outdimA[1] = filterdimA[0];
+  for( int dim = 0; dim < 2; dim++) {
+    outdimA[dim+2] = getFwdConvOutputDim( dimA[dim+2],
+                                          padA[dim],
+                                          filterdimA[dim+2],
+                                          convstrideA[dim],
+                                          dilationA[dim]);
+  }
+
+  for (int i = 0; i < 4; i++) {
+    dimA_padded[i] = dimA[i];
+    outdimA_padded[i] = outdimA[i];
+    filterdimA_padded[i] = filterdimA[i];
+  }
+
+  printf("====USER DIMENSIONS====\n");
+  printf("input dims are %d, %d, %d, %d\n", dimA[0], dimA[1], dimA[2], dimA[3]);
+  printf("filter dims are %d, %d, %d, %d\n", filterdimA[0], filterdimA[1], filterdimA[2], filterdimA[3]);
+  printf("output dims are %d, %d, %d, %d\n", outdimA[0], outdimA[1], outdimA[2], outdimA[3]);
+  printf("====PADDING DIMENSIONS====\n");
+  printf("padded input dims are %d, %d, %d, %d\n", dimA_padded[0], dimA_padded[1], dimA_padded[2], dimA_padded[3]);
+  printf("padded filter dims are %d, %d, %d, %d\n", filterdimA_padded[0], filterdimA_padded[1], filterdimA_padded[2], filterdimA_padded[3]);
+  printf("padded output dims are %d, %d, %d, %d\n", outdimA_padded[0], outdimA_padded[1], outdimA_padded[2], outdimA_padded[3]);
+
+
+  checkCudnnErr(cudnnCreate(&handle_));
+
+  checkCudnnErr( cudnnCreateTensorDescriptor( &cudnnIdesc ));
+  checkCudnnErr( cudnnCreateFilterDescriptor( &cudnnFdesc ));
+  checkCudnnErr( cudnnCreateTensorDescriptor( &cudnnOdesc ));
+  checkCudnnErr( cudnnCreateConvolutionDescriptor( &cudnnConvDesc ));
+
+  generateStrides(dimA_padded, strideA_padded, 4, filterFormat);
+  insize = dimA_padded[0] * dimA_padded[1] * dimA_padded[2] * dimA_padded[3];
+
+  generateStrides(filterdimA_padded, filterstrideA_padded, 4, filterFormat);
+  filtersize = filterdimA_padded[0] * filterdimA_padded[1] * filterdimA_padded[2] * filterdimA_padded[3];
+
+  generateStrides(outdimA_padded, outstrideA_padded, 4, filterFormat);
+  outsize = outdimA_padded[0] * outdimA_padded[1] * outdimA_padded[2] * outdimA_padded[3];
+
+  cudaMalloc ((void**)&(devPtrI), (insize) * sizeof(devPtrI[0]) );
+  cudaMalloc ((void**)&(devPtrF), (filtersize) * sizeof(devPtrF[0]) );
+  cudaMalloc ((void**)&(devPtrO), (outsize) * sizeof(devPtrO[0]) );
+
+  hostI = (T_ELEM*) (x.data);
+  hostF = (T_ELEM*) (w.data);
+  hostO = (T_ELEM*) (y.data);
+
+#if 0
+  hostI = (T_ELEM*)calloc (insize, sizeof(hostI[0]) );
+  hostF = (T_ELEM*)calloc (filtersize, sizeof(hostF[0]) );
+  hostO = (T_ELEM*)calloc (outsize, sizeof(hostO[0]) );
+
+  initImage(hostI, insize);
+  initImage(hostF, filtersize);
+  initImage(hostO, outsize);
+#endif
+
+  checkCudaErr( cudaMemcpy(devPtrI, hostI, sizeof(hostI[0]) * insize, cudaMemcpyHostToDevice));
+  checkCudaErr( cudaMemcpy(devPtrF, hostF, sizeof(hostF[0]) * filtersize, cudaMemcpyHostToDevice));
+  checkCudaErr( cudaMemcpy(devPtrO, hostO, sizeof(hostO[0]) * outsize, cudaMemcpyHostToDevice));
+  checkCudaErr( cudaDeviceSynchronize() );
+
+
+  checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnIdesc, dataType, convDim+2, dimA_padded, strideA_padded) );
+  checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnOdesc, dataType, convDim+2, outdimA_padded, outstrideA_padded) );
+  checkCudnnErr( cudnnSetConvolutionNdDescriptor(cudnnConvDesc,
+                                                 convDim,
+                                                 padA,
+                                                 convstrideA,
+                                                 dilationA,
+                                                 CUDNN_CONVOLUTION,
+                                                 CUDNN_DATA_FLOAT) );
+
+  checkCudnnErr( cudnnSetFilterNdDescriptor(cudnnFdesc, dataType, filterFormat, convDim+2, filterdimA_padded));
+
+  if (mathType == 1) {
+    checkCudnnErr( cudnnSetConvolutionMathType(cudnnConvDesc, CUDNN_TENSOR_OP_MATH) );
+  }
+
+
+  printf("Testing conv\n");
+  numErrors = doConv(
+      handle_,
+      devPtrI,
+      devPtrF,
+      devPtrO,
+      hostI,
+      hostF,
+      hostO,
+      cudnnIdesc,
+      cudnnFdesc,
+      cudnnOdesc,
+      cudnnConvDesc,
+      alpha,
+      beta,
+      filterFormat,
+      dataType,
+      dimA_padded,
+      filterdimA_padded,
+      outdimA_padded,
+      strideA_padded,
+      outstrideA_padded,
+      convstrideA,
+      padA,
+      dilationA,
+      benchmark);
+
+  if (!benchmark) {
+    if (numErrors == 0) {
+      printf("Test PASSED\n");
+    } else {
+      printf("Test FAILED, num errors = %d\n", numErrors);
+    }
+  }
+
+  clean:
+  if (devPtrI) cudaFree (devPtrI);
+  if (devPtrF) cudaFree (devPtrF);
+  if (devPtrO) cudaFree (devPtrO);
+  if (hostI) free(hostI);
+  if (hostF) free(hostF);
+  if (hostO) free(hostO);
+  if (cudnnIdesc) cudnnDestroyTensorDescriptor(cudnnIdesc);
+  if (cudnnFdesc) cudnnDestroyFilterDescriptor(cudnnFdesc);
+  if (cudnnOdesc) cudnnDestroyTensorDescriptor(cudnnOdesc);
+  if (cudnnConvDesc) cudnnDestroyConvolutionDescriptor(cudnnConvDesc);
+  if (handle_) cudnnDestroy(handle_);
+
+  return S_OK;
+}
+
+template <typename T_ELEM>
+status_t doBackward(tensor_t dx, tensor_t dw, lcache_t* cache, conv_param_t const params, tensor_t const dout,
+    int* dimA, int* padA, int* convstrideA, int* filterdimA, cudnnTensorFormat_t filterFormat, cudnnDataType_t dataType, int mathType, int benchmark) {
+
+  cudnnHandle_t handle_;
+  T_ELEM* devPtrI=NULL;
+  T_ELEM* devPtrF=NULL;
+  T_ELEM* devPtrO=NULL;
+  T_ELEM* hostI=NULL;
+  T_ELEM* hostF=NULL;
+  T_ELEM* hostO=NULL;
+
+  cudnnTensorDescriptor_t cudnnIdesc;
+  cudnnFilterDescriptor_t cudnnFdesc;
+  cudnnTensorDescriptor_t cudnnOdesc;
+  cudnnConvolutionDescriptor_t cudnnConvDesc;
+
+  int convDim = 2;
+
+  float alpha = 1.0f;
+  float beta = 0.0;
+  int numErrors = 0;
+  int dilationA[] = {1, 1};
+  int insize = 0;
+  int filtersize = 0;
+  int outdimA[] = {1, 8, 30, 30};
+  int outsize = 0;
+
+  int dimA_padded[4];
+  int outdimA_padded[4];
+  int filterdimA_padded[4];
+  int strideA_padded[4];
+  int outstrideA_padded[4];
+  int filterstrideA_padded[4];
+
+  outdimA[0] = dimA[0];
+  outdimA[1] = filterdimA[0];
+  for( int dim = 0; dim < 2; dim++) {
+    outdimA[dim+2] = getFwdConvOutputDim( dimA[dim+2],
+                                          padA[dim],
+                                          filterdimA[dim+2],
+                                          convstrideA[dim],
+                                          dilationA[dim]);
+  }
+
+  for (int i = 0; i < 4; i++) {
+    dimA_padded[i] = dimA[i];
+    outdimA_padded[i] = outdimA[i];
+    filterdimA_padded[i] = filterdimA[i];
+  }
+
+  printf("====USER DIMENSIONS====\n");
+  printf("input dims are %d, %d, %d, %d\n", dimA[0], dimA[1], dimA[2], dimA[3]);
+  printf("filter dims are %d, %d, %d, %d\n", filterdimA[0], filterdimA[1], filterdimA[2], filterdimA[3]);
+  printf("output dims are %d, %d, %d, %d\n", outdimA[0], outdimA[1], outdimA[2], outdimA[3]);
+  printf("====PADDING DIMENSIONS====\n");
+  printf("padded input dims are %d, %d, %d, %d\n", dimA_padded[0], dimA_padded[1], dimA_padded[2], dimA_padded[3]);
+  printf("padded filter dims are %d, %d, %d, %d\n", filterdimA_padded[0], filterdimA_padded[1], filterdimA_padded[2], filterdimA_padded[3]);
+  printf("padded output dims are %d, %d, %d, %d\n", outdimA_padded[0], outdimA_padded[1], outdimA_padded[2], outdimA_padded[3]);
+
+
+  checkCudnnErr(cudnnCreate(&handle_));
+
+  checkCudnnErr( cudnnCreateTensorDescriptor( &cudnnIdesc ));
+  checkCudnnErr( cudnnCreateFilterDescriptor( &cudnnFdesc ));
+  checkCudnnErr( cudnnCreateTensorDescriptor( &cudnnOdesc ));
+  checkCudnnErr( cudnnCreateConvolutionDescriptor( &cudnnConvDesc ));
+
+  generateStrides(dimA_padded, strideA_padded, 4, filterFormat);
+  insize = dimA_padded[0] * dimA_padded[1] * dimA_padded[2] * dimA_padded[3];
+
+  generateStrides(filterdimA_padded, filterstrideA_padded, 4, filterFormat);
+  filtersize = filterdimA_padded[0] * filterdimA_padded[1] * filterdimA_padded[2] * filterdimA_padded[3];
+
+  generateStrides(outdimA_padded, outstrideA_padded, 4, filterFormat);
+  outsize = outdimA_padded[0] * outdimA_padded[1] * outdimA_padded[2] * outdimA_padded[3];
+
+  cudaMalloc ((void**)&(devPtrI), (insize) * sizeof(devPtrI[0]) );
+  cudaMalloc ((void**)&(devPtrF), (filtersize) * sizeof(devPtrF[0]) );
+  cudaMalloc ((void**)&(devPtrO), (outsize) * sizeof(devPtrO[0]) );
+
+
+  hostI = (T_ELEM*) (dx.data);
+  hostF = (T_ELEM*) (dw.data);
+  hostO = (T_ELEM*) (dout.data);
+
+#if 0
+  hostI = (T_ELEM*)calloc (insize, sizeof(hostI[0]) );
+  hostF = (T_ELEM*)calloc (filtersize, sizeof(hostF[0]) );
+  hostO = (T_ELEM*)calloc (outsize, sizeof(hostO[0]) );
+
+  initImage(hostI, insize);
+  initImage(hostF, filtersize);
+  initImage(hostO, outsize);
+#endif
+
+  checkCudaErr( cudaMemcpy(devPtrI, hostI, sizeof(hostI[0]) * insize, cudaMemcpyHostToDevice));
+  checkCudaErr( cudaMemcpy(devPtrF, hostF, sizeof(hostF[0]) * filtersize, cudaMemcpyHostToDevice));
+  checkCudaErr( cudaMemcpy(devPtrO, hostO, sizeof(hostO[0]) * outsize, cudaMemcpyHostToDevice));
+  checkCudaErr( cudaDeviceSynchronize() );
+
+
+  checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnIdesc, dataType, convDim+2, dimA_padded, strideA_padded) );
+  checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnOdesc, dataType, convDim+2, outdimA_padded, outstrideA_padded) );
+  checkCudnnErr( cudnnSetConvolutionNdDescriptor(cudnnConvDesc,
+                                                 convDim,
+                                                 padA,
+                                                 convstrideA,
+                                                 dilationA,
+                                                 CUDNN_CONVOLUTION,
+                                                 CUDNN_DATA_FLOAT) );
+
+  checkCudnnErr( cudnnSetFilterNdDescriptor(cudnnFdesc, dataType, filterFormat, convDim+2, filterdimA_padded));
+
+  if (mathType == 1) {
+    checkCudnnErr( cudnnSetConvolutionMathType(cudnnConvDesc, CUDNN_TENSOR_OP_MATH) );
+  }
+
+  printf("Testing dgrad\n");
+  numErrors = doDgrad(
+      handle_,
+      devPtrI,
+      devPtrF,
+      devPtrO,
+      hostI,
+      hostF,
+      hostO,
+      cudnnIdesc,
+      cudnnFdesc,
+      cudnnOdesc,
+      cudnnConvDesc,
+      alpha,
+      beta,
+      filterFormat,
+      dimA,
+      filterdimA,
+      outdimA,
+      strideA_padded,
+      outstrideA_padded,
+      convstrideA,
+      padA,
+      dilationA,
+      benchmark);
+
+  printf("Testing wgrad\n");
+  numErrors = doWgrad(
+      handle_,
+      devPtrI,
+      devPtrF,
+      devPtrO,
+      hostI,
+      hostF,
+      hostO,
+      cudnnIdesc,
+      cudnnFdesc,
+      cudnnOdesc,
+      cudnnConvDesc,
+      alpha,
+      beta,
+      filterFormat,
+      dimA,
+      filterdimA,
+      outdimA,
+      strideA_padded,
+      outstrideA_padded,
+      convstrideA,
+      padA,
+      dilationA,
+      benchmark);
+
+  if (!benchmark) {
+    if (numErrors == 0) {
+      printf("Test PASSED\n");
+    } else {
+      printf("Test FAILED, num errors = %d\n", numErrors);
+    }
+  }
+
+  clean:
+  if (devPtrI) cudaFree (devPtrI);
+  if (devPtrF) cudaFree (devPtrF);
+  if (devPtrO) cudaFree (devPtrO);
+  if (hostI) free(hostI);
+  if (hostF) free(hostF);
+  if (hostO) free(hostO);
+  if (cudnnIdesc) cudnnDestroyTensorDescriptor(cudnnIdesc);
+  if (cudnnFdesc) cudnnDestroyFilterDescriptor(cudnnFdesc);
+  if (cudnnOdesc) cudnnDestroyTensorDescriptor(cudnnOdesc);
+  if (cudnnConvDesc) cudnnDestroyConvolutionDescriptor(cudnnConvDesc);
+  if (handle_) cudnnDestroy(handle_);
+
+  return S_OK;
+}
+
 status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y){
 
   int mathType = 0;
   int benchmark = 0;
-  int dimA[] = {1, 32, 4, 4};  // N, C, H, W;
+//  int dimA[] = {1, 32, 4, 4};  // N, C, H, W;
+  int dimA[] = {x.dim.dims[0], x.dim.dims[1], x.dim.dims[2], x.dim.dims[3]};  // N, C, H, W;
   int padA[] = {(int)params.padding, (int)params.padding};
   int convstrideA[] = {(int)params.stride, (int)params.stride};
-  //batch size and feature layers must be multiples of 4 or 32 when using int8x4 or int8x32 respectively
-  //int filterdimA[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; //k, c, r, s
-  int filterdimA[] = {32, 32, 1, 1}; //k, c, r, s
+  // batch size and feature layers must be multiples of 4 or 32 when using int8x4 or int8x32 respectively
+  int filterdimA[] = {w.dim.dims[0], w.dim.dims[1], w.dim.dims[2], w.dim.dims[3]}; //k, c, r, s
+//  int filterdimA[] = {32, 32, 1, 1}; //k, c, r, s
   cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
 
 #if 0
@@ -907,8 +1271,11 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
 #endif
 
   printf("Testing using cudnn forward\n");
-  int algo = 0;
-  status_t ret = doTest<T>(algo, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
+//  int algo = 0;
+//  status_t ret = doTest<T>(algo, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
+
+  status_t ret = doForward<T>(x, w, cache, params, y,
+      dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
 
   return ret;
 }
@@ -916,21 +1283,19 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
 status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache, conv_param_t const params, tensor_t const dout){
   int mathType = 0;
   int benchmark = 0;
-  int dimA[] = {1, 32, 4, 4};  // N, C, H, W;
+//  int dimA[] = {1, 32, 4, 4};  // N, C, H, W;
+  int dimA[] = {dx.dim.dims[0], dx.dim.dims[1], dx.dim.dims[2], dx.dim.dims[3]};  // N, C, H, W;
   int padA[] = {(int)params.padding, (int)params.padding};
   int convstrideA[] = {(int)params.stride, (int)params.stride};
   //batch size and feature layers must be multiples of 4 or 32 when using int8x4 or int8x32 respectively
-  //int filterdimA[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; //k, c, r, s
-  int filterdimA[] = {32, 32, 1, 1}; //k, c, r, s
+  int filterdimA[] = {dw.dim.dims[0], dw.dim.dims[1], dw.dim.dims[2], dw.dim.dims[3]}; //k, c, r, s
+//  int filterdimA[] = {32, 32, 1, 1}; //k, c, r, s
   cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
 
   printf("Testing using cudnn backward\n");
-  int algo = 1;
-  status_t ret = doTest<T>(algo, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
 
-  algo = 2;
-  printf("Testing single precision, backward_weight\n");
-  ret = doTest<T>(algo, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
+  status_t ret = doBackward<T>(dx, dw, cache, params, dout,
+      dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
 
   return ret;
 }

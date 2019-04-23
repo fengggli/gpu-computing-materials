@@ -14,7 +14,7 @@ T channel_mean(T const *t, uint size){
   for (uint i=0; i < size; ++i){
     mean += t[i];
   }
-  return mean/size;
+  return mean/(T)size;
 }
 
 uint channel_capacity(tensor_t t){

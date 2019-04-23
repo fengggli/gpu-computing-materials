@@ -115,7 +115,7 @@ void tensor_fill_random_uniform(tensor_t t, T const low, T const high,
   uint capacity = dim_get_capacity(t.dim);
   uint i;
   for (i = 0; i < capacity; i++) {
-    double scale = (T)rand() / (T)RAND_MAX;  // 0~1
+    T scale = (T)rand() / (T)RAND_MAX;  // 0~1
     t.data[i] = low + (high - low) * scale;
   }
 }
