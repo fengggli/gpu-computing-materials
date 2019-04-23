@@ -1045,9 +1045,9 @@ status_t doForward(tensor_t const x, tensor_t const w, lcache_t* cache,
   if (devPtrI) cudaFree (devPtrI);
   if (devPtrF) cudaFree (devPtrF);
   if (devPtrO) cudaFree (devPtrO);
-  if (hostI) free(hostI);
-  if (hostF) free(hostF);
-  if (hostO) free(hostO);
+  //  if (hostI) free(hostI);
+  //  if (hostF) free(hostF);
+  //  if (hostO) free(hostO);
   if (cudnnIdesc) cudnnDestroyTensorDescriptor(cudnnIdesc);
   if (cudnnFdesc) cudnnDestroyFilterDescriptor(cudnnFdesc);
   if (cudnnOdesc) cudnnDestroyTensorDescriptor(cudnnOdesc);
@@ -1217,9 +1217,9 @@ status_t doBackward_data(tensor_t dx, tensor_t w, lcache_t* cache,
   if (devPtrI) cudaFree (devPtrI);
   if (devPtrF) cudaFree (devPtrF);
   if (devPtrO) cudaFree (devPtrO);
-  if (hostI) free(hostI);
-  if (hostF) free(hostF);
-  if (hostO) free(hostO);
+  //  if (hostI) free(hostI);
+  //  if (hostF) free(hostF);
+  //  if (hostO) free(hostO);
   if (cudnnIdesc) cudnnDestroyTensorDescriptor(cudnnIdesc);
   if (cudnnFdesc) cudnnDestroyFilterDescriptor(cudnnFdesc);
   if (cudnnOdesc) cudnnDestroyTensorDescriptor(cudnnOdesc);
@@ -1375,9 +1375,9 @@ clean:
   if (devPtrI) cudaFree(devPtrI);
   if (devPtrF) cudaFree(devPtrF);
   if (devPtrO) cudaFree(devPtrO);
-  if (hostI) free(hostI);
-  if (hostF) free(hostF);
-  if (hostO) free(hostO);
+  //  if (hostI) free(hostI);
+  //  if (hostF) free(hostF);
+  //  if (hostO) free(hostO);
   if (cudnnIdesc) cudnnDestroyTensorDescriptor(cudnnIdesc);
   if (cudnnFdesc) cudnnDestroyFilterDescriptor(cudnnFdesc);
   if (cudnnOdesc) cudnnDestroyTensorDescriptor(cudnnOdesc);

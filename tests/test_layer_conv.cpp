@@ -662,6 +662,8 @@ TEST_F(LayerConvTest, ConvForwardcudnn) {
   EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
   PINF("Cudnn_forward Consistent with expected results");
 #endif
+
+  // free data
 }
 
 TEST_F(LayerConvTest, ConvBackwardcudnn) {
@@ -746,6 +748,8 @@ TEST_F(LayerConvTest, ConvBackwardcudnn) {
 
   EXPECT_EQ(ret, S_OK);
 #endif
+
+  // free data
 }
 
 #endif
