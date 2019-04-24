@@ -139,7 +139,7 @@ status_t convolution_backward_nnpack(tensor_t dx, tensor_t dw, lcache_t* cache,
   // w gradient
   status = nnp_convolution_kernel_gradient(
       nnp_convolution_algorithm_auto, batch_size, input_channel, output_channel,
-      input_size, pad, kernel_size, w.data, dout.data, dw.data,
+      input_size, pad, kernel_size, x.data, dout.data, dw.data,
       NULL,  // let it allocate scratch on the fly
       NULL, nnp_activation_identity, NULL,  // activation and its param
       thrd_pool, profile);                  // thread pool and profile
