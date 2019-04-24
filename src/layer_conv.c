@@ -21,9 +21,11 @@ status_t convolution_backward_simple(tensor_t dx, tensor_t dw, lcache_t* cache,
 status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cache, conv_param_t const params, tensor_t y){
   status_t ret = S_ERR;
   switch (g_conv_method) {
+#ifdef USE_NNPACK
     case CONV_METHOD_NNPACK_AUTO:
       ret = convolution_forward_nnpack(x, w, cache, params, y);
       break;
+#endif
     default:
       ret = convolution_forward_simple(x, w, cache, params, y);
   }
@@ -35,9 +37,11 @@ status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache,
                               tensor_t const dout) {
   status_t ret = S_ERR;
   switch (g_conv_method) {
+#ifdef USE_NNPACK
     case CONV_METHOD_NNPACK_AUTO:
       ret = convolution_backward_nnpack(dx, dw, cache, conv_params, dout);
       break;
+#endif
     default:
       ret = convolution_backward_simple(dx, dw, cache, conv_params, dout);
   }

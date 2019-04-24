@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5)
 
 option(IS_CI_BUILD "Is a build for CI" OFF) # Reduce problem size if it is run in CI
 option(USE_CLANG "Use clang compiler set" OFF)
-option(USE_OPENBLAS "USE openblas for blas" OFF)
+option(USE_OPENBLAS "USE openblas for blas" ON)
 option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_CUDA "Build with CUDA" OFF)
 option(USE_CUDNN "Build with CUDNN" OFF)
@@ -86,7 +86,7 @@ if(USE_NNPACK)
   set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS} nnpack)
 
 endif()
-add_library(awnn_core
+list(APPEND awnn_core_SOURCES
   src/tensor.c
   src/tensor_op.c
   src/layer_conv.c
@@ -99,7 +99,14 @@ add_library(awnn_core
   src/layer_sandwich.c
   src/solver.c
   src/net_resnet.c
-  src/layer_conv_nnpack.c)
+  )
+
+if (USE_NNPACK)
+  list(APPEND awnn_core_SOURCES
+    src/layer_conv_nnpack.c)
+endif ()
+
+add_library(awnn_core ${awnn_core_SOURCES})
 
 target_include_directories(awnn_core PUBLIC include)
 target_link_libraries(awnn_core PUBLIC ${AWNN_DEP_LIBS})

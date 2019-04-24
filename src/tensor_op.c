@@ -73,11 +73,17 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
 #ifdef USE_OPENBLAS
   // https://software.intel.com/en-us/mkl-tutorial-c-multiplying-matrices-using-dgemm
   tensor_fill_scalar(out, 0.0);
+#ifndef AWNN_USE_FLT32
   cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
       (int)m, (int)n, (int)k,
       1, in1.data, (int)k,
       in2.data, (int)n,
       1.0, out.data, (int)n);
+
+#else
+  cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, (int)m, (int)n, (int)k,
+              1, in1.data, (int)k, in2.data, (int)n, 1.0, out.data, (int)n);
+#endif
 #else
   uint ii, jj, kk; // A[i.j] with B[j,k]
   for(ii = 0; ii < m; ii++){

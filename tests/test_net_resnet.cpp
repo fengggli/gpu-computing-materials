@@ -5,6 +5,7 @@
  * e-mail: fengggli@yahoo.com
  */
 #include "awnn/data_utils.h"
+#include "awnn/layer_conv.h"
 #include "awnn/net_resnet.h"
 #include "awnn/solver.h"
 #include "utils/debug.h"
@@ -37,6 +38,9 @@ TEST_F(NetResnetTest, Construct) {
 
   resnet_init(&model, input_dim, output_dim, nr_stages, nr_blocks, reg,
               normalize_method);
+#ifdef USE_NNPACK
+  set_conv_method(CONV_METHOD_NNPACK_AUTO);
+#endif
 
   EXPECT_EQ((void *)0, (void *)net_get_param(model.list_all_params,
                                              "W3"));  // unexisting param
