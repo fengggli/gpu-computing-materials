@@ -83,6 +83,7 @@ include_directories(include ${PROJECT_BINARY_DIR})
 if(USE_NNPACK)
 
   include_directories(deps/pthreadpool/include extern/NNPACK/include/)
+  set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS} nnpack)
 
 endif()
 add_library(awnn_core
@@ -97,11 +98,13 @@ add_library(awnn_core
   src/net_mlp.c
   src/layer_sandwich.c
   src/solver.c
-  src/net_resnet.c)
+  src/net_resnet.c
+  src/layer_conv_nnpack.c)
 
 target_include_directories(awnn_core PUBLIC include)
 target_link_libraries(awnn_core PUBLIC ${AWNN_DEP_LIBS})
 
+# This is a cpp lib
 add_library(awnn_utils
   utils/data_cifar.cpp
   utils/weight_init.cpp

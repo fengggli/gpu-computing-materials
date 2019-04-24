@@ -116,7 +116,7 @@ void tensor_fill_random_uniform(tensor_t t, double const low, double const high,
   uint i;
   for (i = 0; i < capacity; i++) {
     double scale = (T)rand() / (T)RAND_MAX;  // 0~1
-    t.data[i] = low + (high - low) * scale;
+    t.data[i] = (T)(low + (high - low) * scale);
   }
 }
 
@@ -133,7 +133,7 @@ void tensor_fill_list(tensor_t const t, double const value_list[],
                       uint const length_of_value_list) {
   assert(length_of_value_list <= tensor_get_capacity(t));
   for (uint i = 0; i < length_of_value_list; i++) {
-    t.data[i] = value_list[i];
+    t.data[i] = (T)(value_list[i]);
   }
 }
 
@@ -277,21 +277,21 @@ tensor_t tensor_make_sum(tensor_t const t, uint const axis_id) {
   return t_ret;
 }
 
-void tensor_fill_linspace(tensor_t t, T const start, T const stop) {
+void tensor_fill_linspace(tensor_t t, double const start, double const stop) {
   uint i;
   uint capacity = dim_get_capacity(t.dim);
   if (stop <= start) {
     PERR("Wrong linspace");
     return;
   }
-  T step = (stop - start) / ((T)capacity - 1);
+  double step = (stop - start) / ((T)capacity - 1);
   for (i = 0; i < capacity; i++) {
-    t.data[i] = start + i * step;
+    t.data[i] = (T)(start + i * step);
   }
 }
 
-tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[],
-                              uint const ndims) {
+tensor_t tensor_make_linspace(double const start, double const stop,
+                              uint const shape[], uint const ndims) {
   tensor_t t = tensor_make(shape, ndims);
   tensor_fill_linspace(t, start, stop);
   return t;
@@ -308,7 +308,7 @@ tensor_t tensor_make_ones(uint const shape[], uint const ndims) {
   return t;
 }
 
-tensor_t tensor_make_linspace_alike(T const start, T const stop,
+tensor_t tensor_make_linspace_alike(double const start, double const stop,
                                     tensor_t const t) {
   tensor_t ret = _tensor_make(t.dim);
   tensor_fill_linspace(ret, start, stop);
@@ -446,8 +446,8 @@ T tensor_rel_error(tensor_t x, tensor_t ref) {
 }
 
 void tensor_destroy(tensor_t* t) {
-  if (t->mem_type == CPU_MEM)
-    ;
-  mem_free(t->data);
-  t->data = NULL;
+  if (t->mem_type == CPU_MEM) {
+    mem_free(t->data);
+    t->data = NULL;
+  }
 }

@@ -48,8 +48,9 @@ void print_trace();
 #define AWNN_NO_USE(a) (void)(a)
 
 #define AWNN_CHECK_EQ(a, b)                                         \
-  if ((a) != (b)) {                                                 \
-    PERR("Value (%lu) != %lu", (unsigned long)a, (unsigned long)b); \
+  if ((a) != (b)) {                                                           \
+    PERR("[%s:%d]: Value (%lu) != %lu", __FILE__, __LINE__, (unsigned long)a, \
+         (unsigned long)b);                                                   \
     print_trace();                                                  \
     exit(-1);                                                       \
   }

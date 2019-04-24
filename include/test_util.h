@@ -36,8 +36,7 @@ template <uint SIZE, class T> inline uint dim_of_shape(T const (&)[SIZE]) {
  */
 status_t eval_numerical_gradient(
     std::function<void(tensor_t const, tensor_t)> const &func, tensor_t const x,
-    tensor_t const dy, tensor_t dx, T h = 1e-5) {
-
+    tensor_t const dy, tensor_t dx, double h = 1e-5) {
   tensor_t y_pos, y_neg;
   y_pos = tensor_make_alike(dy);
   y_neg = tensor_make_alike(dy);

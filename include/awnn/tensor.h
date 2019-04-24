@@ -84,7 +84,7 @@ void tensor_destroy(tensor_t *ptr_t);
 // TODO: fill random values
 void tensor_fill_random(tensor_t t, uint seed);
 void tensor_fill_random_uniform(tensor_t t, double low, double high, uint seed);
-void tensor_fill_linspace(tensor_t t, T const start, T const stop);
+void tensor_fill_linspace(tensor_t t, double const start, double const stop);
 void tensor_fill_scalar(tensor_t t, T s);
 void tensor_fill_patterned(tensor_t t);  // debug use
 
@@ -100,14 +100,14 @@ tensor_t tensor_make_zeros(uint const shape[], uint const ndims);
 tensor_t tensor_make_ones(uint const shape[], uint const ndims);
 tensor_t tensor_make_random(uint const shape[], uint const ndims, uint seed);
 tensor_t tensor_make_patterned(uint const shape[], uint const ndims);
-tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[],
-                              uint const ndims);
+tensor_t tensor_make_linspace(double const start, double const stop,
+                              uint const shape[], uint const ndims);
 /* a new tensor, and it has same shape as the original */
 tensor_t tensor_make_alike(tensor_t t);
 tensor_t tensor_make_zeros_alike(tensor_t t);
 /* a new tensor, and it has same shape as the original, and it's filled with
  * linspace */
-tensor_t tensor_make_linspace_alike(T const start, T const stop,
+tensor_t tensor_make_linspace_alike(double const start, double const stop,
                                     tensor_t const t);
 /* a new tensor, and it's a copy of the original */
 tensor_t tensor_make_copy(tensor_t t);
