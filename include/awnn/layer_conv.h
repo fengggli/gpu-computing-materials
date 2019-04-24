@@ -19,6 +19,13 @@ typedef struct conv_param {
   uint padding;
 } conv_param_t;
 
+typedef enum conv_method_ {
+  CONV_METHOD_NAIVE = 0,
+  CONV_METHOD_NNPACK_AUTO = 1
+} conv_method_t;
+
+void set_conv_method(conv_method_t);
+
 /*
  * @brief forwarding for conv2d
  *

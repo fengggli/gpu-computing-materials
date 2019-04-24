@@ -109,7 +109,7 @@ TEST_F(LayerGlobalAvgPoolTest, Backward) {
         global_avg_pool_forward(in, NULL, out);
       },
       x, dy, dx_ref);
-  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 3e-3);
   PINF("gradient check of x... is ok");
 }
 

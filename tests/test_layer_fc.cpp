@@ -124,7 +124,7 @@ TEST_F(LayerFcTest, Backward) {
         layer_fc_forward(in, w_copy, b_copy, NULL, out);
       },
       x, dy, dx_ref);
-  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-3);
   PINF("gradient check of x... is ok");
 
   // evaluate gradient of w
@@ -133,7 +133,7 @@ TEST_F(LayerFcTest, Backward) {
         layer_fc_forward(x_copy, in, b_copy, NULL, out);
       },
       w, dy, dw_ref);
-  EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-7);
+  EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-3);
   PINF("gradient check of w... is ok");
 
   // evaluate gradient of b
@@ -142,7 +142,7 @@ TEST_F(LayerFcTest, Backward) {
         layer_fc_forward(x_copy, w_copy, in, NULL, out);
       },
       b, dy, db_ref);
-  EXPECT_LT(tensor_rel_error(db_ref, db), 1e-7);
+  EXPECT_LT(tensor_rel_error(db_ref, db), 1e-5);
   PINF("gradient check of b... is ok");
 }
 

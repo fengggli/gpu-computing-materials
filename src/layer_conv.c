@@ -7,8 +7,46 @@
 #include <awnn/memory.h>
 #include <printf.h>
 
-status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cache, conv_param_t const params, tensor_t y){
+static conv_method_t g_conv_method = CONV_METHOD_NAIVE;
 
+void set_conv_method(conv_method_t method) { g_conv_method = method; }
+
+status_t convolution_forward_simple(tensor_t const x, tensor_t const w,
+                                    lcache_t* cache, conv_param_t const params,
+                                    tensor_t y);
+status_t convolution_backward_simple(tensor_t dx, tensor_t dw, lcache_t* cache,
+                                     conv_param_t const conv_params,
+                                     tensor_t const dout);
+
+status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cache, conv_param_t const params, tensor_t y){
+  status_t ret = S_ERR;
+  switch (g_conv_method) {
+    case CONV_METHOD_NNPACK_AUTO:
+      ret = convolution_forward_nnpack(x, w, cache, params, y);
+      break;
+    default:
+      ret = convolution_forward_simple(x, w, cache, params, y);
+  }
+  return ret;
+}
+
+status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache,
+                              conv_param_t const conv_params,
+                              tensor_t const dout) {
+  status_t ret = S_ERR;
+  switch (g_conv_method) {
+    case CONV_METHOD_NNPACK_AUTO:
+      ret = convolution_backward_nnpack(dx, dw, cache, conv_params, dout);
+      break;
+    default:
+      ret = convolution_backward_simple(dx, dw, cache, conv_params, dout);
+  }
+  return ret;
+}
+
+status_t convolution_forward_simple(tensor_t const x, tensor_t const w,
+                                    lcache_t* cache, conv_param_t const params,
+                                    tensor_t y) {
   // 1. flatten the input into vectors which represent the filters
   tensor_t flattened_x = im2col(x, w, params);  // NxCxHxW -> C*HH*WW x NxH'xW'
 
@@ -141,7 +179,9 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
  * @param dout
  * @return
  */
-status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache, conv_param_t const conv_params, tensor_t const dout) {
+status_t convolution_backward_simple(tensor_t dx, tensor_t dw, lcache_t* cache,
+                                     conv_param_t const conv_params,
+                                     tensor_t const dout) {
   tensor_t x, w, x_cols;
 
   // NOTE : the order of pop matters, should be flattened_x, w, x (reverse of forward)

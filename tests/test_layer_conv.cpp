@@ -43,17 +43,17 @@ protected:
 TEST_F(LayerConvTest, Backward){
   conv_param_t params;
 
-  params.stride=2;
+  params.stride = 1;
   params.padding=1;
 
   uint nr_img = 2;
   uint sz_img = 4;
   uint nr_in_channel = 3;
-  uint sz_filter = 4;
+  uint sz_filter = 3;
   uint nr_filter = 3;
 
   uint sz_out = 1 + (sz_img + 2 * params.padding - sz_filter) / params.stride;
-  EXPECT_EQ(2, sz_out);
+  EXPECT_EQ(4, sz_out);
 
   uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img}; // 2x3x4x4
   uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; // 3x3x4x4
@@ -93,7 +93,7 @@ TEST_F(LayerConvTest, Backward){
         convolution_forward(in, w_copy, nullptr, params, out);
       },
       x, dy, dx_ref);
-  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-4);
   PINF("gradient check of x... is ok");
 
   // evaluate gradient of w
@@ -102,7 +102,7 @@ TEST_F(LayerConvTest, Backward){
         convolution_forward(x_copy, in, nullptr, params, out);
       },
       w, dy, dw_ref);
-  EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-7);
+  EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-4);
   PINF("gradient check of w... is ok");
 
   EXPECT_EQ(ret, S_OK);
