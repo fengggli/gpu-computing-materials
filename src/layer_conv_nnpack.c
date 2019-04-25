@@ -7,8 +7,8 @@
 
 static int nnpack_initialized = 0;
 
-status_t convolution_forward_nnpack(tensor_t const x, tensor_t const w,
-                                    lcache_t* cache, conv_param_t const params,
+status_t convolution_forward_nnpack(conv_method_t algo, tensor_t const x,
+                                    tensor_t const w, lcache_t* cache, conv_param_t const params,
                                     tensor_t y) {
 #ifndef AWNN_USE_FLT32
   PERR("nnpack doesn's support double");
@@ -53,7 +53,7 @@ status_t convolution_forward_nnpack(tensor_t const x, tensor_t const w,
   // TODO: this can be in the first iteration
 #if 0
   size_t scratch_size = 0;
-  status = nnp_convolution_output(nnp_convolution_algorithm_auto, batch_size,
+  status = nnp_convolution_output(algo, batch_size,
                                   input_channel, output_channel, input_size,
                                   pad, kernel_size, NULL, NULL, NULL, NULL,
                                   NULL, &scratch_size, nnp_activation_identity,
@@ -65,18 +65,18 @@ status_t convolution_forward_nnpack(tensor_t const x, tensor_t const w,
   float *scratch_mem = mem_alloc(scratch_size);
 
   status = nnp_convolution_output(
-      nnp_convolution_algorithm_auto, batch_size, input_channel,
+      algo, batch_size, input_channel,
       output_channel, input_size, pad, kernel_size, input, kernel, bias,
       output, scratch_mem, &scratch_size, nnp_activation_identity,
       NULL,  // activation param
       thrd_pool, profile);
 #else
-  status = nnp_convolution_output(nnp_convolution_algorithm_auto, batch_size,
-                                  input_channel, output_channel, input_size,
-                                  pad, kernel_size, input, kernel, bias, output,
-                                  NULL, NULL, nnp_activation_identity,
-                                  NULL,  // activation param
-                                  thrd_pool, profile);
+  status =
+      nnp_convolution_output(algo, batch_size, input_channel, output_channel,
+                             input_size, pad, kernel_size, input, kernel, bias,
+                             output, NULL, NULL, nnp_activation_identity,
+                             NULL,  // activation param
+                             thrd_pool, profile);
 #endif
   AWNN_CHECK_EQ(status, nnp_status_success);
 
@@ -95,7 +95,8 @@ status_t convolution_forward_nnpack(tensor_t const x, tensor_t const w,
 #endif
 }
 
-status_t convolution_backward_nnpack(tensor_t dx, tensor_t dw, lcache_t* cache,
+status_t convolution_backward_nnpack(conv_method_t algo, tensor_t dx,
+                                     tensor_t dw, lcache_t* cache,
                                      conv_param_t const params,
                                      tensor_t const dout) {
   tensor_t x, w;
@@ -129,8 +130,7 @@ status_t convolution_backward_nnpack(tensor_t dx, tensor_t dw, lcache_t* cache,
   // How about bias?
   // input gradient
   status = nnp_convolution_input_gradient(
-      nnp_convolution_algorithm_auto, batch_size, input_channel, output_channel,
-      input_size, pad, kernel_size, dout.data, w.data, dx.data,
+      algo, batch_size, input_channel, output_channel, input_size, pad, kernel_size, dout.data, w.data, dx.data,
       NULL,  // let it allocate scratch on the fly
       NULL, nnp_activation_identity, NULL,  // activation and its param
       NULL, NULL);                          // thread pool and profile
@@ -138,8 +138,7 @@ status_t convolution_backward_nnpack(tensor_t dx, tensor_t dw, lcache_t* cache,
 
   // w gradient
   status = nnp_convolution_kernel_gradient(
-      nnp_convolution_algorithm_auto, batch_size, input_channel, output_channel,
-      input_size, pad, kernel_size, x.data, dout.data, dw.data,
+      algo, batch_size, input_channel, output_channel, input_size, pad, kernel_size, x.data, dout.data, dw.data,
       NULL,  // let it allocate scratch on the fly
       NULL, nnp_activation_identity, NULL,  // activation and its param
       thrd_pool, profile);                  // thread pool and profile

@@ -39,7 +39,8 @@ TEST_F(LayerConvNNPACKTest, Forward) {
   tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
   tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
 
-  status_t ret = convolution_forward_nnpack(
+  set_conv_method(CONV_METHOD_NNPACK_AUTO);
+  status_t ret = convolution_forward(
       x, w, NULL, conv_params,
       y);  // forward function should allocate and populate cache;
   // status_t ret = convolution_forward(x, w, NULL, conv_params, y);// forward
@@ -104,7 +105,8 @@ TEST_F(LayerConvNNPACKTest, Backward) {
   lcache_t cache;
   make_empty_lcache(&cache);
 
-  status_t ret = convolution_forward_nnpack(
+  set_conv_method(CONV_METHOD_NNPACK_AUTO);
+  status_t ret = convolution_forward(
       x, w, &cache, conv_params,
       y);  // forward function should allocate and populate cache;
   EXPECT_EQ(ret, S_OK);
@@ -115,8 +117,7 @@ TEST_F(LayerConvNNPACKTest, Backward) {
   tensor_t dx = tensor_make_alike(x);
   tensor_t dw = tensor_make_alike(w);
 
-  ret = convolution_backward_nnpack(
-      dx, dw, &cache, conv_params,
+  ret = convolution_backward(dx, dw, &cache, conv_params,
       dy);  // backward needs to call free_lcache(cache);
   EXPECT_EQ(ret, S_OK);
 

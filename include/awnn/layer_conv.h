@@ -20,8 +20,14 @@ typedef struct conv_param {
 } conv_param_t;
 
 typedef enum conv_method_ {
-  CONV_METHOD_NAIVE = 0,
-  CONV_METHOD_NNPACK_AUTO = 1
+  CONV_METHOD_NNPACK_AUTO = 0,
+  CONV_METHOD_NNPACK_ft8x8 = 1,
+  CONV_METHOD_NNPACK_ft16x16 = 2,
+  CONV_METHOD_NNPACK_wt8x8 = 3,
+  CONV_METHOD_NNPACK_implicit_gemm = 4,
+  CONV_METHOD_NNPACK_direct = 5,
+  CONV_METHOD_NAIVE = 6,
+
 } conv_method_t;
 
 void set_conv_method(conv_method_t);
@@ -78,12 +84,12 @@ void col2im_inner(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H,
                   uint padding, uint stride);
 
 #ifdef USE_NNPACK
-status_t convolution_forward_nnpack(tensor_t const x, tensor_t const w,
-                                    lcache_t* cache, conv_param_t const params,
-                                    tensor_t y);
+status_t convolution_forward_nnpack(conv_method_t, tensor_t const x,
+                                    tensor_t const w, lcache_t* cache,
+                                    conv_param_t const params, tensor_t y);
 
-status_t convolution_backward_nnpack(tensor_t dx, tensor_t dw, lcache_t* cache,
-                                     conv_param_t const params,
+status_t convolution_backward_nnpack(conv_method_t, tensor_t dx, tensor_t dw,
+                                     lcache_t* cache, conv_param_t const params,
                                      tensor_t const dout);
 #endif
 
