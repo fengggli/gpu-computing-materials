@@ -1,5 +1,5 @@
 #include "awnn/common.h"
-#include "awnn/layer_conv.h"
+#include "awnndevice/dev_layer_conv.cuh"
 #include "awnndevice/device_utils.cuh"
 
 

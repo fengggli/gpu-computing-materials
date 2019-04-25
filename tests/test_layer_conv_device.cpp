@@ -11,6 +11,8 @@
 #include "awnn/tensor.h"
 #include "awnn/layer_pool.h"
 
+#include "awnndevice/dev_layer_conv.cuh"
+
 #include <gtest/gtest.h>
 
 namespace {

@@ -14,11 +14,6 @@
 extern "C" {
 #endif
 
-typedef struct{
-  int stride;
-  int padding;
-} conv_param_t;
-
 
 /*
  * @brief forwarding for conv2d
