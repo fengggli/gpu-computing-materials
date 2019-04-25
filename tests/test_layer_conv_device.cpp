@@ -57,7 +57,7 @@ namespace {
     tensor_t p_ref = tensor_make(shape_p, dim_of_shape(shape_p));
     T p3012[] = {1, 0, 1, 2, 1, 2, 0, 1, 1, 3, 0, 1, 1, 0, 1, 2, 1, 2};
     tensor_fill_list(p_ref, p3012, array_size(p3012));
-    uint shape_tpose_p[] = {p.dim.dims[3], p.dim.dims[0], p.dim.dims[1], p.dim.dims[2]};
+    uint shape_tpose_p[] = { p.dim.dims[3], p.dim.dims[0], p.dim.dims[1], p.dim.dims[2] };
     tensor_reshape_(&p_ref, shape_tpose_p, dim_of_shape(shape_tpose_p));
 
     EXPECT_LT(tensor_rel_error(p_tpose_3012, p_ref), 1e-7);

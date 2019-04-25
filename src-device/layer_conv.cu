@@ -1,47 +1,7 @@
-#include "range.cuh"
-#include "awnn/layer_conv.h"
 #include "awnn/common.h"
-#include "awnndevice/cublas_utils.cuh"
+#include "awnn/layer_conv.h"
+#include "awnndevice/device_utils.cuh"
 
-// type alias to simplify typing...
-using namespace util::lang;
-template<typename T>
-using step_range = typename range_proxy<T>::step_range_proxy;
-
-template <typename T>
-static __device__ step_range<T> grid_stride_range(T begin, T end) {
-    begin += blockDim.x * blockIdx.x + threadIdx.x;
-    return range(begin, end).step(gridDim.x * blockDim.x);
-}
-
-static uint __device__ capacity(tensor_t t) {
-  uint c = 0;
-
-  if (t.dim.dims[0] == 0) {
-    return c;
-  } else {
-    c = t.dim.dims[0];
-  }
-
-  for (int i = 1; i < MAX_DIM; ++i) {
-    if (t.dim.dims[i] == 0) {
-      return c;
-    }
-    c *= t.dim.dims[i];
-  }
-
-  return c;
-}
-
-static __global__ void print_tensor_device(tensor_t t) {
-  if (threadIdx.x == 0) {
-    printf("entered print_tensor_device capacity t= %u\n", threadIdx.x, capacity(t));
-    for (int i = 0; i < capacity(t); ++i) {
-      printf("data[%u] = %f ", i, t.data[i]);
-    }
-  }
-  printf("\n");
-}
 
 /*
 
@@ -102,7 +62,7 @@ static __global__ void _do_tensor_make_transpose_3012_device(tensor_t d_transpos
     printf("src N=%u, C=%u, H=%u, W=%u, transpose N=%u, C=%u, H=%u, W=%u\n", d_transpose.dim.dims[0], d_transpose.dim.dims[1], d_transpose.dim.dims[2], d_transpose.dim.dims[3], d_src.dim.dims[0], d_src.dim.dims[1], d_src.dim.dims[2], d_src.dim.dims[3]);
   }
 
-  uint n = capacity(d_src);
+  uint n = d_capacity(d_src);
   uint group_size = d_src.dim.dims[0] * d_src.dim.dims[1] * d_src.dim.dims[2];
   uint stride = d_src.dim.dims[3];
 
@@ -158,7 +118,7 @@ static __global__ void _do_tensor_make_padded_square_input_device(tensor_t d_pad
   HH = H + 2 * p;
   WW = W + 2 * p;
 
-  uint n = capacity(d_padded);
+  uint n = d_capacity(d_padded);
 
   uint new_img_sz = d_padded.dim.dims[1] * d_padded.dim.dims[2] * d_padded.dim.dims[3];
   uint channel_sz = d_padded.dim.dims[2] * d_padded.dim.dims[3];
@@ -538,7 +498,7 @@ static __global__ void _do_tensor_make_remove_padding_square_device(tensor_t d_p
   HH = H - 2 * p;
   WW = W - 2 * p;
 
-  uint n = capacity(d_padded);
+  uint n = d_capacity(d_padded);
 
   uint new_img_sz = d_padded.dim.dims[1] * d_padded.dim.dims[2] * d_padded.dim.dims[3];
   uint channel_sz = d_padded.dim.dims[2] * d_padded.dim.dims[3];
@@ -727,7 +687,7 @@ static __global__ void _do_tensor_make_transpose_1230_device(tensor_t d_t, tenso
   uint og_dim_2 = d_src.dim.dims[2];
   uint og_dim_3 = d_src.dim.dims[3];
 
-  uint n = capacity(d_src);
+  uint n = d_capacity(d_src);
   uint group_size = og_dim_1 * og_dim_2 * og_dim_3;
   uint stride = d_src.dim.dims[0];
 

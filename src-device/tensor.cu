@@ -16,13 +16,16 @@ tensor_t tensor_make_device(uint const shape[], uint const ndims) {
   tensor_t t_device;
 
   uint capacity = 1;
-  for (int i = 0; i < ndims; ++i) {
+  int i;
+  for (i = 0; i < ndims; ++i) {
     capacity *= shape[i];
     t_device.dim.dims[i] = shape[i];
   }
+  for (; i < MAX_DIM; ++i) {
+    t_device.dim.dims[i] = 0;
+  }
 
   T* d_data = (T*)mem_alloc_device(capacity * sizeof(T));  // raw data at gpu mem in flat format
-
 
   t_device.data = d_data;
   t_device.mem_type = GPU_MEM;

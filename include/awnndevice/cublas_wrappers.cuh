@@ -5,12 +5,10 @@
 
 #include <cublas_v2.h>
 
-static cublasHandle_t handle_;
-
-tensor_t transpose_device(tensor_t T);
+tensor_t transpose_device(cublasHandle_t handle, tensor_t T);
 
 ////  void cublasDot(const T * srcA, const T * srcB, T * out, int rowA, int colA, int colB)
-tensor_t cublas_gemm_launch(tensor_t A, tensor_t B);
+tensor_t cublas_gemm_launch(cublasHandle_t handle, tensor_t d_A, tensor_t d_B);
 
 
 //inline cublasStatus_t cublasTgemm(cublasHandle_t handle,

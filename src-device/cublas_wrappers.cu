@@ -1,4 +1,5 @@
-#include "awnndevice/cublas_utils.cuh"
+#include "awnndevice/device_utils.cuh"
+#include "awnndevice/cublas_wrappers.cuh"
 
 static inline cublasStatus_t cublasTgemm(cublasHandle_t handle,
                            cublasOperation_t op_a,
@@ -8,7 +9,7 @@ static inline cublasStatus_t cublasTgemm(cublasHandle_t handle,
                            int ldb, const float * beta, float *C,
                            int ldc)
 {
-  return cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, alpha, A,
+  return cublasSgemm(handle, op_a, op_b, m, n, k, alpha, A,
                      lda, B, ldb, beta, C, ldc);
 }
 
@@ -21,7 +22,7 @@ static inline cublasStatus_t cublasTgemm(cublasHandle_t handle,
                                   int ldb, const double * beta, double *C,
                                   int ldc)
 {
-  return cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, alpha, A,
+  return cublasDgemm(handle, op_a, op_b, m, n, k, alpha, A,
                      lda, B, ldb, beta, C, ldc);
 }
 
@@ -89,34 +90,40 @@ static inline cublasStatus_t cublasTgemm(cublasHandle_t handle,
 //  return trans;
 //}
 
-tensor_t cublas_gemm_launch(tensor_t A, tensor_t B) {
-    const T alpha = 1.f;
-    const T beta = 0.f;
+tensor_t cublas_gemm_launch(cublasHandle_t handle, tensor_t d_A, tensor_t d_B) {
+//  print_tensor_device<<<1, 1>>>(d_A);
+//  print_tensor_device<<<1, 1>>>(d_B);
 
-    const int rowA = A.dim.dims[0];
-    const int colA = A.dim.dims[1];
-    const int colB = B.dim.dims[1];
+  const T alpha = 1.f;
+  const T beta = 0.f;
 
-    const T * srcA  = A.data;
-    const T * srcB  = B.data;
+  const int rowA = d_A.dim.dims[0];
+  const int colA = d_A.dim.dims[1];
+  const int colB = d_B.dim.dims[1];
 
-    uint shape_res[] = { (uint)rowA, (uint)colB };
-    tensor_t result = tensor_make_device(shape_res, ARRAY_SIZE(shape_res));
-    T * out   = result.data;
+  const T * srcA  = d_A.data;
+  const T * srcB  = d_B.data;
 
-    // Do the actual multiplication
-    cublasDgemm(handle_,
-                CUBLAS_OP_N,
-                CUBLAS_OP_N,
-                colB,
-                rowA,
-                colA,
-                &alpha,
-                srcB,
-                colB,
-                srcA,
-                colA,
-                &beta,
-                out,
-                colB);
+  uint shape_res[] = { (uint)rowA, (uint)colB };
+  tensor_t result = tensor_make_device(shape_res, ARRAY_SIZE(shape_res));
+  T * out   = result.data;
+
+  // Do the actual multiplication
+  cublasTgemm(handle,
+              CUBLAS_OP_N,
+              CUBLAS_OP_N,
+              colB,
+              rowA,
+              colA,
+              &alpha,
+              srcB,
+              colB,
+              srcA,
+              colA,
+              &beta,
+              out,
+              colB);
+
+//  print_tensor_device<<<1, 1>>>(result);
+  return result;
 }
