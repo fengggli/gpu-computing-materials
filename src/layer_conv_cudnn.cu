@@ -774,8 +774,7 @@ status_t doTest(int algo, int* dimA, int* padA, int* convstrideA, int* filterdim
                                                  padA,
                                                  convstrideA,
                                                  dilationA,
-                                                 CUDNN_CONVOLUTION,
-                                                 CUDNN_DATA_FLOAT) );
+                                                 CUDNN_CONVOLUTION, dataType));
 
   checkCudnnErr( cudnnSetFilterNdDescriptor(cudnnFdesc, dataType, filterFormat, convDim+2, filterdimA_padded));
 
@@ -998,8 +997,7 @@ status_t doForward(tensor_t const x, tensor_t const w, lcache_t* cache,
                                                  padA,
                                                  convstrideA,
                                                  dilationA,
-                                                 CUDNN_CONVOLUTION,
-                                                 CUDNN_DATA_FLOAT) );
+                                                 CUDNN_CONVOLUTION, dataType));
 
   checkCudnnErr( cudnnSetFilterNdDescriptor(cudnnFdesc, dataType, filterFormat, convDim+2, filterdimA_padded));
 
@@ -1172,8 +1170,7 @@ status_t doBackward_data(tensor_t dx, tensor_t w, lcache_t* cache,
                                                  padA,
                                                  convstrideA,
                                                  dilationA,
-                                                 CUDNN_CONVOLUTION,
-                                                 CUDNN_DATA_FLOAT) );
+                                                 CUDNN_CONVOLUTION, dataType));
 
   checkCudnnErr( cudnnSetFilterNdDescriptor(cudnnFdesc, dataType, filterFormat, convDim+2, filterdimA_padded));
 
@@ -1347,8 +1344,7 @@ status_t doBackward_weight(tensor_t x, tensor_t dw, lcache_t* cache,
   checkCudnnErr(cudnnSetTensorNdDescriptor(cudnnOdesc, dataType, convDim + 2,
                                            outdimA_padded, outstrideA_padded));
   checkCudnnErr(cudnnSetConvolutionNdDescriptor(
-      cudnnConvDesc, convDim, padA, convstrideA, dilationA, CUDNN_CONVOLUTION,
-      CUDNN_DATA_FLOAT));
+      cudnnConvDesc, convDim, padA, convstrideA, dilationA, CUDNN_CONVOLUTION, dataType));
 
   checkCudnnErr(cudnnSetFilterNdDescriptor(cudnnFdesc, dataType, filterFormat,
                                            convDim + 2, filterdimA_padded));
