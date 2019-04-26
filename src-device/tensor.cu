@@ -1,4 +1,7 @@
 #include "awnn/tensor.h"
+#include "awnndevice/device_utils.cuh"
+
+#include <cuda_runtime_api.h>  // cudaMemset
 
 void* mem_alloc_device(size_t size) {
   T* d_data;
@@ -33,6 +36,13 @@ tensor_t tensor_make_device(uint const shape[], uint const ndims) {
   return t_device;
 }
 
+tensor_t tensor_make_zeros_device(uint const shape[], uint const ndims) {
+  tensor_t t = tensor_make_device(shape, ndims);
+  cudaMemset(t.data, 0, tensor_get_capacity(t) * sizeof(T));
+
+  return t;
+}
+
 tensor_t tensor_make_copy_h2d(tensor_t t_host) {
   uint capacity = tensor_get_capacity(t_host);
   T* d_data = (T*)mem_alloc_device(
@@ -55,5 +65,7 @@ void tensor_copy_d2h(tensor_t t_host, tensor_t t_device) {
 }
 
 void tensor_destroy_device(tensor_t* ptr_t_device) {
+  assert(ptr_t_device->mem_type == GPU_MEM);
+
   mem_free_device(ptr_t_device->data);
 }
