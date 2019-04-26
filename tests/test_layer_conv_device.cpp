@@ -11,6 +11,8 @@
 #include "awnn/tensor.h"
 #include "awnn/layer_pool.h"
 
+#include "awnndevice/dev_layer_conv.cuh"
+
 #include <gtest/gtest.h>
 
 namespace {
@@ -57,7 +59,7 @@ namespace {
     tensor_t p_ref = tensor_make(shape_p, dim_of_shape(shape_p));
     T p3012[] = {1, 0, 1, 2, 1, 2, 0, 1, 1, 3, 0, 1, 1, 0, 1, 2, 1, 2};
     tensor_fill_list(p_ref, p3012, array_size(p3012));
-    uint shape_tpose_p[] = {p.dim.dims[3], p.dim.dims[0], p.dim.dims[1], p.dim.dims[2]};
+    uint shape_tpose_p[] = { p.dim.dims[3], p.dim.dims[0], p.dim.dims[1], p.dim.dims[2] };
     tensor_reshape_(&p_ref, shape_tpose_p, dim_of_shape(shape_tpose_p));
 
     EXPECT_LT(tensor_rel_error(p_tpose_3012, p_ref), 1e-7);
@@ -753,9 +755,6 @@ namespace {
     tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
     tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x2x2 -> 1x1x4x4
 
-    uint new_h = padded_in.dim.dims[2];
-    uint new_w = padded_in.dim.dims[3];
-
     tensor_t out = tensor_make_remove_padding_square_device(padded_in, pad_size);
 
     //  tensor_dump(in);
@@ -781,9 +780,6 @@ namespace {
     tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
     tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x3x2 -> 1x1x5x4
 
-    uint new_h = padded_in.dim.dims[2];
-    uint new_w = padded_in.dim.dims[3];
-
     tensor_t out = tensor_make_remove_padding_square_device(padded_in, pad_size);
 
     //  tensor_dump(in);
@@ -808,9 +804,6 @@ namespace {
     uint const in_shape[] = { 1, 1, 2, 3 };
     tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
     tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x2x3 -> 1x1x4x5
-
-    uint new_h = padded_in.dim.dims[2];
-    uint new_w = padded_in.dim.dims[3];
 
     tensor_t out = tensor_make_remove_padding_square_device(padded_in, pad_size);
 
@@ -865,9 +858,6 @@ namespace {
     tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
     tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x2x3 -> 1x1x6x7
 
-    uint new_h = padded_in.dim.dims[2];
-    uint new_w = padded_in.dim.dims[3];
-
     tensor_t out = tensor_make_remove_padding_square_device(padded_in, pad_size);
 
     //  tensor_dump(in);
@@ -921,9 +911,6 @@ namespace {
     tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
     tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x2x3x2 -> 1x2x5x4
 
-    uint new_h = padded_in.dim.dims[2];
-    uint new_w = padded_in.dim.dims[3];
-
     tensor_t out = tensor_make_remove_padding_square_device(padded_in, pad_size);
 
     //  tensor_dump(in);
@@ -976,9 +963,6 @@ namespace {
     uint const in_shape[] = { 2, 2, 2, 2 };
     tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
     tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 2x2x2x2 -> 2x2x4x4
-
-    uint new_h = padded_in.dim.dims[2];
-    uint new_w = padded_in.dim.dims[3];
 
     tensor_t out = tensor_make_remove_padding_square_device(padded_in, pad_size);
 

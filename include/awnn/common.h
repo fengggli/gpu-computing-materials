@@ -38,6 +38,12 @@ enum {
   MODE_INFER = 1,
 };
 
+typedef struct{
+  int stride;
+  int padding;
+} conv_param_t;
+
+
 #define AWNN_CHECK_EQ(a, b)              \
   if ((a) != (b)) {                      \
     PERR("Expect equal value, but not"); \

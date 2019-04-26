@@ -72,7 +72,8 @@ add_library(awnn_core
   src/layer_relu.c
   src/loss_softmax.c
   src/net_mlp.c
-  src/layer_sandwich.c include/cuda_defs.h)
+  src/layer_sandwich.c
+)
 
 target_include_directories(awnn_core PUBLIC include)
 target_link_libraries(awnn_core PUBLIC ${AWNN_DEP_LIBS})
@@ -85,14 +86,20 @@ set(AWNN_LIBS "awnn_core" "awnn_utils")
 
 if(USE_CUDA)
   cuda_add_library(awnndevicelib
-    src/tensor.cu
-    src/layer_pool.cu
-    src/layer_conv.cu
-    src/range.cuh
+    include/awnndevice/range.cuh
+    include/awnndevice/device_utils.cuh
+#    include/awnndevice/dev_layer_conv.cuh
+#    include/awnndevice/cublas_wrappers.cuh
+
+    src-device/tensor.cu
+    src-device/layer_pool.cu
+    src-device/dev_layer_conv.cu
+    src-device/cublas_wrappers.cu
   )
 
-  set(AWNN_DEVICE_LIBS "awnndevicelib")
+  target_link_libraries(awnndevicelib cudart  cublas)
 
+  set(AWNN_DEVICE_LIBS "awnndevicelib")
 endif(USE_CUDA)
 
 # message("AWNNLIBS is ${AWNN_LIBS}")
