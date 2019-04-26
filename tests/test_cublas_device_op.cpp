@@ -61,7 +61,7 @@ namespace {
     tensor_t d_src = tensor_make_copy_h2d(h_src);
 
     ////////////////////////////////////////////////////////
-    tensor_t d_tpose = transpose_device(handle_, d_src);
+    tensor_t d_tpose = cublas_transpose_launch(handle_, d_src);
     ////////////////////////////////////////////////////////
 
     uint transpose_shape[] = { h_src.dim.dims[1], h_src.dim.dims[0] };

@@ -413,16 +413,16 @@ status_t convolution_forward_device(tensor_t const x, tensor_t const w, lcache_t
 
 // TODO
 status_t convolution_forward_device_harness(tensor_t hx, tensor_t hw, lcache_t * hcache, conv_param_t hparams, tensor_t hy) {
-  tensor_t x = tensor_make_copy_h2d(hx);
-  tensor_t w = tensor_make_copy_h2d(hw);
-  tensor_t y = tensor_make_copy_h2d(hy);
+  tensor_t dx = tensor_make_copy_h2d(hx);
+  tensor_t dw = tensor_make_copy_h2d(hw);
+  tensor_t dy = tensor_make_copy_h2d(hy);
 
 //  tensor_t flat_x = im2col_device(x, w, hparams);
 
 
-  tensor_destroy_device(&x);
-  tensor_destroy_device(&w);
-  tensor_destroy_device(&y);
+  tensor_destroy_device(&dx);
+  tensor_destroy_device(&dw);
+  tensor_destroy_device(&dy);
 }
 
 

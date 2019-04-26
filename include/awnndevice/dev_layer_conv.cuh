@@ -7,6 +7,7 @@
 #include "awnn/common.h"
 #include "awnn/tensor.h"
 #include "awnn/layer.h"   // for lcache_t
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -46,6 +47,7 @@ tensor_t tensor_make_transpose_1230_device(tensor_t t);
 tensor_t matrix_dot_cublas_harness(tensor_t hx, tensor_t hy);
 
 void cublasDot(const T * srcA, const T * srcB, T * out, int rowA, int colA, int colB);
+
 #ifdef __cplusplus
 }
 #endif

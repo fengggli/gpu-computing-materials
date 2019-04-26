@@ -77,7 +77,7 @@ tensor_t im2col(tensor_t const x, tensor_t const w, conv_param_t const params) {
 
   uint cols_shape[] = {C * filter_height * filter_width, N * HH * WW};
 
-  tensor_t cols = tensor_make_zeros(cols_shape, 2); // set ndims=2
+  tensor_t cols = tensor_make_zeros(cols_shape, ARRAY_SIZE(cols_shape));
 
   im2col_inner(cols, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, pad, stride);
 
