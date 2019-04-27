@@ -1,6 +1,6 @@
-#include <nnpack/reference.h>
 #include "awnn/layer_conv.h"
 #include "nnpack.h"
+#include "nnpack/reference.h"
 #include "pthreadpool.h"
 
 #include <awnn/memory.h>

@@ -26,6 +26,13 @@ class NetResnetTest : public ::testing::Test {
 
 // input of forward
 model_t NetResnetTest::model;
+std::vector<conv_method_t> all_methods = {
+    CONV_METHOD_NNPACK_AUTO, CONV_METHOD_NNPACK_ft8x8,
+    CONV_METHOD_NNPACK_ft16x16,
+    // CONV_METHOD_NNPACK_wt8x8,  // returns 26
+    // CONV_METHOD_NNPACK_implicit_gemm,  // returns 26
+    // CONV_METHOD_NNPACK_direct, // returns 26
+    CONV_METHOD_NNPACK_REF, CONV_METHOD_NAIVE};
 
 TEST_F(NetResnetTest, Construct) {
   uint batch_sz = 3;
@@ -87,21 +94,34 @@ TEST_F(NetResnetTest, ForwardInferOnly) {
 }
 TEST_F(NetResnetTest, Loss) {
   T loss = 0;
+  std::vector<conv_method_t> all_methods = {
+      CONV_METHOD_NNPACK_AUTO, CONV_METHOD_NNPACK_ft8x8,
+      CONV_METHOD_NNPACK_ft16x16,
+      // CONV_METHOD_NNPACK_wt8x8,  // returns 26
+      // CONV_METHOD_NNPACK_implicit_gemm,  // returns 26
+      // CONV_METHOD_NNPACK_direct, // returns 26
+      CONV_METHOD_NNPACK_REF, CONV_METHOD_NAIVE};
 
   // fill some init values as in cs231n
   tensor_t x = tensor_make_linspace(-0.2, 0.3, model.input_dim.dims, 4);
 
   label_t labels[] = {0, 5, 1};
 
-  model.reg = 0;
-  resnet_loss(&model, x, labels, &loss);
-  EXPECT_NEAR(loss, 14.975702563, 1e-3);
+  for (auto conv_method = all_methods.begin(); conv_method != all_methods.end();
+       conv_method++) {
+    PINF("Method:  %d", *conv_method);
+    set_conv_method(*conv_method);
 
-  // test with regulizer
-  model.reg = 1.0;
-  resnet_loss(&model, x, labels, &loss);
-  EXPECT_NEAR(loss, 335.9764923, 1e-3);
-  PINF("Loss checked");
+    model.reg = 0;
+    resnet_loss(&model, x, labels, &loss);
+    EXPECT_NEAR(loss, 14.975702563, 1e-3);
+
+    // test with regulizer
+    model.reg = 1.0;
+    resnet_loss(&model, x, labels, &loss);
+    EXPECT_NEAR(loss, 335.9764923, 1e-3);
+    PINF("Loss checked");
+  }
 }
 
 /* Check both forward/backward, time consuming*/
@@ -110,7 +130,6 @@ TEST_F(NetResnetTest, DISABLED_BackNumerical) {
   tensor_t x = tensor_make_linspace(-0.2, 0.3, model.input_dim.dims, 4);
 
   label_t labels[] = {0, 5, 1};
-
 
   // Check with numerical gradient
   model_t *ptr_model = &model;
@@ -140,13 +159,6 @@ TEST_F(NetResnetTest, DISABLED_BackNumerical) {
 
 /* Check both forward/backward*/
 TEST_F(NetResnetTest, Measure_auto) {
-  std::vector<conv_method_t> all_methods{
-      CONV_METHOD_NNPACK_AUTO, CONV_METHOD_NNPACK_ft8x8,
-      CONV_METHOD_NNPACK_ft16x16,
-      // CONV_METHOD_NNPACK_wt8x8,  // returns 26
-      // CONV_METHOD_NNPACK_implicit_gemm,  // returns 26
-      // CONV_METHOD_NNPACK_direct, // returns 26
-      CONV_METHOD_NNPACK_REF, CONV_METHOD_NAIVE};
   for (auto conv_method = all_methods.begin(); conv_method != all_methods.end();
        conv_method++) {
     PINF("Method:  %d", *conv_method);
