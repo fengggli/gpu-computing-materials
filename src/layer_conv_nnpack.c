@@ -1,3 +1,4 @@
+#include <nnpack/reference.h>
 #include "awnn/layer_conv.h"
 #include "nnpack.h"
 #include "pthreadpool.h"
@@ -71,14 +72,24 @@ status_t convolution_forward_nnpack(conv_method_t algo, tensor_t const x,
       NULL,  // activation param
       thrd_pool, profile);
 #else
-  status =
+  if (algo != CONV_METHOD_NNPACK_REF) {
+    status =
       nnp_convolution_output(algo, batch_size, input_channel, output_channel,
                              input_size, pad, kernel_size, input, kernel, bias,
                              output, NULL, NULL, nnp_activation_identity,
                              NULL,  // activation param
                              thrd_pool, profile);
+    AWNN_CHECK_EQ(status, nnp_status_success);
+  } else {
+    struct nnp_size output_subsampling;
+    output_subsampling.height = 1;
+    output_subsampling.width = 1;
+
+    nnp_convolution_output__reference(
+        batch_size, input_channel, output_channel, input_size, pad, kernel_size,
+        output_subsampling, input, kernel, bias, output, thrd_pool);
+  }
 #endif
-  AWNN_CHECK_EQ(status, nnp_status_success);
 
   // shadow copy
   tensor_t cached_x_shadow = x;
@@ -129,20 +140,31 @@ status_t convolution_backward_nnpack(conv_method_t algo, tensor_t dx,
 
   // How about bias?
   // input gradient
-  status = nnp_convolution_input_gradient(
-      algo, batch_size, input_channel, output_channel, input_size, pad, kernel_size, dout.data, w.data, dx.data,
-      NULL,  // let it allocate scratch on the fly
-      NULL, nnp_activation_identity, NULL,  // activation and its param
-      NULL, NULL);                          // thread pool and profile
-  AWNN_CHECK_EQ(nnp_status_success, status);
+  if (algo != CONV_METHOD_NNPACK_REF) {
+    status = nnp_convolution_input_gradient(
+        algo, batch_size, input_channel, output_channel, input_size, pad,
+        kernel_size, dout.data, w.data, dx.data,
+        NULL,  // let it allocate scratch on the fly
+        NULL, nnp_activation_identity, NULL,  // activation and its param
+        thrd_pool, profile);                  // thread pool and profile
+    AWNN_CHECK_EQ(nnp_status_success, status);
 
-  // w gradient
-  status = nnp_convolution_kernel_gradient(
-      algo, batch_size, input_channel, output_channel, input_size, pad, kernel_size, x.data, dout.data, dw.data,
-      NULL,  // let it allocate scratch on the fly
-      NULL, nnp_activation_identity, NULL,  // activation and its param
-      thrd_pool, profile);                  // thread pool and profile
-  AWNN_CHECK_EQ(nnp_status_success, status);
+    // w gradient
+    status = nnp_convolution_kernel_gradient(
+        algo, batch_size, input_channel, output_channel, input_size, pad,
+        kernel_size, x.data, dout.data, dw.data,
+        NULL,  // let it allocate scratch on the fly
+        NULL, nnp_activation_identity, NULL,  // activation and its param
+        thrd_pool, profile);                  // thread pool and profile
+    AWNN_CHECK_EQ(nnp_status_success, status);
+  } else {
+    nnp_convolution_input_gradient__reference(
+        batch_size, input_channel, output_channel, input_size, pad, kernel_size,
+        dout.data, w.data, dx.data, thrd_pool);
+    nnp_convolution_kernel_gradient__reference(
+        batch_size, input_channel, output_channel, input_size, pad, kernel_size,
+        x.data, dout.data, dw.data, thrd_pool);
+  }
 
   return S_OK;
 }

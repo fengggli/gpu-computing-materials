@@ -81,9 +81,19 @@ configure_file (
 include_directories(include ${PROJECT_BINARY_DIR})
 
 if(USE_NNPACK)
+  set(NNPACK_ROOT extern/NNPACK)
 
-  include_directories(deps/pthreadpool/include extern/NNPACK/include/)
-  set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS} nnpack)
+  include_directories(deps/pthreadpool/include ${NNPACK_ROOT}/include/)
+
+  # I didn't added this in extern since RELEASE flag was disabled there
+  add_executable(nnpack-bench-conv
+    ${NNPACK_ROOT}/bench/convolution.c
+    ${NNPACK_ROOT}/bench/memread.c
+    ${NNPACK_ROOT}/bench/median.c
+    ${NNPACK_ROOT}/bench/perf_counter.c)
+  target_include_directories(nnpack-bench-conv PRIVATE ${NNPACK_ROOT}/bench)
+  target_link_libraries(nnpack-bench-conv nnpack)
+  set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS} nnpack nnpack_reference_layers)
 
 endif()
 list(APPEND awnn_core_SOURCES

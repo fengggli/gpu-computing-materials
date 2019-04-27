@@ -146,7 +146,7 @@ TEST_F(NetResnetTest, Measure_auto) {
       // CONV_METHOD_NNPACK_wt8x8,  // returns 26
       // CONV_METHOD_NNPACK_implicit_gemm,  // returns 26
       // CONV_METHOD_NNPACK_direct, // returns 26
-      CONV_METHOD_NAIVE};
+      CONV_METHOD_NNPACK_REF, CONV_METHOD_NAIVE};
   for (auto conv_method = all_methods.begin(); conv_method != all_methods.end();
        conv_method++) {
     PINF("Method:  %d", *conv_method);

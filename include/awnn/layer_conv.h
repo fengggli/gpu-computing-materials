@@ -26,7 +26,8 @@ typedef enum conv_method_ {
   CONV_METHOD_NNPACK_wt8x8 = 3,
   CONV_METHOD_NNPACK_implicit_gemm = 4,
   CONV_METHOD_NNPACK_direct = 5,
-  CONV_METHOD_NAIVE = 6,
+  CONV_METHOD_NNPACK_REF = 6,
+  CONV_METHOD_NAIVE = 7,  // This is our convolution method
 
 } conv_method_t;
 
