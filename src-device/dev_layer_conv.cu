@@ -1,25 +1,8 @@
 #include "awnn/common.h"
 #include "awnndevice/dev_layer_conv.cuh"
 #include "awnndevice/device_utils.cuh"
+#include "awnndevice/cublas_wrappers.cuh"
 
-
-/*
-
-tensor_t tensor_make_transpose_3012(tensor_t t) {
-  uint target_idx = 0;
-  tensor_t tpose = tensor_make_copy(t);
-
-  for (uint i = 0; i < t.dim.dims[3]; ++i) {  // for each of the new dim 0
-    for (uint j = 0; j < t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2]; ++j) {
-      tpose.data[target_idx++] = t.data[i + j * t.dim.dims[3]];
-    }
-  }
-
-  uint const shape[] = { t.dim.dims[3], t.dim.dims[0], t.dim.dims[1], t.dim.dims[2] };
-  tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
-  return tpose;
-}
-*/
 
 /*
  * In the above naive version for the CPU, we stride through the target one
@@ -145,11 +128,11 @@ static __global__ void _do_tensor_make_padded_square_input_device(tensor_t d_pad
   }
 }
 
-tensor_t tensor_make_padded_square_input_device(tensor_t t, uint p, T val) {
+tensor_t tensor_make_padded_square_input_device(tensor_t h_t, uint p, T val) {
 
-  uint padded_shape[] = { t.dim.dims[0], t.dim.dims[1], t.dim.dims[2] + 2 * p, t.dim.dims[3] + 2 * p };
+  uint padded_shape[] = { h_t.dim.dims[0], h_t.dim.dims[1], h_t.dim.dims[2] + 2 * p, h_t.dim.dims[3] + 2 * p };
   tensor_t d_padded = tensor_make_device(padded_shape, ARRAY_SIZE(padded_shape));
-  tensor_t d_src = tensor_make_copy_h2d(t);
+  tensor_t d_src = tensor_make_copy_h2d(h_t);
 
   dim3 threads(32);
   dim3 blocks(1);
@@ -356,73 +339,115 @@ static __global__ void _do_convolution_forward_device(tensor_t const x, tensor_t
  * The assumption I am making here is that the tensors and other elements
  * that are necessary are already allocated on the GPU.
  */
-status_t convolution_forward_device(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y)
+status_t convolution_forward_device(cublasHandle_t handle, tensor_t const hx, tensor_t const hw, lcache_t* hcache, conv_param_t const hparams, tensor_t hy)
 {
-
-//    // 1. flatten the input into vectors which represent the filters
-//    tensor_t flattened_x = im2col(x, w, params);
-//
-//    // 2. setup and apply filters
-//    // TODO : const input is preventing reshape, but this memory doesn't need to be allocated
-//    //        w is just used as a multiplier, but it needs to be reshaped.
-//    uint const reshaped_w_shape[] = { w.dim.dims[0], w.dim.dims[1] * w.dim.dims[2] * w.dim.dims[3] };
-//    tensor_t reshaped_w = tensor_make_copy(w);
-//    tensor_reshape_(&reshaped_w, reshaped_w_shape, ARRAY_SIZE(reshaped_w_shape));
-//
-//    uint const out_shape[] = { w.dim.dims[0], flattened_x.dim.dims[1] };
-//    tensor_t out = tensor_make(out_shape, ARRAY_SIZE(out_shape));
-//
-//    // apply here !!!
-//    tensor_matmul(reshaped_w, flattened_x, out);
-//
-//    uint const out_shape_2[] = { w.dim.dims[0], y.dim.dims[2], y.dim.dims[3], x.dim.dims[0] };
-//    tensor_reshape_(&out, out_shape_2, ARRAY_SIZE(out_shape_2));
-//
-//    // 3. transpose output
-//    tensor_t tpose = tensor_make_transpose_3012(out);
-//
-//    // copy transposed to y
-//    y.dim = tpose.dim;
-//    uint sz = dim_get_capacity(tpose.dim);
-//    for (int i = 0; i < sz; ++i) {
-//      y.data[i] = tpose.data[i];
-//    }
-//    y.mem_type = tpose.mem_type;
-//
-//    // fill cache
-//    // NOTE, the order matters should be x, w, flattened_x
-//    if(cache) {
-//      lcache_push(cache, x);
-//      lcache_push(cache, w);
-//      lcache_push(cache, flattened_x);
-//    }
-//
-//    tensor_destroy(&tpose);
-//    tensor_destroy(&out);
-//    return S_OK;
+  tensor_t d_x = tensor_make_copy_h2d(hx);
+  tensor_t d_w = tensor_make_copy_h2d(hw);
+  tensor_t d_y = tensor_make_copy_h2d(hy);
 
 
-//  dim3 threads(32);
-//  dim3 blocks(1);
-//  PINF("device code is called");
-//
-//  _do_convolution_forward_device<<<blocks, threads>>>(x, w, cache, params, y);
+  // 1. flatten the input into vectors which represent the filters
+  tensor_t flattened_x = im2col_device(d_x, d_w, hparams);
+
+//  print_tensor_device<<<1, 1>>>(flattened_x);
+//  // 2. setup and apply filters
+  uint const original_w_shape[] = { d_w.dim.dims[0], d_w.dim.dims[1], d_w.dim.dims[2], d_w.dim.dims[3] };
+  uint const reshaped_w_shape[] = { d_w.dim.dims[0], d_w.dim.dims[1] * d_w.dim.dims[2] * d_w.dim.dims[3] };
+  tensor_reshape_(&d_w, reshaped_w_shape, ARRAY_SIZE(reshaped_w_shape));
+
+  // apply filters with gemm here !!!
+  tensor_t d_out = cublas_gemm_launch(handle, d_w, flattened_x);
+
+  // reshape output back into tensor
+  uint const out_shape_2[] = { original_w_shape[0], d_y.dim.dims[2], d_y.dim.dims[3], d_x.dim.dims[0] };
+  tensor_reshape_(&d_out, out_shape_2, ARRAY_SIZE(out_shape_2));
+
+  // 3. transpose output
+  uint const transposed_shape[] = { d_out.dim.dims[3], d_out.dim.dims[0], d_out.dim.dims[1], d_out.dim.dims[2] };
+  tensor_t d_transposed_out= tensor_make_device(transposed_shape, ARRAY_SIZE(transposed_shape));
+  _do_tensor_make_transpose_3012_device<<<32, 128>>>(d_transposed_out, d_out);
+
+  // copy transposed output to y
+  hy.dim = d_transposed_out.dim;
+
+  // TODO : replace this with tensor_copy_d2d for GPU only use
+  tensor_copy_d2h(hy, d_transposed_out);
+
+  // fill cache
+  // NOTE, the order matters should be x, w, flattened_x
+  if(hcache) {
+    lcache_push(hcache, d_x);
+    lcache_push(hcache, d_w);
+    lcache_push(hcache, flattened_x);
+  }
+
+  tensor_destroy_device(&d_transposed_out);
+  tensor_destroy_device(&d_out);
+
+  tensor_destroy_device(&d_x);
+  tensor_destroy_device(&d_w);
+  tensor_destroy_device(&d_y);
+
+  return S_OK;
   return S_ERR;
 }
 
 
-// TODO
-status_t convolution_forward_device_harness(tensor_t hx, tensor_t hw, lcache_t * hcache, conv_param_t hparams, tensor_t hy) {
-  tensor_t dx = tensor_make_copy_h2d(hx);
-  tensor_t dw = tensor_make_copy_h2d(hw);
-  tensor_t dy = tensor_make_copy_h2d(hy);
+// Call this function from the host ONLY
+// cache will be filled with
+status_t convolution_forward_device_host_harness(cublasHandle_t handle,
+                                                 tensor_t hx, tensor_t hw,
+                                                 lcache_t* hcache,
+                                                 conv_param_t hparams,
+                                                 tensor_t hy) {
+  tensor_t d_x = tensor_make_copy_h2d(hx);
+  tensor_t d_w = tensor_make_copy_h2d(hw);
+  tensor_t d_y = tensor_make_copy_h2d(hy);
 
-//  tensor_t flat_x = im2col_device(x, w, hparams);
 
+  // 1. flatten the input into vectors which represent the filters
+  tensor_t flattened_x = im2col_device(d_x, d_w, hparams);
 
-  tensor_destroy_device(&dx);
-  tensor_destroy_device(&dw);
-  tensor_destroy_device(&dy);
+//  print_tensor_device<<<1, 1>>>(flattened_x);
+//  // 2. setup and apply filters
+  uint const original_w_shape[] = { d_w.dim.dims[0], d_w.dim.dims[1], d_w.dim.dims[2], d_w.dim.dims[3] };
+  uint const reshaped_w_shape[] = { d_w.dim.dims[0], d_w.dim.dims[1] * d_w.dim.dims[2] * d_w.dim.dims[3] };
+  tensor_reshape_(&d_w, reshaped_w_shape, ARRAY_SIZE(reshaped_w_shape));
+
+  // apply filters with gemm here !!!
+  tensor_t d_out = cublas_gemm_launch(handle, d_w, flattened_x);
+
+  // reshape output back into tensor
+  uint const out_shape_2[] = { original_w_shape[0], d_y.dim.dims[2], d_y.dim.dims[3], d_x.dim.dims[0] };
+  tensor_reshape_(&d_out, out_shape_2, ARRAY_SIZE(out_shape_2));
+
+  // 3. transpose output
+  uint const transposed_shape[] = { d_out.dim.dims[3], d_out.dim.dims[0], d_out.dim.dims[1], d_out.dim.dims[2] };
+  tensor_t d_transposed_out= tensor_make_device(transposed_shape, ARRAY_SIZE(transposed_shape));
+  _do_tensor_make_transpose_3012_device<<<32, 128>>>(d_transposed_out, d_out);
+
+  // copy transposed output to y
+  hy.dim = d_transposed_out.dim;
+
+  // TODO : replace this with tensor_copy_d2d for GPU only use
+  tensor_copy_d2h(hy, d_transposed_out);
+
+  // fill cache
+  // NOTE, the order matters should be x, w, flattened_x
+  if(hcache) {
+    lcache_push(hcache, d_x);
+    lcache_push(hcache, d_w);
+    lcache_push(hcache, flattened_x);
+  }
+
+  tensor_destroy_device(&d_transposed_out);
+  tensor_destroy_device(&d_out);
+
+  tensor_destroy_device(&d_x);
+  tensor_destroy_device(&d_w);
+  tensor_destroy_device(&d_y);
+
+  return S_OK;
 }
 
 
@@ -448,14 +473,57 @@ static __global__ void _do_im2col_device(tensor_t const x, tensor_t const w, con
 /*
  * This function just sets up the im2col.
  */
-tensor_t im2col_device(tensor_t const x, tensor_t const w, conv_param_t const params)
+tensor_t im2col_device(tensor_t const d_x, tensor_t const d_w, conv_param_t const hparams)
 {
-  // TODO: make it handler lager size
-  dim3 threads(32);
-  dim3 blocks(1);
-  PINF("device code is called");
 
-  _do_im2col_device<<<blocks, threads>>>(x, w, params);
+  uint N, C, H, W, filter_height, filter_width;
+  int stride, pad_sz;
+
+  N = d_x.dim.dims[0];
+  C = d_x.dim.dims[1];
+  H = d_x.dim.dims[2];
+  W = d_x.dim.dims[3];
+
+  filter_height   = d_w.dim.dims[2];
+  filter_width    = d_w.dim.dims[3];
+
+  stride  = hparams.stride;
+  pad_sz     = hparams.padding;
+
+  // Check dimensions
+  assert((W + 2 * pad_sz - filter_width) % stride == 0);
+  assert((H + 2 * pad_sz - filter_height) % stride == 0);
+
+  uint HH = (H + 2 * pad_sz - filter_height) / stride + 1; // total strides needed over rows
+  uint WW = (W + 2 * pad_sz - filter_width) / stride + 1; // total strides needed over cols
+
+
+  // TODO : look into not allocating here... maybe check bounds in the inner
+  uint padded_shape[] = { d_x.dim.dims[0], d_x.dim.dims[1], d_x.dim.dims[2] + 2 * pad_sz, d_x.dim.dims[3] + 2 * pad_sz };
+  tensor_t x_padded = tensor_make_device(padded_shape, ARRAY_SIZE(padded_shape));
+
+  /////////////////////////////////////////////////////////////////////////////
+  _do_tensor_make_padded_square_input_device<<<32, 128>>>(x_padded, d_x, pad_sz, 0);  // 0 is pad value
+  /////////////////////////////////////////////////////////////////////////////
+
+  uint flattened_x_shape[] = {C * filter_height * filter_width, N * HH * WW};
+
+  tensor_t d_flattened_x = tensor_make_zeros_device(flattened_x_shape, ARRAY_SIZE(flattened_x_shape));
+
+  /////////////////////////////////////////////////////////////////////////////
+  _do_im2col_inner_device_thread_per_element<<<32, 128>>>(d_flattened_x, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, pad_sz, stride);
+  /////////////////////////////////////////////////////////////////////////////
+
+  tensor_destroy_device(&x_padded);
+
+  return d_flattened_x;
+
+//  // TODO: make it handler lager size
+//  dim3 threads(32);
+//  dim3 blocks(1);
+//  PINF("device code is called");
+//
+//  _do_im2col_device<<<blocks, threads>>>(dx, dw, hparams);
 }
 
 
@@ -548,6 +616,7 @@ tensor_t col2im_device(tensor_t cols, uint N, uint C, uint H, uint W, uint field
   dim3 blocks(1);
   PINF("device code is called");
   _do_col2im_device<<<blocks, threads>>>(cols, N, C, H, W, field_height, field_width, padding, stride);
+  return cols;
 }
 
 

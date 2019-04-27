@@ -25,11 +25,17 @@ namespace {
 
     LayerConvTestDevice() {
       // You can do set-up work for each test here.
+      stat = cublasCreate(&handle_);
+      if (stat != CUBLAS_STATUS_SUCCESS) {
+        PERR("CUBLAS initialization failed\n");
+      }
     }
 
     ~LayerConvTestDevice() override {
       // You can do clean-up work that doesn't throw exceptions here.
+      cublasDestroy(handle_);
     }
+
 
     // If the constructor and destructor are not enough for setting up
     // and cleaning up each test, you can define the following methods:
@@ -43,10 +49,139 @@ namespace {
       // Code here will be called immediately after each test (right
       // before the destructor).
     }
+
+    cublasHandle_t handle_;
+    cublasStatus_t stat;
   };
 
 
 #ifdef USE_CUDA
+  TEST_F(LayerConvTestDevice, convolution_forward_device_harness_from_pic)
+  {
+    conv_param_t conv_params = {1, 0};
+
+    uint n = 1;
+    uint img_sz = 3;
+    uint c = 2;
+    uint fltr_sz = 2;
+    uint num_fil = 2;
+    uint sz_out = 1 + (img_sz + 2 * conv_params.padding - fltr_sz) / conv_params.stride;
+
+    uint const shape_x[] = { n, c, img_sz, img_sz }; // 2x3x4x4
+    uint const shape_w[] = { num_fil, c, fltr_sz, fltr_sz }; // 3x3x4x4
+    uint const shape_y[] = { n, num_fil, sz_out, sz_out };
+
+    EXPECT_EQ(2, sz_out);
+
+    T x_values[] = { 1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2 };
+    tensor_t x = tensor_make(shape_x, dim_of_shape(shape_x));
+    tensor_fill_list(x, x_values, array_size(x_values));
+
+    T w_values[] = { 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 2, 2 };
+    tensor_t w = tensor_make(shape_w, dim_of_shape(shape_w));
+    tensor_fill_list(w, w_values, array_size(w_values));
+
+    tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
+
+    lcache_t cache;
+    make_empty_lcache(&cache);
+
+    status_t ret = convolution_forward_device_host_harness(
+        handle_, x, w, &cache, conv_params,
+        y); // forward function should allocate and populate cache;
+    EXPECT_EQ(ret, S_OK);
+
+    tensor_t y_ref = tensor_make_alike(y);
+    T value_list[] = { 6, 2, 3, 4, 3, 3, 7, 7 };
+    tensor_fill_list(y_ref, value_list, array_size(value_list));
+
+    EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
+    if (tensor_rel_error(y_ref, y) < 1e-7) {
+      PINF("Consistent with expected results");
+    } else {
+      PERR("INCONSISTENT WITH EXPECTED RESULTS");
+    }
+
+  }
+
+  TEST_F(LayerConvTestDevice, im2col_numerical1) {
+    conv_param_t conv_params = { 2, 1 };
+
+    uint num_img = 2;
+    uint img_sz = 4;
+    uint nr_in_channel = 3;
+    uint fil_sz = 4;
+    uint nr_filter = 3;
+    uint sz_out = 1 + (img_sz + 2 * conv_params.padding - fil_sz) / conv_params.stride;
+    EXPECT_EQ(2, sz_out);
+
+    uint const shape_x[] = { num_img, nr_in_channel, img_sz, img_sz }; // 2x3x4x4
+    uint const shape_w[] = { nr_filter, nr_in_channel, fil_sz, fil_sz }; // 3x3x4x4
+
+    tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
+    tensor_t d_x = tensor_make_copy_h2d(x);
+    tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
+    tensor_t d_w = tensor_make_copy_h2d(w);
+
+    lcache_t cache;
+    make_empty_lcache(&cache);
+
+    tensor_t d_ret = im2col_device(d_x, d_w, conv_params);// forward function should allocate and populate cache;
+    uint const shape_ref[] = { 384 };
+    tensor_reshape_(&d_ret, shape_ref, dim_of_shape(shape_ref));
+    tensor_t h_ret = tensor_make(shape_ref, ARRAY_SIZE(shape_ref));
+    tensor_copy_d2h(h_ret, d_ret);
+
+    tensor_t ref = tensor_make(shape_ref, dim_of_shape(shape_ref));
+    T value_list[] = { 0., 0., 0., 0., 0., 0., -0.068421052631579, 0.234736842105263, 0., 0., 0., 0., -0.074736842105263, 0.228421052631579, -0.062105263157895, 0.241052631578947, 0., 0., 0., 0., -0.068421052631579, 0.234736842105263, -0.055789473684211, 0.247368421052632, 0., 0., 0., 0., -0.062105263157895, 0.241052631578947, 0., 0., 0., 0., -0.093684210526316, 0.209473684210526, 0., 0., -0.043157894736842, 0.26, -0.1 , 0.203157894736842, -0.087368421052632, 0.215789473684211, -0.049473684210526, 0.253684210526316, -0.036842105263158, 0.266315789473684, -0.093684210526316, 0.209473684210526, -0.081052631578947, 0.222105263157895, -0.043157894736842, 0.26, -0.030526315789474, 0.272631578947368, -0.087368421052632, 0.215789473684211, 0., 0., -0.036842105263158, 0.266315789473684, 0., 0., 0., 0., -0.068421052631579, 0.234736842105263, 0., 0., -0.017894736842105, 0.285263157894737, -0.074736842105263, 0.228421052631579, -0.062105263157895, 0.241052631578947, -0.024210526315789, 0.278947368421053, -0.011578947368421, 0.291578947368421, -0.068421052631579, 0.234736842105263, -0.055789473684211, 0.247368421052632, -0.017894736842105, 0.285263157894737, -0.005263157894737, 0.297894736842105, -0.062105263157895, 0.241052631578947, 0., 0., -0.011578947368421, 0.291578947368421, 0., 0., 0., 0., -0.043157894736842, 0.26, 0., 0., 0., 0., -0.049473684210526, 0.253684210526316, -0.036842105263158, 0.266315789473684, 0., 0., 0., 0., -0.043157894736842, 0.26, -0.030526315789474, 0.272631578947368, 0., 0., 0., 0., -0.036842105263158, 0.266315789473684, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.032631578947368, 0.335789473684211, 0., 0., 0., 0., 0.026315789473684, 0.329473684210526, 0.038947368421053, 0.342105263157895, 0., 0., 0., 0., 0.032631578947368, 0.335789473684211, 0.045263157894737, 0.348421052631579, 0., 0., 0., 0., 0.038947368421053, 0.342105263157895, 0., 0., 0., 0., 0.007368421052632, 0.310526315789474, 0., 0., 0.057894736842105, 0.361052631578947, 0.001052631578947, 0.304210526315789, 0.013684210526316, 0.316842105263158, 0.051578947368421, 0.354736842105263, 0.064210526315789, 0.367368421052632, 0.007368421052632, 0.310526315789474, 0.02, 0.323157894736842, 0.057894736842105, 0.361052631578947, 0.070526315789474, 0.373684210526316, 0.013684210526316, 0.316842105263158, 0., 0., 0.064210526315789, 0.367368421052632, 0., 0., 0., 0., 0.032631578947368, 0.335789473684211, 0., 0., 0.083157894736842, 0.386315789473684, 0.026315789473684, 0.329473684210526, 0.038947368421053, 0.342105263157895, 0.076842105263158, 0.38, 0.089473684210526, 0.392631578947368, 0.032631578947368, 0.335789473684211, 0.045263157894737, 0.348421052631579, 0.083157894736842, 0.386315789473684, 0.095789473684211, 0.398947368421053, 0.038947368421053, 0.342105263157895, 0., 0., 0.089473684210526, 0.392631578947368, 0., 0., 0., 0., 0.057894736842105, 0.361052631578947, 0., 0., 0., 0., 0.051578947368421, 0.354736842105263, 0.064210526315789, 0.367368421052632, 0., 0., 0., 0., 0.057894736842105, 0.361052631578947, 0.070526315789474, 0.373684210526316, 0., 0., 0., 0., 0.064210526315789, 0.367368421052632, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.133684210526316, 0.436842105263158, 0., 0., 0., 0., 0.127368421052632, 0.430526315789474, 0.14, 0.443157894736842, 0., 0., 0., 0., 0.133684210526316, 0.436842105263158, 0.146315789473684, 0.449473684210526, 0., 0., 0., 0., 0.14, 0.443157894736842, 0., 0., 0., 0., 0.108421052631579, 0.411578947368421, 0., 0., 0.158947368421053, 0.462105263157895, 0.102105263157895, 0.405263157894737, 0.114736842105263, 0.417894736842105, 0.152631578947368, 0.455789473684211, 0.165263157894737, 0.468421052631579, 0.108421052631579, 0.411578947368421, 0.121052631578947, 0.424210526315789, 0.158947368421053, 0.462105263157895, 0.171578947368421, 0.474736842105263, 0.114736842105263, 0.417894736842105, 0., 0., 0.165263157894737, 0.468421052631579, 0., 0., 0., 0., 0.133684210526316, 0.436842105263158, 0., 0., 0.184210526315789, 0.487368421052632, 0.127368421052632, 0.430526315789474, 0.14, 0.443157894736842, 0.177894736842105, 0.481052631578947, 0.190526315789474, 0.493684210526316, 0.133684210526316, 0.436842105263158, 0.146315789473684, 0.449473684210526, 0.184210526315789, 0.487368421052632, 0.196842105263158, 0.5 , 0.14, 0.443157894736842, 0., 0., 0.190526315789474, 0.493684210526316, 0., 0., 0., 0., 0.158947368421053, 0.462105263157895, 0., 0., 0., 0., 0.152631578947368, 0.455789473684211, 0.165263157894737, 0.468421052631579, 0., 0., 0., 0., 0.158947368421053, 0.462105263157895, 0.171578947368421, 0.474736842105263, 0., 0., 0., 0., 0.165263157894737, 0.468421052631579, 0., 0., 0., 0., 0., 0. };
+    tensor_fill_list(ref, value_list, array_size(value_list));
+
+    EXPECT_LT(tensor_rel_error(ref, h_ret), 1e-7);
+    PINF("Consistent with expected results");
+  }
+
+  TEST_F(LayerConvTestDevice, im2col_numerical2) {
+    conv_param_t conv_params = {1, 0};
+
+    uint n = 1;
+    uint img_sz = 3;
+    uint c = 2;
+    uint fltr_sz = 2;
+    uint num_fil = 2;
+    uint sz_out = 1 + (img_sz + 2 * conv_params.padding - fltr_sz) / conv_params.stride;
+
+    uint const shape_x[] = {n, c, img_sz, img_sz}; // 2x3x4x4
+    uint const shape_w[] = {num_fil, c, fltr_sz, fltr_sz}; // 3x3x4x4
+
+    EXPECT_EQ(2, sz_out);
+
+    T x_values[] = { 1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2 };
+    tensor_t x = tensor_make(shape_x, dim_of_shape(shape_x));
+    tensor_fill_list(x, x_values, array_size(x_values));
+    tensor_t d_x = tensor_make_copy_h2d(x);
+
+    T w_values[] = {1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 2, 2};
+    tensor_t w = tensor_make(shape_w, dim_of_shape(shape_w));
+    tensor_fill_list(w, w_values, array_size(w_values));
+    tensor_t d_w = tensor_make_copy_h2d(w);
+
+    lcache_t cache;
+    make_empty_lcache(&cache);
+
+    tensor_t d_ret = im2col_device(d_x, d_w, conv_params);// forward function should allocate and populate cache;
+
+    uint const shape_ref[] = { 32 };
+    tensor_t ret = tensor_make(shape_ref, dim_of_shape(shape_ref));
+    tensor_copy_d2h(ret, d_ret);
+
+    tensor_t ref = tensor_make(shape_ref, dim_of_shape(shape_ref));
+    T value_list[] = { 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 2, 3, 1, 0, 3, 2, 0, 1, 1, 0, 2, 1, 0, 1, 1, 2 };
+
+    tensor_fill_list(ref, value_list, array_size(value_list));
+
+    EXPECT_LT(tensor_rel_error(ref, ret), 1e-7);
+  }
+
   TEST_F(LayerConvTestDevice, tensor_make_transpose_3012_device_1) {
     uint const shape_p[] = {1, 2, 3, 3}; // 1x2x3x3
 
@@ -202,7 +337,7 @@ namespace {
     tensor_destroy(&w_ref);
   }
 
-  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_numerical_0) {
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_device_numerical_0) {
     uint padding = 2;
     T pad_val = 0;
 
@@ -221,7 +356,7 @@ namespace {
     EXPECT_LT(tensor_rel_error(padded, ref), 1e-7);
   }
 
-  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_numerical_1) {
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_device_numerical_1) {
     uint padding = 2;
     T pad_val = 0;
 
@@ -240,7 +375,7 @@ namespace {
     EXPECT_LT(tensor_rel_error(padded, ref), 1e-7);
   }
 
-  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test0) {
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_device_unit_test0) {
     uint const shape[] = { 1, 1, 1, 1 };
     tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
@@ -279,7 +414,7 @@ namespace {
     tensor_destroy(&padded_in);
   }
 
-  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test1) {
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_device_unit_test1) {
     uint const shape[] = { 1, 1, 1, 1 };
     tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
@@ -318,7 +453,7 @@ namespace {
     tensor_destroy(&padded_in);
   }
 
-  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test2) {
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_device_unit_test2) {
     uint const shape[] = { 1, 1, 1, 1 };
     tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
@@ -357,7 +492,7 @@ namespace {
     tensor_destroy(&padded_in);
   }
 
-  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test3) {
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_device_unit_test3) {
     uint const shape[] = { 1, 1, 1, 2 };
     tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
@@ -396,7 +531,7 @@ namespace {
     tensor_destroy(&padded_in);
   }
 
-  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test4) {
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_device_unit_test4) {
     uint const shape[] = { 1, 1, 2, 2 };
     tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
@@ -435,7 +570,7 @@ namespace {
     tensor_destroy(&padded_in);
   }
 
-  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test5) {
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_device_unit_test5) {
     uint const shape[] = { 1, 1, 2, 2 };
     tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
@@ -474,7 +609,7 @@ namespace {
     tensor_destroy(&padded_in);
   }
 
-  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test6) {
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_device_unit_test6) {
     uint const shape[] = { 1, 1, 3, 2 };
     tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
@@ -513,7 +648,7 @@ namespace {
     tensor_destroy(&padded_in);
   }
 
-  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test7) {
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_device_unit_test7) {
     uint const shape[] = { 1, 1, 3, 2 };
     tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
@@ -552,7 +687,7 @@ namespace {
     tensor_destroy(&padded_in);
   }
 
-  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test8) {
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_device_unit_test8) {
     uint const shape[] = { 1, 1, 2, 3 };
     tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
@@ -591,7 +726,7 @@ namespace {
     tensor_destroy(&padded_in);
   }
 
-  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test9) {
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_device_unit_test9) {
     uint const shape[] = { 1, 2, 2, 3 };
     tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
@@ -630,7 +765,7 @@ namespace {
     tensor_destroy(&padded_in);
   }
 
-  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test10) {
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_device_unit_test10) {
     uint const shape[] = { 2, 1, 2, 3 };
     tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
@@ -669,7 +804,7 @@ namespace {
     tensor_destroy(&padded_in);
   }
 
-  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test11) {
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_device_unit_test11) {
     uint const shape[] = { 2, 2, 2, 3 };
     tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
@@ -708,7 +843,7 @@ namespace {
     tensor_destroy(&padded_in);
   }
 
-  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_unit_test12) {
+  TEST_F(LayerConvTestDevice, tensor_make_padded_square_input_device_unit_test12) {
     uint const shape[] = { 5, 4, 2, 3 };
     tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
@@ -1035,7 +1170,7 @@ namespace {
     PINF("Consistent with expected results");
   }
 
-TEST_F(LayerConvTestDevice, im2col_inner_device_2) {
+  TEST_F(LayerConvTestDevice, im2col_inner_device_2) {
   uint C = 2, H = 3, HH = 2, N = 1, W = 3, WW = 2,
       filter_height = 2, filter_width = 2, padding = 0, stride = 1;
 
@@ -1060,7 +1195,6 @@ TEST_F(LayerConvTestDevice, im2col_inner_device_2) {
   EXPECT_LT(tensor_rel_error(cols_ref, cols), 1e-7);
   PINF("Consistent with expected results");
 }
-
 
   TEST_F(LayerConvTestDevice, im2col_inner_device_3)
   {
@@ -1088,40 +1222,41 @@ TEST_F(LayerConvTestDevice, im2col_inner_device_2) {
   }
 
   TEST_F(LayerConvTestDevice, im2col_device_1) {
-    conv_param_t conv_params = { 2, 1 };
-
-    uint num_img = 2;
-    uint img_sz = 4;
-    uint nr_in_channel = 3;
-    uint fil_sz = 4;
-    uint nr_filter = 3;
-    uint sz_out = 1 + (img_sz + 2 * conv_params.padding - fil_sz) / conv_params.stride;
-
-    uint const shape_x[] = { num_img, nr_in_channel, img_sz, img_sz }; // 2x3x4x4
-    uint const shape_w[] = { nr_filter, nr_in_channel, fil_sz, fil_sz }; // 3x3x4x4
-
-    EXPECT_EQ(2, sz_out);
-
-    tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
-    tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
-
-    lcache_t cache;
-    make_empty_lcache(&cache);
-
-    /////////////////////////////////////////////////////////////////
-    tensor_t ret = im2col_device(x, w, conv_params);// forward function should allocate and populate cache;
-    /////////////////////////////////////////////////////////////////
-
-    uint const shape_ref[] = { 384 };
-    tensor_reshape_(&ret, shape_ref, dim_of_shape(shape_ref));
-
-    tensor_t ref = tensor_make(shape_ref, dim_of_shape(shape_ref));
-    T value_list[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.068421052631579, 0.234736842105263, 0.0, 0.0, 0.0, 0.0, -0.074736842105263, 0.228421052631579, -0.062105263157895, 0.241052631578947, 0.0, 0.0, 0.0, 0.0, -0.068421052631579, 0.234736842105263, -0.055789473684211, 0.247368421052632, 0.0, 0.0, 0.0, 0.0, -0.062105263157895, 0.241052631578947, 0.0, 0.0, 0.0, 0.0, -0.093684210526316, 0.209473684210526, 0.0, 0.0, -0.043157894736842, 0.26, -0.1, 0.203157894736842, -0.087368421052632, 0.215789473684211, -0.049473684210526, 0.253684210526316, -0.036842105263158, 0.266315789473684, -0.093684210526316, 0.209473684210526, -0.081052631578947, 0.222105263157895, -0.043157894736842, 0.26, -0.030526315789474, 0.272631578947368, -0.087368421052632, 0.215789473684211, 0.0, 0.0, -0.036842105263158, 0.266315789473684, 0.0, 0.0, 0.0, 0.0, -0.068421052631579, 0.234736842105263, 0.0, 0.0, -0.017894736842105, 0.285263157894737, -0.074736842105263, 0.228421052631579, -0.062105263157895, 0.241052631578947, -0.024210526315789, 0.278947368421053, -0.011578947368421, 0.291578947368421, -0.068421052631579, 0.234736842105263, -0.055789473684211, 0.247368421052632, -0.017894736842105, 0.285263157894737, -0.005263157894737, 0.297894736842105, -0.062105263157895, 0.241052631578947, 0.0, 0.0, -0.011578947368421, 0.291578947368421, 0.0, 0.0, 0.0, 0.0, -0.043157894736842, 0.26, 0.0, 0.0, 0.0, 0.0, -0.049473684210526, 0.253684210526316, -0.036842105263158, 0.266315789473684, 0.0, 0.0, 0.0, 0.0, -0.043157894736842, 0.26, -0.030526315789474, 0.272631578947368, 0.0, 0.0, 0.0, 0.0, -0.036842105263158, 0.266315789473684, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.032631578947368, 0.335789473684211, 0.0, 0.0, 0.0, 0.0, 0.026315789473684, 0.329473684210526, 0.038947368421053, 0.342105263157895, 0.0, 0.0, 0.0, 0.0, 0.032631578947368, 0.335789473684211, 0.045263157894737, 0.348421052631579, 0.0, 0.0, 0.0, 0.0, 0.038947368421053, 0.342105263157895, 0.0, 0.0, 0.0, 0.0, 0.007368421052632, 0.310526315789474, 0.0, 0.0, 0.057894736842105, 0.361052631578947, 0.001052631578947, 0.304210526315789, 0.013684210526316, 0.316842105263158, 0.051578947368421, 0.354736842105263, 0.064210526315789, 0.367368421052632, 0.007368421052632, 0.310526315789474, 0.02, 0.323157894736842, 0.057894736842105, 0.361052631578947, 0.070526315789474, 0.373684210526316, 0.013684210526316, 0.316842105263158, 0.0, 0.0, 0.064210526315789, 0.367368421052632, 0.0, 0.0, 0.0, 0.0, 0.032631578947368, 0.335789473684211, 0.0, 0.0, 0.083157894736842, 0.386315789473684, 0.026315789473684, 0.329473684210526, 0.038947368421053, 0.342105263157895, 0.076842105263158, 0.38, 0.089473684210526, 0.392631578947368, 0.032631578947368, 0.335789473684211, 0.045263157894737, 0.348421052631579, 0.083157894736842, 0.386315789473684, 0.095789473684211, 0.398947368421053, 0.038947368421053, 0.342105263157895, 0.0, 0.0, 0.089473684210526, 0.392631578947368, 0.0, 0.0, 0.0, 0.0, 0.057894736842105, 0.361052631578947, 0.0, 0.0, 0.0, 0.0, 0.051578947368421, 0.354736842105263, 0.064210526315789, 0.367368421052632, 0.0, 0.0, 0.0, 0.0, 0.057894736842105, 0.361052631578947, 0.070526315789474, 0.373684210526316, 0.0, 0.0, 0.0, 0.0, 0.064210526315789, 0.367368421052632, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.133684210526316, 0.436842105263158, 0.0, 0.0, 0.0, 0.0, 0.127368421052632, 0.430526315789474, 0.14, 0.443157894736842, 0.0, 0.0, 0.0, 0.0, 0.133684210526316, 0.436842105263158, 0.146315789473684, 0.449473684210526, 0.0, 0.0, 0.0, 0.0, 0.14, 0.443157894736842, 0.0, 0.0, 0.0, 0.0, 0.108421052631579, 0.411578947368421, 0.0, 0.0, 0.158947368421053, 0.462105263157895, 0.102105263157895, 0.405263157894737, 0.114736842105263, 0.417894736842105, 0.152631578947368, 0.455789473684211, 0.165263157894737, 0.468421052631579, 0.108421052631579, 0.411578947368421, 0.121052631578947, 0.424210526315789, 0.158947368421053, 0.462105263157895, 0.171578947368421, 0.474736842105263, 0.114736842105263, 0.417894736842105, 0.0, 0.0, 0.165263157894737, 0.468421052631579, 0.0, 0.0, 0.0, 0.0, 0.133684210526316, 0.436842105263158, 0.0, 0.0, 0.184210526315789, 0.487368421052632, 0.127368421052632, 0.430526315789474, 0.14, 0.443157894736842, 0.177894736842105, 0.481052631578947, 0.190526315789474, 0.493684210526316, 0.133684210526316, 0.436842105263158, 0.146315789473684, 0.449473684210526, 0.184210526315789, 0.487368421052632, 0.196842105263158, 0.5, 0.14, 0.443157894736842, 0.0, 0.0, 0.190526315789474, 0.493684210526316, 0.0, 0.0, 0.0, 0.0, 0.158947368421053, 0.462105263157895, 0.0, 0.0, 0.0, 0.0, 0.152631578947368, 0.455789473684211, 0.165263157894737, 0.468421052631579, 0.0, 0.0, 0.0, 0.0, 0.158947368421053, 0.462105263157895, 0.171578947368421, 0.474736842105263, 0.0, 0.0, 0.0, 0.0, 0.165263157894737, 0.468421052631579, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-
-    tensor_fill_list(ref, value_list, array_size(value_list));
-
-    EXPECT_LT(tensor_rel_error(ref, ret), 1e-7);
-    PINF("Consistent with expected results");
+//    conv_param_t conv_params = { 2, 1 };
+//
+//    uint num_img = 2;
+//    uint img_sz = 4;
+//    uint nr_in_channel = 3;
+//    uint fil_sz = 4;
+//    uint nr_filter = 3;
+//    uint sz_out = 1 + (img_sz + 2 * conv_params.padding - fil_sz) / conv_params.stride;
+//
+//    uint const shape_x[] = { num_img, nr_in_channel, img_sz, img_sz }; // 2x3x4x4
+//    uint const shape_w[] = { nr_filter, nr_in_channel, fil_sz, fil_sz }; // 3x3x4x4
+//
+//    EXPECT_EQ(2, sz_out);
+//
+//    tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
+//    tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
+//
+//    lcache_t cache;
+//    make_empty_lcache(&cache);
+//
+//    /////////////////////////////////////////////////////////////////
+//    tensor_t ret = im2col_device(x, w, conv_params);// forward function should allocate and populate cache;
+//    /////////////////////////////////////////////////////////////////
+//
+//    uint const shape_ref[] = { 384 };
+//    tensor_reshape_(&ret, shape_ref, dim_of_shape(shape_ref));
+//
+//    tensor_t ref = tensor_make(shape_ref, dim_of_shape(shape_ref));
+//    T value_list[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.068421052631579, 0.234736842105263, 0.0, 0.0, 0.0, 0.0, -0.074736842105263, 0.228421052631579, -0.062105263157895, 0.241052631578947, 0.0, 0.0, 0.0, 0.0, -0.068421052631579, 0.234736842105263, -0.055789473684211, 0.247368421052632, 0.0, 0.0, 0.0, 0.0, -0.062105263157895, 0.241052631578947, 0.0, 0.0, 0.0, 0.0, -0.093684210526316, 0.209473684210526, 0.0, 0.0, -0.043157894736842, 0.26, -0.1, 0.203157894736842, -0.087368421052632, 0.215789473684211, -0.049473684210526, 0.253684210526316, -0.036842105263158, 0.266315789473684, -0.093684210526316, 0.209473684210526, -0.081052631578947, 0.222105263157895, -0.043157894736842, 0.26, -0.030526315789474, 0.272631578947368, -0.087368421052632, 0.215789473684211, 0.0, 0.0, -0.036842105263158, 0.266315789473684, 0.0, 0.0, 0.0, 0.0, -0.068421052631579, 0.234736842105263, 0.0, 0.0, -0.017894736842105, 0.285263157894737, -0.074736842105263, 0.228421052631579, -0.062105263157895, 0.241052631578947, -0.024210526315789, 0.278947368421053, -0.011578947368421, 0.291578947368421, -0.068421052631579, 0.234736842105263, -0.055789473684211, 0.247368421052632, -0.017894736842105, 0.285263157894737, -0.005263157894737, 0.297894736842105, -0.062105263157895, 0.241052631578947, 0.0, 0.0, -0.011578947368421, 0.291578947368421, 0.0, 0.0, 0.0, 0.0, -0.043157894736842, 0.26, 0.0, 0.0, 0.0, 0.0, -0.049473684210526, 0.253684210526316, -0.036842105263158, 0.266315789473684, 0.0, 0.0, 0.0, 0.0, -0.043157894736842, 0.26, -0.030526315789474, 0.272631578947368, 0.0, 0.0, 0.0, 0.0, -0.036842105263158, 0.266315789473684, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.032631578947368, 0.335789473684211, 0.0, 0.0, 0.0, 0.0, 0.026315789473684, 0.329473684210526, 0.038947368421053, 0.342105263157895, 0.0, 0.0, 0.0, 0.0, 0.032631578947368, 0.335789473684211, 0.045263157894737, 0.348421052631579, 0.0, 0.0, 0.0, 0.0, 0.038947368421053, 0.342105263157895, 0.0, 0.0, 0.0, 0.0, 0.007368421052632, 0.310526315789474, 0.0, 0.0, 0.057894736842105, 0.361052631578947, 0.001052631578947, 0.304210526315789, 0.013684210526316, 0.316842105263158, 0.051578947368421, 0.354736842105263, 0.064210526315789, 0.367368421052632, 0.007368421052632, 0.310526315789474, 0.02, 0.323157894736842, 0.057894736842105, 0.361052631578947, 0.070526315789474, 0.373684210526316, 0.013684210526316, 0.316842105263158, 0.0, 0.0, 0.064210526315789, 0.367368421052632, 0.0, 0.0, 0.0, 0.0, 0.032631578947368, 0.335789473684211, 0.0, 0.0, 0.083157894736842, 0.386315789473684, 0.026315789473684, 0.329473684210526, 0.038947368421053, 0.342105263157895, 0.076842105263158, 0.38, 0.089473684210526, 0.392631578947368, 0.032631578947368, 0.335789473684211, 0.045263157894737, 0.348421052631579, 0.083157894736842, 0.386315789473684, 0.095789473684211, 0.398947368421053, 0.038947368421053, 0.342105263157895, 0.0, 0.0, 0.089473684210526, 0.392631578947368, 0.0, 0.0, 0.0, 0.0, 0.057894736842105, 0.361052631578947, 0.0, 0.0, 0.0, 0.0, 0.051578947368421, 0.354736842105263, 0.064210526315789, 0.367368421052632, 0.0, 0.0, 0.0, 0.0, 0.057894736842105, 0.361052631578947, 0.070526315789474, 0.373684210526316, 0.0, 0.0, 0.0, 0.0, 0.064210526315789, 0.367368421052632, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.133684210526316, 0.436842105263158, 0.0, 0.0, 0.0, 0.0, 0.127368421052632, 0.430526315789474, 0.14, 0.443157894736842, 0.0, 0.0, 0.0, 0.0, 0.133684210526316, 0.436842105263158, 0.146315789473684, 0.449473684210526, 0.0, 0.0, 0.0, 0.0, 0.14, 0.443157894736842, 0.0, 0.0, 0.0, 0.0, 0.108421052631579, 0.411578947368421, 0.0, 0.0, 0.158947368421053, 0.462105263157895, 0.102105263157895, 0.405263157894737, 0.114736842105263, 0.417894736842105, 0.152631578947368, 0.455789473684211, 0.165263157894737, 0.468421052631579, 0.108421052631579, 0.411578947368421, 0.121052631578947, 0.424210526315789, 0.158947368421053, 0.462105263157895, 0.171578947368421, 0.474736842105263, 0.114736842105263, 0.417894736842105, 0.0, 0.0, 0.165263157894737, 0.468421052631579, 0.0, 0.0, 0.0, 0.0, 0.133684210526316, 0.436842105263158, 0.0, 0.0, 0.184210526315789, 0.487368421052632, 0.127368421052632, 0.430526315789474, 0.14, 0.443157894736842, 0.177894736842105, 0.481052631578947, 0.190526315789474, 0.493684210526316, 0.133684210526316, 0.436842105263158, 0.146315789473684, 0.449473684210526, 0.184210526315789, 0.487368421052632, 0.196842105263158, 0.5, 0.14, 0.443157894736842, 0.0, 0.0, 0.190526315789474, 0.493684210526316, 0.0, 0.0, 0.0, 0.0, 0.158947368421053, 0.462105263157895, 0.0, 0.0, 0.0, 0.0, 0.152631578947368, 0.455789473684211, 0.165263157894737, 0.468421052631579, 0.0, 0.0, 0.0, 0.0, 0.158947368421053, 0.462105263157895, 0.171578947368421, 0.474736842105263, 0.0, 0.0, 0.0, 0.0, 0.165263157894737, 0.468421052631579, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+//
+//    tensor_fill_list(ref, value_list, array_size(value_list));
+//
+//    EXPECT_LT(tensor_rel_error(ref, ret), 1e-7);
+//    PINF("Consistent with expected results");
+    FAIL();
   }
 
   TEST_F(LayerConvTestDevice, convolution_forward_device) {

@@ -8,23 +8,29 @@
 #include "awnn/tensor.h"
 #include "awnn/layer.h"   // for lcache_t
 
+#include <cublas_v2.h> // for cublasHandle_t
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-status_t convolution_forward_device(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y);
+status_t convolution_forward_device(cublasHandle_t handle, tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y);
 
-status_t convolution_forward_device_harness(tensor_t hx, tensor_t hw, lcache_t * hcache, conv_param_t hparams, tensor_t hy);
+status_t convolution_forward_device_host_harness(cublasHandle_t handle,
+                                                 tensor_t hx, tensor_t hw,
+                                                 lcache_t* hcache,
+                                                 conv_param_t hparams,
+                                                 tensor_t hy);
 
 
-tensor_t im2col_device(tensor_t const x, tensor_t const w, conv_param_t const params);
+tensor_t im2col_device(tensor_t const d_x, tensor_t const d_w, conv_param_t const params);
 
 status_t im2col_inner_device(tensor_t cols, tensor_t x_padded,
                              uint N,  uint C,  uint H,  uint W,  uint HH, uint WW,
                              uint filter_height, uint filter_width, uint padding, uint stride);
 
-tensor_t tensor_make_padded_square_input_device(tensor_t t, uint p, T val);
+tensor_t tensor_make_padded_square_input_device(tensor_t h_t, uint p, T val);
 
 tensor_t tensor_make_transpose_3012_device(tensor_t t);
 

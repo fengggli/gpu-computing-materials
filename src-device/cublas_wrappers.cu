@@ -83,8 +83,6 @@ static cublasStatus_t cublasTgemm(cublasHandle_t handle,
 }
 
 tensor_t cublas_gemm_launch(cublasHandle_t handle, tensor_t d_A, tensor_t d_B) {
-//  print_tensor_device<<<1, 1>>>(d_A);
-//  print_tensor_device<<<1, 1>>>(d_B);
 
   const T alpha = 1.f;
   const T beta = 0.f;

@@ -69,21 +69,21 @@ tensor_t im2col(tensor_t const x, tensor_t const w, conv_param_t const params) {
   assert((H + 2 * pad - filter_height) % stride == 0);
 
   uint HH = (H + 2 * pad - filter_height) / stride + 1; // total strides needed over rows
-  uint WW = (W + 2 * pad - filter_width) / stride + 1; // total strides needed over cols
+  uint WW = (W + 2 * pad - filter_width) / stride + 1;  // total strides needed over cols
 
   // TODO : Optimize tensor_make_padded function
   // TODO : look into not allocating here... maybe check bounds in the inner
   tensor_t x_padded = tensor_make_padded_square_input(x, pad, 0);
 
-  uint cols_shape[] = {C * filter_height * filter_width, N * HH * WW};
+  uint flattened_x_shape[] = {C * filter_height * filter_width, N * HH * WW};
 
-  tensor_t cols = tensor_make_zeros(cols_shape, ARRAY_SIZE(cols_shape));
+  tensor_t flattened_x = tensor_make_zeros(flattened_x_shape, ARRAY_SIZE(flattened_x_shape));
 
-  im2col_inner(cols, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, pad, stride);
+  im2col_inner(flattened_x, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, pad, stride);
 
   tensor_destroy(&x_padded);
 
-  return cols;
+  return flattened_x;
 }
 
 /**

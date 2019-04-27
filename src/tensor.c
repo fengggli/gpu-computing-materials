@@ -272,6 +272,7 @@ tensor_t tensor_make_zeros(uint const shape[], uint const ndims) {
   tensor_fill_scalar(t, 0.0);
   return t;
 }
+
 tensor_t tensor_make_ones(uint const shape[], uint const ndims) {
   tensor_t t = tensor_make(shape, ndims);
   tensor_fill_scalar(t, 1.0);
@@ -511,6 +512,8 @@ T tensor_rel_error(tensor_t x, tensor_t ref) {
 }
 
 void tensor_destroy(tensor_t* t) {
+  assert(t->mem_type == CPU_MEM);
+
   mem_free(t->data);
   t->data = NULL;
 }
