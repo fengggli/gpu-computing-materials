@@ -266,10 +266,12 @@ status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache, conv_pa
   tensor_t dx_cols = tensor_make(dx_cols_shape, ARRAY_SIZE(dx_cols_shape));
   tensor_matmul(w_T, dout_T_1230, dx_cols);
 
+  tensor_print_flat(dx_cols);
+
   // then we convert it back to tensor form
   tensor_t t = col2im(dx_cols, x.dim.dims[0], x.dim.dims[1], x.dim.dims[2], x.dim.dims[3], filter_height, filter_width, conv_params.padding, conv_params.stride);
 
-  // copy date into dx (assumption is that dx is already correct shape)
+  // copy data into dx (assumption is that dx is already correct shape)
   uint capacity = tensor_get_capacity(t);
   for (int i = 0; i < capacity; ++i) {
     dx.data[i] = t.data[i];

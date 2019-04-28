@@ -101,21 +101,57 @@ tensor_t cublas_gemm_launch(cublasHandle_t handle, tensor_t d_A, tensor_t d_B) {
   T * out   = result.data;
 
   // Do the actual multiplication
-  cublasTgemm(handle,
-              CUBLAS_OP_N,
-              CUBLAS_OP_N,
-              colB,
-              rowA,
-              colA,
-              &alpha,
-              srcB,
-              colB,
-              srcA,
-              colA,
-              &beta,
-              out,
-              colB);
+  cublasStatus_t stat = cublasTgemm(handle,
+                                    CUBLAS_OP_N,
+                                    CUBLAS_OP_N,
+                                    colB,
+                                    rowA,
+                                    colA,
+                                    &alpha,
+                                    srcB,
+                                    colB,
+                                    srcA,
+                                    colA,
+                                    &beta,
+                                    out,
+                                    colB);
 
 //  print_tensor_device<<<1, 1>>>(result);
   return result;
+}
+
+status_t cublas_gemm_launch(cublasHandle_t handle, tensor_t d_A, tensor_t d_B, tensor_t out) {
+  assert(d_A.mem_type == GPU_MEM);
+  assert(d_B.mem_type == GPU_MEM);
+  assert(out.mem_type == GPU_MEM);
+  assert(out.dim.dims[0] == d_A.dim.dims[0]);
+  assert(out.dim.dims[1] == d_B.dim.dims[1]);
+
+  const T alpha = 1.f;
+  const T beta = 0.f;
+
+  const int rowA = d_A.dim.dims[0];
+  const int colA = d_A.dim.dims[1];
+  const int colB = d_B.dim.dims[1];
+
+  const T * srcA  = d_A.data;
+  const T * srcB  = d_B.data;
+
+  // Do the actual multiplication
+  cublasStatus_t stat = cublasTgemm(handle,
+                                    CUBLAS_OP_N,
+                                    CUBLAS_OP_N,
+                                    colB,
+                                    rowA,
+                                    colA,
+                                    &alpha,
+                                    srcB,
+                                    colB,
+                                    srcA,
+                                    colA,
+                                    &beta,
+                                    out.data,
+                                    colB);
+
+  return stat == CUBLAS_STATUS_SUCCESS ? S_OK : S_ERR;
 }

@@ -1399,15 +1399,11 @@ TEST_F(LayerConvTestDevice, forward_caches_proper_values) {
     EXPECT_EQ(ret, S_OK);
 
     // input for backward
-    tensor_t dy = tensor_make_linspace(-0.1, 0.5, shape_y, dim_of_shape(shape_y));
-
-    tensor_t dx = tensor_make_alike(x);
-    tensor_t dw = tensor_make_alike(w);
-
-    /////////////////////////////////////////////////////////////////
-    ret = convolution_backward_device(handle_, dx, dw, &cache, params, dy); // backward needs to call free_lcache(cache);
-    /////////////////////////////////////////////////////////////////
-    EXPECT_EQ(ret, S_OK);
+    tensor_t h_dy = tensor_make_linspace(-0.1, 0.5, shape_y, dim_of_shape(shape_y));
+    tensor_t h_dx = tensor_make_alike(x);
+    tensor_t d_dx = tensor_make_copy_h2d(x);
+    tensor_t h_dw = tensor_make_alike(w);
+    tensor_t d_dw = tensor_make_copy_h2d(w);
 
     /* II. Numerical check */
     // I had to make this copy since lambda doesn't allow me to use global
@@ -1418,15 +1414,27 @@ TEST_F(LayerConvTestDevice, forward_caches_proper_values) {
     tensor_t dx_ref = tensor_make_alike(x);
     tensor_t dw_ref = tensor_make_alike(w);
 
+    /////////////////////////////////////////////////////////////////
+    ret = convolution_backward_device(handle_, d_dx, d_dw, &cache, params, h_dy); // backward needs to call free_lcache(cache);
+    /////////////////////////////////////////////////////////////////
+    EXPECT_EQ(ret, S_OK);
+
     // evaluate gradient of x
     eval_numerical_gradient(
         [&](tensor_t const in, tensor_t out) {
           convolution_forward(in, w_copy, nullptr, params, out);
         },
-        x, dy, dx_ref);
-    double err1 = tensor_rel_error(dx_ref, dx);
-    EXPECT_LT(err1, 1e-7);
-    if (err1 < 1e-7) {
+        x, h_dy, dx_ref);
+
+
+
+    tensor_copy_d2h(h_dx, d_dx);
+
+
+
+    double err1 = tensor_rel_error(dx_ref, h_dx);
+    EXPECT_LT(err1, 1e-3);
+    if (err1 < 1e-3) {
       PINF("gradient check of x... is ok");
     } else {
       PERR("gradient check of dx failed");
@@ -1437,16 +1445,31 @@ TEST_F(LayerConvTestDevice, forward_caches_proper_values) {
         [&](tensor_t const in, tensor_t out) {
           convolution_forward(x_copy, in, nullptr, params, out);
         },
-        w, dy, dw_ref);
-    double err2 = tensor_rel_error(dw_ref, dw);
-    EXPECT_LT(err2, 1e-7);
-    if (err2 < 1e-7) {
-      PINF("gradient check of x... is ok");
+        w, h_dy, dw_ref);
+
+    tensor_copy_d2h(h_dw, d_dw);
+
+    std::cout << "dw_ref\n";
+    tensor_print_flat(dw_ref);
+    std::cout << "dw\n";
+    tensor_print_flat(h_dw);
+
+
+    double err2 = tensor_rel_error(dw_ref, h_dw);
+    EXPECT_LT(err2, 1e-3);
+    if (err2 < 1e-3) {
+      PINF("gradient check of dw... is ok");
     } else {
-      PERR("gradient check of dx failed");
+      PERR("gradient check of dw failed");
     }
 
     EXPECT_EQ(ret, S_OK);
+
+    tensor_destroy_device(&d_dw);
+    tensor_destroy_device(&d_dx);
+    tensor_destroy(&h_dy);
+    tensor_destroy(&h_dx);
+    tensor_destroy(&h_dw);
   }
 
   TEST_F(LayerConvTestDevice, convolution_backward_device_precalculated) {
@@ -1502,19 +1525,58 @@ TEST_F(LayerConvTestDevice, forward_caches_proper_values) {
     tensor_t flat_x_cached = tensor_make(flat_x_cached_shape, dim_of_shape(flat_x_cached_shape));
     tensor_fill_list(flat_x_cached, flat_x_cached_vals, array_size(flat_x_cached_vals));
 
-    lcache_push(&cache, x_cached);
-    lcache_push(&cache, w_cached);
-    lcache_push(&cache, flat_x_cached);
+    tensor_t d_x_cached = tensor_make_copy_h2d(x_cached);
+    tensor_t d_w_cached = tensor_make_copy_h2d(w_cached);
+    tensor_t d_flat_x_cached = tensor_make_copy_h2d(flat_x_cached);
+
+    lcache_push(&cache, d_x_cached);
+    lcache_push(&cache, d_w_cached);
+    lcache_push(&cache, d_flat_x_cached);
 
     tensor_t dx = tensor_make_scalar_alike(dx_num, 0);
     tensor_t dw = tensor_make_scalar_alike(dw_num, 0);
-    convolution_backward_device(handle_, dx, dw, &cache, conv_params, dout);
 
-    EXPECT_LT(tensor_rel_error(dw, dw_num), 1e-7);
-    PINF("gradient check of w... is ok");
+    tensor_t d_dx = tensor_make_copy_h2d(dx);
+    tensor_t d_dw = tensor_make_copy_h2d(dw);
 
-    EXPECT_LT(tensor_rel_error(dx, dx_num), 1e-7);
-    PINF("gradient check of x... is ok");
+    ////////////////////////////////////////////////////////////////////////
+    convolution_backward_device(handle_, d_dx, d_dw, &cache, conv_params, dout);
+    ////////////////////////////////////////////////////////////////////////
+
+    tensor_copy_d2h(dx, d_dx);
+    tensor_copy_d2h(dw, d_dw);
+
+    double err1 = tensor_rel_error(dx, dx_num);
+    if (err1 < 1e-3) {
+      PINF("gradient check of dx... is ok");
+    } else {
+      PERR("gradient check of dx failed");
+    }
+
+    double err2 = tensor_rel_error(dw, dw_num);
+    EXPECT_LT(err2, 1e-3);
+    if (err2 < 1e-3) {
+      PINF("gradient check of dw... is ok");
+    } else {
+      PERR("gradient check of dw failed");
+    }
+
+
+    tensor_destroy_device(&d_x_cached);
+    tensor_destroy_device(&d_w_cached);
+    tensor_destroy_device(&d_flat_x_cached);
+    tensor_destroy_device(&d_dx);
+    tensor_destroy_device(&d_dw);
+
+    tensor_destroy(&x);
+    tensor_destroy(&w);
+    tensor_destroy(&dout);
+    tensor_destroy(&dx_num);
+    tensor_destroy(&dw_num);
+
+    tensor_destroy(&x_cached);
+    tensor_destroy(&w_cached);
+    tensor_destroy(&flat_x_cached);
   }
 
 

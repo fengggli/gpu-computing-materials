@@ -3,6 +3,7 @@
 #include "awnndevice/device_utils.cuh"
 #include "awnndevice/cublas_wrappers.cuh"
 
+#include <cuda_runtime.h>
 
 /*
  * In the above naive version for the CPU, we stride through the target one
@@ -698,7 +699,7 @@ tensor_t col2im_device(tensor_t d_dx_cols, uint N, uint C, uint H, uint W, uint 
     ////////////////////////////////////////////////////////////////////////////
 
 //    tensor_t padding_removed = tensor_make_remove_padding_square_device(d_x_padded, pad_sz);
-    tensor_destroy(&d_x_padded);
+    tensor_destroy_device(&d_x_padded);
     return padding_removed;
   }
   return d_x_padded;
@@ -760,17 +761,17 @@ static __global__ void _do_convolution_backward_device(tensor_t dx, tensor_t dw,
   }
 }
 
-status_t convolution_backward_device(cublasHandle_t handle, tensor_t dx, tensor_t dqw, lcache_t* dcache, conv_param_t const params, tensor_t const h_dout)
+status_t convolution_backward_device(cublasHandle_t handle, tensor_t d_dx, tensor_t d_dw, lcache_t* dcache, conv_param_t const params, tensor_t const h_dout)
 {
   tensor_t d_dout = tensor_make_copy_h2d(h_dout);
 
-  tensor_t d_x, d_w, d_x_cols;
-
   // NOTE : the order of pop matters, should be flattened_x, d_w, d_x (reverse of forward)
-  d_x_cols = lcache_pop(dcache);
-  d_w = lcache_pop(dcache);
-  d_x = lcache_pop(dcache);
+  tensor_t d_x_cols = lcache_pop(dcache);
+  tensor_t d_w = lcache_pop(dcache);
+  tensor_t d_x = lcache_pop(dcache);
 
+  assert(d_dx.mem_type == GPU_MEM);
+  assert(d_dw.mem_type == GPU_MEM);
   assert(d_x_cols.mem_type == GPU_MEM);
   assert(d_w.mem_type == GPU_MEM);
   assert(d_x.mem_type == GPU_MEM);
@@ -780,11 +781,12 @@ status_t convolution_backward_device(cublasHandle_t handle, tensor_t dx, tensor_
   uint filter_height = d_w.dim.dims[2];
   uint filter_width = d_w.dim.dims[3];
 
-  uint const d_dout_T_shape[] = { d_dout.dim.dims[3], d_dout.dim.dims[0], d_dout.dim.dims[1], d_dout.dim.dims[2] };
 
   // 1. tensor transpose 1230 the dout (derivative of output layer)
-  tensor_t d_dout_T_1230 = tensor_make_device(d_dout_T_shape, ARRAY_SIZE(d_dout_T_shape));
+  uint const d_dout_T_1230_shape[] = { d_dout.dim.dims[1], d_dout.dim.dims[2], d_dout.dim.dims[3], d_dout.dim.dims[0] };
+  tensor_t d_dout_T_1230 = tensor_make_device(d_dout_T_1230_shape, ARRAY_SIZE(d_dout_T_1230_shape));
   _do_tensor_make_transpose_1230_device<<<32, 128>>>(d_dout_T_1230, d_dout);
+
 
   // 2. reshape the dout_T to a 2D shape by collapsing the last 3 dims
   uint d_dout_2d_shape[] = { num_filters, d_dout_T_1230.dim.dims[1] * d_dout_T_1230.dim.dims[2] * d_dout_T_1230.dim.dims[3] };
@@ -795,7 +797,10 @@ status_t convolution_backward_device(cublasHandle_t handle, tensor_t dx, tensor_
   tensor_t d_x_cols_T = cublas_transpose_launch(handle, d_x_cols);
 
   // 4. 2D GEMM multiply the dout_T by the flat d_x_cols_T
-  tensor_t d_dw = cublas_gemm_launch(handle, d_dout_T_1230, d_x_cols_T);
+  uint mult_shape[] = { d_dout_T_1230.dim.dims[0], d_x_cols_T.dim.dims[1] };
+  tensor_reshape_(&d_dw, mult_shape, ARRAY_SIZE(mult_shape));
+  int ret = cublas_gemm_launch(handle, d_dout_T_1230, d_x_cols_T, d_dw);
+  assert(ret == S_OK);
 
   // 5. reshape d_dw to same shape as cached d_w
   uint d_dw_shape[] = { num_filters, w_channels, filter_height, filter_width };
@@ -813,20 +818,18 @@ status_t convolution_backward_device(cublasHandle_t handle, tensor_t dx, tensor_
   // 6b : gotta get dx : first we get it in flat form,
   tensor_t d_dx_cols = cublas_gemm_launch(handle, d_w_T, d_dout_T_1230);
 
-  // then we convert it back to tensor form
+  // 6c : then we convert it back to tensor form
   tensor_t t = col2im_device(d_dx_cols, d_x.dim.dims[0], d_x.dim.dims[1], d_x.dim.dims[2], d_x.dim.dims[3], filter_height, filter_width, params.padding, params.stride);
 
-//  // copy data into dx (assumption is that dx is already correct shape)
-//  uint capacity = tensor_get_capacity(t);
-//  for (int i = 0; i < capacity; ++i) {
-//    dx.data[i] = t.data[i];
-//  }
-  tensor_copy_d2d(d_dx, t);
+  // TODO : get rid of allocation of t by passing d_dx into col2im_device
+  /////////////////////////////////////////////////////////////////////////////
+  tensor_copy_d2d<<<32, 128>>>(d_dx, t);
+  /////////////////////////////////////////////////////////////////////////////
 
   tensor_destroy_device(&d_dout_T_1230);
-  tensor_destroy(&d_x_cols_T);
-  tensor_destroy(&d_w_T);
-  tensor_destroy(&t);
+  tensor_destroy_device(&d_x_cols_T);
+  tensor_destroy_device(&d_w_T);
+  tensor_destroy_device(&t);
 
   return S_OK;
 }
