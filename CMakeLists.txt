@@ -9,8 +9,11 @@ option(USE_CUDA "Build with CUDA" OFF)
 option(USE_CUDNN "Build with CUDNN" OFF)
 option(USE_NNPACK "Build with NNPACK" OFF)
 option(AWNN_USE_FLT32 "Use single precision floating point" OFF)
-
 option(USE_STRICT_CHECK "use pedantic flag" OFF)
+
+if (NOT AWNN_USE_FLT32 AND USE_NNPACK)
+  message(FATAL_ERROR 'nnpack only support float32')
+endif ()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 

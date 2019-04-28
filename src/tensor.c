@@ -543,9 +543,9 @@ T tensor_rel_error(tensor_t x, tensor_t ref) {
 }
 
 void tensor_destroy(tensor_t* t) {
-  AWNN_CHECK_EQ(t->mem_type, CPU_MEM);
-
-  mem_free(t->data);
-  t->data = NULL;
-
+  AWNN_CHECK_NE(t->mem_type, GPU_MEM);
+  if (t->mem_type == CPU_MEM) {
+    mem_free(t->data);
+    t->data = NULL;
+  }
 }
