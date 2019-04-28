@@ -3,12 +3,12 @@ cmake_minimum_required(VERSION 3.5)
 
 option(IS_CI_BUILD "Is a build for CI" OFF) # Reduce problem size if it is run in CI
 option(USE_CLANG "Use clang compiler set" OFF)
-option(USE_OPENBLAS "USE openblas for blas" OFF)
+option(USE_OPENBLAS "USE openblas for blas" ON)
 option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_CUDA "Build with CUDA" OFF)
 option(USE_CUDNN "Build with CUDNN" OFF)
 option(USE_NNPACK "Build with NNPACK" OFF)
-
+option(AWNN_USE_FLT32 "Use single precision floating point" OFF)
 
 option(USE_STRICT_CHECK "use pedantic flag" OFF)
 
@@ -80,7 +80,23 @@ configure_file (
 
 include_directories(include ${PROJECT_BINARY_DIR})
 
-add_library(awnn_core
+if(USE_NNPACK)
+  set(NNPACK_ROOT extern/NNPACK)
+
+  include_directories(deps/pthreadpool/include ${NNPACK_ROOT}/include/)
+
+  # I didn't added this in extern since RELEASE flag was disabled there
+  add_executable(nnpack-bench-conv
+    ${NNPACK_ROOT}/bench/convolution.c
+    ${NNPACK_ROOT}/bench/memread.c
+    ${NNPACK_ROOT}/bench/median.c
+    ${NNPACK_ROOT}/bench/perf_counter.c)
+  target_include_directories(nnpack-bench-conv PRIVATE ${NNPACK_ROOT}/bench)
+  target_link_libraries(nnpack-bench-conv nnpack)
+  set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS} nnpack nnpack_reference_layers)
+
+endif()
+list(APPEND awnn_core_SOURCES
   src/tensor.c
   src/tensor_op.c
   src/layer_conv.c
@@ -92,11 +108,20 @@ add_library(awnn_core
   src/net_mlp.c
   src/layer_sandwich.c
   src/solver.c
-  src/net_resnet.c)
+  src/net_resnet.c
+  )
+
+if (USE_NNPACK)
+  list(APPEND awnn_core_SOURCES
+    src/layer_conv_nnpack.c)
+endif ()
+
+add_library(awnn_core ${awnn_core_SOURCES})
 
 target_include_directories(awnn_core PUBLIC include)
 target_link_libraries(awnn_core PUBLIC ${AWNN_DEP_LIBS})
 
+# This is a cpp lib
 add_library(awnn_utils
   utils/data_cifar.cpp
   utils/weight_init.cpp

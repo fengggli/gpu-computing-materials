@@ -96,7 +96,7 @@ TEST_F(LayerSandwich, ResidualBlock_noBN) {
 
   make_empty_lcache(&cache);
   // forward
-  T value_list[] = {
+  double value_list[] = {
       -0.,        -0.,        -0.,        -0.,        -0.,        -0.,
       -0.,        -0.,        -0.,        -0.,        -0.,        -0.,
       -0.,        -0.,        -0.,        -0.,        -0.,        -0.,
