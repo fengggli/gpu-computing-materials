@@ -187,6 +187,7 @@ tensor_t tensor_make_copy(tensor_t t) {
   return ret;
 }
 
+// TODO : refactor to reflect host creation / mem_type, etc...
 tensor_t tensor_make_alike(tensor_t t) { return _tensor_make(t.dim); }
 
 tensor_t tensor_make_transpose(tensor_t const t) {

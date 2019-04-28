@@ -34,11 +34,11 @@ tensor_t tensor_make_padded_square_input_device(tensor_t h_t, uint p, T val);
 
 tensor_t tensor_make_transpose_3012_device(tensor_t t);
 
-status_t convolution_backward_device(tensor_t dx, tensor_t dw, lcache_t* cache, conv_param_t const params, tensor_t const dout);
+status_t convolution_backward_device(cublasHandle_t handle, tensor_t dx, tensor_t dw, lcache_t* cache, conv_param_t const params, tensor_t const d_dout);
 
 tensor_t col2im_device(tensor_t cols,
                        uint N, uint C, uint H, uint W,
-                       uint field_height, uint field_width, uint padding, uint stride);
+                       uint field_height, uint field_width, uint pad_sz, uint stride);
 
 
 void col2im_inner_device(tensor_t cols, tensor_t x_padded,
@@ -48,11 +48,6 @@ void col2im_inner_device(tensor_t cols, tensor_t x_padded,
 tensor_t tensor_make_remove_padding_square_device(tensor_t t, uint p);
 
 tensor_t tensor_make_transpose_1230_device(tensor_t t);
-
-
-tensor_t matrix_dot_cublas_harness(tensor_t hx, tensor_t hy);
-
-void cublasDot(const T * srcA, const T * srcB, T * out, int rowA, int colA, int colB);
 
 #ifdef __cplusplus
 }

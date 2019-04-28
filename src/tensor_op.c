@@ -255,14 +255,18 @@ status_t tensor_reshape_(tensor_t* ptr_t, uint const shape[], uint const ndims){
     req_dim = make_dim(0,0);
   }
 
-  for(i = 0; i< MAX_DIM; i++){
+  for(i = 0; i < MAX_DIM; i++){
     if(i < ndims){
       req_dim.dims[i] = shape[i];
     }
     else
       req_dim.dims[i] = 0;
   }
-  if(dim_get_capacity(req_dim) != dim_get_capacity(ptr_t->dim)){
+
+  uint original_capacity = dim_get_capacity(ptr_t->dim);
+  uint requested_capacity = dim_get_capacity(req_dim);
+
+  if(requested_capacity != original_capacity){
     PERR("[tensor reshape]: dimension not matched");
     PERR("Original dimension: ");
     dim_dump(ptr_t->dim);

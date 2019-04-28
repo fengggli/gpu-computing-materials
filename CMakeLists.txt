@@ -97,7 +97,7 @@ if(USE_CUDA)
     src-device/cublas_wrappers.cu
   )
 
-  target_link_libraries(awnndevicelib cudart  cublas)
+  target_link_libraries(awnndevicelib cudart cublas)
 
   set(AWNN_DEVICE_LIBS "awnndevicelib")
 endif(USE_CUDA)

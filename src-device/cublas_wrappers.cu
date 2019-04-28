@@ -33,7 +33,7 @@ static cublasStatus_t inline cublasTgeam(cublasHandle_t handle,
 
 
 
-tensor_t transpose_device (cublasHandle_t handle, tensor_t src)
+tensor_t cublas_transpose_launch (cublasHandle_t handle, tensor_t src)
 {
   assert(src.mem_type == GPU_MEM);
 
@@ -83,6 +83,8 @@ static cublasStatus_t cublasTgemm(cublasHandle_t handle,
 }
 
 tensor_t cublas_gemm_launch(cublasHandle_t handle, tensor_t d_A, tensor_t d_B) {
+  assert(d_A.mem_type == GPU_MEM);
+  assert(d_B.mem_type == GPU_MEM);
 
   const T alpha = 1.f;
   const T beta = 0.f;

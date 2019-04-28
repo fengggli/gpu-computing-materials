@@ -19,7 +19,7 @@ extern "C" {
 #endif
 
 typedef unsigned int uint;
-typedef double T;
+typedef float T;
 
 typedef unsigned int label_t;
 label_t *label_make_random(uint nr_elem, uint range);
