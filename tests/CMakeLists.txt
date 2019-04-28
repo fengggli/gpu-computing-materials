@@ -70,8 +70,8 @@ add_executable(test-net-resnet test_net_resnet.cpp)
 target_link_libraries(test-net-resnet ${AWNN_LIBS}  gtest)
 add_test(test-net-resnet test-net-resnet)
 
-set_target_properties(test-net-resnet
-  PROPERTIES COMPILE_DEFINITIONS "CONFIG_DEBUG")
+#set_target_properties(test-net-resnet
+  #PROPERTIES COMPILE_DEFINITIONS "CONFIG_DEBUG")
 
 add_executable(test-net-resnet-cifar test_net_resnet_cifar.cpp)
 target_link_libraries(test-net-resnet-cifar ${AWNN_LIBS} gtest)

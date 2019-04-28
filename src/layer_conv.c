@@ -3,6 +3,10 @@
 #include "pthreadpool.h"
 #include "nnpack.h"
 #endif
+#ifdef USE_OPENBLAS
+#include "cblas.h"
+#endif
+
 
 #include <awnn/memory.h>
 #include <printf.h>
@@ -198,11 +202,17 @@ status_t convolution_backward_simple(tensor_t dx, tensor_t dw, lcache_t* cache,
                        dout_reshaped.dim.dims[3]};  // (F, H'xW'xN)
   tensor_reshape_(&dout_reshaped, dout_2d_shape, ARRAY_SIZE(dout_2d_shape));
 
-  tensor_t x_cols_T = tensor_make_transpose(x_cols);
+  // tensor_t x_cols_T = tensor_make_transpose(x_cols);
 
-  uint mult_shape[] = { dout_reshaped.dim.dims[0], x_cols_T.dim.dims[1] };
+  uint mult_shape[] = { dout_reshaped.dim.dims[0], x_cols.dim.dims[0] };
   tensor_reshape_(&dw, mult_shape, ARRAY_SIZE(mult_shape));
-  tensor_matmul(dout_reshaped, x_cols_T, dw);
+
+  // tensor_matmul(dout_reshaped, x_cols_T, dw);
+  int m = (int)(dout_reshaped.dim.dims[0]);
+  int k = (int)(dout_reshaped.dim.dims[1]);
+  int n = (int)(x_cols.dim.dims[0]);
+  tensor_fill_scalar(dw, 0.0);
+  awnn_gemm(CblasNoTrans, CblasTrans, m, n, k, 1.0, dout_reshaped.data, x_cols.data, 1.0, dw.data);
 
   uint dw_shape[] = { num_filters, w_channels, filter_height, filter_width };
   tensor_reshape_(&dw, dw_shape, ARRAY_SIZE(dw_shape));
@@ -212,12 +222,18 @@ status_t convolution_backward_simple(tensor_t dx, tensor_t dw, lcache_t* cache,
   // now get dx in column form multiplying the w_T with the d_out
   uint w_shape[] = { num_filters, w_channels * filter_height * filter_width };
   tensor_reshape_(&w, w_shape, ARRAY_SIZE(w_shape));
-  tensor_t w_T = tensor_make_transpose(w);
+  // tensor_t w_T = tensor_make_transpose(w);
 
   // next gotta get dx : first we get it in flat form,
-  uint dx_cols_shape[] = { w_T.dim.dims[0], dout_reshaped.dim.dims[1] };
+  uint dx_cols_shape[] = { w.dim.dims[1], dout_reshaped.dim.dims[1] };
   tensor_t dx_cols = tensor_make(dx_cols_shape, ARRAY_SIZE(dx_cols_shape));
-  tensor_matmul(w_T, dout_reshaped, dx_cols);
+  // TODO(Feng): use tranpose in matmul
+  // tensor_matmul(w_T, dout_reshaped, dx_cols);
+  m = (int)(w.dim.dims[1]);
+  k = (int)( w.dim.dims[0]);
+  n = (int)(dout_reshaped.dim.dims[1]);
+  tensor_fill_scalar(dx_cols, 0.0);
+  awnn_gemm(CblasTrans, CblasNoTrans, m, n, k, 1.0, w.data, dout_reshaped.data, 1.0, dx_cols.data);
 
   // then we convert it back to tensor form
   tensor_t t = col2im(dx_cols, x.dim.dims[0], x.dim.dims[1], x.dim.dims[2], x.dim.dims[3], filter_height, filter_width, conv_params.padding, conv_params.stride);
@@ -227,11 +243,7 @@ status_t convolution_backward_simple(tensor_t dx, tensor_t dw, lcache_t* cache,
   for (uint i = 0; i < capacity; ++i) {
     dx.data[i] = t.data[i];
   }
-
-
   tensor_destroy(&dout_reshaped);
-  tensor_destroy(&x_cols_T);
-  tensor_destroy(&w_T);
   tensor_destroy(&t);
   tensor_destroy(&x_cols);
   tensor_destroy(&dx_cols);
@@ -258,6 +270,7 @@ tensor_t col2im(tensor_t cols, uint N, uint C, uint H, uint W, uint field_height
   uint WW = (W + 2 * padding - field_width) / stride + 1;
 
   uint x_padded_shape[] = { N, C, H + 2 * padding, W + 2 * padding };
+  // TODO(Feng): move padding inside col2img
   tensor_t x_padded = tensor_make_scalar(x_padded_shape, ARRAY_SIZE(x_padded_shape), 0);                                    // new mem created by returned
 
   col2im_inner(cols, x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);

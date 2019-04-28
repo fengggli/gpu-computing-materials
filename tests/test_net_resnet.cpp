@@ -125,7 +125,7 @@ TEST_F(NetResnetTest, Loss) {
 }
 
 /* Check both forward/backward, time consuming*/
-TEST_F(NetResnetTest, DISABLED_BackNumerical) {
+TEST_F(NetResnetTest, BackNumerical) {
   // fill some init values as in cs231n
   tensor_t x = tensor_make_linspace(-0.2, 0.3, model.input_dim.dims, 4);
 
@@ -157,8 +157,8 @@ TEST_F(NetResnetTest, DISABLED_BackNumerical) {
   }
 }
 
-/* Check both forward/backward*/
-TEST_F(NetResnetTest, Measure_auto) {
+/* Compare across different conv layers*/
+TEST_F(NetResnetTest, DISABLED_Measure_auto) {
   for (auto conv_method = all_methods.begin(); conv_method != all_methods.end();
        conv_method++) {
     PINF("Method:  %d", *conv_method);
@@ -181,6 +181,28 @@ TEST_F(NetResnetTest, Measure_auto) {
       print_time_in_ms(t_begin, t_end);
     }
   }
+}
+
+/* Profiler a certain conv layer */
+TEST_F(NetResnetTest, Measure_profiler) {
+  auto conv_method = CONV_METHOD_NAIVE;
+  PINF("Method:  %d", conv_method);
+  set_conv_method(conv_method);
+
+    T loss = 0;
+
+    tensor_t x = tensor_make_linspace(-5.5, 4.5, model.input_dim.dims, 4);
+    label_t labels[] = {0, 5, 1};
+
+    time_point_t t_begin, t_end;
+    get_cur_time(t_begin);
+    uint nr_iterations = 10;
+    for (uint i = 0; i < nr_iterations; i++) {
+      resnet_loss(&model, x, labels, &loss);
+      // PINF("Loss without regulizer: %.3f", loss);
+    }
+    get_cur_time(t_end);
+    print_time_in_ms(t_begin, t_end);
 }
 
 TEST_F(NetResnetTest, Destroy) { resnet_finalize(&model); }
