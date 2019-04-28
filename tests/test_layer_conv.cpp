@@ -76,9 +76,6 @@ TEST_F(LayerConvTest, Backward){
   tensor_t dx = tensor_make_alike(x);
   tensor_t dw = tensor_make_alike(w);
 
-  ret = convolution_backward(dx, dw, &cache, params, dy); // backward needs to call free_lcache(cache);
-  EXPECT_EQ(ret, S_OK);
-
   /* II. Numerical check */
   // I had to make this copy since lambda doesn't allow me to use global
   // variable
@@ -88,12 +85,19 @@ TEST_F(LayerConvTest, Backward){
   tensor_t dx_ref = tensor_make_alike(x);
   tensor_t dw_ref = tensor_make_alike(w);
 
+  /////////////////////////////////////////////////////////////////
+  ret = convolution_backward(dx, dw, &cache, params, dy); // backward needs to call free_lcache(cache);
+  /////////////////////////////////////////////////////////////////
+  EXPECT_EQ(ret, S_OK);
+
+
   // evaluate gradient of x
   eval_numerical_gradient(
       [&](tensor_t const in, tensor_t out) {
         convolution_forward(in, w_copy, nullptr, params, out);
       },
       x, dy, dx_ref);
+
   EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
   PINF("gradient check of x... is ok");
 
@@ -103,6 +107,12 @@ TEST_F(LayerConvTest, Backward){
         convolution_forward(x_copy, in, nullptr, params, out);
       },
       w, dy, dw_ref);
+
+  std::cout << "dw_ref\n";
+  tensor_print_flat(dw_ref);
+  std::cout << "dw\n";
+  tensor_print_flat(dw);
+
   EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-7);
   PINF("gradient check of w... is ok");
 
@@ -177,10 +187,29 @@ TEST_F(LayerConvTest, forward_caches_proper_values) {
   EXPECT_LT(tensor_rel_error(flatten_x_cached, flat_x_cached_ref), 1e-15);
 
   EXPECT_LT(tensor_rel_error(x_cached, x_cached_ref), 1e-15);
+  EXPECT_EQ(x_cached_ref.dim.dims[0], x_cached.dim.dims[0]);
+  EXPECT_EQ(x_cached_ref.dim.dims[1], x_cached.dim.dims[1]);
+  EXPECT_EQ(x_cached_ref.dim.dims[2], x_cached.dim.dims[2]);
+  EXPECT_EQ(x_cached_ref.dim.dims[3], x_cached.dim.dims[3]);
+
   EXPECT_LT(tensor_rel_error(x_cached, x), 1e-15);
+  EXPECT_EQ(x.dim.dims[0], x_cached.dim.dims[0]);
+  EXPECT_EQ(x.dim.dims[1], x_cached.dim.dims[1]);
+  EXPECT_EQ(x.dim.dims[2], x_cached.dim.dims[2]);
+  EXPECT_EQ(x.dim.dims[3], x_cached.dim.dims[3]);
+
 
   EXPECT_LT(tensor_rel_error(w_cached, w_cached_ref), 1e-15);
+  EXPECT_EQ(w_cached.dim.dims[0], w_cached_ref.dim.dims[0]);
+  EXPECT_EQ(w_cached.dim.dims[1], w_cached_ref.dim.dims[1]);
+  EXPECT_EQ(w_cached.dim.dims[2], w_cached_ref.dim.dims[2]);
+  EXPECT_EQ(w_cached.dim.dims[3], w_cached_ref.dim.dims[3]);
+
   EXPECT_LT(tensor_rel_error(w_cached, w), 1e-15);
+  EXPECT_EQ(w_cached.dim.dims[0], w.dim.dims[0]);
+  EXPECT_EQ(w_cached.dim.dims[1], w.dim.dims[1]);
+  EXPECT_EQ(w_cached.dim.dims[2], w.dim.dims[2]);
+  EXPECT_EQ(w_cached.dim.dims[3], w.dim.dims[3]);
 }
 
 TEST_F(LayerConvTest, Backward_precalculated_numerical_numpy) {

@@ -81,7 +81,6 @@ static __global__ void tensor_copy_d2d(tensor_t copy_to, tensor_t copy_from)
     assert(copy_to.dim.dims[1] == copy_from.dim.dims[1]);
     assert(copy_to.dim.dims[2] == copy_from.dim.dims[2]);
     assert(copy_to.dim.dims[3] == copy_from.dim.dims[3]);
-
   }
 
   for (uint i : grid_stride_range(0u, d_capacity(copy_to))) {
