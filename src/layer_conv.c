@@ -1,31 +1,75 @@
 #include "awnn/layer_conv.h"
+#ifdef USE_NNPACK
+#include "pthreadpool.h"
+#include "nnpack.h"
+#endif
 
+#include <awnn/memory.h>
 #include <printf.h>
 
+conv_method_t g_conv_method = CONV_METHOD_NAIVE;
+
+void set_conv_method(conv_method_t method) { g_conv_method = method; }
+
+status_t convolution_forward_simple(tensor_t const x, tensor_t const w,
+                                    lcache_t* cache, conv_param_t const params,
+                                    tensor_t y);
+status_t convolution_backward_simple(tensor_t dx, tensor_t dw, lcache_t* cache,
+                                     conv_param_t const conv_params,
+                                     tensor_t const dout);
 
 status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cache, conv_param_t const params, tensor_t y){
+  if (g_conv_method != CONV_METHOD_NAIVE) {
+#ifdef USE_NNPACK
+    return convolution_forward_nnpack(g_conv_method, x, w, cache, params, y);
+#endif
+    PWRN("Fall back to naiive conv");
+  }
+  return convolution_forward_simple(x, w, cache, params, y);
+}
 
+status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache,
+                              conv_param_t const conv_params,
+                              tensor_t const dout) {
+  if (g_conv_method != CONV_METHOD_NAIVE) {
+#ifdef USE_NNPACK
+    return convolution_backward_nnpack(g_conv_method, dx, dw, cache,
+                                       conv_params, dout);
+#endif
+    PWRN("Fall back to naiive conv");
+  }
+  return convolution_backward_simple(dx, dw, cache, conv_params, dout);
+}
+
+status_t convolution_forward_simple(tensor_t const x, tensor_t const w,
+                                    lcache_t* cache, conv_param_t const params,
+                                    tensor_t y) {
   // 1. flatten the input into vectors which represent the filters
-  tensor_t flattened_x = im2col(x, w, params);
+  tensor_t flattened_x = im2col(x, w, params);  // NxCxHxW -> C*HH*WW x NxH'xW'
 
   // 2. setup and apply filters
   // TODO : const input is preventing reshape, but this memory doesn't need to be allocated
   //        w is just used as a multiplier, but it needs to be reshaped.
-  uint const reshaped_w_shape[] = { w.dim.dims[0], w.dim.dims[1] * w.dim.dims[2] * w.dim.dims[3] };
+  uint const reshaped_w_shape[] = {
+      w.dim.dims[0],
+      w.dim.dims[1] * w.dim.dims[2] * w.dim.dims[3]};  // (F, CxHHxWW)
   tensor_t reshaped_w = tensor_make_copy(w);
   tensor_reshape_(&reshaped_w, reshaped_w_shape, ARRAY_SIZE(reshaped_w_shape));
 
-  uint const out_shape[] = { w.dim.dims[0], flattened_x.dim.dims[1] };
+  uint const out_shape[] = {w.dim.dims[0],
+                            flattened_x.dim.dims[1]};  // (F, NxH'xW')
   tensor_t out = tensor_make(out_shape, ARRAY_SIZE(out_shape));
 
   // apply here !!!
   tensor_matmul(reshaped_w, flattened_x, out);
 
-  uint const out_shape_2[] = { w.dim.dims[0], y.dim.dims[2], y.dim.dims[3], x.dim.dims[0] };
-  tensor_reshape_(&out, out_shape_2, ARRAY_SIZE(out_shape_2));
+  uint const out_shape_2[] = {w.dim.dims[0], y.dim.dims[2], y.dim.dims[3],
+                              x.dim.dims[0]};  // F x H' x W' x N
+  tensor_reshape_(&out, out_shape_2,
+                  ARRAY_SIZE(out_shape_2));  // (F x N*H'*W') -> (F x H'xW'xN)
 
   // 3. transpose output
-  tensor_t tpose = tensor_make_transpose_3012(out);
+  tensor_t tpose = tensor_make_transpose_3012(out);  // Nx F x H' x W'
 
   // copy transposed to y
   y.dim = tpose.dim;
@@ -41,8 +85,11 @@ status_t convolution_forward(tensor_t const x, tensor_t const w, lcache_t * cach
     lcache_push(cache, x);
     lcache_push(cache, w);
     lcache_push(cache, flattened_x);
+  } else {
+    tensor_destroy(&flattened_x);
   }
 
+  tensor_destroy(&reshaped_w);
   tensor_destroy(&tpose);
   tensor_destroy(&out);
   return S_OK;
@@ -109,35 +156,40 @@ tensor_t im2col(tensor_t const x, tensor_t const w, conv_param_t const params) {
  */
 // note that this strides along columns of the target "cols" tensor
 // possibly could be re-written to take advantage of
-//status_t im2col_inner(tensor_t cols, tensor_t x_padded,
-//                      uint N, uint C, uint H, uint W, uint HH, uint WW,
-//                      uint filter_height, uint filter_width, uint padding, uint stride){
-//
-//  uint cols_d_1 = cols.dim.dims[1];
-//  uint img_sz = C * x_padded.dim.dims[2] * x_padded.dim.dims[3];
-//  uint chan_sz = x_padded.dim.dims[2] * x_padded.dim.dims[3];
-//  uint row_sz = x_padded.dim.dims[2];
-//
-//  for (uint c = 0; c < C; c++) // for each channel
-//    for (uint yy = 0; yy < HH; yy++) // stride over rows
-//      for (uint xx = 0; xx < WW; xx++) // stride over cols
-//        for (uint ii = 0; ii < filter_height; ii++) // for each row of filter
-//          for (uint jj = 0; jj < filter_width; jj++){ // for each col of filter
-//            uint row = c * filter_width * filter_height + ii * filter_height + jj;
-//            for (uint i = 0; i < N; i++){
-//              uint col = yy * WW * N + xx * N + i;
-//              uint target_idx = row * cols_d_1 + col;
-
-//              uint src_idx = (i * img_sz) + (c * chan_sz) + (stride * yy + ii) * row_sz + stride * xx + jj;
-//              cols.data[target_idx] = x_padded.data[src_idx];
-//            }
-//          }
-//
-//  return S_OK;
-//}
 status_t im2col_inner(tensor_t cols, tensor_t x_padded,
                       uint N, uint C, uint H, uint W, uint HH, uint WW,
                       uint filter_height, uint filter_width, int padding, int stride){
+
+  uint cols_d_1 = cols.dim.dims[1];
+  uint img_sz = C * x_padded.dim.dims[2] * x_padded.dim.dims[3];
+  uint chan_sz = x_padded.dim.dims[2] * x_padded.dim.dims[3];
+  uint row_sz = x_padded.dim.dims[2];
+
+  for (uint c = 0; c < C; c++) // for each channel
+    for (uint yy = 0; yy < HH; yy++) // stride over rows
+      for (uint xx = 0; xx < WW; xx++) // stride over cols
+        for (uint ii = 0; ii < filter_height; ii++) // for each row of filter
+          for (uint jj = 0; jj < filter_width; jj++){ // for each col of filter
+            uint row = c * filter_width * filter_height + ii * filter_height + jj;
+            for (uint i = 0; i < N; i++){
+              uint col = yy * WW * N + xx * N + i;
+              uint target_idx = row * cols_d_1 + col;
+
+              uint src_idx = (i * img_sz) + (c * chan_sz) + (stride * yy + ii) * row_sz + stride * xx + jj;
+              cols.data[target_idx] = x_padded.data[src_idx];
+            }
+          }
+
+  return S_OK;
+}
+
+#if 0
+status_t im2col_inner(tensor_t cols, tensor_t x_padded,
+                      uint N, uint C, uint H, uint W, uint HH, uint WW,
+                      uint filter_height, uint filter_width, int padding, int stride){
+  AWNN_NO_USE(H);
+  AWNN_NO_USE(W);
+  AWNN_NO_USE(padding);
 
   uint cols_d_1 = cols.dim.dims[1];
   uint img_sz = C * x_padded.dim.dims[2] * x_padded.dim.dims[3];
@@ -206,7 +258,7 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
 
   return S_OK;
 }
-
+#endif
 
 /**
  * creates 4 new chunks of memory
@@ -222,7 +274,10 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded,
  * @param dout
  * @return
  */
-status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache, conv_param_t const conv_params, tensor_t const dout) {
+
+status_t convolution_backward_simple(tensor_t dx, tensor_t dw, lcache_t* cache,
+                                     conv_param_t const conv_params,
+                                     tensor_t const dout) {
   tensor_t x, w, x_cols;
 
   // NOTE : the order of pop matters, should be flattened_x, w, x (reverse of forward)
@@ -266,22 +321,21 @@ status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache, conv_pa
   tensor_t dx_cols = tensor_make(dx_cols_shape, ARRAY_SIZE(dx_cols_shape));
   tensor_matmul(w_T, dout_T_1230, dx_cols);
 
-  tensor_print_flat(dx_cols);
-
   // then we convert it back to tensor form
   tensor_t t = col2im(dx_cols, x.dim.dims[0], x.dim.dims[1], x.dim.dims[2], x.dim.dims[3], filter_height, filter_width, conv_params.padding, conv_params.stride);
 
   // copy data into dx (assumption is that dx is already correct shape)
   uint capacity = tensor_get_capacity(t);
-  for (int i = 0; i < capacity; ++i) {
+  for (uint i = 0; i < capacity; ++i) {
     dx.data[i] = t.data[i];
   }
-
 
   tensor_destroy(&dout_T_1230);
   tensor_destroy(&x_cols_T);
   tensor_destroy(&w_T);
   tensor_destroy(&t);
+  tensor_destroy(&x_cols);
+  tensor_destroy(&dx_cols);
 
   return S_OK;
 }
@@ -317,48 +371,37 @@ tensor_t col2im(tensor_t dx_cols, uint N, uint C, uint H, uint W, uint field_hei
 }
 
 
-/*
-    for c in range(C):
-        for ii in range(field_height):
-            for jj in range(field_width):
-                row = c * field_width * field_height + ii * field_height + jj
-                for yy in range(HH):
-                    for xx in range(WW):
-                        for i in range(N):
-                            col = yy * WW * N + xx * N + i
-                            x_padded[i, c, stride * yy + ii, stride * xx + jj] += cols[row, col]
- */
-//void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW,
-//                  uint field_height, uint field_width, uint padding, uint stride)
-//{
-//  uint dx_col_d_1 = dx_cols.dim.dims[1];
-//  uint x_p_d_1 = x_padded.dim.dims[1];
-//  uint x_p_d_2 = x_padded.dim.dims[2];
-//  uint x_p_d_3 = x_padded.dim.dims[3];
-//
-//
-//  for (int c = 0; c < C; ++c) {
-//    for (int ii = 0; ii < field_height; ++ii) {
-//      for (int jj = 0; jj < field_width; ++jj) {
-//        uint row = c * field_width * field_height + ii * field_width + jj;
-//        for (int yy = 0; yy < HH; ++yy) {
-//          for (int xx = 0; xx < WW; ++xx) {
-//            for (int i = 0; i < N; ++i) {
-//              uint col = yy * WW * N + xx * N + i;
-//              uint src_idx = row * dx_col_d_1 + col;
-//              uint target_idx =
-//                  i * x_p_d_1 * x_p_d_2 * x_p_d_3
-//                  + c * x_p_d_2 * x_p_d_3
-//                  + (stride * yy + ii) * x_p_d_3
-//                  + stride * xx + jj;
-//              x_padded.data[target_idx] += dx_cols.data[src_idx];
-//            }
-//          }
-//        }
-//      }
-//    }
-//  }
-//}
+void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW,
+                  uint field_height, uint field_width, int padding, int stride)
+{
+  uint dx_col_d_1 = dx_cols.dim.dims[1];
+  uint x_p_d_1 = x_padded.dim.dims[1];
+  uint x_p_d_2 = x_padded.dim.dims[2];
+  uint x_p_d_3 = x_padded.dim.dims[3];
+
+
+  for (int c = 0; c < C; ++c) {
+    for (int ii = 0; ii < field_height; ++ii) {
+      for (int jj = 0; jj < field_width; ++jj) {
+        uint row = c * field_width * field_height + ii * field_width + jj;
+        for (int yy = 0; yy < HH; ++yy) {
+          for (int xx = 0; xx < WW; ++xx) {
+            for (int i = 0; i < N; ++i) {
+              uint col = yy * WW * N + xx * N + i;
+              uint src_idx = row * dx_col_d_1 + col;
+              uint target_idx =
+                  i * x_p_d_1 * x_p_d_2 * x_p_d_3
+                  + c * x_p_d_2 * x_p_d_3
+                  + (stride * yy + ii) * x_p_d_3
+                  + stride * xx + jj;
+              x_padded.data[target_idx] += dx_cols.data[src_idx];
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
 
 /*
@@ -423,6 +466,8 @@ tensor_t col2im(tensor_t dx_cols, uint N, uint C, uint H, uint W, uint field_hei
 ////  tensor_print_flat(x_padded);
 //}
 
+
+#if 0
 /*
  * this version gets us closer to the upgraded version mapping
  * the entire iter space to the ii, cc, fii, fjj elements.
@@ -432,6 +477,10 @@ tensor_t col2im(tensor_t dx_cols, uint N, uint C, uint H, uint W, uint field_hei
 void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH, uint WW,
                   uint field_height, uint field_width, int padding, int stride)
 {
+
+  AWNN_NO_USE(H);
+  AWNN_NO_USE(W);
+  AWNN_NO_USE(padding);
   uint dx_col_d1  = dx_cols.dim.dims[1];
   uint x_p_d1     = x_padded.dim.dims[1];
   uint x_p_d2     = x_padded.dim.dims[2];
@@ -468,6 +517,7 @@ void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, u
               printf("iter=%u, i=%u, c=%u, fi=%u, fj=%u, h=%u, w=%u\n", iter, i, c, fi, fj, h, w);
               uint col = h * WW * N + w * N + i;
               uint src_idx = row * dx_col_d1 + col;
+
               uint target_idx =
                   i * x_p_d1 * x_p_d2 * x_p_d3
                   + c * x_p_d2 * x_p_d3
@@ -483,10 +533,5 @@ void col2im_inner(tensor_t dx_cols, tensor_t x_padded, uint N, uint C, uint H, u
       }
     }
   }
-  printf("iter=%u, C_fh_fw_HH_WW=%u\n", iter, C_fh_fw_HH_WW);
-
-//  assert(iter == C_fh_fw_HH_WW);
-
-//  printf("after x_padded");
-//  tensor_print_flat(x_padded);
 }
+#endif

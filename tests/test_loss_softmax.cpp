@@ -43,11 +43,6 @@ protected:
   // Objects declared here can be used by all tests.
 };
 
-TEST_F(LostSoftmaxTest, Loss) {
-  uint nr_images = 3073;
-  uint nr_classes = 10;
-}
-
 TEST_F(LostSoftmaxTest, OneImg) {
 
   uint nr_classes = 3;
@@ -57,8 +52,8 @@ TEST_F(LostSoftmaxTest, OneImg) {
       nr_images, nr_classes}; // e.g. nr_images images, nr_classes features (softmax usually
                               // follows fc, which is already flattened to 2d)
   tensor_t x = tensor_make(shape_x, dim_of_shape(shape_x));
-  T const value_list[] = {-2.85, 0.86, 0.28, -2.85, 0.86, 0.28};
-  //T const value_list[] = {-2.85, 0.86, -2.85, 0.86};
+  double const value_list[] = {-2.85, 0.86, 0.28, -2.85, 0.86, 0.28};
+  // double const value_list[] = {-2.85, 0.86, -2.85, 0.86};
   tensor_fill_list(x, value_list, nr_images*nr_classes);
 
   status_t ret;
@@ -114,6 +109,7 @@ TEST_F(LostSoftmaxTest, MultiImg) {
 
   tensor_t dx = tensor_make_alike(x); // this is not actually required for inference
   ret = loss_softmax(x, real_labels, &loss, MODE_TRAIN, dx);
+  EXPECT_EQ(ret, S_OK);
 
   auto func_softmax = [real_labels, dx](tensor_t const input, tensor_t output) {
     T ref_loss;

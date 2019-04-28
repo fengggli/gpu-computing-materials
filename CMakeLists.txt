@@ -1,10 +1,16 @@
 cmake_minimum_required(VERSION 3.5)
 #set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+option(IS_CI_BUILD "Is a build for CI" OFF) # Reduce problem size if it is run in CI
 option(USE_CLANG "Use clang compiler set" OFF)
-option(USE_OPENBLAS "USE openblas for blas" OFF)
+option(USE_OPENBLAS "USE openblas for blas" ON)
 option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_CUDA "Build with CUDA" OFF)
+option(USE_CUDNN "Build with CUDNN" OFF)
+option(USE_NNPACK "Build with NNPACK" OFF)
+option(AWNN_USE_FLT32 "Use single precision floating point" OFF)
+
+option(USE_STRICT_CHECK "use pedantic flag" OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
@@ -17,11 +23,14 @@ else()
 endif()
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_SHARED_LINKER_FLAGS "-rdynamic")
 
-set(GCC_COVERAGE_COMPILE_FLAGS "-Wall -Wextra -Wconversion -pedantic")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}" )
+set(GCC_COVERAGE_COMPILE_FLAGS "-Wall -Wextra -Wconversion -rdynamic")
+if(USE_STRICT_CHECK)
+  set(GCC_COVERAGE_COMPILE_FLAGS "-pedantic ${GCC_COVERAGE_COMPILE_FLAGS}")
+endif()
 
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 project(awnn LANGUAGES C CXX)
 
 ## cuda
@@ -46,14 +55,20 @@ include(CheckIncludeFiles)
 
 #TODO support MLK? source /opt/intel/mkl/bin/mklvars.sh intel64")
 if(USE_OPENBLAS)
-  CHECK_INCLUDE_FILES("cblas.h" HAVE_CBLAS)
-  if(HAVE_CBLAS)
-    message("has cblas!")
+  CHECK_INCLUDE_FILES("openblas/cblas.h" HAVE_CBLAS_OPENBLAS)  # ubuntu 1604
+  CHECK_INCLUDE_FILES("cblas.h" HAVE_CBLAS) # my arch
+  if(HAVE_CBLAS_OPENBLAS)
+    message("has cblas in ubuntu!")
+    set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS}  blas)
+  elseif(HAVE_CBLAS)
+    message("has cblas in archlinux!")
+    set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS} cblas blas)
+
   else()
     message(FATAL_ERROR "in sievert, run:
-    sudo apt-get install libopenblas-dev")
+    [ubuntu] sudo apt-get install libopenblas-dev
+    [arch]: sudo pacman cblas openblas")
   endif()
-  set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS} openblas)
 endif()
 
 configure_file (
@@ -63,7 +78,23 @@ configure_file (
 
 include_directories(include ${PROJECT_BINARY_DIR})
 
-add_library(awnn_core
+if(USE_NNPACK)
+  set(NNPACK_ROOT extern/NNPACK)
+
+  include_directories(deps/pthreadpool/include ${NNPACK_ROOT}/include/)
+
+  # I didn't added this in extern since RELEASE flag was disabled there
+  add_executable(nnpack-bench-conv
+    ${NNPACK_ROOT}/bench/convolution.c
+    ${NNPACK_ROOT}/bench/memread.c
+    ${NNPACK_ROOT}/bench/median.c
+    ${NNPACK_ROOT}/bench/perf_counter.c)
+  target_include_directories(nnpack-bench-conv PRIVATE ${NNPACK_ROOT}/bench)
+  target_link_libraries(nnpack-bench-conv nnpack)
+  set(AWNN_DEP_LIBS ${AWNN_DEP_LIBS} nnpack nnpack_reference_layers)
+
+endif()
+list(APPEND awnn_core_SOURCES
   src/tensor.c
   src/tensor_op.c
   src/layer_conv.c
@@ -71,16 +102,30 @@ add_library(awnn_core
   src/layer_fc.c
   src/layer_relu.c
   src/loss_softmax.c
+  src/net.c
   src/net_mlp.c
   src/layer_sandwich.c
-)
+  src/solver.c
+  src/net_resnet.c
+  )
+
+if (USE_NNPACK)
+  list(APPEND awnn_core_SOURCES
+    src/layer_conv_nnpack.c)
+endif ()
+
+add_library(awnn_core ${awnn_core_SOURCES})
 
 target_include_directories(awnn_core PUBLIC include)
 target_link_libraries(awnn_core PUBLIC ${AWNN_DEP_LIBS})
 
+# This is a cpp lib
 add_library(awnn_utils
   utils/data_cifar.cpp
-  utils/weight_init.cpp)
+  utils/weight_init.cpp
+  utils/debug.cpp)
+
+target_link_libraries(awnn_utils awnn_core)
 
 set(AWNN_LIBS "awnn_core" "awnn_utils")
 
@@ -88,8 +133,8 @@ if(USE_CUDA)
   cuda_add_library(awnndevicelib
     include/awnndevice/range.cuh
     include/awnndevice/device_utils.cuh
-#    include/awnndevice/dev_layer_conv.cuh
-#    include/awnndevice/cublas_wrappers.cuh
+    include/awnndevice/dev_layer_conv.cuh
+    include/awnndevice/cublas_wrappers.cuh
 
     src-device/tensor.cu
     src-device/layer_pool.cu
@@ -102,13 +147,14 @@ if(USE_CUDA)
   set(AWNN_DEVICE_LIBS "awnndevicelib")
 endif(USE_CUDA)
 
-# message("AWNNLIBS is ${AWNN_LIBS}")
+if(USE_CUDA AND USE_CUDNN)
+  add_subdirectory(examples/mnistCUDNN)
+endif()
 
+# nnpack and gtest
+add_subdirectory(extern)
 
 if(BUILD_TEST)
-#  add_subdirectory(/usr/src/gtest ${CMAKE_CURRENT_BINARY_DIR}/gtest)
-  add_subdirectory(extern/googletest extern/googletest)
   enable_testing()
   add_subdirectory(tests)
 endif()
-

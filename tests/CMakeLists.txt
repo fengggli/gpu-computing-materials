@@ -20,13 +20,21 @@ add_executable(test-layer-conv test_layer_conv.cpp)
 target_link_libraries(test-layer-conv ${AWNN_LIBS}  gtest)
 add_test(test-layer-conv test-layer-conv)
 
-add_executable(test-layer-conv-device test_layer_conv_device.cpp)
-target_link_libraries(test-layer-conv-device ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} gtest)
-add_test(test-layer-conv-device test-layer-conv-device)
+if(USE_CUDA)
+    add_executable(test-layer-conv-device test_layer_conv_device.cpp)
+    target_link_libraries(test-layer-conv-device ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} gtest)
+    add_test(test-layer-conv-device test-layer-conv-device)
 
-add_executable(test-device-op test_cublas_device_op.cpp)
-target_link_libraries(test-device-op ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} cudart cublas gtest)
-add_test(test-device-op test-device-op)
+    add_executable(test-device-op test_cublas_device_op.cpp)
+    target_link_libraries(test-device-op ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} cudart cublas gtest)
+    add_test(test-device-op test-device-op)
+endif(USE_CUDA)
+
+if (USE_NNPACK)
+add_executable(test-layer-conv-nnpack test_layer_conv_nnpack.cpp)
+target_link_libraries(test-layer-conv-nnpack ${AWNN_LIBS} gtest)
+add_test(test-layer-conv-nnpack test-layer-conv-nnpack)
+endif ()
 
 add_executable(test-layer-pool test_layer_pool.cpp)
 target_link_libraries(test-layer-pool ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} gtest)
@@ -39,8 +47,6 @@ add_test(test-layer-fc test-layer-fc)
 add_executable(test-utility test_utility.cpp)
 target_link_libraries(test-utility ${AWNN_LIBS}  gtest)
 add_test(test-utility test-utility)
-set_target_properties(test-utility
-  PROPERTIES COMPILE_DEFINITIONS "CONFIG_DEBUG")
 
 add_executable(test-layer-relu test_layer_relu.cpp)
 target_link_libraries(test-layer-relu ${AWNN_LIBS}  gtest)
@@ -65,6 +71,25 @@ add_test(test-dtype-list test-dtype-list)
 add_executable(test-data-cifar test_data_cifar.cpp)
 target_link_libraries(test-data-cifar ${AWNN_LIBS}  gtest)
 add_test(test-data-cifar test-data-cifar)
+
+add_executable(test-layer-sandwich test_layer_sandwich.cpp)
+target_link_libraries(test-layer-sandwich ${AWNN_LIBS}  gtest)
+add_test(test-layer-sandwich test-layer-sandwich)
+
+add_executable(test-net-resnet test_net_resnet.cpp)
+target_link_libraries(test-net-resnet ${AWNN_LIBS}  gtest)
+add_test(test-net-resnet test-net-resnet)
+
+set_target_properties(test-net-resnet
+  PROPERTIES COMPILE_DEFINITIONS "CONFIG_DEBUG")
+
+add_executable(test-net-resnet-cifar test_net_resnet_cifar.cpp)
+target_link_libraries(test-net-resnet-cifar ${AWNN_LIBS} gtest)
+# add_test(test-net-resnet-cifar test-net-resnet-cifar) # this uses a lot of mem
+
+# test memory leaks
+add_executable(test-net-resnet-mem test_net_resnet_mem.cpp)
+target_link_libraries(test-net-resnet-mem ${AWNN_LIBS} gtest)
 
 #add_executable(test-loss-softmax-simple test_loss_softmax_simple.cpp)
 #target_link_libraries(test-loss-softmax-simple ${AWNN_LIBS}  gtest)

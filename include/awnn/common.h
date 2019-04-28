@@ -19,7 +19,12 @@ extern "C" {
 #endif
 
 typedef unsigned int uint;
+
+#ifdef AWNN_USE_FLT32
 typedef float T;
+#else
+typedef double T;
+#endif
 
 typedef unsigned int label_t;
 label_t *label_make_random(uint nr_elem, uint range);
@@ -38,16 +43,22 @@ enum {
   MODE_INFER = 1,
 };
 
+/** Moved from layer_conv.h, also used for device*/
 typedef struct{
   int stride;
   int padding;
 } conv_param_t;
 
+void print_trace();
 
-#define AWNN_CHECK_EQ(a, b)              \
-  if ((a) != (b)) {                      \
-    PERR("Expect equal value, but not"); \
-    exit(-1);                            \
+#define AWNN_NO_USE(a) (void)(a)
+
+#define AWNN_CHECK_EQ(a, b)                                         \
+  if ((a) != (b)) {                                                           \
+    PERR("[%s:%d]: Value (%lu) != %lu", __FILE__, __LINE__, (unsigned long)a, \
+         (unsigned long)b);                                                   \
+    print_trace();                                                  \
+    exit(-1);                                                       \
   }
 
 #define AWNN_CHECK_NE(a, b)                \

@@ -16,36 +16,49 @@ Current
 Working in progress
 --------------------
 
-1. Reporting statistics in MLP. For now loss does change as expected.
-2. Convnet
-
+* Batchnorm
+* More measurement
 
 TODO List
 ----------
 
-* Layers
-
-  * batchnorm
-
-* Net
-
-  1. Lenet
-  2. residual blocks
-  3. simplified resnet
-
-* Utility
-
-  * reporting
-
-* Initializer (kaiming initialization)
-
-* Others
-
-  * show show backtrace (https://www.gnu.org/software/libc/manual/html_node/Backtraces.html)
+* Theoretical model.
+* Parallize it.
 
 =========
 Previous
 =========
+
+0.4.7
+======
+:Data 2019-04-22
+
+* Simplified resnet(https://github.com/fengggli/gpu-computing-materials/pull/38)
+* Fix memory leaks, and some obvious optimization.
+* Initializer (kaiming initialization)
+
+0.4.6
+======
+:Data 2019-04-15
+
+Added
+-------
+
+* residual block and simple resnet. See https://github.com/fengggli/gpu-computing-materials/pull/37.
+
+0.4.5
+======
+
+:Date 2019-04-10
+
+Added
+-------
+
+* utils for debug use (tensor mean/std, etc)
+* fixed several bugs
+* utils to report statistics during training(loss, train/val accuracy).
+* results of mlp is in https://github.com/fengggli/gpu-computing-materials/pull/27/
+
 
 0.4.4
 ======
@@ -93,7 +106,7 @@ Added
 *  macro: tensor_for_each_entry in tensor.h
 * net-mlp:
 
-  - inference-only forward - mlp_scores
+  - inference-only forward - mlp_forward
   - loss function to update the gradients mlp_loss
   - forward compared with numpy version
   - backward checked with numerical results

@@ -19,7 +19,7 @@ dim_t make_dim(int ndims, ...) {
   assert(ndims <= MAX_DIM);
   for (i = 0; i < MAX_DIM; i++) {
     if (i < ndims)
-      dim.dims[i] = va_arg(vl, int);
+      dim.dims[i] = va_arg(vl, uint);
     else
       dim.dims[i] = 0;
   }
@@ -116,7 +116,7 @@ void tensor_fill_random_uniform(tensor_t t, double const low, double const high,
   uint i;
   for (i = 0; i < capacity; i++) {
     double scale = (T)rand() / (T)RAND_MAX;  // 0~1
-    t.data[i] = low + (high - low) * scale;
+    t.data[i] = (T)(low + (high - low) * scale);
   }
 }
 
@@ -129,11 +129,11 @@ void tensor_fill_patterned(tensor_t t) {
   }
 }
 
-void tensor_fill_list(tensor_t const t, T const value_list[],
+void tensor_fill_list(tensor_t const t, double const value_list[],
                       uint const length_of_value_list) {
   assert(length_of_value_list <= tensor_get_capacity(t));
   for (uint i = 0; i < length_of_value_list; i++) {
-    t.data[i] = value_list[i];
+    t.data[i] = (T)(value_list[i]);
   }
 }
 
@@ -149,8 +149,30 @@ tensor_t _tensor_make(dim_t dim) {
   return t;
 }
 
+tensor_t tensor_make_placeholder(uint const shape[], uint const ndims){
+  uint i;
+  dim_t dim;
+
+  if (ndims == 0) {
+    PINF("make zero");
+    dim = make_dim(0, 0);
+  }
+
+  for (i = 0; i < MAX_DIM; i++) {
+    if (i < ndims)
+      dim.dims[i] = shape[i];
+    else
+      dim.dims[i] = 0;
+  }
+  tensor_t ret;
+  ret.dim = dim;
+  ret.mem_type = EMPTY_MEM;
+  ret.data = NULL;
+  return ret;
+}
+
 tensor_t tensor_make(uint const shape[], uint const ndims) {
-  int i;
+  uint i;
   dim_t dim;
 
   if (ndims == 0) {
@@ -175,7 +197,7 @@ tensor_t tensor_make_empty_with_dim(dim_t dim) {
   return empty;
 }
 
-tensor_t tensor_make_random(uint const shape[], uint const ndims, int seed) {
+tensor_t tensor_make_random(uint const shape[], uint const ndims, uint seed) {
   tensor_t t = tensor_make(shape, ndims);
   tensor_fill_random(t, seed);
   return t;
@@ -189,6 +211,11 @@ tensor_t tensor_make_copy(tensor_t t) {
 
 // TODO : refactor to reflect host creation / mem_type, etc...
 tensor_t tensor_make_alike(tensor_t t) { return _tensor_make(t.dim); }
+tensor_t tensor_make_zeros_alike(tensor_t t) {
+  tensor_t ret = _tensor_make(t.dim);
+  tensor_fill_scalar(ret, 0.0);
+  return ret;
+}
 
 tensor_t tensor_make_transpose(tensor_t const t) {
   uint i, j;
@@ -201,13 +228,16 @@ tensor_t tensor_make_transpose(tensor_t const t) {
   uint M = t.dim.dims[0];
   uint N = t.dim.dims[1];
 
-  dim_t tranposed_dim = dim_get_reverse(t.dim);
+  dim_t tranposed_dim;
+  tranposed_dim.dims[0] = N;
+  tranposed_dim.dims[1] = M;
+  tranposed_dim.dims[2] = 0;
+  tranposed_dim.dims[3] = 0;
   tensor_t t_transposed = _tensor_make(tranposed_dim);
 
   for (i = 0; i < N; i++) {
     for (j = 0; j < M; j++) {
-      *tensor_get_elem_ptr(t_transposed, make_dim(2, i, j)) =
-          *tensor_get_elem_ptr(t, make_dim(2, j, i));
+      t_transposed.data[i*M +j] = t.data[j*N+i];
     }
   }
   return t_transposed;
@@ -248,21 +278,21 @@ tensor_t tensor_make_sum(tensor_t const t, uint const axis_id) {
   return t_ret;
 }
 
-void tensor_fill_linspace(tensor_t t, T const start, T const stop) {
+void tensor_fill_linspace(tensor_t t, double const start, double const stop) {
   uint i;
   uint capacity = dim_get_capacity(t.dim);
   if (stop <= start) {
     PERR("Wrong linspace");
     return;
   }
-  T step = (stop - start) / ((T)capacity - 1);
+  double step = (stop - start) / ((T)capacity - 1);
   for (i = 0; i < capacity; i++) {
-    t.data[i] = start + i * step;
+    t.data[i] = (T)(start + i * step);
   }
 }
 
-tensor_t tensor_make_linspace(T const start, T const stop, uint const shape[],
-                              uint const ndims) {
+tensor_t tensor_make_linspace(double const start, double const stop,
+                              uint const shape[], uint const ndims) {
   tensor_t t = tensor_make(shape, ndims);
   tensor_fill_linspace(t, start, stop);
   return t;
@@ -280,7 +310,7 @@ tensor_t tensor_make_ones(uint const shape[], uint const ndims) {
   return t;
 }
 
-tensor_t tensor_make_linspace_alike(T const start, T const stop,
+tensor_t tensor_make_linspace_alike(double const start, double const stop,
                                     tensor_t const t) {
   tensor_t ret = _tensor_make(t.dim);
   tensor_fill_linspace(ret, start, stop);
@@ -461,7 +491,7 @@ T* tensor_get_elem_ptr(tensor_t const t, dim_t const loc) {
   return t.data + offset;
 }
 
-static void _dump(T* data, dim_t dim, int cur_dim_id, int cur_capacity) {
+static void _dump(T* data, dim_t dim, uint cur_dim_id, uint cur_capacity) {
   uint i;
   for (i = 0; i < dim.dims[cur_dim_id]; i++) {
     if (cur_dim_id + 1 == dim_get_ndims(dim)) {  // this is the vector
@@ -513,8 +543,9 @@ T tensor_rel_error(tensor_t x, tensor_t ref) {
 }
 
 void tensor_destroy(tensor_t* t) {
-  assert(t->mem_type == CPU_MEM);
+  AWNN_CHECK_EQ(t->mem_type, CPU_MEM);
 
   mem_free(t->data);
   t->data = NULL;
+
 }

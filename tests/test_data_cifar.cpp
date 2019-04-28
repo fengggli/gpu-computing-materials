@@ -3,6 +3,7 @@
 //
 #include "gtest/gtest.h"
 #include "utils/data_cifar.h"
+#include "utils/debug.h"
 
 namespace {
 
@@ -31,6 +32,17 @@ TEST_F(DataCifarTest, TestBatch) {
     EXPECT_EQ(batch_sz,
               get_train_batch(&loader, &x, &labels, batch_id, batch_sz));
   }
+}
+
+TEST_F(DataCifarTest, TestStat) {
+  tensor_t x;
+  label_t *labels;
+  uint batch_sz = 49000;  // this can be 50 000/50 = 1000 batches
+  uint batch_id = 0;
+
+  EXPECT_EQ(batch_sz,
+            get_train_batch(&loader, &x, &labels, batch_id, batch_sz));
+  dump_tensor_stats(x, "all_train");
 }
 
 TEST_F(DataCifarTest, TestClose) {

@@ -14,7 +14,6 @@ tensor_t tensor_make_transpose_3012(tensor_t t) {
   for (uint i = 0; i < t.dim.dims[3]; ++i) {  // for each of the new dim 0
     for (uint j = 0; j < t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2]; ++j) {
       tpose.data[target_idx++] = t.data[i + j * t.dim.dims[3]];
-//      printf("targetIdx=%u, src_idx=%u\n", target_idx - 1, i + j * t.dim.dims[3]);
     }
   }
   uint const shape[] = { t.dim.dims[3], t.dim.dims[0], t.dim.dims[1], t.dim.dims[2] };
@@ -22,54 +21,56 @@ tensor_t tensor_make_transpose_3012(tensor_t t) {
   return tpose;
 }
 
+#if 0
 /*
  * second example of the transpose 3012 operation, this time with a
  * more mapping based on the target index, which will help us do
  * a translation to cuda
  */
-//tensor_t tensor_make_transpose_3012(tensor_t t) {
-//  uint mod = t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2];
-//  uint capacity = tensor_get_capacity(t);
-//  uint stride = t.dim.dims[3];
-//
-//  tensor_t tpose = tensor_make_copy(t);
-//
-//  for (uint i = 0; i < capacity; ++i) {
-//    uint src_idx = i / mod;
-//    src_idx += (i % mod) * stride;
-//    tpose.data[i] = t.data[src_idx];
-//    printf("targetIdx=%u, src_idx=%u\n", i, src_idx);
-//  }
-//
-//  uint const shape[] = { t.dim.dims[3], t.dim.dims[0], t.dim.dims[1], t.dim.dims[2] };
-//  tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
-//  return tpose;
-//}
+tensor_t tensor_make_transpose_3012(tensor_t t) {
+  uint mod = t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2];
+  uint capacity = tensor_get_capacity(t);
+  uint stride = t.dim.dims[3];
+
+  tensor_t tpose = tensor_make_copy(t);
+
+  for (uint i = 0; i < capacity; ++i) {
+    uint src_idx = i / mod;
+    src_idx += (i % mod) * stride;
+    tpose.data[i] = t.data[src_idx];
+    printf("targetIdx=%u, src_idx=%u\n", i, src_idx);
+  }
+
+  uint const shape[] = { t.dim.dims[3], t.dim.dims[0], t.dim.dims[1], t.dim.dims[2] };
+  tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
+  return tpose;
+}
+#endif
 
 
 // used for backward
-//tensor_t tensor_make_transpose_1230(tensor_t t) {
-//  uint src_idx = 0, target_idx = 0;
-//  uint original_dim_0 = t.dim.dims[0];
-//  uint original_dim_1 = t.dim.dims[1];
-//  uint original_dim_2 = t.dim.dims[2];
-//  uint original_dim_3 = t.dim.dims[3];
-//
-//  tensor_t tpose = tensor_make_copy(t);
-//
-//  for (uint i = 0; i < original_dim_0; ++i) {
-//    for (uint j = 0; j < original_dim_1 * original_dim_2 * original_dim_3; ++j) {
-//      target_idx = (i + j * original_dim_0);
-//      tpose.data[target_idx] = t.data[src_idx++];
-////      printf("targetIdx=%u, src_idx=%u\n", target_idx, src_idx - 1);
-//    }
-//  }
-//
-//  uint const shape[] = { original_dim_1, original_dim_2, original_dim_3, original_dim_0 };
-//  tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
-//  return tpose;
-//}
+tensor_t tensor_make_transpose_1230(tensor_t t) {
+  uint src_idx = 0, target_idx = 0;
+  uint original_dim_0 = t.dim.dims[0];
+  uint original_dim_1 = t.dim.dims[1];
+  uint original_dim_2 = t.dim.dims[2];
+  uint original_dim_3 = t.dim.dims[3];
 
+  tensor_t tpose = tensor_make_copy(t);
+
+  for (uint i = 0; i < original_dim_0; ++i) {
+    for (uint j = 0; j < original_dim_1 * original_dim_2 * original_dim_3; ++j) {
+      target_idx = (i + j * original_dim_0);
+      tpose.data[target_idx] = t.data[src_idx++];
+    }
+  }
+
+  uint const shape[] = { original_dim_1, original_dim_2, original_dim_3, original_dim_0 };
+  tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
+  return tpose;
+}
+
+#if 0
 // used for backward
 tensor_t tensor_make_transpose_1230(tensor_t t) {
   uint src_idx = 0, target_idx = 0;
@@ -100,6 +101,7 @@ tensor_t tensor_make_transpose_1230(tensor_t t) {
   tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
   return tpose;
 }
+#endif
 
 
 // TODO:  results not correct
@@ -131,11 +133,18 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
 
 #ifdef USE_OPENBLAS
   // https://software.intel.com/en-us/mkl-tutorial-c-multiplying-matrices-using-dgemm
-  cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-      m, n, k,
-      1, in1.data, k,
-      in2.data, n,
-      1.0, out.data, n);
+  tensor_fill_scalar(out, 0.0);
+#ifndef AWNN_USE_FLT32
+  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+      (int)m, (int)n, (int)k,
+      1, in1.data, (int)k,
+      in2.data, (int)n,
+      1.0, out.data, (int)n);
+
+#else
+  cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, (int)m, (int)n, (int)k,
+              1, in1.data, (int)k, in2.data, (int)n, 1.0, out.data, (int)n);
+#endif
 #else
   uint ii, jj, kk; // A[i.j] with B[j,k]
   for(ii = 0; ii < m; ii++){
@@ -272,7 +281,7 @@ status_t tensor_reshape_(tensor_t* ptr_t, uint const shape[], uint const ndims){
     dim_dump(ptr_t->dim);
     PERR("requested dimension: ");
     dim_dump(req_dim);
-
+    print_trace();
     return S_BAD_DIM;
   }
   ptr_t->dim = req_dim;

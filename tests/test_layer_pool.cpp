@@ -48,6 +48,7 @@ TEST_F(LayerGlobalAvgPoolTest, channel_mean) {
   T* start = x.data + channel_capacity * target_channel;
 
   T res = channel_mean(start, channel_capacity);
+  PINF("channel mean, %.3f", res);
 }
 
 // TODO : document tests
@@ -56,9 +57,7 @@ TEST_F(LayerGlobalAvgPoolTest, Forward) {
   uint const shape_y[] = {6, 2, 1, 1};
 
   tensor_t in = tensor_make(shape_x, dim_of_shape(shape_x));
-  tensor_t din = tensor_make(shape_x, dim_of_shape(shape_x));
   tensor_t out = tensor_make(shape_y, dim_of_shape(shape_y));
-  tensor_t dout = tensor_make(shape_y, dim_of_shape(shape_y));
 
   status_t ret;
 
@@ -83,8 +82,8 @@ TEST_F(LayerGlobalAvgPoolTest, Backward) {
 
   // check forward value
   tensor_t y_ref = tensor_make_alike(y);
-  T value_list[] = {0.10817717, 0.12487223, 0.14156729, 0.15826235,
-                    0.17495741, 0.19165247, 0.20834753, 0.22504259,
+  double value_list[] = {0.10817717, 0.12487223, 0.14156729, 0.15826235,
+                         0.17495741, 0.19165247, 0.20834753, 0.22504259,
                     0.24173765, 0.25843271, 0.27512777, 0.29182283};
   tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
   EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
@@ -110,7 +109,7 @@ TEST_F(LayerGlobalAvgPoolTest, Backward) {
         global_avg_pool_forward(in, NULL, out);
       },
       x, dy, dx_ref);
-  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 3e-3);
   PINF("gradient check of x... is ok");
 }
 
@@ -130,9 +129,9 @@ TEST_F(LayerGlobalAvgPoolTest, BackwardDevice) {
 
   // check forward value
   tensor_t y_ref = tensor_make_alike(y);
-  T value_list[] = {0.10817717, 0.12487223, 0.14156729, 0.15826235,
-                    0.17495741, 0.19165247, 0.20834753, 0.22504259,
-                    0.24173765, 0.25843271, 0.27512777, 0.29182283};
+  double value_list[] = {0.10817717, 0.12487223, 0.14156729, 0.15826235,
+                         0.17495741, 0.19165247, 0.20834753, 0.22504259,
+                         0.24173765, 0.25843271, 0.27512777, 0.29182283};
   tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
   EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
 

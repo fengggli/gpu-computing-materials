@@ -6,7 +6,7 @@
 label_t *label_make_random(uint nr_elem, uint range){
   label_t *labels = (label_t*)mem_alloc(sizeof(label_t)*nr_elem);
   for(uint i =0; i< nr_elem; i++){
-    labels[i] = rand()%range;
+    labels[i] = ((uint)rand())%range;
   }
   return labels;
 }
