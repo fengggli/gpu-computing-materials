@@ -32,9 +32,11 @@ model_t NetResnetTest::model;
 // CONV_METHOD_NNPACK_direct, // returns 26
 // CONV_METHOD_NNPACK_REF, very slow
 std::vector<conv_method_t> all_methods = {
+#ifndef IS_CI_BUILD // nnpack requires instruct set not avaible in ci
      CONV_METHOD_NNPACK_AUTO,
      CONV_METHOD_NNPACK_ft8x8,
      CONV_METHOD_NNPACK_ft16x16,
+#endif
      // CONV_METHOD_PERIMG,
      CONV_METHOD_NAIVE
     };
