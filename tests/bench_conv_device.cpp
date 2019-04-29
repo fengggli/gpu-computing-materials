@@ -53,10 +53,7 @@ TEST_F(LayerBenchConvDeviceTest, BenchCUDNN) {
   status_t ret = convolution_forward_cudnn(x, w, &cache, conv_params, y);
   EXPECT_EQ(ret, S_OK);
 
-  ret = convolution_backward_cudnn_data(dx, w, &cache, conv_params, dy);
-  EXPECT_EQ(ret, S_OK);
-
-  ret = convolution_backward_cudnn_weight(x, dw, &cache, conv_params, dy);
+  ret = convolution_backward_cudnn(dx, dw, &cache, conv_params, dy);
   EXPECT_EQ(ret, S_OK);
 }
 
