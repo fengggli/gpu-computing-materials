@@ -451,7 +451,7 @@ int doConv(
     const int   benchmark) {
 
   int outsize = outstrideA[0]*outdimA[0];
-  //  T_ELEM* hostOfromdev = (T_ELEM*)calloc (outsize, sizeof(hostO[0]) );
+  T_ELEM* hostO_ref = (T_ELEM*)calloc(outsize, sizeof(hostO[0]));
 
   cudnnConvolutionFwdAlgo_t algo =
       CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
@@ -486,21 +486,21 @@ int doConv(
                           cudaMemcpyDeviceToHost));
   checkCudaErr( cudaDeviceSynchronize() );
 
-  //  if (!benchmark) {
-  //    conv_cpu_ref<T_ELEM, T>( hostI, hostF, hostO, alpha, beta, 1,
-  //    filterFormat, dimA, filterdimA, outdimA, strideA, outstrideA,
-  //    convstrideA, padA, dilationA, 4);
-  //
-  //    for (int index = 0; index < outsize; index++) {
-  //      T diff = getError(hostOfromdev[index], hostO[index]);
-  //      if (diff < 0) diff = -diff;
-  //      if(diff > THRESHOLD) {
-  //        numErrors++;
-  //      }
-  //      //printf("cuda result is %d, and reference is %d\n",
-  //      hostOfromdev[index], hostO[index]);
-  //    }
-  //  }
+  if (!benchmark) {
+    conv_cpu_ref<T_ELEM, T>(hostI, hostF, hostO_ref, alpha, beta, 1,
+                            filterFormat, dimA, filterdimA, outdimA, strideA,
+                            outstrideA, convstrideA, padA, dilationA, 4);
+
+    for (int index = 0; index < outsize; index++) {
+      T diff = getError(hostO_ref[index], hostO[index]);
+      if (diff < 0) diff = -diff;
+      if (diff > THRESHOLD) {
+        numErrors++;
+      }
+      //        printf("cuda result is %d, and reference is %d\n",
+      //        hostO[index], hostO_ref[index]);
+    }
+  }
 clean:
   //  if (hostOfromdev) free(hostOfromdev);
   if (workSpace) cudaFree(workSpace);
@@ -534,7 +534,7 @@ int doDgrad(
     const int    benchmark) {
 
   int insize = strideA[0]*dimA[0];
-  //  T_ELEM* hostIfromdev = (T_ELEM*)calloc (insize, sizeof(hostI[0]) );
+  T_ELEM* hostI_ref = (T_ELEM*)calloc(insize, sizeof(hostI[0]));
   cudnnConvolutionBwdDataAlgo_t algo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
 
   void *workSpace = 0;
@@ -566,20 +566,21 @@ int doDgrad(
                           cudaMemcpyDeviceToHost));
   checkCudaErr( cudaDeviceSynchronize() );
 
-  //  if (!benchmark) {
-  //    dataGrad_cpu_ref<T_ELEM>(hostF, hostO, hostI,  alpha, beta,
-  //    filterFormat, outdimA, filterdimA, dimA, outstrideA, strideA,
-  //    convstrideA, padA, dilationA, 4); for (int index = 0; index < insize;
-  //    index++) { // assuming in data is packed
-  //      T diff = getError(hostIfromdev[index], hostI[index]);
-  //      if (diff < 0) diff = -diff;
-  //      if(diff > THRESHOLD) {
-  //        numErrors++;
-  //      }
-  //    }
-  //  }
+  if (!benchmark) {
+    dataGrad_cpu_ref<T_ELEM>(hostF, hostO, hostI, alpha, beta, filterFormat,
+                             outdimA, filterdimA, dimA, outstrideA, strideA,
+                             convstrideA, padA, dilationA, 4);
+    for (int index = 0; index < insize;
+         index++) {  // assuming in data is packed
+      T diff = getError(hostI_ref[index], hostI[index]);
+      if (diff < 0) diff = -diff;
+      if (diff > THRESHOLD) {
+        numErrors++;
+      }
+    }
+  }
 clean:
-  //  if (hostIfromdev) free(hostIfromdev);
+  if (hostI_ref) free(hostI_ref);
   if (workSpace) cudaFree(workSpace);
   return numErrors;
 }
@@ -611,7 +612,7 @@ int doWgrad(
     const int   benchmark) {
 
   int filsize = filterdimA[0]*filterdimA[1]*filterdimA[2]*filterdimA[3];
-  //  T_ELEM* hostFfromdev = (T_ELEM*)calloc (filsize, sizeof(hostF[0]) );
+  T_ELEM* hostFf_ref = (T_ELEM*)calloc(filsize, sizeof(hostF[0]));
   cudnnConvolutionBwdFilterAlgo_t algo = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
 
   void *workSpace = 0;
@@ -643,28 +644,28 @@ int doWgrad(
                           cudaMemcpyDeviceToHost));
   checkCudaErr( cudaDeviceSynchronize() );
 
-  //  if (!benchmark) {
-  //    weightGrad_cpu_ref<T_ELEM>(hostI, hostO, alpha, beta, hostF,
-  //    filterFormat, dimA, filterdimA, outdimA, strideA, outstrideA,
-  //    convstrideA, padA, dilationA, 4); for (int index = 0; index < filsize;
-  //    index++) { // assuming in data is packed
-  //      T diff = getError(hostFfromdev[index], hostF[index]);
-  //      if (diff < 0) diff = -diff;
-  //      if(diff > THRESHOLD) {
-  //        numErrors++;
-  //      }
-  //    }
-  //  }
+  if (!benchmark) {
+    weightGrad_cpu_ref<T_ELEM>(hostI, hostO, alpha, beta, hostF, filterFormat,
+                               dimA, filterdimA, outdimA, strideA, outstrideA,
+                               convstrideA, padA, dilationA, 4);
+    for (int index = 0; index < filsize;
+         index++) {  // assuming in data is packed
+      T diff = getError(hostFf_ref[index], hostF[index]);
+      if (diff < 0) diff = -diff;
+      if (diff > THRESHOLD) {
+        numErrors++;
+      }
+    }
+  }
 clean:
-  //  if (hostFfromdev) free(hostFfromdev);
+  if (hostFf_ref) free(hostFf_ref);
   if (workSpace) cudaFree(workSpace);
   return numErrors;
 }
 
 template <typename T_ELEM>
-status_t doForward(tensor_t const x, tensor_t const w, tensor_t y,
-                   int* dimA, int* padA, int* convstrideA,
-                   int* filterdimA, cudnnTensorFormat_t filterFormat,
+status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
+                   int* padA, int* convstrideA, int* filterdimA, cudnnTensorFormat_t filterFormat,
                    cudnnDataType_t dataType, int mathType, int benchmark) {
   cudnnHandle_t handle_;
   T_ELEM* devPtrI=NULL;
@@ -1051,8 +1052,7 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
   printf("Testing using cudnn forward\n");
 
   status_t ret =
-      doForward<T>(x, w, cache, y, dimA, padA, convstrideA, filterdimA,
-                   filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
+      doForward<T>(x, w, y, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
 
   // shadow copy
   tensor_t cached_x_shadow = x;
