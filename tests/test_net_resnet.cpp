@@ -32,7 +32,7 @@ std::vector<conv_method_t> all_methods = {
     // CONV_METHOD_NNPACK_wt8x8,  // returns 26
     // CONV_METHOD_NNPACK_implicit_gemm,  // returns 26
     // CONV_METHOD_NNPACK_direct, // returns 26
-    CONV_METHOD_NNPACK_REF, CONV_METHOD_NAIVE};
+    CONV_METHOD_NNPACK_REF, CONV_METHOD_PERIMG, CONV_METHOD_NAIVE};
 
 TEST_F(NetResnetTest, Construct) {
   uint batch_sz = 3;
@@ -94,13 +94,6 @@ TEST_F(NetResnetTest, ForwardInferOnly) {
 }
 TEST_F(NetResnetTest, DISABLED_Loss) {
   T loss = 0;
-  std::vector<conv_method_t> all_methods = {
-      CONV_METHOD_NNPACK_AUTO, CONV_METHOD_NNPACK_ft8x8,
-      CONV_METHOD_NNPACK_ft16x16,
-      // CONV_METHOD_NNPACK_wt8x8,  // returns 26
-      // CONV_METHOD_NNPACK_implicit_gemm,  // returns 26
-      // CONV_METHOD_NNPACK_direct, // returns 26
-      CONV_METHOD_NNPACK_REF, CONV_METHOD_NAIVE};
 
   // fill some init values as in cs231n
   tensor_t x = tensor_make_linspace(-0.2, 0.3, model.input_dim.dims, 4);
@@ -164,7 +157,7 @@ TEST_F(NetResnetTest, BackNumerical) {
 #endif
 
 /* Compare across different conv layers*/
-TEST_F(NetResnetTest, DISABLED_Measure_auto) {
+TEST_F(NetResnetTest, Measure_auto) {
   for (auto conv_method = all_methods.begin(); conv_method != all_methods.end();
        conv_method++) {
     PINF("Method:  %d", *conv_method);
