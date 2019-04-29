@@ -662,8 +662,8 @@ clean:
 }
 
 template <typename T_ELEM>
-status_t doForward(tensor_t const x, tensor_t const w, lcache_t* cache,
-                   tensor_t y, int* dimA, int* padA, int* convstrideA,
+status_t doForward(tensor_t const x, tensor_t const w, tensor_t y,
+                   int* dimA, int* padA, int* convstrideA,
                    int* filterdimA, cudnnTensorFormat_t filterFormat,
                    cudnnDataType_t dataType, int mathType, int benchmark) {
   cudnnHandle_t handle_;
