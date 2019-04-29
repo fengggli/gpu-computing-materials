@@ -86,14 +86,9 @@ void col2im_inner(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H,
 
 status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y);
 
-status_t convolution_backward_cudnn_data(tensor_t dx, tensor_t w,
-                                         lcache_t* cache,
-                                         conv_param_t const params,
+status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache,
+                                    conv_param_t const params,
                                          tensor_t const dout);
-status_t convolution_backward_cudnn_weight(tensor_t x, tensor_t dw,
-                                           lcache_t* cache,
-                                           conv_param_t const params,
-                                           tensor_t const dout);
 #ifdef USE_NNPACK
 status_t convolution_forward_nnpack(conv_method_t, tensor_t const x,
                                     tensor_t const w, lcache_t* cache,
