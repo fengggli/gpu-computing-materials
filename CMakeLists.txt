@@ -99,8 +99,9 @@ endif()
 list(APPEND awnn_core_SOURCES
   src/tensor.c
   src/tensor_op.c
+	src/im2col.c
   src/layer_conv.c
-  #src/layer_conv_per_img.c
+  src/layer_conv_per_img.c
   src/layer_pool.c
   src/layer_fc.c
   src/layer_relu.c
