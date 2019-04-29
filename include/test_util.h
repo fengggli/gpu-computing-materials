@@ -99,6 +99,10 @@ void print_time_in_ms(time_point_t &begin, time_point_t &end){
   PINF("Time difference = %.3f  ms",((double)duration_cast<microseconds>(end - begin).count())/1000);
 }
 
+double elapsed_ms(time_point_t &begin, time_point_t &end) {
+  return ((double)duration_cast<microseconds>(end - begin).count()) / 1000;
+}
+
 void print_time_in_ns(time_point_t &begin, time_point_t &end){
   PINF("Time difference = %lu ns",duration_cast<nanoseconds>(end - begin).count());
 }
