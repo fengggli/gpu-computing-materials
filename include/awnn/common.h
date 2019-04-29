@@ -26,6 +26,8 @@ typedef float T;
 typedef double T;
 #endif
 
+
+
 typedef unsigned int label_t;
 label_t *label_make_random(uint nr_elem, uint range);
 void label_destroy(label_t *labels);

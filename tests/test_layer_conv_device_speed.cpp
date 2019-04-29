@@ -10,8 +10,11 @@
 #include "awnn/layer_conv.h"
 #include "awnn/tensor.h"
 #include "awnn/layer_pool.h"
-
 #include "awnndevice/dev_layer_conv.cuh"
+
+#ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
+#include "awnn/memory.h"
+#endif
 
 #include <gtest/gtest.h>
 #include <numeric>
@@ -129,6 +132,21 @@ TEST_F(TestLayerConvSpeed, forward_and_backward_loop) {
   tensor_destroy(&h_dy);
   tensor_destroy(&h_dx);
   tensor_destroy(&h_dw);
+
+#ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
+
+  std::cout << "total host allocations = "
+            << GET_TOTAL_TENSOR_ALLOC_HOST()
+            << ", total host de-allocations = "
+            << GET_TOTAL_TENSOR_DEALLOC_HOST() << '\n';
+  EXPECT_EQ(GET_TOTAL_TENSOR_ALLOC_HOST(), GET_TOTAL_TENSOR_DEALLOC_HOST());
+  std::cout << "total device allocations = "
+            << GET_TOTAL_TENSOR_ALLOC_DEVICE()
+            << ", total device de-allocations = "
+            << GET_TOTAL_TENSOR_DEALLOC_DEVICE() << '\n';
+
+  EXPECT_EQ(GET_TOTAL_TENSOR_ALLOC_DEVICE(), GET_TOTAL_TENSOR_DEALLOC_DEVICE());
+#endif
 }
 
 #endif

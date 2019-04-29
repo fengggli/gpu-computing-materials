@@ -8,6 +8,7 @@ option(DEBUG_GPU_FUNC_ENTRY_NOTIFY "Print device function names upon function ca
 option(USE_CUDNN "Build with CUDNN" OFF)
 option(USE_NNPACK "Build with NNPACK" OFF)
 option(AWNN_USE_FLT32 "Use single precision floating point" OFF)
+option(GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC "Count allocations and destroy globally" OFF)
 
 option(USE_CLANG "Use clang compiler set" OFF)
 option(BUILD_TEST "Build google test and all test cases" ON)
@@ -113,6 +114,7 @@ list(APPEND awnn_core_SOURCES
   src/layer_sandwich.c
   src/solver.c
   src/net_resnet.c
+  src/memory.c
   )
 
 if (USE_NNPACK)

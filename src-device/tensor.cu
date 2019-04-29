@@ -1,6 +1,11 @@
 #include "awnn/tensor.h"
 #include "awnndevice/device_utils.cuh"
 
+#ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
+#include "awnn/memory.h"
+#endif
+
+
 #include <cuda_runtime_api.h>  // cudaMemset
 
 void* mem_alloc_device(size_t size) {
@@ -8,11 +13,19 @@ void* mem_alloc_device(size_t size) {
   cudaError_t cudaStat;
   cudaStat = cudaMalloc(&d_data, size);
   AWNN_CHECK_EQ(cudaStat, cudaSuccess);
+#ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
+  INC_TOTAL_TENSOR_ALLOC_DEVICE();
+#endif
   return d_data;
 }
 
 void mem_free_device(void* d_data) {
-  if (d_data) cudaFree(d_data);
+  if (d_data) {
+    cudaFree(d_data);
+#ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
+    INC_TOTAL_TENSOR_DEALLOC_DEVICE();
+#endif
+  }
 }
 
 tensor_t tensor_make_device(uint const shape[], uint const ndims) {

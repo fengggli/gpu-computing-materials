@@ -6,5 +6,6 @@
 #cmakedefine USE_CUDNN
 #cmakedefine USE_NNPACK
 #cmakedefine AWNN_USE_FLT32
+#cmakedefine GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
 
 #define CIFAR_PATH ("@CMAKE_SOURCE_DIR@/data/cifar10")
