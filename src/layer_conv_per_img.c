@@ -43,7 +43,7 @@ status_t conv_forward_perimg(tensor_t const x, tensor_t const w,
   if (cache) {
     lcache_push(cache, x);
     lcache_push(cache, w);
-  };
+  }
   return S_OK;
 }
 

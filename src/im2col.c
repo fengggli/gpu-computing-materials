@@ -1,5 +1,6 @@
 #include "awnn/im2col.h"
 #include "awnn/memory.h"
+#include <string.h>
 
 #define is_a_ge_zero_and_a_lt_b(a, b) ((a >= 0 && a < b) ? 1 : 0)
 

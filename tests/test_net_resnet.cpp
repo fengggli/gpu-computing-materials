@@ -26,13 +26,18 @@ class NetResnetTest : public ::testing::Test {
 
 // input of forward
 model_t NetResnetTest::model;
+
+// CONV_METHOD_NNPACK_wt8x8,  // returns 26
+// CONV_METHOD_NNPACK_implicit_gemm,  // returns 26
+// CONV_METHOD_NNPACK_direct, // returns 26
+// CONV_METHOD_NNPACK_REF, very slow
 std::vector<conv_method_t> all_methods = {
-    CONV_METHOD_NNPACK_AUTO, CONV_METHOD_NNPACK_ft8x8,
-    CONV_METHOD_NNPACK_ft16x16,
-    // CONV_METHOD_NNPACK_wt8x8,  // returns 26
-    // CONV_METHOD_NNPACK_implicit_gemm,  // returns 26
-    // CONV_METHOD_NNPACK_direct, // returns 26
-    CONV_METHOD_NNPACK_REF, CONV_METHOD_PERIMG, CONV_METHOD_NAIVE};
+     CONV_METHOD_NNPACK_AUTO,
+     CONV_METHOD_NNPACK_ft8x8,
+     CONV_METHOD_NNPACK_ft16x16,
+     // CONV_METHOD_PERIMG,
+     CONV_METHOD_NAIVE
+    };
 
 TEST_F(NetResnetTest, Construct) {
   uint batch_sz = 3;
