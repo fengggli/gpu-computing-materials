@@ -57,13 +57,14 @@ status_t awnn_gemm(const int TransA,
       (double)beta, C, N);
 
 #else
-  cblas_sgemm(CblasRowMajor, TransA, TransB,
+  cblas_sgemm(CblasRowMajor, (CBLAS_TRANSPOSE)TransA, (CBLAS_TRANSPOSE)TransB,
       M, N, K,
       (float)alpha, A, lda,
       B, ldb,
       (float)beta, C, N);
 #endif
 
+  return S_OK;
 }
 #endif
 
@@ -88,12 +89,11 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
     print_trace();
     goto end;
   }
-  uint m = in1.dim.dims[0];
-  uint k = in1.dim.dims[1];
-  uint n = in2.dim.dims[1];
+  int m = (int)in1.dim.dims[0];
+  int k = (int)in1.dim.dims[1];
+  int n = (int)in2.dim.dims[1];
 
   // PDBG("mnk = [%u, %u, %u]", m,n,k);
-
 #ifdef USE_OPENBLAS
   // https://software.intel.com/en-us/mkl-tutorial-c-multiplying-matrices-using-dgemm
   tensor_fill_scalar(out, 0.0);

@@ -32,6 +32,7 @@ typedef enum conv_method_ {
 } conv_method_t;
 
 void set_conv_method(conv_method_t);
+conv_method_t  get_conv_method();
 
 /*
  * @brief forwarding for conv2d

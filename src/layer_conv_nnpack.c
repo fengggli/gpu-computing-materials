@@ -102,7 +102,7 @@ status_t convolution_forward_nnpack(conv_method_t algo, tensor_t const x,
   }
   tensor_destroy(&t_bias);
 
-  return (status == nnp_status_success ? S_OK : S_ERR);
+  return S_OK;
 #endif
 }
 
