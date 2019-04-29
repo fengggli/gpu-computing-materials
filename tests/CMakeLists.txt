@@ -20,6 +20,12 @@ add_executable(test-layer-conv test_layer_conv.cpp)
 target_link_libraries(test-layer-conv ${AWNN_LIBS}  ${AWNN_DEVICE_LIBS} gtest)
 add_test(test-layer-conv test-layer-conv)
 
+if (USE_NNPACK)
+add_executable(test-layer-conv-nnpack test_layer_conv_nnpack.cpp)
+target_link_libraries(test-layer-conv-nnpack ${AWNN_LIBS} gtest)
+add_test(test-layer-conv-nnpack test-layer-conv-nnpack)
+endif ()
+
 add_executable(test-layer-pool test_layer_pool.cpp)
 target_link_libraries(test-layer-pool ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} gtest)
 add_test(test-layer-pool test-layer-pool)

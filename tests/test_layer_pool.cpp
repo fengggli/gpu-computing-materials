@@ -82,8 +82,8 @@ TEST_F(LayerGlobalAvgPoolTest, Backward) {
 
   // check forward value
   tensor_t y_ref = tensor_make_alike(y);
-  T value_list[] = {0.10817717, 0.12487223, 0.14156729, 0.15826235,
-                    0.17495741, 0.19165247, 0.20834753, 0.22504259,
+  double value_list[] = {0.10817717, 0.12487223, 0.14156729, 0.15826235,
+                         0.17495741, 0.19165247, 0.20834753, 0.22504259,
                     0.24173765, 0.25843271, 0.27512777, 0.29182283};
   tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
   EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
@@ -109,7 +109,7 @@ TEST_F(LayerGlobalAvgPoolTest, Backward) {
         global_avg_pool_forward(in, NULL, out);
       },
       x, dy, dx_ref);
-  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 3e-3);
   PINF("gradient check of x... is ok");
 }
 
@@ -129,9 +129,9 @@ TEST_F(LayerGlobalAvgPoolTest, BackwardDevice) {
 
   // check forward value
   tensor_t y_ref = tensor_make_alike(y);
-  T value_list[] = {0.10817717, 0.12487223, 0.14156729, 0.15826235,
-                    0.17495741, 0.19165247, 0.20834753, 0.22504259,
-                    0.24173765, 0.25843271, 0.27512777, 0.29182283};
+  double value_list[] = {0.10817717, 0.12487223, 0.14156729, 0.15826235,
+                         0.17495741, 0.19165247, 0.20834753, 0.22504259,
+                         0.24173765, 0.25843271, 0.27512777, 0.29182283};
   tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
   EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
 

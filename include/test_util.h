@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <functional>
+#include <chrono>
 
 template<uint SIZE, class T> inline uint array_size(T (&)[SIZE]) {
   return SIZE;
@@ -35,8 +36,7 @@ template <uint SIZE, class T> inline uint dim_of_shape(T const (&)[SIZE]) {
  */
 status_t eval_numerical_gradient(
     std::function<void(tensor_t const, tensor_t)> const &func, tensor_t const x,
-    tensor_t const dy, tensor_t dx, T h = 1e-5) {
-
+    tensor_t const dy, tensor_t dx, double h = 1e-5) {
   tensor_t y_pos, y_neg;
   y_pos = tensor_make_alike(dy);
   y_neg = tensor_make_alike(dy);
@@ -78,4 +78,19 @@ status_t eval_numerical_gradient(
   tensor_destroy(&y_neg);
 
   return S_OK;
+}
+
+using namespace std::chrono;
+using time_point_t = high_resolution_clock::time_point;
+
+void get_cur_time(time_point_t &t){
+  t = high_resolution_clock::now();
+}
+
+void print_time_in_ms(time_point_t &begin, time_point_t &end){
+  PINF("Time difference = %.3f  ms",((double)duration_cast<microseconds>(end - begin).count())/1000);
+}
+
+void print_time_in_ns(time_point_t &begin, time_point_t &end){
+  PINF("Time difference = %lu ns",duration_cast<nanoseconds>(end - begin).count());
 }
