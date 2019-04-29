@@ -9000,18 +9000,6 @@ TEST_F(LayerConvTest, Forward){
 TEST_F(LayerConvTest, ConvForwardcudnn) {
   conv_param_t conv_params;
 
-#if 0
-  conv_params.stride=1;
-  conv_params.padding=0;
-
-  uint nr_img = 1;
-  uint sz_img = 4;
-  uint nr_in_channel = 32;
-
-  uint nr_filter = 32;
-  uint sz_filter = 1;
-#endif
-
   conv_params.stride=1;
   conv_params.padding=1;
 
@@ -9033,14 +9021,9 @@ TEST_F(LayerConvTest, ConvForwardcudnn) {
   tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
   tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
 
-//  lcache_t cache;
-//  make_empty_lcache(&cache);
-
-//  status_t ret = convolution_forward_cudnn(x, w, &cache, conv_params, y);
   status_t ret = convolution_forward_cudnn(x, w, NULL, conv_params, y);
   EXPECT_EQ(ret, S_OK);
 
-#if 1
   tensor_t y_ref = tensor_make_alike(y);
   double value_list[] = {
       0.02553947,  0.03144079,  0.01900658,  0.00722368,  0.01273026,
@@ -9067,24 +9050,12 @@ TEST_F(LayerConvTest, ConvForwardcudnn) {
 
   EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
   PINF("Cudnn_forward Consistent with expected results");
-#endif
 
   // free data
 }
 
 TEST_F(LayerConvTest, ConvBackwardcudnn) {
   conv_param_t conv_params;
-#if 0
-  conv_params.stride=1;
-  conv_params.padding=0;
-
-  uint nr_img = 1;
-  uint sz_img = 4;
-  uint nr_in_channel = 32;
-
-  uint nr_filter = 32;
-  uint sz_filter = 1;
-#endif
 
   conv_params.stride=1;
   conv_params.padding=1;
@@ -9098,9 +9069,10 @@ TEST_F(LayerConvTest, ConvBackwardcudnn) {
   uint sz_out = 1 + (sz_img + 2 * conv_params.padding - sz_filter) / conv_params.stride;
   EXPECT_EQ(4, sz_out);
 
-  uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img}; // 1, 32, 4, 4
-  uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter, sz_filter}; // 32, 32, 1, 1
-  uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out}; // 1, 32,
+  uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img};  // 2x3x4x4
+  uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter,
+                          sz_filter};                          // 3x3x3x3
+  uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out};  // 2x3x4x4
 
   tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
   tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
@@ -9118,13 +9090,9 @@ TEST_F(LayerConvTest, ConvBackwardcudnn) {
   tensor_t dx = tensor_make_alike(x);
   tensor_t dw = tensor_make_alike(w);
 
-  ret = convolution_backward_cudnn_data(dx, w, &cache, conv_params, dy);
+  ret = convolution_backward_cudnn(dx, dw, &cache, conv_params, dy);
   EXPECT_EQ(ret, S_OK);
 
-  ret = convolution_backward_cudnn_weight(x, dw, &cache, conv_params, dy);
-  EXPECT_EQ(ret, S_OK);
-
-#if 1
   /* II. Numerical check */
   // I had to make this copy since lambda doesn't allow me to use global
   // variable
@@ -9153,7 +9121,6 @@ TEST_F(LayerConvTest, ConvBackwardcudnn) {
   PINF("cudnn gradient check of w... is ok");
 
   EXPECT_EQ(ret, S_OK);
-#endif
 
   // free data
 }
