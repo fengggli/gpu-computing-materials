@@ -1412,7 +1412,7 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
 
   status_t ret =
       doForward<T>(x, w, cache, y, dimA, padA, convstrideA, filterdimA,
-                   filterFormat, CUDNN_DATA_DOUBLE, mathType, benchmark);
+                   filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
 
   return ret;
 }
@@ -1436,7 +1436,7 @@ status_t convolution_backward_cudnn_data(tensor_t dx, tensor_t w,
   printf("Testing using cudnn backward data\n");
 
   status_t ret = doBackward_data<T>(dx, w, cache, dout, dimA, padA, convstrideA,
-                                    filterdimA, filterFormat, CUDNN_DATA_DOUBLE,
+                                    filterdimA, filterFormat, CUDNN_DATA_FLOAT,
                                     mathType, benchmark);
 
   return ret;
@@ -1464,7 +1464,7 @@ status_t convolution_backward_cudnn_weight(tensor_t x, tensor_t dw,
 
   status_t ret = doBackward_weight<T>(x, dw, cache, dout, dimA, padA,
                                       convstrideA, filterdimA, filterFormat,
-                                      CUDNN_DATA_DOUBLE, mathType, benchmark);
+                                      CUDNN_DATA_FLOAT, mathType, benchmark);
 
   return ret;
 }
