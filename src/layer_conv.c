@@ -58,6 +58,7 @@ status_t convolution_forward_simple(tensor_t const x, tensor_t const w,
   uint const reshaped_w_shape[] = {
       w.dim.dims[0],
       w.dim.dims[1] * w.dim.dims[2] * w.dim.dims[3]};  // (F, CxHHxWW)
+  // TODO: feng this is not necessay. call gemm directly
   tensor_t reshaped_w = tensor_make_copy(w);
   tensor_reshape_(&reshaped_w, reshaped_w_shape, ARRAY_SIZE(reshaped_w_shape));
 
