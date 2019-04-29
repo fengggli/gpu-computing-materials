@@ -398,7 +398,6 @@ status_t convolution_forward_device(cublasHandle_t handle, tensor_t const d_x, t
   tensor_reshape_(&d_w, reshaped_w_shape, ARRAY_SIZE(reshaped_w_shape));
 
   // apply filters with gemm here !!!
-
   tensor_t d_out = cublas_gemm_launch(handle, d_w, d_flattened_x);
 
   // put d_w back to original shape
@@ -422,6 +421,8 @@ status_t convolution_forward_device(cublasHandle_t handle, tensor_t const d_x, t
     lcache_push(hcache, d_x);
     lcache_push(hcache, d_w);
     lcache_push(hcache, d_flattened_x);
+  } else {
+    tensor_destroy_device(&d_flattened_x);
   }
 
   tensor_destroy_device(&d_out);
@@ -726,14 +727,12 @@ tensor_t tensor_make_transpose_1230_device(tensor_t t)
   return h_transposed;
 }
 
-status_t convolution_backward_device(cublasHandle_t handle, tensor_t d_dx, tensor_t d_dw, lcache_t* dcache, conv_param_t const params, tensor_t const h_dout)
+status_t convolution_backward_device(cublasHandle_t handle, tensor_t d_dx, tensor_t d_dw, lcache_t* dcache, conv_param_t const params, tensor_t const d_dout)
 {
-  tensor_t d_dout = tensor_make_copy_h2d(h_dout);
-
   // NOTE : the order of pop matters, should be flattened_x, d_w, d_x (reverse of forward)
-  tensor_t d_x_cols = lcache_pop(dcache);
-  tensor_t d_w = lcache_pop(dcache);
-  tensor_t d_x = lcache_pop(dcache);
+  tensor_t d_x_cols   = lcache_pop(dcache);
+  tensor_t d_w        = lcache_pop(dcache);
+  tensor_t d_x        = lcache_pop(dcache);
 
   assert(d_dx.mem_type == GPU_MEM);
   assert(d_dw.mem_type == GPU_MEM);
@@ -741,17 +740,15 @@ status_t convolution_backward_device(cublasHandle_t handle, tensor_t d_dx, tenso
   assert(d_w.mem_type == GPU_MEM);
   assert(d_x.mem_type == GPU_MEM);
 
-  uint num_filters = d_w.dim.dims[0];
-  uint w_channels = d_w.dim.dims[1];
-  uint filter_height = d_w.dim.dims[2];
-  uint filter_width = d_w.dim.dims[3];
-
+  uint num_filters    = d_w.dim.dims[0];
+  uint w_channels     = d_w.dim.dims[1];
+  uint filter_height  = d_w.dim.dims[2];
+  uint filter_width   = d_w.dim.dims[3];
 
   // 1. tensor transpose 1230 the dout (derivative of output layer)
   uint const d_dout_T_1230_shape[] = { d_dout.dim.dims[1], d_dout.dim.dims[2], d_dout.dim.dims[3], d_dout.dim.dims[0] };
   tensor_t d_dout_T_1230 = tensor_make_device(d_dout_T_1230_shape, ARRAY_SIZE(d_dout_T_1230_shape));
   _do_tensor_make_transpose_1230_device<<<32, 128>>>(d_dout_T_1230, d_dout);
-
 
   // 2. reshape the dout_T to a 2D shape by collapsing the last 3 dims
   uint d_dout_2d_shape[] = { num_filters, d_dout_T_1230.dim.dims[1] * d_dout_T_1230.dim.dims[2] * d_dout_T_1230.dim.dims[3] };
@@ -790,6 +787,11 @@ status_t convolution_backward_device(cublasHandle_t handle, tensor_t d_dx, tenso
   /////////////////////////////////////////////////////////////////////////////
   tensor_copy_d2d<<<32, 128>>>(d_dx, t);
   /////////////////////////////////////////////////////////////////////////////
+
+  // cache
+  tensor_destroy_device(&d_x_cols);
+  tensor_destroy_device(&d_w);
+  tensor_destroy_device(&d_x);
 
   tensor_destroy_device(&d_dout_T_1230);
   tensor_destroy_device(&d_x_cols_T);
