@@ -497,7 +497,7 @@ int doConv(
       if (diff > THRESHOLD) {
         numErrors++;
       }
-      //        printf("cuda result is %d, and reference is %d\n",
+      // printf("cuda result is %d, and reference is %d\n",
       //        hostO[index], hostO_ref[index]);
     }
   }
@@ -781,7 +781,7 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
 
 
   printf("Testing conv\n");
-  numErrors = doConv(
+  numErrors = doConv<T_ELEM>(
       handle_,
       devPtrI,
       devPtrF,
@@ -974,8 +974,8 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   }
 
   printf("Testing dgrad\n");
-  numErrors = doDgrad(handle_, devPtr_dx, devPtr_w, devPtrO, host_dx, host_w, hostO,
-              cudnnIdesc,
+  numErrors = doDgrad<T_ELEM>(
+      handle_, devPtr_dx, devPtr_w, devPtrO, host_dx, host_w, hostO, cudnnIdesc,
       cudnnFdesc,
       cudnnOdesc,
       cudnnConvDesc,
