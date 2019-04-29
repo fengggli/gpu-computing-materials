@@ -2,14 +2,16 @@ cmake_minimum_required(VERSION 3.5)
 #set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 option(IS_CI_BUILD "Is a build for CI" OFF) # Reduce problem size if it is run in CI
-option(USE_CLANG "Use clang compiler set" OFF)
 option(USE_OPENBLAS "USE openblas for blas" ON)
-option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_CUDA "Build with CUDA" OFF)
 option(USE_CUDNN "Build with CUDNN" OFF)
 option(USE_NNPACK "Build with NNPACK" OFF)
 option(AWNN_USE_FLT32 "Use single precision floating point" OFF)
+
+option(USE_CLANG "Use clang compiler set" OFF)
+option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_STRICT_CHECK "use pedantic flag" OFF)
+
 
 if (NOT AWNN_USE_FLT32 AND USE_NNPACK)
   message(FATAL_ERROR 'nnpack only support float32')

@@ -1,8 +1,9 @@
 #pragma once
+#cmakedefine IS_CI_BUILD
 #cmakedefine USE_OPENBLAS
 #cmakedefine USE_CUDA
+#cmakedefine USE_CUDNN
 #cmakedefine USE_NNPACK
-#cmakedefine IS_CI_BUILD
 #cmakedefine AWNN_USE_FLT32
 
 #define CIFAR_PATH ("@CMAKE_SOURCE_DIR@/data/cifar10")

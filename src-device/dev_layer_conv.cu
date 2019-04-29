@@ -617,7 +617,9 @@ static __global__ void _do_col2im_inner_device_thread_per_filter(
             + (stride * h + fi) * x_p_d3
             + stride * w + fj;
 
+#ifdef AWNN_USE_FLT32
           atomicAdd(&(x_padded.data[target_idx]), d_cols.data[src_idx]); // TODO fix this
+#endif
       }
     }
   }
@@ -658,7 +660,9 @@ static __global__ void _do_col2im_inner_device_thread_per_element(
         + (stride * h + fi) * x_p_d3
         + stride * w + fj;
 
+#ifdef AWNN_USE_FLT32
     atomicAdd(&(x_padded.data[target_idx]), d_cols.data[src_idx]); // TODO fix this
+#endif
   }
 }
 
