@@ -1,5 +1,8 @@
 #include "awnn/im2col.h"
 #include "awnn/memory.h"
+
+#define is_a_ge_zero_and_a_lt_b(a, b) ((a >= 0 && a < b) ? 1 : 0)
+
 T* alloc_col_buffer(uint C, uint HH, uint WW, uint Hout, uint Wout){
   uint nr_elem = (C*HH*WW)*(Hout*Wout);
   return mem_alloc(nr_elem*sizeof(T));
