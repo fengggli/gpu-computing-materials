@@ -19,7 +19,7 @@ tensor_t tensor_make_device(uint const shape[], uint const ndims) {
   tensor_t t_device;
 
   uint capacity = 1;
-  int i;
+  uint i;
   for (i = 0; i < ndims; ++i) {
     capacity *= shape[i];
     t_device.dim.dims[i] = shape[i];
@@ -58,6 +58,9 @@ tensor_t tensor_make_copy_h2d(tensor_t t_host) {
 }
 
 void tensor_copy_d2h(tensor_t t_host, tensor_t t_device) {
+  assert(t_device.mem_type == GPU_MEM);
+  assert(t_host.mem_type == CPU_MEM);
+
   uint capacity = tensor_get_capacity(t_device);
   AWNN_CHECK_EQ(tensor_get_capacity(t_host), capacity)
   cudaMemcpy(t_host.data, t_device.data, capacity * sizeof(T),

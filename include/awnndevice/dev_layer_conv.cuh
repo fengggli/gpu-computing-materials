@@ -15,13 +15,13 @@ extern "C" {
 #endif
 
 
-status_t convolution_forward_device(cublasHandle_t handle, tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y);
+status_t convolution_forward_device(cublasHandle_t handle, tensor_t const d_x, tensor_t d_w, lcache_t* cache, conv_param_t const params, tensor_t d_y);
 
 status_t convolution_forward_device_host_harness(cublasHandle_t handle,
-                                                 tensor_t hx, tensor_t hw,
+                                                 tensor_t h_x, tensor_t h_w,
                                                  lcache_t* hcache,
                                                  conv_param_t hparams,
-                                                 tensor_t hy);
+                                                 tensor_t h_y);
 
 
 tensor_t im2col_device(tensor_t const d_x, tensor_t const d_w, conv_param_t const params);

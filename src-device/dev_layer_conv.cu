@@ -3,8 +3,6 @@
 #include "awnndevice/device_utils.cuh"
 #include "awnndevice/cublas_wrappers.cuh"
 
-#include <cuda_runtime.h>
-
 /*
  * In the above naive version for the CPU, we stride through the target one
  * by one and then index into the source using knowledge about our
@@ -41,10 +39,13 @@
  * src array where the dimensions cause use to need to offset the input.
  */
 static __global__ void _do_tensor_make_transpose_3012_device(tensor_t d_transpose, tensor_t d_src) {
+
+  #ifdef DEBUG_GPU_FUNC_ENTRY_NOTIFY
   if (threadIdx.x == 0) {
     printf("entered _do_tensor_make_transpose_3012_device\n", threadIdx.x);
     printf("src N=%u, C=%u, H=%u, W=%u, transpose N=%u, C=%u, H=%u, W=%u\n", d_transpose.dim.dims[0], d_transpose.dim.dims[1], d_transpose.dim.dims[2], d_transpose.dim.dims[3], d_src.dim.dims[0], d_src.dim.dims[1], d_src.dim.dims[2], d_src.dim.dims[3]);
   }
+#endif
 
   uint n = d_capacity(d_src);
   uint group_size = d_src.dim.dims[0] * d_src.dim.dims[1] * d_src.dim.dims[2];
@@ -91,9 +92,11 @@ tensor_t tensor_make_transpose_3012_device(tensor_t t) {
  */
 static __global__ void _do_tensor_make_padded_square_input_device(tensor_t d_padded, tensor_t d_src, uint p, T pad_val)
 {
+#ifdef DEBUG_GPU_FUNC_ENTRY_NOTIFY
   if (threadIdx.x == 0) {
     printf("entered _do_tensor_make_padded_square_input_device\n", threadIdx.x);
   }
+#endif
 
   uint C, H, W, HH, WW;
   C = d_src.dim.dims[1];
@@ -174,9 +177,12 @@ static __global__ void _do_im2col_inner_device_naive_thread_per_filter(
     tensor_t cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH,
     uint WW, uint filter_height, uint filter_width, uint padding, uint stride)
 {
+#ifdef DEBUG_GPU_FUNC_ENTRY_NOTIFY
   if (threadIdx.x == 0) {
     printf("entered _do_im2col_inner_device\n", threadIdx.x);
   }
+#endif
+
   uint cols_d1  = cols.dim.dims[1];
   uint img_sz   = C * x_padded.dim.dims[2] * x_padded.dim.dims[3];
   uint chan_sz  = x_padded.dim.dims[2] * x_padded.dim.dims[3];
@@ -264,10 +270,12 @@ static __global__ void _do_im2col_inner_device_thread_per_element(
   uint total_filters = N * filters_per_image;
   uint total_elements = filter_size * total_filters;
 
+#ifdef DEBUG_GPU_FUNC_ENTRY_NOTIFY
   if (threadIdx.x == 0) {
     printf("entered _do_im2col_inner_device_thread_per_element\n", threadIdx.x);
     printf("filters_per_chan=%u, filters_per_img=%u, total_filters=%u\n", filters_per_channel, filters_per_image, total_filters);
   }
+#endif
 
   for (auto iter : grid_stride_range(0u, total_elements)) {
     uint n = iter / (filters_per_image * filter_size);  // nn is the target image
@@ -374,88 +382,13 @@ tensor_t im2col_device(tensor_t const d_x, tensor_t const d_w, conv_param_t cons
   return d_flattened_x;
 }
 
-/*
- * Note that this is the only one that should likely remain global in the forward path.
- * The rest should become __device__ and should be called by this function
- */
-static __global__ void _do_convolution_forward_device(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y)
-{
-  if (threadIdx.x == 0) {
-    printf("entered _do_convolution_forward_device\n", threadIdx.x);
-  }
-}
 
 /*
  * The assumption I am making here is that the tensors and other elements
  * that are necessary are already allocated on the GPU.
  */
-//status_t convolution_forward_device(cublasHandle_t handle, tensor_t const hx, tensor_t const hw, lcache_t* hcache, conv_param_t const hparams, tensor_t hy)
-//{
-//  tensor_t d_x = tensor_make_copy_h2d(hx);
-//  tensor_t d_w = tensor_make_copy_h2d(hw);
-//  tensor_t d_y = tensor_make_copy_h2d(hy);
-//
-//
-//  // 1. flatten the input into vectors which represent the filters
-//  tensor_t flattened_x = im2col_device(d_x, d_w, hparams);
-//
-//
-//  // 2. setup and apply filters
-//  uint const original_w_shape[] = { d_w.dim.dims[0], d_w.dim.dims[1], d_w.dim.dims[2], d_w.dim.dims[3] };
-//  uint const reshaped_w_shape[] = { d_w.dim.dims[0], d_w.dim.dims[1] * d_w.dim.dims[2] * d_w.dim.dims[3] };
-//  tensor_reshape_(&d_w, reshaped_w_shape, ARRAY_SIZE(reshaped_w_shape));
-//
-//  // apply filters with gemm here !!!
-//  tensor_t d_out = cublas_gemm_launch(handle, d_w, flattened_x);
-//
-//  // reshape output back into tensor
-//  uint const out_shape_2[] = { original_w_shape[0], d_y.dim.dims[2], d_y.dim.dims[3], d_x.dim.dims[0] };
-//  tensor_reshape_(&d_out, out_shape_2, ARRAY_SIZE(out_shape_2));
-//
-//  // 3. transpose output
-//  uint const transposed_shape[] = { d_out.dim.dims[3], d_out.dim.dims[0], d_out.dim.dims[1], d_out.dim.dims[2] };
-//  tensor_t d_transposed_out = tensor_make_device(transposed_shape, ARRAY_SIZE(transposed_shape));
-//  _do_tensor_make_transpose_3012_device<<<32, 128>>>(d_transposed_out, d_out);
-//
-//  // copy transposed output to y
-//  hy.dim = d_transposed_out.dim;
-//  assert(hy.dim.dims[0] == d_transposed_out.dim.dims[0]);
-//  assert(hy.dim.dims[1] == d_transposed_out.dim.dims[1]);
-//  assert(hy.dim.dims[2] == d_transposed_out.dim.dims[2]);
-//  assert(hy.dim.dims[3] == d_transposed_out.dim.dims[3]);
-//
-//  // TODO : replace this with tensor_copy_d2d for GPU only use
-//  tensor_copy_d2h(hy, d_transposed_out);
-//
-//  // fill cache
-//  // NOTE, the order matters should be x, w, flattened_x
-//  if(hcache) {
-//    lcache_push(hcache, d_x);
-//    lcache_push(hcache, d_w);
-//    lcache_push(hcache, flattened_x);
-//  }
-//
-//  tensor_destroy_device(&d_transposed_out);
-//  tensor_destroy_device(&d_out);
-//
-//  tensor_destroy_device(&d_y);
-//
-//  return S_OK;
-//}
-
-
-// Call this function from the host ONLY
-// cache will be filled with
-status_t convolution_forward_device_host_harness(cublasHandle_t handle,
-                                                 tensor_t hx, tensor_t hw,
-                                                 lcache_t* hcache,
-                                                 conv_param_t hparams,
-                                                 tensor_t hy) {
-  tensor_t d_x = tensor_make_copy_h2d(hx);
-  tensor_t d_w = tensor_make_copy_h2d(hw);
-  tensor_t d_y = tensor_make_copy_h2d(hy);
-
-
+status_t convolution_forward_device(cublasHandle_t handle, tensor_t const d_x, tensor_t d_w, lcache_t* hcache, conv_param_t const hparams, tensor_t d_y)
+{
   // 1. flatten the input into vectors which represent the filters
   tensor_t d_flattened_x = im2col_device(d_x, d_w, hparams);
 
@@ -465,7 +398,10 @@ status_t convolution_forward_device_host_harness(cublasHandle_t handle,
   tensor_reshape_(&d_w, reshaped_w_shape, ARRAY_SIZE(reshaped_w_shape));
 
   // apply filters with gemm here !!!
+
   tensor_t d_out = cublas_gemm_launch(handle, d_w, d_flattened_x);
+
+  // put d_w back to original shape
   tensor_reshape_(&d_w, original_w_shape, ARRAY_SIZE(original_w_shape));
 
   // reshape output back into tensor
@@ -474,14 +410,11 @@ status_t convolution_forward_device_host_harness(cublasHandle_t handle,
 
   // 3. transpose output
   uint const transposed_shape[] = { d_out.dim.dims[3], d_out.dim.dims[0], d_out.dim.dims[1], d_out.dim.dims[2] };
-  tensor_t d_transposed_out= tensor_make_device(transposed_shape, ARRAY_SIZE(transposed_shape));
-  _do_tensor_make_transpose_3012_device<<<32, 128>>>(d_transposed_out, d_out);
+  tensor_reshape_(&d_y, transposed_shape, ARRAY_SIZE(transposed_shape));
 
-  // copy transposed output to y
-  hy.dim = d_transposed_out.dim;
-
-  // TODO : replace this with tensor_copy_d2d for GPU only use
-  tensor_copy_d2h(hy, d_transposed_out);
+  //////////////////////////////////////////////////////////////////////
+  _do_tensor_make_transpose_3012_device<<<32, 128>>>(d_y, d_out);
+  //////////////////////////////////////////////////////////////////////
 
   // fill cache
   // NOTE, the order matters should be x, w, flattened_x
@@ -491,8 +424,32 @@ status_t convolution_forward_device_host_harness(cublasHandle_t handle,
     lcache_push(hcache, d_flattened_x);
   }
 
-  tensor_destroy_device(&d_transposed_out);
   tensor_destroy_device(&d_out);
+
+  return S_OK;
+}
+
+
+// Call this function from the host ONLY
+// cache will be filled with
+status_t convolution_forward_device_host_harness(cublasHandle_t handle,
+                                                 tensor_t h_x, tensor_t h_w,
+                                                 lcache_t* hcache,
+                                                 conv_param_t hparams,
+                                                 tensor_t h_y)
+{
+  tensor_t d_x = tensor_make_copy_h2d(h_x);
+  tensor_t d_w = tensor_make_copy_h2d(h_w);
+  tensor_t d_y = tensor_make_copy_h2d(h_y);
+
+  convolution_forward_device(handle, d_x, d_w, hcache, hparams, d_y);
+
+  tensor_copy_d2h(h_x, d_x);
+  tensor_copy_d2h(h_w, d_w);
+  tensor_copy_d2h(h_y, d_y);
+
+  // d_x is cached so don't destroy
+  // d_w is cached so don't destroy
   tensor_destroy_device(&d_y);
 
   return S_OK;
@@ -504,13 +461,16 @@ status_t convolution_forward_device_host_harness(cublasHandle_t handle,
  *
  * This function should just do the padding operation in parallel.  Although below in my notes of the
  * inner im2col, I speculate that this operation can be eliminated, I am still going to provide it in
- * the intitial cuda implementation
+ * the initial CUDA implementation
  */
 static __global__ void _do_tensor_make_remove_padding_square_device(tensor_t d_padded, tensor_t d_src, uint p)
 {
+#ifdef DEBUG_GPU_FUNC_ENTRY_NOTIFY
   if (threadIdx.x == 0) {
     printf("entered _do_tensor_make_remove_padding_square_device\n", threadIdx.x);
   }
+#endif
+
   uint C, H, W, HH, WW;
   C = d_src.dim.dims[1];
   H = d_src.dim.dims[2];
@@ -589,9 +549,11 @@ static __global__ void _do_col2im_inner_device_thread_per_filter(
     tensor_t d_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH,
     uint WW, uint field_height, uint field_width, uint padding, uint stride)
 {
+#ifdef DEBUG_GPU_FUNC_ENTRY_NOTIFY
   if (threadIdx.x == 0) {
     printf("entered _do_col2im_inner_device\n");
   }
+#endif
 
   uint dx_col_d1  = d_cols.dim.dims[1];
   uint x_p_d1     = x_padded.dim.dims[1];
@@ -632,9 +594,11 @@ static __global__ void _do_col2im_inner_device_thread_per_element(
     tensor_t d_cols, tensor_t x_padded, uint N, uint C, uint H, uint W, uint HH,
     uint WW, uint field_height, uint field_width, uint padding, uint stride)
 {
+#ifdef DEBUG_GPU_FUNC_ENTRY_NOTIFY
   if (threadIdx.x == 0) {
     printf("entered _do_col2im_inner_device\n");
   }
+#endif
 
   uint dx_col_d1  = d_cols.dim.dims[1];
   uint x_p_d1     = x_padded.dim.dims[1];
@@ -716,11 +680,13 @@ tensor_t col2im_device(tensor_t d_dx_cols, uint N, uint C, uint H, uint W, uint 
 
 static __global__ void _do_tensor_make_transpose_1230_device(tensor_t d_t, tensor_t d_src)
 {
+#ifdef DEBUG_GPU_FUNC_ENTRY_NOTIFY
   if (threadIdx.x == 0) {
     assert(d_src.mem_type == GPU_MEM);
     assert(d_t.mem_type == GPU_MEM);
     printf("entered _do_tensor_make_transpose_1230_device\n", threadIdx.x);
   }
+#endif
 
   uint target_idx = 0;
 
@@ -758,15 +724,6 @@ tensor_t tensor_make_transpose_1230_device(tensor_t t)
   tensor_destroy_device(&d_transposed);
 
   return h_transposed;
-}
-
-
-
-static __global__ void _do_convolution_backward_device(tensor_t dx, tensor_t dw, lcache_t* cache, conv_param_t const params, tensor_t const dout)
-{
-  if (threadIdx.x == 0) {
-    printf("entered _do_col2im_inner_device\n");
-  }
 }
 
 status_t convolution_backward_device(cublasHandle_t handle, tensor_t d_dx, tensor_t d_dw, lcache_t* dcache, conv_param_t const params, tensor_t const h_dout)

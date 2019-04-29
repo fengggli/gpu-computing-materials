@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.5)
 option(IS_CI_BUILD "Is a build for CI" OFF) # Reduce problem size if it is run in CI
 option(USE_OPENBLAS "USE openblas for blas" ON)
 option(USE_CUDA "Build with CUDA" OFF)
+option(DEBUG_GPU_FUNC_ENTRY_NOTIFY "Print device function names upon function call" ON)
 option(USE_CUDNN "Build with CUDNN" OFF)
 option(USE_NNPACK "Build with NNPACK" OFF)
 option(AWNN_USE_FLT32 "Use single precision floating point" OFF)

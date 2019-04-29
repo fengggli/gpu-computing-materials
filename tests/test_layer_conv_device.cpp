@@ -58,7 +58,7 @@ namespace {
 #ifdef USE_CUDA
   TEST_F(LayerConvTestDevice, convolution_forward_device_harness_from_pic)
   {
-    conv_param_t conv_params = {1, 0};
+    conv_param_t conv_params = { .stride = 1, .padding = 0 };
 
     uint n = 1;
     uint img_sz = 3;
@@ -66,12 +66,11 @@ namespace {
     uint fltr_sz = 2;
     uint num_fil = 2;
     uint sz_out = 1 + (img_sz + 2 * conv_params.padding - fltr_sz) / conv_params.stride;
+    EXPECT_EQ(2, sz_out);
 
     uint const shape_x[] = { n, c, img_sz, img_sz }; // 2x3x4x4
     uint const shape_w[] = { num_fil, c, fltr_sz, fltr_sz }; // 3x3x4x4
     uint const shape_y[] = { n, num_fil, sz_out, sz_out };
-
-    EXPECT_EQ(2, sz_out);
 
     double x_values[] = { 1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2 };
     tensor_t x = tensor_make(shape_x, dim_of_shape(shape_x));
@@ -86,17 +85,19 @@ namespace {
     lcache_t cache;
     make_empty_lcache(&cache);
 
-    status_t ret = convolution_forward_device_host_harness(
-        handle_, x, w, &cache, conv_params,
-        y); // forward function should allocate and populate cache;
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    status_t ret = convolution_forward_device_host_harness(handle_, x, w, &cache, conv_params, y);
+    /////////////////////////////////////////////////////////////////////////////////////////////
     EXPECT_EQ(ret, S_OK);
+//    tensor_print_flat(y);
 
     tensor_t y_ref = tensor_make_alike(y);
     double value_list[] = { 6, 2, 3, 4, 3, 3, 7, 7 };
     tensor_fill_list(y_ref, value_list, array_size(value_list));
 
-    EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
-    if (tensor_rel_error(y_ref, y) < 1e-7) {
+    double err = tensor_rel_error(y_ref, y);
+    EXPECT_LT(err, 1e-7);
+    if (err < 1e-7) {
       PINF("Consistent with expected results");
     } else {
       PERR("INCONSISTENT WITH EXPECTED RESULTS");
@@ -1313,7 +1314,6 @@ TEST_F(LayerConvTestDevice, forward_caches_proper_values) {
   tensor_t flat_x_cached_ref = tensor_make(flat_x_cached_shape_ref, dim_of_shape(flat_x_cached_shape_ref));
   tensor_fill_list(flat_x_cached_ref, flat_x_cached_ref_vals, array_size(flat_x_cached_ref_vals));
 
-
   uint y_shape[] = { n, num_fil, sz_out, sz_out };
   y = tensor_make(y_shape, dim_of_shape(y_shape));
 
@@ -1332,11 +1332,15 @@ TEST_F(LayerConvTestDevice, forward_caches_proper_values) {
   tensor_t flatten_x_cached = tensor_make_alike(d_flatten_x_cached);
   tensor_copy_d2h(flatten_x_cached, d_flatten_x_cached);
 
+  tensor_t x_cached = tensor_make_alike(d_x_cached);
+  tensor_copy_d2h(x_cached, d_x_cached);
+
+  tensor_print_flat(x);
+  tensor_print_flat(x_cached);
+
   tensor_t w_cached = tensor_make_alike(d_w_cached);
   tensor_copy_d2h(w_cached, d_w_cached);
 
-  tensor_t x_cached = tensor_make_alike(d_x_cached);
-  tensor_copy_d2h(x_cached, d_x_cached);
 
   EXPECT_LT(tensor_rel_error(flatten_x_cached, flat_x_cached_ref), 1e-15);
 
@@ -1429,8 +1433,6 @@ TEST_F(LayerConvTestDevice, forward_caches_proper_values) {
 
 
     tensor_copy_d2h(h_dx, d_dx);
-
-
 
     double err1 = tensor_rel_error(dx_ref, h_dx);
     EXPECT_LT(err1, 1e-3);
@@ -1578,10 +1580,6 @@ TEST_F(LayerConvTestDevice, forward_caches_proper_values) {
     tensor_destroy(&w_cached);
     tensor_destroy(&flat_x_cached);
   }
-
-
-
-
 
 
   TEST_F(LayerConvTestDevice, DISABLED_col2im_device) {

@@ -2,6 +2,7 @@
 #cmakedefine IS_CI_BUILD
 #cmakedefine USE_OPENBLAS
 #cmakedefine USE_CUDA
+#cmakedefine DEBUG_GPU_FUNCTION_ENTRY_NOTIFICATIONS
 #cmakedefine USE_CUDNN
 #cmakedefine USE_NNPACK
 #cmakedefine AWNN_USE_FLT32
