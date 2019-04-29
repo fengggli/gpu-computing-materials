@@ -88,7 +88,7 @@ namespace {
     uint dim2 = 2;
 
     uint A_shape[] = { dim1, dim2 };
-    T A_vals[] = { 1, 1,
+    double A_vals[] = { 1, 1,
                    1, 1,
                    1, 1,
                    1, 1 };
@@ -96,7 +96,7 @@ namespace {
     tensor_fill_list(h_A, A_vals, array_size(A_vals));
 
     uint B_shape[] = { dim2, dim1 };
-    T B_vals[] = { 1, 1, 1, 1,
+    double B_vals[] = { 1, 1, 1, 1,
                    1, 1, 1, 1 };
     tensor_t h_B = tensor_make(B_shape, dim_of_shape(B_shape));
     tensor_fill_list(h_B, B_vals, array_size(B_vals));
