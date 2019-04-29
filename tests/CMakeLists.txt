@@ -28,6 +28,11 @@ if(USE_CUDA)
     add_executable(test-cublas-device-op test_cublas_device_op.cpp)
     target_link_libraries(test-cublas-device-op ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} cudart cublas gtest)
     add_test(test-cublas-device-op test-device-op)
+
+    add_executable(test-layer-conv-device-speed test_layer_conv_device_speed.cpp)
+    target_link_libraries(test-layer-conv-device-speed ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} cudart cublas gtest)
+    add_test(test-layer-conv-device-speed test-device-op)
+
 endif(USE_CUDA)
 
 if (USE_NNPACK)
