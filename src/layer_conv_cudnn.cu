@@ -439,8 +439,8 @@ int doConv(
     float alpha,
     float beta,
     cudnnTensorFormat_t filterFormat,
-    cudnnDataType_t dataType,
-    const int*   dimA,
+           //    cudnnDataType_t dataType,
+           const int*   dimA,
     const int*   filterdimA,
     const int*   outdimA,
     const int*   strideA,
@@ -714,15 +714,19 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
     filterdimA_padded[i] = filterdimA[i];
   }
 
-  printf("====USER DIMENSIONS====\n");
-  printf("input dims are %d, %d, %d, %d\n", dimA[0], dimA[1], dimA[2], dimA[3]);
-  printf("filter dims are %d, %d, %d, %d\n", filterdimA[0], filterdimA[1], filterdimA[2], filterdimA[3]);
-  printf("output dims are %d, %d, %d, %d\n", outdimA[0], outdimA[1], outdimA[2], outdimA[3]);
-  printf("====PADDING DIMENSIONS====\n");
-  printf("padded input dims are %d, %d, %d, %d\n", dimA_padded[0], dimA_padded[1], dimA_padded[2], dimA_padded[3]);
-  printf("padded filter dims are %d, %d, %d, %d\n", filterdimA_padded[0], filterdimA_padded[1], filterdimA_padded[2], filterdimA_padded[3]);
-  printf("padded output dims are %d, %d, %d, %d\n", outdimA_padded[0], outdimA_padded[1], outdimA_padded[2], outdimA_padded[3]);
-
+  PDBG("====USER DIMENSIONS====\n");
+  PDBG("input dims are %d, %d, %d, %d\n", dimA[0], dimA[1], dimA[2], dimA[3]);
+  PDBG("filter dims are %d, %d, %d, %d\n", filterdimA[0], filterdimA[1],
+       filterdimA[2], filterdimA[3]);
+  PDBG("output dims are %d, %d, %d, %d\n", outdimA[0], outdimA[1], outdimA[2],
+       outdimA[3]);
+  PDBG("====PADDING DIMENSIONS====\n");
+  PDBG("padded input dims are %d, %d, %d, %d\n", dimA_padded[0], dimA_padded[1],
+       dimA_padded[2], dimA_padded[3]);
+  PDBG("padded filter dims are %d, %d, %d, %d\n", filterdimA_padded[0],
+       filterdimA_padded[1], filterdimA_padded[2], filterdimA_padded[3]);
+  PDBG("padded output dims are %d, %d, %d, %d\n", outdimA_padded[0],
+       outdimA_padded[1], outdimA_padded[2], outdimA_padded[3]);
 
   checkCudnnErr(cudnnCreate(&handle_));
 
@@ -779,8 +783,7 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
     checkCudnnErr( cudnnSetConvolutionMathType(cudnnConvDesc, CUDNN_TENSOR_OP_MATH) );
   }
 
-
-  printf("Testing conv\n");
+  PDBG("Testing conv\n");
   numErrors = doConv<T_ELEM>(
       handle_,
       devPtrI,
@@ -796,7 +799,7 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
       alpha,
       beta,
       filterFormat,
-      dataType,
+      //      dataType,
       dimA_padded,
       filterdimA_padded,
       outdimA_padded,
@@ -809,9 +812,9 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
 
   if (!benchmark) {
     if (numErrors == 0) {
-      printf("Test PASSED\n");
+      PDBG("Test PASSED\n");
     } else {
-      printf("Test FAILED, num errors = %d\n", numErrors);
+      PDBG("Test FAILED, num errors = %d\n", numErrors);
     }
   }
 
@@ -890,15 +893,19 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
     filterdimA_padded[i] = filterdimA[i];
   }
 
-  printf("====USER DIMENSIONS====\n");
-  printf("input dims are %d, %d, %d, %d\n", dimA[0], dimA[1], dimA[2], dimA[3]);
-  printf("filter dims are %d, %d, %d, %d\n", filterdimA[0], filterdimA[1], filterdimA[2], filterdimA[3]);
-  printf("output dims are %d, %d, %d, %d\n", outdimA[0], outdimA[1], outdimA[2], outdimA[3]);
-  printf("====PADDING DIMENSIONS====\n");
-  printf("padded input dims are %d, %d, %d, %d\n", dimA_padded[0], dimA_padded[1], dimA_padded[2], dimA_padded[3]);
-  printf("padded filter dims are %d, %d, %d, %d\n", filterdimA_padded[0], filterdimA_padded[1], filterdimA_padded[2], filterdimA_padded[3]);
-  printf("padded output dims are %d, %d, %d, %d\n", outdimA_padded[0], outdimA_padded[1], outdimA_padded[2], outdimA_padded[3]);
-
+  PDBG("====USER DIMENSIONS====\n");
+  PDBG("input dims are %d, %d, %d, %d\n", dimA[0], dimA[1], dimA[2], dimA[3]);
+  PDBG("filter dims are %d, %d, %d, %d\n", filterdimA[0], filterdimA[1],
+       filterdimA[2], filterdimA[3]);
+  PDBG("output dims are %d, %d, %d, %d\n", outdimA[0], outdimA[1], outdimA[2],
+       outdimA[3]);
+  PDBG("====PADDING DIMENSIONS====\n");
+  PDBG("padded input dims are %d, %d, %d, %d\n", dimA_padded[0], dimA_padded[1],
+       dimA_padded[2], dimA_padded[3]);
+  PDBG("padded filter dims are %d, %d, %d, %d\n", filterdimA_padded[0],
+       filterdimA_padded[1], filterdimA_padded[2], filterdimA_padded[3]);
+  PDBG("padded output dims are %d, %d, %d, %d\n", outdimA_padded[0],
+       outdimA_padded[1], outdimA_padded[2], outdimA_padded[3]);
 
   checkCudnnErr(cudnnCreate(&handle_));
 
@@ -973,7 +980,7 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
     checkCudnnErr( cudnnSetConvolutionMathType(cudnnConvDesc, CUDNN_TENSOR_OP_MATH) );
   }
 
-  printf("Testing dgrad\n");
+  PDBG("Testing dgrad\n");
   numErrors = doDgrad<T_ELEM>(
       handle_, devPtr_dx, devPtr_w, devPtrO, host_dx, host_w, hostO, cudnnIdesc,
       cudnnFdesc,
@@ -994,13 +1001,13 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
 
   if (!benchmark) {
     if (numErrors == 0) {
-      printf("Test PASSED\n");
+      PDBG("Test PASSED\n");
     } else {
-      printf("Test FAILED, num errors = %d\n", numErrors);
+      PDBG("Test FAILED, num errors = %d\n", numErrors);
     }
   }
 
-  printf("Testing wgrad\n");
+  PDBG("Testing wgrad\n");
   numErrors =
       doWgrad(handle_, devPtr_x, devPtr_dw, devPtrO, host_x, host_dw, hostO,
               cudnnIdesc, cudnnFdesc, cudnnOdesc, cudnnConvDesc, alpha, beta,
@@ -1009,9 +1016,9 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
 
   if (!benchmark) {
     if (numErrors == 0) {
-      printf("CUDNN Internal Test PASSED\n");
+      PDBG("CUDNN Internal Test PASSED\n");
     } else {
-      printf("CUDNN Internal Test FAILED, num errors = %d\n", numErrors);
+      PDBG("CUDNN Internal Test FAILED, num errors = %d\n", numErrors);
     }
   }
 
@@ -1049,7 +1056,7 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
 
   cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
 
-  printf("Testing using cudnn forward\n");
+  PDBG("Testing using cudnn forward\n");
 
   status_t ret =
       doForward<T>(x, w, y, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
@@ -1088,7 +1095,7 @@ status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache,
 
   cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
 
-  printf("Testing using cudnn backward data\n");
+  PDBG("Testing using cudnn backward data\n");
 
   status_t ret =
       doBackward<T>(x, dx, w, dw, dout, dimA, padA, convstrideA, filterdimA,
