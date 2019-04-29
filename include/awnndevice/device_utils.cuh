@@ -87,3 +87,28 @@ static __global__ void tensor_copy_d2d(tensor_t copy_to, tensor_t copy_from)
     copy_to.data[i] = copy_from.data[i];
   }
 }
+
+// This function should only be required if  __CUDA_ARCH__ < 600
+// currently I have it working at all times when the AWNN_USE_FLT32
+// is not defined.
+// TODO : remove the AWNN_USE_FLT32 and figure out how to enable this
+// TODO : function with the preprocessor directly
+// https://docs.nvidia.com/cuda/cuda-c-programming-guide/#atomic-functions
+//#if __CUDA_ARCH__ < 600
+static __device__ double atomicAddDouble(double* address, double val)
+{
+  unsigned long long int* address_as_ull =
+      (unsigned long long int*)address;
+  unsigned long long int old = *address_as_ull, assumed;
+
+  do {
+    assumed = old;
+    old = atomicCAS(address_as_ull, assumed,
+                    __double_as_longlong(val + __longlong_as_double(assumed)));
+
+    // Note: uses integer comparison to avoid hang in case of NaN (since NaN != NaN)
+  } while (assumed != old);
+
+  return __longlong_as_double(old);
+}
+//#endif
