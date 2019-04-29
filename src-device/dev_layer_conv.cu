@@ -363,21 +363,21 @@ tensor_t im2col_device(tensor_t const d_x, tensor_t const d_w, conv_param_t cons
   // TODO : look into not allocating here... maybe check bounds in the inner
   // TODO :   and simply replace with 0's
   uint padded_shape[] = { d_x.dim.dims[0], d_x.dim.dims[1], d_x.dim.dims[2] + 2 * pad_sz, d_x.dim.dims[3] + 2 * pad_sz };
-  tensor_t x_padded = tensor_make_device(padded_shape, ARRAY_SIZE(padded_shape));
+  tensor_t d_x_padded = tensor_make_device(padded_shape, ARRAY_SIZE(padded_shape));  // ALLOC
 
   /////////////////////////////////////////////////////////////////////////////
-  _do_tensor_make_padded_square_input_device<<<32, 128>>>(x_padded, d_x, pad_sz, 0);  // 0 is pad value
+  _do_tensor_make_padded_square_input_device<<<32, 128>>>(d_x_padded, d_x, pad_sz, 0);  // 0 is pad value
   /////////////////////////////////////////////////////////////////////////////
 
   uint flattened_x_shape[] = {C * filter_height * filter_width, N * HH * WW};
 
-  tensor_t d_flattened_x = tensor_make_zeros_device(flattened_x_shape, ARRAY_SIZE(flattened_x_shape));
+  tensor_t d_flattened_x = tensor_make_zeros_device(flattened_x_shape, ARRAY_SIZE(flattened_x_shape)); // ALLOC
 
   /////////////////////////////////////////////////////////////////////////////
-  _do_im2col_inner_device_thread_per_element<<<32, 128>>>(d_flattened_x, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, pad_sz, stride);
+  _do_im2col_inner_device_thread_per_element<<<32, 128>>>(d_flattened_x, d_x_padded, N, C, H, W, HH, WW, filter_height, filter_width, pad_sz, stride);
   /////////////////////////////////////////////////////////////////////////////
 
-  tensor_destroy_device(&x_padded);
+  tensor_destroy_device(&d_x_padded);
 
   return d_flattened_x;
 }
@@ -390,7 +390,7 @@ tensor_t im2col_device(tensor_t const d_x, tensor_t const d_w, conv_param_t cons
 status_t convolution_forward_device(cublasHandle_t handle, tensor_t const d_x, tensor_t d_w, lcache_t* hcache, conv_param_t const hparams, tensor_t d_y)
 {
   // 1. flatten the input into vectors which represent the filters
-  tensor_t d_flattened_x = im2col_device(d_x, d_w, hparams);
+  tensor_t d_flattened_x = im2col_device(d_x, d_w, hparams); // 2 x ALLOC
 
   // 2. setup and apply filters
   uint const original_w_shape[] = { d_w.dim.dims[0], d_w.dim.dims[1], d_w.dim.dims[2], d_w.dim.dims[3] };
@@ -398,7 +398,7 @@ status_t convolution_forward_device(cublasHandle_t handle, tensor_t const d_x, t
   tensor_reshape_(&d_w, reshaped_w_shape, ARRAY_SIZE(reshaped_w_shape));
 
   // apply filters with gemm here !!!
-  tensor_t d_out = cublas_gemm_launch(handle, d_w, d_flattened_x);
+  tensor_t d_out = cublas_gemm_launch(handle, d_w, d_flattened_x); // ALLOC
 
   // put d_w back to original shape
   tensor_reshape_(&d_w, original_w_shape, ARRAY_SIZE(original_w_shape));
@@ -790,9 +790,6 @@ status_t convolution_backward_device(cublasHandle_t handle, tensor_t d_dx, tenso
 
   // cache
   tensor_destroy_device(&d_x_cols);
-  tensor_destroy_device(&d_w);
-  tensor_destroy_device(&d_x);
-
   tensor_destroy_device(&d_dout_T_1230);
   tensor_destroy_device(&d_x_cols_T);
   tensor_destroy_device(&d_w_T);

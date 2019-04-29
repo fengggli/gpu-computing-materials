@@ -14,7 +14,9 @@ void* mem_alloc_device(size_t size) {
   cudaStat = cudaMalloc(&d_data, size);
   AWNN_CHECK_EQ(cudaStat, cudaSuccess);
 #ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
-  INC_TOTAL_TENSOR_ALLOC_DEVICE();
+  if(cudaStat == cudaSuccess) {
+    INC_TOTAL_TENSOR_ALLOC_DEVICE();
+  }
 #endif
   return d_data;
 }

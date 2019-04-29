@@ -21,6 +21,8 @@
 
 namespace {
 
+using std::cout;
+
 // The fixture for testing class Foo.
   class TestLayerConvSpeed : public ::testing::Test {
   protected:
@@ -61,6 +63,7 @@ namespace {
 
 #ifdef USE_CUDA
 
+#ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
 TEST_F(TestLayerConvSpeed, forward_and_backward_loop) {
   std::vector<double> forward_times;
   std::vector<double> backward_times;
@@ -87,22 +90,26 @@ TEST_F(TestLayerConvSpeed, forward_and_backward_loop) {
   tensor_t h_w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
   tensor_t h_y = tensor_make(shape_y, dim_of_shape(shape_y));
 
-  tensor_t d_x = tensor_make_copy_h2d(h_x);
-  tensor_t d_w = tensor_make_copy_h2d(h_w);
-  tensor_t d_y = tensor_make_copy_h2d(h_y);
-
   // input for backward
   tensor_t h_dy = tensor_make_linspace(-0.1, 0.5, shape_y, dim_of_shape(shape_y));
-  tensor_t d_dy = tensor_make_copy_h2d(h_dy);
   tensor_t h_dx = tensor_make_alike(h_x);
-  tensor_t d_dx = tensor_make_copy_h2d(h_x);
   tensor_t h_dw = tensor_make_alike(h_w);
-  tensor_t d_dw = tensor_make_copy_h2d(h_w);
 
+  long count_host_alloc   = GET_TOTAL_TENSOR_ALLOC_HOST();
+  long count_device_alloc = GET_TOTAL_TENSOR_ALLOC_DEVICE();
 
-  int iterations = 10;
+  cout << "-----------------------------------------------------------------\n";
+  cout << "BEGIN LOOP\n";
+
+  int iterations = 450;
   for (int i = 0; i < iterations; ++i) {
-    std::cout << "cache_size before forward = " << cache.count << '\n';
+    assert(cache.count == 0);
+
+    reset_all_tensor_alloc_dealloc_stats();
+
+    tensor_t d_y = tensor_make_copy_h2d(h_y);
+    tensor_t d_x = tensor_make_copy_h2d(h_x);
+    tensor_t d_w = tensor_make_copy_h2d(h_w);
 
     auto t1 = get_timepoint();
     /////////////////////////////////////////////////////////////////
@@ -111,7 +118,15 @@ TEST_F(TestLayerConvSpeed, forward_and_backward_loop) {
     auto t2 = get_timepoint();
     forward_times.emplace_back(elapsed_ms(t1, t2));
 
-    std::cout << "cache_size after forward / before backward = " << cache.count << '\n';
+    tensor_destroy_device(&d_y);
+
+    ASSERT_EQ(GET_TOTAL_TENSOR_ALLOC_DEVICE(), GET_TOTAL_TENSOR_DEALLOC_DEVICE() + cache.count);
+
+    reset_all_tensor_alloc_dealloc_stats();
+
+    tensor_t d_dy = tensor_make_copy_h2d(h_dy);
+    tensor_t d_dx = tensor_make_copy_h2d(h_x);
+    tensor_t d_dw = tensor_make_copy_h2d(h_w);
 
     t1 = get_timepoint();
     /////////////////////////////////////////////////////////////////
@@ -120,36 +135,39 @@ TEST_F(TestLayerConvSpeed, forward_and_backward_loop) {
     t2 = get_timepoint();
     backward_times.emplace_back(elapsed_ms(t1, t2));
 
-    std::cout << "cache_size after backward = " << cache.count << '\n';
+    tensor_destroy_device(&d_dw);
+    tensor_destroy_device(&d_dx);
+    tensor_destroy_device(&d_dy);
+
+    ASSERT_EQ(GET_TOTAL_TENSOR_ALLOC_DEVICE() + cache.count, GET_TOTAL_TENSOR_DEALLOC_DEVICE());
+
+    reset_all_tensor_alloc_dealloc_stats();
   }
+
+  cout << "END LOOP\n";
+  cout << "-----------------------------------------------------------------\n";
+
   double avg_fwd_ms = std::accumulate(forward_times.begin(), forward_times.end(), double(0)) / forward_times.size();
   double avg_bkwd_ms = std::accumulate(backward_times.begin(), backward_times.end(), double(0)) / backward_times.size();
 
   std::cout << "avg_fwd_ms=" << avg_fwd_ms << ", avg_bkwd_ms=" << avg_bkwd_ms << '\n';
 
-  tensor_destroy_device(&d_dw);
-  tensor_destroy_device(&d_dx);
+  tensor_destroy(&h_x);
+  tensor_destroy(&h_w);
+  tensor_destroy(&h_y);
   tensor_destroy(&h_dy);
   tensor_destroy(&h_dx);
   tensor_destroy(&h_dw);
 
-#ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
 
-  std::cout << "total host allocations = "
-            << GET_TOTAL_TENSOR_ALLOC_HOST()
-            << ", total host de-allocations = "
-            << GET_TOTAL_TENSOR_DEALLOC_HOST() << '\n';
-  EXPECT_EQ(GET_TOTAL_TENSOR_ALLOC_HOST(), GET_TOTAL_TENSOR_DEALLOC_HOST());
-  std::cout << "total device allocations = "
-            << GET_TOTAL_TENSOR_ALLOC_DEVICE()
-            << ", total device de-allocations = "
-            << GET_TOTAL_TENSOR_DEALLOC_DEVICE() << '\n';
+  print_memory_alloc_dealloc_totals();
+  EXPECT_EQ(count_host_alloc, GET_TOTAL_TENSOR_DEALLOC_HOST());
+  EXPECT_EQ(count_device_alloc, GET_TOTAL_TENSOR_DEALLOC_DEVICE());
 
-  EXPECT_EQ(GET_TOTAL_TENSOR_ALLOC_DEVICE(), GET_TOTAL_TENSOR_DEALLOC_DEVICE());
-#endif
 }
+#endif // #ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
 
-#endif
+#endif // USE_CUDA
 }
 
 int main(int argc, char **argv) {

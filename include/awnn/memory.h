@@ -27,8 +27,6 @@ long GET_TOTAL_TENSOR_DEALLOC_HOST();
 long GET_TOTAL_TENSOR_ALLOC_DEVICE();
 long GET_TOTAL_TENSOR_DEALLOC_DEVICE();
 
-
-
 static inline void* mem_alloc(size_t size) {
   void* ret = malloc(size);
   if (!ret) {
@@ -54,7 +52,14 @@ void* mem_alloc_device(size_t size);
 
 void mem_free_device(void* data);
 
-
+#ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
+void print_memory_alloc_dealloc_totals();
+long reset_TOTAL_TENSOR_ALLOC_HOST();
+long reset_TOTAL_TENSOR_DEALLOC_HOST();
+long reset_TOTAL_TENSOR_ALLOC_DEVICE();
+long reset_TOTAL_TENSOR_DEALLOC_DEVICE();
+void reset_all_tensor_alloc_dealloc_stats();
+#endif
 
 #ifdef __cplusplus
 }
