@@ -51,12 +51,20 @@ TEST_F(LayerBenchConvDeviceTest, BenchCUDNN) {
                 tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
             tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
 
+            tensor_t d_x = tensor_make_copy_h2d(x);
+            tensor_t d_w = tensor_make_copy_h2d(w);
+            tensor_t d_y = tensor_make_copy_h2d(y);
+
             // input for backward
             tensor_t dy =
                 tensor_make_linspace(-0.1, 0.5, shape_y, dim_of_shape(shape_y));
 
             tensor_t dx = tensor_make_alike(x);
             tensor_t dw = tensor_make_alike(w);
+
+            tensor_t d_dy = tensor_make_copy_h2d(dy);
+            tensor_t d_dx = tensor_make_copy_h2d(x);
+            tensor_t d_dw = tensor_make_copy_h2d(w);
 
             lcache_t cache;
             make_empty_lcache(&cache);
@@ -66,7 +74,7 @@ TEST_F(LayerBenchConvDeviceTest, BenchCUDNN) {
 
               // FORWARD
               status_t ret =
-                  convolution_forward_cudnn(x, w, &cache, conv_params, y);
+                  convolution_forward_cudnn(d_x, d_w, &cache, conv_params, d_y);
               EXPECT_EQ(ret, S_OK);
 
               auto t2 = get_timepoint();
@@ -74,7 +82,7 @@ TEST_F(LayerBenchConvDeviceTest, BenchCUDNN) {
 
               t1 = get_timepoint();
 
-              ret = convolution_backward_cudnn(dx, dw, &cache, conv_params, dy);
+              ret = convolution_backward_cudnn(d_dx, d_dw, &cache, conv_params, d_dy);
               EXPECT_EQ(ret, S_OK);
 
               t2 = get_timepoint();

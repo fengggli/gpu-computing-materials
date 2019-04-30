@@ -17,10 +17,14 @@ target_link_libraries(test-tensor-op ${AWNN_LIBS}  gtest)
 add_test(test-tensor-op test-tensor-op)
 
 add_executable(test-layer-conv test_layer_conv.cpp)
-target_link_libraries(test-layer-conv ${AWNN_LIBS}  ${AWNN_DEVICE_LIBS} gtest)
+target_link_libraries(test-layer-conv ${AWNN_LIBS} gtest)
 add_test(test-layer-conv test-layer-conv)
 
 if(USE_CUDA AND USE_CUDNN)
+add_executable(test-layer-conv-cudnn test_layer_conv_cudnn.cpp)
+target_link_libraries(test-layer-conv-cudnn ${AWNN_LIBS}  ${AWNN_DEVICE_LIBS} gtest)
+add_test(test-layer-conv-cudnn test-layer-conv-cudnn)
+
 add_executable(bench-conv-device bench_conv_device.cpp)
 target_link_libraries(bench-conv-device ${AWNN_LIBS}  ${AWNN_DEVICE_LIBS} gtest)
 add_test(bench-conv-device bench-conv-device)

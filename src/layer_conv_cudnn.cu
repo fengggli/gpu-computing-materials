@@ -456,7 +456,6 @@ int doConv(
     const int   benchmark) {
 
   int outsize = outstrideA[0]*outdimA[0];
-  T_ELEM* hostO_ref = (T_ELEM*)calloc(outsize, sizeof(hostO[0]));
 
   cudnnConvolutionFwdAlgo_t algo =
       CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
@@ -466,6 +465,7 @@ int doConv(
   size_t workSpaceSize;
   int numErrors = 0;
 #ifdef PRINT_VERBOSE
+  T_ELEM* hostO_ref = (T_ELEM*)calloc(outsize, sizeof(hostO[0]));
   double start, stop;
 #endif
 
@@ -475,9 +475,11 @@ int doConv(
   if (workSpaceSize > 0) {
     cudaMalloc(&workSpace, workSpaceSize);
   }
+
 #ifdef PRINT_VERBOSE
   start = second();
 #endif
+
   checkCudnnErr ( cudnnConvolutionForward (handle_,
                                            (void*)(&alpha),
                                            cudnnIdesc, devPtrI,
@@ -488,15 +490,17 @@ int doConv(
                                            (void*)(&beta),
                                            cudnnOdesc, devPtrO) );
   checkCudaErr( cudaDeviceSynchronize() );
+
 #ifdef PRINT_VERBOSE
   stop = second();
   printPerf( stop - start, 0, 0,
              0, 0, 0, 0);
 #endif
-  checkCudaErr(cudaMemcpy(hostO, devPtrO, sizeof(hostO[0]) * outsize,
-                          cudaMemcpyDeviceToHost));
-  checkCudaErr( cudaDeviceSynchronize() );
+//  checkCudaErr(cudaMemcpy(hostO, devPtrO, sizeof(hostO[0]) * outsize,
+//                          cudaMemcpyDeviceToHost));
+//  checkCudaErr( cudaDeviceSynchronize() );
 
+#ifdef PRINT_VERBOSE
   if (!benchmark) {
     conv_cpu_ref<T_ELEM, T>(hostI, hostF, hostO_ref, alpha, beta, 1,
                             filterFormat, dimA, filterdimA, outdimA, strideA,
@@ -512,8 +516,9 @@ int doConv(
       //        hostO[index], hostO_ref[index]);
     }
   }
+  if (hostO_ref) free(hostO_ref);
+#endif
 clean:
-  //  if (hostOfromdev) free(hostOfromdev);
   if (workSpace) cudaFree(workSpace);
   return numErrors;
 }
@@ -543,13 +548,14 @@ int doDgrad(
     const int*   padA,
     const int*   dilationA, const int notUseInternalTest) {
   int insize = strideA[0]*dimA[0];
-  T_ELEM* hostI_ref = (T_ELEM*)calloc(insize, sizeof(hostI[0]));
+
   cudnnConvolutionBwdDataAlgo_t algo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
 
   void *workSpace = 0;
   size_t workSpaceSize;
   int numErrors = 0;
 #ifdef PRINT_VERBOSE
+  T_ELEM* hostI_ref = (T_ELEM*)calloc(insize, sizeof(hostI[0]));
   double start, stop;
 #endif
 
@@ -559,9 +565,11 @@ int doDgrad(
   if (workSpaceSize > 0) {
     cudaMalloc(&workSpace, workSpaceSize);
   }
+
 #ifdef PRINT_VERBOSE
   start = second();
 #endif
+
   checkCudnnErr ( cudnnConvolutionBackwardData (handle_,
                                                 (void*)(&alpha),
                                                 cudnnFdesc, devPtrF,
@@ -572,14 +580,15 @@ int doDgrad(
                                                 (void*)(&beta),
                                                 cudnnIdesc, devPtrI) );
   checkCudaErr( cudaDeviceSynchronize() );
+
 #ifdef PRINT_VERBOSE
   stop = second();
   printPerf( stop - start, 0, 0,
              0, 0, 0, 0);
-#endif
-  checkCudaErr(cudaMemcpy(hostI, devPtrI, sizeof(hostI[0]) * insize,
-                          cudaMemcpyDeviceToHost));
-  checkCudaErr( cudaDeviceSynchronize() );
+
+//  checkCudaErr(cudaMemcpy(hostI, devPtrI, sizeof(hostI[0]) * insize,
+//                          cudaMemcpyDeviceToHost));
+//  checkCudaErr( cudaDeviceSynchronize() );
 
   if (!notUseInternalTest) {
     dataGrad_cpu_ref<T_ELEM>(hostF, hostO, hostI, alpha, beta, filterFormat,
@@ -594,8 +603,11 @@ int doDgrad(
       }
     }
   }
-clean:
+
   if (hostI_ref) free(hostI_ref);
+#endif
+
+clean:
   if (workSpace) cudaFree(workSpace);
   return numErrors;
 }
@@ -625,7 +637,7 @@ int doWgrad(
     const int*   padA,
     const int*   dilationA, const int notUseInternalTest) {
   int filsize = filterdimA[0]*filterdimA[1]*filterdimA[2]*filterdimA[3];
-  T_ELEM* hostFf_ref = (T_ELEM*)calloc(filsize, sizeof(hostF[0]));
+
   cudnnConvolutionBwdFilterAlgo_t algo = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
 
   void *workSpace = 0;
@@ -641,9 +653,12 @@ int doWgrad(
   if (workSpaceSize > 0) {
     cudaMalloc(&workSpace, workSpaceSize);
   }
+
 #ifdef PRINT_VERBOSE
+  T_ELEM* hostFf_ref = (T_ELEM*)calloc(filsize, sizeof(hostF[0]));
   start = second();
 #endif
+
   checkCudnnErr ( cudnnConvolutionBackwardFilter (handle_,
                                                   (void*)(&alpha),
                                                   cudnnIdesc, devPtrI,
@@ -654,11 +669,12 @@ int doWgrad(
                                                   (void*)(&beta),
                                                   cudnnFdesc, devPtrF) );
   checkCudaErr( cudaDeviceSynchronize() );
+
 #ifdef PRINT_VERBOSE
   stop = second();
   printPerf( stop - start, 0, 0,
              0, 0, 0, 0);
-#endif
+
   checkCudaErr(cudaMemcpy(hostF, devPtrF, sizeof(hostF[0]) * filsize,
                           cudaMemcpyDeviceToHost));
   checkCudaErr( cudaDeviceSynchronize() );
@@ -676,8 +692,11 @@ int doWgrad(
       }
     }
   }
-clean:
+
   if (hostFf_ref) free(hostFf_ref);
+#endif
+
+clean:
   if (workSpace) cudaFree(workSpace);
   return numErrors;
 }
@@ -687,9 +706,9 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
                    int* padA, int* convstrideA, int* filterdimA, cudnnTensorFormat_t filterFormat, cudnnDataType_t dataType,
                    int mathType, int notUseInternalTest) {
   cudnnHandle_t handle_;
-  T_ELEM* devPtrI=NULL;
-  T_ELEM* devPtrF=NULL;
-  T_ELEM* devPtrO=NULL;
+  T_ELEM* devPtrI=x.data;
+  T_ELEM* devPtrF=w.data;
+  T_ELEM* devPtrO=y.data;
   T_ELEM* hostI=NULL;
   T_ELEM* hostF=NULL;
   T_ELEM* hostO=NULL;
@@ -757,26 +776,26 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
   checkCudnnErr( cudnnCreateConvolutionDescriptor( &cudnnConvDesc ));
 
   generateStrides(dimA_padded, strideA_padded, 4, filterFormat);
-  insize = dimA_padded[0] * dimA_padded[1] * dimA_padded[2] * dimA_padded[3];
+//  insize = dimA_padded[0] * dimA_padded[1] * dimA_padded[2] * dimA_padded[3];
 
   generateStrides(filterdimA_padded, filterstrideA_padded, 4, filterFormat);
-  filtersize = filterdimA_padded[0] * filterdimA_padded[1] * filterdimA_padded[2] * filterdimA_padded[3];
+//  filtersize = filterdimA_padded[0] * filterdimA_padded[1] * filterdimA_padded[2] * filterdimA_padded[3];
 
   generateStrides(outdimA_padded, outstrideA_padded, 4, filterFormat);
-  outsize = outdimA_padded[0] * outdimA_padded[1] * outdimA_padded[2] * outdimA_padded[3];
+//  outsize = outdimA_padded[0] * outdimA_padded[1] * outdimA_padded[2] * outdimA_padded[3];
 
-  cudaMalloc ((void**)&(devPtrI), (insize) * sizeof(devPtrI[0]) );
-  cudaMalloc ((void**)&(devPtrF), (filtersize) * sizeof(devPtrF[0]) );
-  cudaMalloc ((void**)&(devPtrO), (outsize) * sizeof(devPtrO[0]) );
+//  cudaMalloc ((void**)&(devPtrI), (insize) * sizeof(devPtrI[0]) );
+//  cudaMalloc ((void**)&(devPtrF), (filtersize) * sizeof(devPtrF[0]) );
+//  cudaMalloc ((void**)&(devPtrO), (outsize) * sizeof(devPtrO[0]) );
 
-  hostI = (T_ELEM*) (x.data);
-  hostF = (T_ELEM*) (w.data);
-  hostO = (T_ELEM*) (y.data);
+//  hostI = (T_ELEM*) (x.data);
+//  hostF = (T_ELEM*) (w.data);
+//  hostO = (T_ELEM*) (y.data);
 
-  checkCudaErr( cudaMemcpy(devPtrI, hostI, sizeof(hostI[0]) * insize, cudaMemcpyHostToDevice));
-  checkCudaErr( cudaMemcpy(devPtrF, hostF, sizeof(hostF[0]) * filtersize, cudaMemcpyHostToDevice));
-  checkCudaErr( cudaMemcpy(devPtrO, hostO, sizeof(hostO[0]) * outsize, cudaMemcpyHostToDevice));
-  checkCudaErr( cudaDeviceSynchronize() );
+//  checkCudaErr( cudaMemcpy(devPtrI, hostI, sizeof(hostI[0]) * insize, cudaMemcpyHostToDevice));
+//  checkCudaErr( cudaMemcpy(devPtrF, hostF, sizeof(hostF[0]) * filtersize, cudaMemcpyHostToDevice));
+//  checkCudaErr( cudaMemcpy(devPtrO, hostO, sizeof(hostO[0]) * outsize, cudaMemcpyHostToDevice));
+//  checkCudaErr( cudaDeviceSynchronize() );
 
 
   checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnIdesc, dataType, convDim+2, dimA_padded, strideA_padded) );
@@ -828,9 +847,9 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
   }
 
   clean:
-  if (devPtrI) cudaFree (devPtrI);
-  if (devPtrF) cudaFree (devPtrF);
-  if (devPtrO) cudaFree (devPtrO);
+//  if (devPtrI) cudaFree (devPtrI);
+//  if (devPtrF) cudaFree (devPtrF);
+//  if (devPtrO) cudaFree (devPtrO);
 
   if (cudnnIdesc) cudnnDestroyTensorDescriptor(cudnnIdesc);
   if (cudnnFdesc) cudnnDestroyFilterDescriptor(cudnnFdesc);
@@ -848,18 +867,18 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
                          cudnnDataType_t dataType, int mathType,
                     int notUseInternalTest) {
   cudnnHandle_t handle_;
-  T_ELEM* devPtr_dx = NULL;
-  T_ELEM* devPtr_w = NULL;
+  T_ELEM* devPtr_dx = dx.data;
+  T_ELEM* devPtr_w = w.data;
   T_ELEM* host_dx = NULL;
   T_ELEM* host_w = NULL;
 
-  T_ELEM* devPtr_x = NULL;
-  T_ELEM* devPtr_dw = NULL;
+  T_ELEM* devPtr_x = x.data;
+  T_ELEM* devPtr_dw = dw.data;
   T_ELEM* host_x = NULL;
   T_ELEM* host_dw = NULL;
 
   T_ELEM* hostO=NULL;
-  T_ELEM* devPtrO = NULL;
+  T_ELEM* devPtrO = dout.data;
 
   cudnnTensorDescriptor_t cudnnIdesc;
   cudnnFilterDescriptor_t cudnnFdesc;
@@ -933,13 +952,13 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   outsize = outdimA_padded[0] * outdimA_padded[1] * outdimA_padded[2] * outdimA_padded[3];
 
   // malloc device backward data
-  cudaMalloc((void**)&(devPtr_dx), (insize) * sizeof(devPtr_dx[0]));
-  cudaMalloc((void**)&(devPtr_w), (filtersize) * sizeof(devPtr_w[0]));
+//  cudaMalloc((void**)&(devPtr_dx), (insize) * sizeof(devPtr_dx[0]));
+//  cudaMalloc((void**)&(devPtr_w), (filtersize) * sizeof(devPtr_w[0]));
   // malloc device backward weight
-  cudaMalloc((void**)&(devPtr_x), (insize) * sizeof(devPtr_x[0]));
-  cudaMalloc((void**)&(devPtr_dw), (filtersize) * sizeof(devPtr_dw[0]));
-
-  cudaMalloc ((void**)&(devPtrO), (outsize) * sizeof(devPtrO[0]) );
+//  cudaMalloc((void**)&(devPtr_x), (insize) * sizeof(devPtr_x[0]));
+//  cudaMalloc((void**)&(devPtr_dw), (filtersize) * sizeof(devPtr_dw[0]));
+//
+//  cudaMalloc ((void**)&(devPtrO), (outsize) * sizeof(devPtrO[0]) );
 
   // host pointer used to compute backward data
   host_dx = (T_ELEM*)(dx.data);
@@ -950,18 +969,18 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   hostO = (T_ELEM*) (dout.data);
 
   // backward data
-  checkCudaErr(cudaMemcpy(devPtr_dx, host_dx, sizeof(host_dx[0]) * insize,
-                          cudaMemcpyHostToDevice));
-  checkCudaErr(cudaMemcpy(devPtr_w, host_w, sizeof(host_w[0]) * filtersize,
-                          cudaMemcpyHostToDevice));
+//  checkCudaErr(cudaMemcpy(devPtr_dx, host_dx, sizeof(host_dx[0]) * insize,
+//                          cudaMemcpyHostToDevice));
+//  checkCudaErr(cudaMemcpy(devPtr_w, host_w, sizeof(host_w[0]) * filtersize,
+//                          cudaMemcpyHostToDevice));
   // backward weight
-  checkCudaErr(cudaMemcpy(devPtr_x, host_x, sizeof(host_x[0]) * insize,
-                          cudaMemcpyHostToDevice));
-  checkCudaErr(cudaMemcpy(devPtr_dw, host_dw, sizeof(host_dw[0]) * filtersize,
-                          cudaMemcpyHostToDevice));
-
-  checkCudaErr( cudaMemcpy(devPtrO, hostO, sizeof(hostO[0]) * outsize, cudaMemcpyHostToDevice));
-  checkCudaErr( cudaDeviceSynchronize() );
+//  checkCudaErr(cudaMemcpy(devPtr_x, host_x, sizeof(host_x[0]) * insize,
+//                          cudaMemcpyHostToDevice));
+//  checkCudaErr(cudaMemcpy(devPtr_dw, host_dw, sizeof(host_dw[0]) * filtersize,
+//                          cudaMemcpyHostToDevice));
+//
+//  checkCudaErr( cudaMemcpy(devPtrO, hostO, sizeof(hostO[0]) * outsize, cudaMemcpyHostToDevice));
+//  checkCudaErr( cudaDeviceSynchronize() );
 
 
   checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnIdesc, dataType, convDim+2, dimA_padded, strideA_padded) );
@@ -1022,16 +1041,13 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
 
 clean:
   // clean device backward data
-  if (devPtr_dx) cudaFree(devPtr_dx);
-  if (devPtr_w) cudaFree(devPtr_w);
+//  if (devPtr_dx) cudaFree(devPtr_dx);
+//  if (devPtr_w) cudaFree(devPtr_w);
   // clean device backward weight
-  if (devPtr_x) cudaFree(devPtr_x);
-  if (devPtr_dw) cudaFree(devPtr_dw);
+//  if (devPtr_x) cudaFree(devPtr_x);
+//  if (devPtr_dw) cudaFree(devPtr_dw);
 
-  if (devPtrO) cudaFree (devPtrO);
-  //  if (hostI) free(hostI);
-  //  if (hostF) free(hostF);
-  //  if (hostO) free(hostO);
+//  if (devPtrO) cudaFree (devPtrO);
   if (cudnnIdesc) cudnnDestroyTensorDescriptor(cudnnIdesc);
   if (cudnnFdesc) cudnnDestroyFilterDescriptor(cudnnFdesc);
   if (cudnnOdesc) cudnnDestroyTensorDescriptor(cudnnOdesc);
