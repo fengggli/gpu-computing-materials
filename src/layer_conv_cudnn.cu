@@ -17,12 +17,15 @@
 //#define PRINT_VERBOSE
 
 #include <time.h>
+
+#ifdef PRINT_VERBOSE
 static double second (void)
 {
   struct timespec tp;
   clock_gettime(CLOCK_REALTIME, &tp);
   return ((double)tp.tv_sec + (double)tp.tv_nsec / 1000000000.0);
 }
+#endif
 
 static int checkCudaError(cudaError_t code, const char* expr, const char* file, int line) {
   if (code) {
@@ -44,7 +47,7 @@ static int checkCudnnError(cudnnStatus_t code, const char* expr, const char* fil
 
 #define checkCudnnErr(...)      do { int err = checkCudnnError(__VA_ARGS__, #__VA_ARGS__, __FILE__, __LINE__);  if (err) goto clean; } while (0)
 
-
+#ifdef PRINT_VERBOSE
 static void printPerf( double cudaTime, double cudaGflops, double cudaBandwithGb,
                        const char *cpuLib, double cpuTime,  double cpuGflops, double cpuBandwithGb) {
   printf( "^^^^ CUDA : elapsed = %g sec,  ",  cudaTime );
@@ -59,6 +62,7 @@ static void printPerf( double cudaTime, double cudaGflops, double cudaBandwithGb
 
   }
 }
+#endif
 
 static void generateStrides(const int* dimA, int* strideA, int nbDims, cudnnTensorFormat_t filterFormat) {
   //For INT8x4 and INT8x32 we still compute standard strides here to input
@@ -460,7 +464,7 @@ int doConv(
   void *workSpace = 0;
   size_t workSpaceSize;
   int numErrors = 0;
-  double start, stop;
+  //  double start, stop;
 
   checkCudnnErr ( cudnnGetConvolutionForwardWorkspaceSize(handle_, cudnnIdesc, cudnnFdesc, cudnnConvDesc,
                                                           cudnnOdesc, algo, &workSpaceSize) );
@@ -468,7 +472,7 @@ int doConv(
   if (workSpaceSize > 0) {
     cudaMalloc(&workSpace, workSpaceSize);
   }
-#define PRINT_VERBOSE
+#ifdef PRINT_VERBOSE
   start = second();
 #endif
   checkCudnnErr ( cudnnConvolutionForward (handle_,
@@ -481,7 +485,7 @@ int doConv(
                                            (void*)(&beta),
                                            cudnnOdesc, devPtrO) );
   checkCudaErr( cudaDeviceSynchronize() );
-#define PRINT_VERBOSE
+#ifdef PRINT_VERBOSE
   stop = second();
   printPerf( stop - start, 0, 0,
              0, 0, 0, 0);
@@ -544,7 +548,7 @@ int doDgrad(
   void *workSpace = 0;
   size_t workSpaceSize;
   int numErrors = 0;
-  double start, stop;
+  //  double start, stop;
 
   checkCudnnErr ( cudnnGetConvolutionBackwardDataWorkspaceSize(handle_, cudnnFdesc, cudnnOdesc, cudnnConvDesc,
                                                                cudnnIdesc, algo, &workSpaceSize) );
@@ -552,7 +556,7 @@ int doDgrad(
   if (workSpaceSize > 0) {
     cudaMalloc(&workSpace, workSpaceSize);
   }
-#define PRINT_VERBOSE
+#ifdef PRINT_VERBOSE
   start = second();
 #endif
   checkCudnnErr ( cudnnConvolutionBackwardData (handle_,
@@ -565,7 +569,7 @@ int doDgrad(
                                                 (void*)(&beta),
                                                 cudnnIdesc, devPtrI) );
   checkCudaErr( cudaDeviceSynchronize() );
-#define PRINT_VERBOSE
+#ifdef PRINT_VERBOSE
   stop = second();
   printPerf( stop - start, 0, 0,
              0, 0, 0, 0);
@@ -626,7 +630,7 @@ int doWgrad(
   void *workSpace = 0;
   size_t workSpaceSize;
   int numErrors = 0;
-  double start, stop;
+  //  double start, stop;
 
   checkCudnnErr ( cudnnGetConvolutionBackwardFilterWorkspaceSize(handle_, cudnnIdesc, cudnnOdesc, cudnnConvDesc,
                                                                  cudnnFdesc, algo, &workSpaceSize) );
@@ -634,7 +638,7 @@ int doWgrad(
   if (workSpaceSize > 0) {
     cudaMalloc(&workSpace, workSpaceSize);
   }
-#define PRINT_VERBOSE
+#ifdef PRINT_VERBOSE
   start = second();
 #endif
   checkCudnnErr ( cudnnConvolutionBackwardFilter (handle_,
@@ -647,7 +651,7 @@ int doWgrad(
                                                   (void*)(&beta),
                                                   cudnnFdesc, devPtrF) );
   checkCudaErr( cudaDeviceSynchronize() );
-#define PRINT_VERBOSE
+#ifdef PRINT_VERBOSE
   stop = second();
   printPerf( stop - start, 0, 0,
              0, 0, 0, 0);
@@ -1049,7 +1053,7 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
 
   cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
 
-#define PRINT_VERBOSE
+#ifdef PRINT_VERBOSE
   PDBG("Testing using cudnn forward\n");
 #endif
   status_t ret =
@@ -1089,7 +1093,7 @@ status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache,
 
   cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
 
-#define PRINT_VERBOSE
+#ifdef PRINT_VERBOSE
   PDBG("Testing using cudnn backward data\n");
 #endif
 
