@@ -15,6 +15,7 @@
 #define THRESHOLD               2.0e-2
 
 //#define PRINT_VERBOSE
+//#define USE_INTERNAL_TEST
 
 #include <time.h>
 
@@ -1036,9 +1037,14 @@ clean:
 
 
 status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y){
+  int mathType = 0;  // 0: CUDNN_DEFAULT_MATH -> Tensor Core Operations are not
+                     // used 1: CUDNN_TENSOR_OP_MATH -> The use of Tensor Core
+                     // Operations is permitted.
 
-  int mathType = 0;
   int notUseInternalTest = 1;  // 1: True -> Not use my internal test
+#ifdef USE_INTERNAL_TEST
+  int notUseInternalTest = 0;  // 0: False -> use my internal test
+#endif
   int dimA[] = {(int)x.dim.dims[0], (int)x.dim.dims[1], (int)x.dim.dims[2], (int)x.dim.dims[3]};  // N, C, H, W;
   int padA[] = {(int)params.padding, (int)params.padding};
   int convstrideA[] = {(int)params.stride, (int)params.stride};
@@ -1078,6 +1084,9 @@ status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache,
 
   int mathType = 0;
   int notUseInternalTest = 1;
+#ifdef USE_INTERNAL_TEST
+  int notUseInternalTest = 0;  // 0: False -> use my internal test
+#endif
 
   int dimA[] = {(int)dx.dim.dims[0], (int)dx.dim.dims[1], (int)dx.dim.dims[2], (int)dx.dim.dims[3]};  // N, C, H, W;
   int padA[] = {(int)params.padding, (int)params.padding};
