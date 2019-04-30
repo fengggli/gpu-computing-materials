@@ -538,9 +538,7 @@ int doDgrad(
     const int*   outstrideA,
     const int*   convstrideA,
     const int*   padA,
-    const int*   dilationA,
-    const int    benchmark) {
-
+    const int*   dilationA, const int notUseInternalTest) {
   int insize = strideA[0]*dimA[0];
   T_ELEM* hostI_ref = (T_ELEM*)calloc(insize, sizeof(hostI[0]));
   cudnnConvolutionBwdDataAlgo_t algo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
@@ -578,7 +576,7 @@ int doDgrad(
                           cudaMemcpyDeviceToHost));
   checkCudaErr( cudaDeviceSynchronize() );
 
-  if (!benchmark) {
+  if (!notUseInternalTest) {
     dataGrad_cpu_ref<T_ELEM>(hostF, hostO, hostI, alpha, beta, filterFormat,
                              outdimA, filterdimA, dimA, outstrideA, strideA,
                              convstrideA, padA, dilationA, 4);
@@ -620,9 +618,7 @@ int doWgrad(
     const int*   outstrideA,
     const int*   convstrideA,
     const int*   padA,
-    const int*   dilationA,
-    const int   benchmark) {
-
+    const int*   dilationA, const int notUseInternalTest) {
   int filsize = filterdimA[0]*filterdimA[1]*filterdimA[2]*filterdimA[3];
   T_ELEM* hostFf_ref = (T_ELEM*)calloc(filsize, sizeof(hostF[0]));
   cudnnConvolutionBwdFilterAlgo_t algo = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
@@ -660,7 +656,7 @@ int doWgrad(
                           cudaMemcpyDeviceToHost));
   checkCudaErr( cudaDeviceSynchronize() );
 
-  if (!benchmark) {
+  if (!notUseInternalTest) {
     weightGrad_cpu_ref<T_ELEM>(hostI, hostO, alpha, beta, hostF, filterFormat,
                                dimA, filterdimA, outdimA, strideA, outstrideA,
                                convstrideA, padA, dilationA, 4);
@@ -681,8 +677,8 @@ clean:
 
 template <typename T_ELEM>
 status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
-                   int* padA, int* convstrideA, int* filterdimA, cudnnTensorFormat_t filterFormat,
-                   cudnnDataType_t dataType, int mathType, int benchmark) {
+                   int* padA, int* convstrideA, int* filterdimA, cudnnTensorFormat_t filterFormat, cudnnDataType_t dataType,
+                   int mathType, int notUseInternalTest) {
   cudnnHandle_t handle_;
   T_ELEM* devPtrI=NULL;
   T_ELEM* devPtrF=NULL;
@@ -814,10 +810,9 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
       outstrideA_padded,
       convstrideA,
       padA,
-      dilationA,
-      benchmark);
+      dilationA, notUseInternalTest);
 
-  if (!benchmark) {
+  if (!notUseInternalTest) {
     if (numErrors == 0) {
       PDBG("Test PASSED\n");
     } else {
@@ -844,7 +839,7 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
                     tensor_t const dout, int* dimA, int* padA, int* convstrideA, int* filterdimA,
                          cudnnTensorFormat_t filterFormat,
                          cudnnDataType_t dataType, int mathType,
-                         int benchmark) {
+                    int notUseInternalTest) {
   cudnnHandle_t handle_;
   T_ELEM* devPtr_dx = NULL;
   T_ELEM* devPtr_w = NULL;
@@ -993,10 +988,9 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
       outstrideA_padded,
       convstrideA,
       padA,
-      dilationA,
-      benchmark);
+      dilationA, notUseInternalTest);
 
-  if (!benchmark) {
+  if (!notUseInternalTest) {
     if (numErrors == 0) {
       PDBG("Test PASSED\n");
     } else {
@@ -1008,10 +1002,10 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   numErrors =
       doWgrad(handle_, devPtr_x, devPtr_dw, devPtrO, host_x, host_dw, hostO,
               cudnnIdesc, cudnnFdesc, cudnnOdesc, cudnnConvDesc, alpha, beta,
-              filterFormat, dimA, filterdimA, outdimA, strideA_padded,
-              outstrideA_padded, convstrideA, padA, dilationA, benchmark);
+              filterFormat, dimA, filterdimA, outdimA, strideA_padded, outstrideA_padded, convstrideA, padA,
+                      dilationA, notUseInternalTest);
 
-  if (!benchmark) {
+  if (!notUseInternalTest) {
     if (numErrors == 0) {
       PDBG("CUDNN Internal Test PASSED\n");
     } else {
@@ -1044,7 +1038,7 @@ clean:
 status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y){
 
   int mathType = 0;
-  int benchmark = 1;
+  int notUseInternalTest = 1;  // 1: True -> Not use my internal test
   int dimA[] = {(int)x.dim.dims[0], (int)x.dim.dims[1], (int)x.dim.dims[2], (int)x.dim.dims[3]};  // N, C, H, W;
   int padA[] = {(int)params.padding, (int)params.padding};
   int convstrideA[] = {(int)params.stride, (int)params.stride};
@@ -1057,7 +1051,8 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
   PDBG("Testing using cudnn forward\n");
 #endif
   status_t ret =
-      doForward<T>(x, w, y, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
+      doForward<T>(x, w, y, dimA, padA, convstrideA, filterdimA, filterFormat,
+                   CUDNN_DATA_FLOAT, mathType, notUseInternalTest);
 
   // shadow copy
   tensor_t cached_x_shadow = x;
@@ -1082,7 +1077,7 @@ status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache,
   x = lcache_pop(cache);
 
   int mathType = 0;
-  int benchmark = 1;
+  int notUseInternalTest = 1;
 
   int dimA[] = {(int)dx.dim.dims[0], (int)dx.dim.dims[1], (int)dx.dim.dims[2], (int)dx.dim.dims[3]};  // N, C, H, W;
   int padA[] = {(int)params.padding, (int)params.padding};
@@ -1098,8 +1093,8 @@ status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache,
 #endif
 
   status_t ret =
-      doBackward<T>(x, dx, w, dw, dout, dimA, padA, convstrideA, filterdimA,
-                    filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
+      doBackward<T>(x, dx, w, dw, dout, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT,
+                               mathType, notUseInternalTest);
 
   return ret;
 }
