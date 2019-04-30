@@ -12,6 +12,8 @@
 #include "awnn/layer_cudnn.h"
 #define THRESHOLD               2.0e-2
 
+//#define PRINT_VERBOSE
+
 static void generateStrides(const int* dimA, int* strideA, int nbDims, cudnnTensorFormat_t filterFormat) {
   //For INT8x4 and INT8x32 we still compute standard strides here to input
   //into the cuDNN functions. We will manually scale by resizeFactor in the cpu ref.
@@ -31,6 +33,7 @@ static void generateStrides(const int* dimA, int* strideA, int nbDims, cudnnTens
   }
 }
 
+#if 0
 static inline int getFwdConvDilatedFilterDim(int filterDim,
                                              int dilation)
 {
@@ -52,7 +55,7 @@ static inline int getFwdConvOutputDim( int tensorDim,
   int p = (getFwdConvPaddedImageDim(tensorDim, pad) - getFwdConvDilatedFilterDim(filterDim, dilation))/stride + 1;
   return(p);
 }
-
+#endif
 
 
 template <typename T_ELEM>
@@ -70,8 +73,8 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
   void *workSpace = 0;
   size_t workSpaceSize;
 
-  /*cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;*/
-  cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_FFT;
+  cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
+//  cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_FFT;
   /*cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING;*/
   /*cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD;*/
 
@@ -80,31 +83,31 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
   float alpha = 1.0f;
   float beta = 0.0;
   int dilationA[] = {1, 1};
-  int outdimA[4];
+//  int outdimA[4];
 
-
-  int dimA_padded[4];
-  int outdimA_padded[4];
-  int filterdimA_padded[4];
+  int* dimA_padded = dimA;
+  int* outdimA_padded = (int*) (y.dim.dims);
+  int* filterdimA_padded = filterdimA;
   int strideA_padded[4];
   int outstrideA_padded[4];
   int filterstrideA_padded[4];
 
-  outdimA[0] = dimA[0];
-  outdimA[1] = filterdimA[0];
-  for( int dim = 0; dim < 2; dim++) {
-    outdimA[dim+2] = getFwdConvOutputDim( dimA[dim+2],
-                                          padA[dim],
-                                          filterdimA[dim+2],
-                                          convstrideA[dim],
-                                          dilationA[dim]);
-  }
+//  outdimA[0] = dimA[0];
+//  outdimA[1] = filterdimA[0];
+//  for( int dim = 0; dim < 2; dim++) {
+//    outdimA[dim+2] = getFwdConvOutputDim( dimA[dim+2],
+//                                          padA[dim],
+//                                          filterdimA[dim+2],
+//                                          convstrideA[dim],
+//                                          dilationA[dim]);
+//  }
 
-  for (int i = 0; i < 4; i++) {
-    dimA_padded[i] = dimA[i];
-    outdimA_padded[i] = outdimA[i];
-    filterdimA_padded[i] = filterdimA[i];
-  }
+
+//  for (int i = 0; i < 4; i++) {
+//    dimA_padded[i] = dimA[i];
+//    outdimA_padded[i] = (int)y.dim.dims[i];
+//    filterdimA_padded[i] = filterdimA[i];
+//  }
 
 #ifdef PRINT_VERBOSE
   PDBG("====USER DIMENSIONS====\n");
@@ -196,30 +199,31 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   float alpha = 1.0f;
   float beta = 0.0;
   int dilationA[] = {1, 1};
-  int outdimA[4];
+//  int outdimA[4];
 
-  int dimA_padded[4];
-  int outdimA_padded[4];
-  int filterdimA_padded[4];
+  int* dimA_padded = dimA;
+  int* outdimA_padded = (int*) (dout.dim.dims);
+  int* filterdimA_padded = filterdimA;
+
   int strideA_padded[4];
   int outstrideA_padded[4];
   int filterstrideA_padded[4];
 
-  outdimA[0] = dimA[0];
-  outdimA[1] = filterdimA[0];
-  for( int dim = 0; dim < 2; dim++) {
-    outdimA[dim+2] = getFwdConvOutputDim( dimA[dim+2],
-                                          padA[dim],
-                                          filterdimA[dim+2],
-                                          convstrideA[dim],
-                                          dilationA[dim]);
-  }
+//  outdimA[0] = dimA[0];
+//  outdimA[1] = filterdimA[0];
+//  for( int dim = 0; dim < 2; dim++) {
+//    outdimA[dim+2] = getFwdConvOutputDim( dimA[dim+2],
+//                                          padA[dim],
+//                                          filterdimA[dim+2],
+//                                          convstrideA[dim],
+//                                          dilationA[dim]);
+//  }
 
-  for (int i = 0; i < 4; i++) {
-    dimA_padded[i] = dimA[i];
-    outdimA_padded[i] = outdimA[i];
-    filterdimA_padded[i] = filterdimA[i];
-  }
+//  for (int i = 0; i < 4; i++) {
+//    dimA_padded[i] = dimA[i];
+//    outdimA_padded[i] = (int)dout.dim.dims[i];
+//    filterdimA_padded[i] = filterdimA[i];
+//  }
 
 #ifdef PRINT_VERBOSE
   PDBG("====USER DIMENSIONS====\n");
@@ -317,21 +321,29 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
                      // used 1: CUDNN_TENSOR_OP_MATH -> The use of Tensor Core
                      // Operations is permitted.
 
-  int dimA[] = {(int)x.dim.dims[0], (int)x.dim.dims[1], (int)x.dim.dims[2], (int)x.dim.dims[3]};  // N, C, H, W;
+  int* dimA = (int*)(x.dim.dims);  // N, C, H, W;
   int padA[] = {(int)params.padding, (int)params.padding};
   int convstrideA[] = {(int)params.stride, (int)params.stride};
   // batch size and feature layers must be multiples of 4 or 32 when using int8x4 or int8x32 respectively
-  int filterdimA[] = {(int)w.dim.dims[0], (int)w.dim.dims[1], (int)w.dim.dims[2], (int)w.dim.dims[3]}; //k, c, r, s
+  int* filterdimA = (int*)(w.dim.dims);  // k, c, r, s //k, c, r, s
 
   cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
 
 #ifdef PRINT_VERBOSE
   PDBG("Testing using cudnn forward\n");
 #endif
+
+#ifdef AWNN_USE_FLT32
   status_t ret =
       doForward<T>(x, w, y, dimA, padA, convstrideA, filterdimA, filterFormat,
                    CUDNN_DATA_FLOAT, mathType,
                    handle_, cudnnIdesc, cudnnFdesc, cudnnOdesc, cudnnConvDesc);
+#else
+  status_t ret =
+      doForward<T>(x, w, y, dimA, padA, convstrideA, filterdimA, filterFormat,
+                   CUDNN_DATA_DOUBLE, mathType,
+                   handle_, cudnnIdesc, cudnnFdesc, cudnnOdesc, cudnnConvDesc);
+#endif
 
   // shadow copy
   tensor_t cached_x_shadow = x;
@@ -360,12 +372,11 @@ status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache,
 
   int mathType = 0;
 
-  int dimA[] = {(int)dx.dim.dims[0], (int)dx.dim.dims[1], (int)dx.dim.dims[2], (int)dx.dim.dims[3]};  // N, C, H, W;
+  int* dimA = (int*)(dx.dim.dims);  // N, C, H, W;
   int padA[] = {(int)params.padding, (int)params.padding};
   int convstrideA[] = {(int)params.stride, (int)params.stride};
   //batch size and feature layers must be multiples of 4 or 32 when using int8x4 or int8x32 respectively
-  int filterdimA[] = {(int)w.dim.dims[0], (int)w.dim.dims[1],
-                      (int)w.dim.dims[2], (int)w.dim.dims[3]};  // k, c, r, s
+  int* filterdimA = (int*)(w.dim.dims);  // k, c, r, s
 
   cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
 
@@ -373,10 +384,17 @@ status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache,
   PDBG("Testing using cudnn backward data\n");
 #endif
 
+#ifdef AWNN_USE_FLT32
   status_t ret =
       doBackward<T>(x, dx, w, dw, dout, dimA, padA, convstrideA, filterdimA, filterFormat,
           CUDNN_DATA_FLOAT, mathType,
           handle_, cudnnIdesc, cudnnFdesc, cudnnOdesc, cudnnConvDesc);
+#else
+  status_t ret =
+      doBackward<T>(x, dx, w, dw, dout, dimA, padA, convstrideA, filterdimA, filterFormat,
+                    CUDNN_DATA_DOUBLE, mathType,
+                    handle_, cudnnIdesc, cudnnFdesc, cudnnOdesc, cudnnConvDesc);
+#endif
 
   return ret;
 }
