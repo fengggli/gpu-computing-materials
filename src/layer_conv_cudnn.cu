@@ -33,31 +33,6 @@ static void generateStrides(const int* dimA, int* strideA, int nbDims, cudnnTens
   }
 }
 
-#if 0
-static inline int getFwdConvDilatedFilterDim(int filterDim,
-                                             int dilation)
-{
-  return ( (filterDim - 1) * dilation ) + 1 ;
-}
-
-static inline int getFwdConvPaddedImageDim(int tensorDim,
-                                           int pad)
-{
-  return tensorDim + (2 * pad) ;
-}
-
-static inline int getFwdConvOutputDim( int tensorDim,
-                                       int pad,
-                                       int filterDim,
-                                       int stride,
-                                       int dilation)
-{
-  int p = (getFwdConvPaddedImageDim(tensorDim, pad) - getFwdConvDilatedFilterDim(filterDim, dilation))/stride + 1;
-  return(p);
-}
-#endif
-
-
 template <typename T_ELEM>
 status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
                    int* padA, int* convstrideA, int* filterdimA, cudnnTensorFormat_t filterFormat, cudnnDataType_t dataType,
@@ -83,7 +58,6 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
   float alpha = 1.0f;
   float beta = 0.0;
   int dilationA[] = {1, 1};
-//  int outdimA[4];
 
   int* dimA_padded = dimA;
   int* outdimA_padded = (int*) (y.dim.dims);
@@ -91,23 +65,6 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
   int strideA_padded[4];
   int outstrideA_padded[4];
   int filterstrideA_padded[4];
-
-//  outdimA[0] = dimA[0];
-//  outdimA[1] = filterdimA[0];
-//  for( int dim = 0; dim < 2; dim++) {
-//    outdimA[dim+2] = getFwdConvOutputDim( dimA[dim+2],
-//                                          padA[dim],
-//                                          filterdimA[dim+2],
-//                                          convstrideA[dim],
-//                                          dilationA[dim]);
-//  }
-
-
-//  for (int i = 0; i < 4; i++) {
-//    dimA_padded[i] = dimA[i];
-//    outdimA_padded[i] = (int)y.dim.dims[i];
-//    filterdimA_padded[i] = filterdimA[i];
-//  }
 
 #ifdef PRINT_VERBOSE
   PDBG("====USER DIMENSIONS====\n");
@@ -126,9 +83,7 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
 #endif
 
   generateStrides(dimA_padded, strideA_padded, 4, filterFormat);
-
   generateStrides(filterdimA_padded, filterstrideA_padded, 4, filterFormat);
-
   generateStrides(outdimA_padded, outstrideA_padded, 4, filterFormat);
 
   checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnIdesc, dataType, convDim+2, dimA_padded, strideA_padded) );
@@ -209,22 +164,6 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   int outstrideA_padded[4];
   int filterstrideA_padded[4];
 
-//  outdimA[0] = dimA[0];
-//  outdimA[1] = filterdimA[0];
-//  for( int dim = 0; dim < 2; dim++) {
-//    outdimA[dim+2] = getFwdConvOutputDim( dimA[dim+2],
-//                                          padA[dim],
-//                                          filterdimA[dim+2],
-//                                          convstrideA[dim],
-//                                          dilationA[dim]);
-//  }
-
-//  for (int i = 0; i < 4; i++) {
-//    dimA_padded[i] = dimA[i];
-//    outdimA_padded[i] = (int)dout.dim.dims[i];
-//    filterdimA_padded[i] = filterdimA[i];
-//  }
-
 #ifdef PRINT_VERBOSE
   PDBG("====USER DIMENSIONS====\n");
   PDBG("input dims are %d, %d, %d, %d\n", dimA[0], dimA[1], dimA[2], dimA[3]);
@@ -242,11 +181,8 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
 #endif
 
   generateStrides(dimA_padded, strideA_padded, 4, filterFormat);
-
   generateStrides(filterdimA_padded, filterstrideA_padded, 4, filterFormat);
-
   generateStrides(outdimA_padded, outstrideA_padded, 4, filterFormat);
-
 
   checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnIdesc, dataType, convDim+2, dimA_padded, strideA_padded) );
   checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnOdesc, dataType, convDim+2, outdimA_padded, outstrideA_padded) );
