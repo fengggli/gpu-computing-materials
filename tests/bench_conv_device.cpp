@@ -10,6 +10,8 @@
 #include "gtest/gtest.h"
 #include "test_util.h"
 
+#include "awnn/layer_cudnn.h"
+
 namespace {
 class LayerBenchConvDeviceTest : public ::testing::Test {};
 }  // namespace
@@ -69,12 +71,26 @@ TEST_F(LayerBenchConvDeviceTest, BenchCUDNN) {
             lcache_t cache;
             make_empty_lcache(&cache);
 
+            cudnnHandle_t handle_;
+            cudnnTensorDescriptor_t cudnnIdesc;
+            cudnnFilterDescriptor_t cudnnFdesc;
+            cudnnTensorDescriptor_t cudnnOdesc;
+            cudnnConvolutionDescriptor_t cudnnConvDesc;
+
+            checkCudnnErr(cudnnCreate(&handle_));
+
+            checkCudnnErr( cudnnCreateTensorDescriptor( &cudnnIdesc ));
+            checkCudnnErr( cudnnCreateFilterDescriptor( &cudnnFdesc ));
+            checkCudnnErr( cudnnCreateTensorDescriptor( &cudnnOdesc ));
+            checkCudnnErr( cudnnCreateConvolutionDescriptor( &cudnnConvDesc ));
+
             for (uint i = 0; i < nr_iterations; i++) {
               auto t1 = get_timepoint();
 
               // FORWARD
               status_t ret =
-                  convolution_forward_cudnn(d_x, d_w, &cache, conv_params, d_y);
+                  convolution_forward_cudnn(d_x, d_w, &cache, conv_params, d_y,
+                      handle_, cudnnIdesc,  cudnnFdesc, cudnnOdesc, cudnnConvDesc);
               EXPECT_EQ(ret, S_OK);
 
               auto t2 = get_timepoint();
@@ -88,6 +104,14 @@ TEST_F(LayerBenchConvDeviceTest, BenchCUDNN) {
               t2 = get_timepoint();
               backward_times.emplace_back(elapsed_ms(t1, t2));
             }
+
+            clean:
+            if (cudnnIdesc) cudnnDestroyTensorDescriptor(cudnnIdesc);
+            if (cudnnFdesc) cudnnDestroyFilterDescriptor(cudnnFdesc);
+            if (cudnnOdesc) cudnnDestroyTensorDescriptor(cudnnOdesc);
+            if (cudnnConvDesc) cudnnDestroyConvolutionDescriptor(cudnnConvDesc);
+            if (handle_) cudnnDestroy(handle_);
+
             tensor_destroy(&x);
             tensor_destroy(&w);
             tensor_destroy(&y);

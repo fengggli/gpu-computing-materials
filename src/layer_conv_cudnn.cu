@@ -9,32 +9,8 @@
 #include "awnn/layer.h"
 #include "awnn/layer_conv.h"
 
-#include <cuda_runtime.h>
-#include <cudnn.h>
-
+#include "awnn/layer_cudnn.h"
 #define THRESHOLD               2.0e-2
-
-#include <time.h>
-
-static int checkCudaError(cudaError_t code, const char* expr, const char* file, int line) {
-  if (code) {
-    printf("CUDA error at %s:%d, code=%d (%s) in '%s'", file, line, (int) code, cudaGetErrorString(code), expr);
-    return 1;
-  }
-  return 0;
-}
-
-static int checkCudnnError(cudnnStatus_t code, const char* expr, const char* file, int line) {
-  if (code)  {
-    printf("CUDNN error at %s:%d, code=%d (%s) in '%s'\n", file, line, (int) code, cudnnGetErrorString(code), expr);
-    return 1;
-  }
-  return 0;
-}
-
-#define checkCudaErr(...)       do { int err = checkCudaError(__VA_ARGS__, #__VA_ARGS__, __FILE__, __LINE__); if (err) goto clean; } while (0)
-
-#define checkCudnnErr(...)      do { int err = checkCudnnError(__VA_ARGS__, #__VA_ARGS__, __FILE__, __LINE__);  if (err) goto clean; } while (0)
 
 static void generateStrides(const int* dimA, int* strideA, int nbDims, cudnnTensorFormat_t filterFormat) {
   //For INT8x4 and INT8x32 we still compute standard strides here to input
@@ -82,16 +58,20 @@ static inline int getFwdConvOutputDim( int tensorDim,
 template <typename T_ELEM>
 status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
                    int* padA, int* convstrideA, int* filterdimA, cudnnTensorFormat_t filterFormat, cudnnDataType_t dataType,
-                   int mathType) {
-  cudnnHandle_t handle_;
+                   int mathType,
+                   cudnnHandle_t handle_, cudnnTensorDescriptor_t cudnnIdesc,
+                   cudnnFilterDescriptor_t cudnnFdesc,
+                   cudnnTensorDescriptor_t cudnnOdesc,
+                   cudnnConvolutionDescriptor_t cudnnConvDesc) {
+//  cudnnHandle_t handle_;
   T_ELEM* devPtrI=x.data;
   T_ELEM* devPtrF=w.data;
   T_ELEM* devPtrO=y.data;
 
-  cudnnTensorDescriptor_t cudnnIdesc;
-  cudnnFilterDescriptor_t cudnnFdesc;
-  cudnnTensorDescriptor_t cudnnOdesc;
-  cudnnConvolutionDescriptor_t cudnnConvDesc;
+//  cudnnTensorDescriptor_t cudnnIdesc;
+//  cudnnFilterDescriptor_t cudnnFdesc;
+//  cudnnTensorDescriptor_t cudnnOdesc;
+//  cudnnConvolutionDescriptor_t cudnnConvDesc;
 
   void *workSpace = 0;
   size_t workSpaceSize;
@@ -148,12 +128,12 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
        outdimA_padded[1], outdimA_padded[2], outdimA_padded[3]);
 #endif
 
-  checkCudnnErr(cudnnCreate(&handle_));
-
-  checkCudnnErr( cudnnCreateTensorDescriptor( &cudnnIdesc ));
-  checkCudnnErr( cudnnCreateFilterDescriptor( &cudnnFdesc ));
-  checkCudnnErr( cudnnCreateTensorDescriptor( &cudnnOdesc ));
-  checkCudnnErr( cudnnCreateConvolutionDescriptor( &cudnnConvDesc ));
+//  checkCudnnErr(cudnnCreate(&handle_));
+//
+//  checkCudnnErr( cudnnCreateTensorDescriptor( &cudnnIdesc ));
+//  checkCudnnErr( cudnnCreateFilterDescriptor( &cudnnFdesc ));
+//  checkCudnnErr( cudnnCreateTensorDescriptor( &cudnnOdesc ));
+//  checkCudnnErr( cudnnCreateConvolutionDescriptor( &cudnnConvDesc ));
 
   generateStrides(dimA_padded, strideA_padded, 4, filterFormat);
 
@@ -195,13 +175,14 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
                                            cudnnOdesc, devPtrO) );
   checkCudaErr( cudaDeviceSynchronize() );
 
-clean:
-  if (cudnnIdesc) cudnnDestroyTensorDescriptor(cudnnIdesc);
-  if (cudnnFdesc) cudnnDestroyFilterDescriptor(cudnnFdesc);
-  if (cudnnOdesc) cudnnDestroyTensorDescriptor(cudnnOdesc);
-  if (cudnnConvDesc) cudnnDestroyConvolutionDescriptor(cudnnConvDesc);
-  if (handle_) cudnnDestroy(handle_);
+//clean:
+//  if (cudnnIdesc) cudnnDestroyTensorDescriptor(cudnnIdesc);
+//  if (cudnnFdesc) cudnnDestroyFilterDescriptor(cudnnFdesc);
+//  if (cudnnOdesc) cudnnDestroyTensorDescriptor(cudnnOdesc);
+//  if (cudnnConvDesc) cudnnDestroyConvolutionDescriptor(cudnnConvDesc);
+//  if (handle_) cudnnDestroy(handle_);
 
+clean:
   if (workSpace) cudaFree(workSpace);
 
   return S_OK;
@@ -358,7 +339,11 @@ clean:
 }
 
 
-status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y){
+status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y,
+                                   cudnnHandle_t handle_, cudnnTensorDescriptor_t cudnnIdesc,
+                                   cudnnFilterDescriptor_t cudnnFdesc,
+                                   cudnnTensorDescriptor_t cudnnOdesc,
+                                   cudnnConvolutionDescriptor_t cudnnConvDesc){
   int mathType = 0;  // 0: CUDNN_DEFAULT_MATH -> Tensor Core Operations are not
                      // used 1: CUDNN_TENSOR_OP_MATH -> The use of Tensor Core
                      // Operations is permitted.
@@ -376,7 +361,8 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
 #endif
   status_t ret =
       doForward<T>(x, w, y, dimA, padA, convstrideA, filterdimA, filterFormat,
-                   CUDNN_DATA_FLOAT, mathType);
+                   CUDNN_DATA_FLOAT, mathType,
+                   handle_, cudnnIdesc, cudnnFdesc, cudnnOdesc, cudnnConvDesc);
 
   // shadow copy
   tensor_t cached_x_shadow = x;

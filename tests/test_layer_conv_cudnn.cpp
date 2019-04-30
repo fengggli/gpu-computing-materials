@@ -14,6 +14,7 @@ namespace {
 class LayerConvCUDNNTest : public ::testing::Test {};
 }  // namespace
 
+#if 0
 TEST_F(LayerConvCUDNNTest, ConvForwardcudnn) {
   conv_param_t conv_params;
 
@@ -160,6 +161,7 @@ TEST_F(LayerConvCUDNNTest, ConvBackwardcudnn) {
 
   // free data
 }
+#endif
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
