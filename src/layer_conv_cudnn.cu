@@ -258,8 +258,8 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
                      // Operations is permitted.
 
   int* dimA = (int*)(x.dim.dims);  // N, C, H, W;
-  int padA[] = {(int)params.padding, (int)params.padding};
-  int convstrideA[] = {(int)params.stride, (int)params.stride};
+  int padA[2] = {(int)params.padding, (int)params.padding};
+  int convstrideA[2] = {(int)params.stride, (int)params.stride};
   // batch size and feature layers must be multiples of 4 or 32 when using int8x4 or int8x32 respectively
   int* filterdimA = (int*)(w.dim.dims);  // k, c, r, s //k, c, r, s
 
@@ -309,8 +309,8 @@ status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache,
   int mathType = 0;
 
   int* dimA = (int*)(dx.dim.dims);  // N, C, H, W;
-  int padA[] = {(int)params.padding, (int)params.padding};
-  int convstrideA[] = {(int)params.stride, (int)params.stride};
+  int padA[2] = {(int)params.padding, (int)params.padding};
+  int convstrideA[2] = {(int)params.stride, (int)params.stride};
   //batch size and feature layers must be multiples of 4 or 32 when using int8x4 or int8x32 respectively
   int* filterdimA = (int*)(w.dim.dims);  // k, c, r, s
 

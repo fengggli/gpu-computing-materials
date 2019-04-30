@@ -18,8 +18,8 @@ class LayerConvCUDNNTest : public ::testing::Test {};
 TEST_F(LayerConvCUDNNTest, ConvForwardcudnn) {
   conv_param_t conv_params;
 
-  conv_params.stride=1;
-  conv_params.padding=1;
+  conv_params.stride = 1;
+  conv_params.padding = 1;
 
   uint nr_img = 2;
   uint sz_img = 4;
@@ -27,7 +27,8 @@ TEST_F(LayerConvCUDNNTest, ConvForwardcudnn) {
   uint sz_filter = 3;
   uint nr_filter = 3;
 
-  uint sz_out = 1 + (sz_img + 2 * conv_params.padding - sz_filter) / conv_params.stride;
+  uint sz_out =
+      1 + (sz_img + 2 * conv_params.padding - sz_filter) / conv_params.stride;
   EXPECT_EQ(4, sz_out);
 
   uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img};  // 2x3x4x4
@@ -100,8 +101,8 @@ TEST_F(LayerConvCUDNNTest, ConvForwardcudnn) {
 TEST_F(LayerConvCUDNNTest, ConvBackwardcudnn) {
   conv_param_t conv_params;
 
-  conv_params.stride=1;
-  conv_params.padding=1;
+  conv_params.stride = 1;
+  conv_params.padding = 1;
 
   uint nr_img = 2;
   uint sz_img = 4;
@@ -109,7 +110,8 @@ TEST_F(LayerConvCUDNNTest, ConvBackwardcudnn) {
   uint sz_filter = 3;
   uint nr_filter = 3;
 
-  uint sz_out = 1 + (sz_img + 2 * conv_params.padding - sz_filter) / conv_params.stride;
+  uint sz_out =
+      1 + (sz_img + 2 * conv_params.padding - sz_filter) / conv_params.stride;
   EXPECT_EQ(4, sz_out);
 
   uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img};  // 2x3x4x4
