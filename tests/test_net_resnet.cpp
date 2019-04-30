@@ -37,8 +37,8 @@ std::vector<conv_method_t> all_methods = {
      CONV_METHOD_NNPACK_ft8x8,
      CONV_METHOD_NNPACK_ft16x16,
 #endif
-     // CONV_METHOD_PERIMG,
-     CONV_METHOD_NAIVE
+    CONV_METHOD_NAIVE,
+    CONV_METHOD_PERIMG,
     };
 
 TEST_F(NetResnetTest, Construct) {
@@ -62,6 +62,7 @@ TEST_F(NetResnetTest, Construct) {
             */
 }
 TEST_F(NetResnetTest, ForwardInferOnly) {
+  // set_conv_method(CONV_METHOD_PERIMG);
   tensor_t w0 = net_get_param(model.list_all_params, "conv1.weight")->data;
   tensor_t w1 =
       net_get_param(model.list_all_params, "layer1.1.conv1.weight")->data;
@@ -99,7 +100,7 @@ TEST_F(NetResnetTest, ForwardInferOnly) {
   }
   tensor_destroy(&x);
 }
-TEST_F(NetResnetTest, DISABLED_Loss) {
+TEST_F(NetResnetTest, Loss) {
   T loss = 0;
 
   // fill some init values as in cs231n
