@@ -465,7 +465,9 @@ int doConv(
   void *workSpace = 0;
   size_t workSpaceSize;
   int numErrors = 0;
-  //  double start, stop;
+#ifdef PRINT_VERBOSE
+  double start, stop;
+#endif
 
   checkCudnnErr ( cudnnGetConvolutionForwardWorkspaceSize(handle_, cudnnIdesc, cudnnFdesc, cudnnConvDesc,
                                                           cudnnOdesc, algo, &workSpaceSize) );
@@ -547,7 +549,9 @@ int doDgrad(
   void *workSpace = 0;
   size_t workSpaceSize;
   int numErrors = 0;
-  //  double start, stop;
+#ifdef PRINT_VERBOSE
+  double start, stop;
+#endif
 
   checkCudnnErr ( cudnnGetConvolutionBackwardDataWorkspaceSize(handle_, cudnnFdesc, cudnnOdesc, cudnnConvDesc,
                                                                cudnnIdesc, algo, &workSpaceSize) );
@@ -627,7 +631,9 @@ int doWgrad(
   void *workSpace = 0;
   size_t workSpaceSize;
   int numErrors = 0;
-  //  double start, stop;
+#ifdef PRINT_VERBOSE
+  double start, stop;
+#endif
 
   checkCudnnErr ( cudnnGetConvolutionBackwardFilterWorkspaceSize(handle_, cudnnIdesc, cudnnOdesc, cudnnConvDesc,
                                                                  cudnnFdesc, algo, &workSpaceSize) );
@@ -1043,7 +1049,7 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
 
   int notUseInternalTest = 1;  // 1: True -> Not use my internal test
 #ifdef USE_INTERNAL_TEST
-  int notUseInternalTest = 0;  // 0: False -> use my internal test
+  notUseInternalTest = 0;  // 0: False -> use my internal test
 #endif
   int dimA[] = {(int)x.dim.dims[0], (int)x.dim.dims[1], (int)x.dim.dims[2], (int)x.dim.dims[3]};  // N, C, H, W;
   int padA[] = {(int)params.padding, (int)params.padding};
@@ -1085,7 +1091,7 @@ status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache,
   int mathType = 0;
   int notUseInternalTest = 1;
 #ifdef USE_INTERNAL_TEST
-  int notUseInternalTest = 0;  // 0: False -> use my internal test
+  notUseInternalTest = 0;  // 0: False -> use my internal test
 #endif
 
   int dimA[] = {(int)dx.dim.dims[0], (int)dx.dim.dims[1], (int)dx.dim.dims[2], (int)dx.dim.dims[3]};  // N, C, H, W;
