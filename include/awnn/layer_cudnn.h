@@ -15,8 +15,11 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
                                    cudnnConvolutionDescriptor_t cudnnConvDesc);
 
 status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache,
-                                    conv_param_t const params,
-                                    tensor_t const dout);
+                                    conv_param_t const params, tensor_t const dout,
+                                    cudnnHandle_t handle_, cudnnTensorDescriptor_t cudnnIdesc,
+                                    cudnnFilterDescriptor_t cudnnFdesc,
+                                    cudnnTensorDescriptor_t cudnnOdesc,
+                                    cudnnConvolutionDescriptor_t cudnnConvDesc);
 
 static int checkCudaError(cudaError_t code, const char* expr, const char* file, int line) {
   if (code) {

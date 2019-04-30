@@ -98,7 +98,8 @@ TEST_F(LayerBenchConvDeviceTest, BenchCUDNN) {
 
               t1 = get_timepoint();
 
-              ret = convolution_backward_cudnn(d_dx, d_dw, &cache, conv_params, d_dy);
+              ret = convolution_backward_cudnn(d_dx, d_dw, &cache, conv_params, d_dy,
+                                               handle_, cudnnIdesc, cudnnFdesc, cudnnOdesc, cudnnConvDesc);
               EXPECT_EQ(ret, S_OK);
 
               t2 = get_timepoint();

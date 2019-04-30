@@ -63,15 +63,9 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
                    cudnnFilterDescriptor_t cudnnFdesc,
                    cudnnTensorDescriptor_t cudnnOdesc,
                    cudnnConvolutionDescriptor_t cudnnConvDesc) {
-//  cudnnHandle_t handle_;
   T_ELEM* devPtrI=x.data;
   T_ELEM* devPtrF=w.data;
   T_ELEM* devPtrO=y.data;
-
-//  cudnnTensorDescriptor_t cudnnIdesc;
-//  cudnnFilterDescriptor_t cudnnFdesc;
-//  cudnnTensorDescriptor_t cudnnOdesc;
-//  cudnnConvolutionDescriptor_t cudnnConvDesc;
 
   void *workSpace = 0;
   size_t workSpaceSize;
@@ -128,13 +122,6 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
        outdimA_padded[1], outdimA_padded[2], outdimA_padded[3]);
 #endif
 
-//  checkCudnnErr(cudnnCreate(&handle_));
-//
-//  checkCudnnErr( cudnnCreateTensorDescriptor( &cudnnIdesc ));
-//  checkCudnnErr( cudnnCreateFilterDescriptor( &cudnnFdesc ));
-//  checkCudnnErr( cudnnCreateTensorDescriptor( &cudnnOdesc ));
-//  checkCudnnErr( cudnnCreateConvolutionDescriptor( &cudnnConvDesc ));
-
   generateStrides(dimA_padded, strideA_padded, 4, filterFormat);
 
   generateStrides(filterdimA_padded, filterstrideA_padded, 4, filterFormat);
@@ -175,13 +162,6 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
                                            cudnnOdesc, devPtrO) );
   checkCudaErr( cudaDeviceSynchronize() );
 
-//clean:
-//  if (cudnnIdesc) cudnnDestroyTensorDescriptor(cudnnIdesc);
-//  if (cudnnFdesc) cudnnDestroyFilterDescriptor(cudnnFdesc);
-//  if (cudnnOdesc) cudnnDestroyTensorDescriptor(cudnnOdesc);
-//  if (cudnnConvDesc) cudnnDestroyConvolutionDescriptor(cudnnConvDesc);
-//  if (handle_) cudnnDestroy(handle_);
-
 clean:
   if (workSpace) cudaFree(workSpace);
 
@@ -192,9 +172,11 @@ template <typename T_ELEM>
 status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
                     tensor_t const dout, int* dimA, int* padA, int* convstrideA, int* filterdimA,
                     cudnnTensorFormat_t filterFormat,
-                    cudnnDataType_t dataType, int mathType
-                    ) {
-  cudnnHandle_t handle_;
+                    cudnnDataType_t dataType, int mathType,
+                    cudnnHandle_t handle_, cudnnTensorDescriptor_t cudnnIdesc,
+                    cudnnFilterDescriptor_t cudnnFdesc,
+                    cudnnTensorDescriptor_t cudnnOdesc,
+                    cudnnConvolutionDescriptor_t cudnnConvDesc) {
   T_ELEM* devPtr_dx = dx.data;
   T_ELEM* devPtr_w = w.data;
 
@@ -202,11 +184,6 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   T_ELEM* devPtr_dw = dw.data;
 
   T_ELEM* devPtrO = dout.data;
-
-  cudnnTensorDescriptor_t cudnnIdesc;
-  cudnnFilterDescriptor_t cudnnFdesc;
-  cudnnTensorDescriptor_t cudnnOdesc;
-  cudnnConvolutionDescriptor_t cudnnConvDesc;
 
   cudnnConvolutionBwdDataAlgo_t algo_data = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
   cudnnConvolutionBwdFilterAlgo_t algo_weight = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
@@ -260,13 +237,6 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
        outdimA_padded[1], outdimA_padded[2], outdimA_padded[3]);
 #endif
 
-  checkCudnnErr(cudnnCreate(&handle_));
-
-  checkCudnnErr( cudnnCreateTensorDescriptor( &cudnnIdesc ));
-  checkCudnnErr( cudnnCreateFilterDescriptor( &cudnnFdesc ));
-  checkCudnnErr( cudnnCreateTensorDescriptor( &cudnnOdesc ));
-  checkCudnnErr( cudnnCreateConvolutionDescriptor( &cudnnConvDesc ));
-
   generateStrides(dimA_padded, strideA_padded, 4, filterFormat);
 
   generateStrides(filterdimA_padded, filterstrideA_padded, 4, filterFormat);
@@ -308,6 +278,9 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
                                                 cudnnIdesc, devPtr_dx) );
   checkCudaErr( cudaDeviceSynchronize() );
 
+  // free workSpace
+  if (workSpace) cudaFree(workSpace);
+
   // start compute cudnn backward filter
   checkCudnnErr ( cudnnGetConvolutionBackwardFilterWorkspaceSize(handle_, cudnnIdesc, cudnnOdesc, cudnnConvDesc,
                                                                  cudnnFdesc, algo_weight, &workSpaceSize) );
@@ -329,17 +302,13 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
 
 
 clean:
-  if (cudnnIdesc) cudnnDestroyTensorDescriptor(cudnnIdesc);
-  if (cudnnFdesc) cudnnDestroyFilterDescriptor(cudnnFdesc);
-  if (cudnnOdesc) cudnnDestroyTensorDescriptor(cudnnOdesc);
-  if (cudnnConvDesc) cudnnDestroyConvolutionDescriptor(cudnnConvDesc);
-  if (handle_) cudnnDestroy(handle_);
   if (workSpace) cudaFree(workSpace);
   return S_OK;
 }
 
 
-status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t* cache, conv_param_t const params, tensor_t y,
+status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t* cache,
+                                   conv_param_t const params, tensor_t y,
                                    cudnnHandle_t handle_, cudnnTensorDescriptor_t cudnnIdesc,
                                    cudnnFilterDescriptor_t cudnnFdesc,
                                    cudnnTensorDescriptor_t cudnnOdesc,
@@ -377,8 +346,11 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
 }
 
 status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache,
-                                    conv_param_t const params,
-                                         tensor_t const dout) {
+                                    conv_param_t const params, tensor_t const dout,
+                                    cudnnHandle_t handle_, cudnnTensorDescriptor_t cudnnIdesc,
+                                    cudnnFilterDescriptor_t cudnnFdesc,
+                                    cudnnTensorDescriptor_t cudnnOdesc,
+                                    cudnnConvolutionDescriptor_t cudnnConvDesc) {
   tensor_t x, w;
 
   // NOTE : the order of pop matters, should be flattened_x, w, x (reverse of
@@ -402,8 +374,9 @@ status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache,
 #endif
 
   status_t ret =
-      doBackward<T>(x, dx, w, dw, dout, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT,
-                               mathType);
+      doBackward<T>(x, dx, w, dw, dout, dimA, padA, convstrideA, filterdimA, filterFormat,
+          CUDNN_DATA_FLOAT, mathType,
+          handle_, cudnnIdesc, cudnnFdesc, cudnnOdesc, cudnnConvDesc);
 
   return ret;
 }

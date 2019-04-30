@@ -9,12 +9,12 @@
 #include "awnn/tensor.h"
 #include "gtest/gtest.h"
 #include "test_util.h"
+#include "awnn/layer_cudnn.h"
 
 namespace {
 class LayerConvCUDNNTest : public ::testing::Test {};
 }  // namespace
 
-#if 0
 TEST_F(LayerConvCUDNNTest, ConvForwardcudnn) {
   conv_param_t conv_params;
 
@@ -43,7 +43,20 @@ TEST_F(LayerConvCUDNNTest, ConvForwardcudnn) {
   tensor_t d_w = tensor_make_copy_h2d(w);
   tensor_t d_y = tensor_make_copy_h2d(y);
 
-  status_t ret = convolution_forward_cudnn(d_x, d_w, NULL, conv_params, d_y);
+  cudnnHandle_t handle_;
+  cudnnTensorDescriptor_t cudnnIdesc;
+  cudnnFilterDescriptor_t cudnnFdesc;
+  cudnnTensorDescriptor_t cudnnOdesc;
+  cudnnConvolutionDescriptor_t cudnnConvDesc;
+
+  cudnnCreate(&handle_);
+  cudnnCreateTensorDescriptor( &cudnnIdesc );
+  cudnnCreateFilterDescriptor( &cudnnFdesc );
+  cudnnCreateTensorDescriptor( &cudnnOdesc );
+  cudnnCreateConvolutionDescriptor( &cudnnConvDesc );
+
+  status_t ret = convolution_forward_cudnn(d_x, d_w, NULL, conv_params, d_y,
+                                           handle_, cudnnIdesc,  cudnnFdesc, cudnnOdesc, cudnnConvDesc);
   EXPECT_EQ(ret, S_OK);
 
   // device copy back to host
@@ -77,6 +90,11 @@ TEST_F(LayerConvCUDNNTest, ConvForwardcudnn) {
   PINF("Cudnn_forward Consistent with expected results");
 
   // free data
+  if (cudnnIdesc) cudnnDestroyTensorDescriptor(cudnnIdesc);
+  if (cudnnFdesc) cudnnDestroyFilterDescriptor(cudnnFdesc);
+  if (cudnnOdesc) cudnnDestroyTensorDescriptor(cudnnOdesc);
+  if (cudnnConvDesc) cudnnDestroyConvolutionDescriptor(cudnnConvDesc);
+  if (handle_) cudnnDestroy(handle_);
 }
 
 TEST_F(LayerConvCUDNNTest, ConvBackwardcudnn) {
@@ -110,7 +128,20 @@ TEST_F(LayerConvCUDNNTest, ConvBackwardcudnn) {
   lcache_t cache;
   make_empty_lcache(&cache);
 
-  status_t ret = convolution_forward_cudnn(d_x, d_w, &cache, conv_params, d_y);
+  cudnnHandle_t handle_;
+  cudnnTensorDescriptor_t cudnnIdesc;
+  cudnnFilterDescriptor_t cudnnFdesc;
+  cudnnTensorDescriptor_t cudnnOdesc;
+  cudnnConvolutionDescriptor_t cudnnConvDesc;
+
+  cudnnCreate(&handle_);
+  cudnnCreateTensorDescriptor( &cudnnIdesc );
+  cudnnCreateFilterDescriptor( &cudnnFdesc );
+  cudnnCreateTensorDescriptor( &cudnnOdesc );
+  cudnnCreateConvolutionDescriptor( &cudnnConvDesc );
+
+  status_t ret = convolution_forward_cudnn(d_x, d_w, &cache, conv_params, d_y,
+                                           handle_, cudnnIdesc,  cudnnFdesc, cudnnOdesc, cudnnConvDesc);
   EXPECT_EQ(ret, S_OK);
 
   // input for backward
@@ -123,7 +154,8 @@ TEST_F(LayerConvCUDNNTest, ConvBackwardcudnn) {
   tensor_t d_dx = tensor_make_copy_h2d(x);
   tensor_t d_dw = tensor_make_copy_h2d(w);
 
-  ret = convolution_backward_cudnn(d_dx, d_dw, &cache, conv_params, d_dy);
+  ret = convolution_backward_cudnn(d_dx, d_dw, &cache, conv_params, d_dy,
+      handle_, cudnnIdesc,  cudnnFdesc, cudnnOdesc, cudnnConvDesc);
   EXPECT_EQ(ret, S_OK);
 
   // device copy back to host
@@ -160,8 +192,12 @@ TEST_F(LayerConvCUDNNTest, ConvBackwardcudnn) {
   EXPECT_EQ(ret, S_OK);
 
   // free data
+  if (cudnnIdesc) cudnnDestroyTensorDescriptor(cudnnIdesc);
+  if (cudnnFdesc) cudnnDestroyFilterDescriptor(cudnnFdesc);
+  if (cudnnOdesc) cudnnDestroyTensorDescriptor(cudnnOdesc);
+  if (cudnnConvDesc) cudnnDestroyConvolutionDescriptor(cudnnConvDesc);
+  if (handle_) cudnnDestroy(handle_);
 }
-#endif
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
