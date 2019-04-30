@@ -14,6 +14,8 @@
 
 #define THRESHOLD               2.0e-2
 
+//#define PRINT_VERBOSE
+
 #include <time.h>
 static double second (void)
 {
@@ -714,6 +716,7 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
     filterdimA_padded[i] = filterdimA[i];
   }
 
+#ifdef PRINT_VERBOSE
   PDBG("====USER DIMENSIONS====\n");
   PDBG("input dims are %d, %d, %d, %d\n", dimA[0], dimA[1], dimA[2], dimA[3]);
   PDBG("filter dims are %d, %d, %d, %d\n", filterdimA[0], filterdimA[1],
@@ -727,6 +730,7 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
        filterdimA_padded[1], filterdimA_padded[2], filterdimA_padded[3]);
   PDBG("padded output dims are %d, %d, %d, %d\n", outdimA_padded[0],
        outdimA_padded[1], outdimA_padded[2], outdimA_padded[3]);
+#endif
 
   checkCudnnErr(cudnnCreate(&handle_));
 
@@ -751,16 +755,6 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
   hostI = (T_ELEM*) (x.data);
   hostF = (T_ELEM*) (w.data);
   hostO = (T_ELEM*) (y.data);
-
-#if 0
-  hostI = (T_ELEM*)calloc (insize, sizeof(hostI[0]) );
-  hostF = (T_ELEM*)calloc (filtersize, sizeof(hostF[0]) );
-  hostO = (T_ELEM*)calloc (outsize, sizeof(hostO[0]) );
-
-  initImage(hostI, insize);
-  initImage(hostF, filtersize);
-  initImage(hostO, outsize);
-#endif
 
   checkCudaErr( cudaMemcpy(devPtrI, hostI, sizeof(hostI[0]) * insize, cudaMemcpyHostToDevice));
   checkCudaErr( cudaMemcpy(devPtrF, hostF, sizeof(hostF[0]) * filtersize, cudaMemcpyHostToDevice));
@@ -822,9 +816,7 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
   if (devPtrI) cudaFree (devPtrI);
   if (devPtrF) cudaFree (devPtrF);
   if (devPtrO) cudaFree (devPtrO);
-  //  if (hostI) free(hostI);
-  //  if (hostF) free(hostF);
-  //  if (hostO) free(hostO);
+
   if (cudnnIdesc) cudnnDestroyTensorDescriptor(cudnnIdesc);
   if (cudnnFdesc) cudnnDestroyFilterDescriptor(cudnnFdesc);
   if (cudnnOdesc) cudnnDestroyTensorDescriptor(cudnnOdesc);
@@ -893,6 +885,7 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
     filterdimA_padded[i] = filterdimA[i];
   }
 
+#ifdef PRINT_VERBOSE
   PDBG("====USER DIMENSIONS====\n");
   PDBG("input dims are %d, %d, %d, %d\n", dimA[0], dimA[1], dimA[2], dimA[3]);
   PDBG("filter dims are %d, %d, %d, %d\n", filterdimA[0], filterdimA[1],
@@ -906,6 +899,7 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
        filterdimA_padded[1], filterdimA_padded[2], filterdimA_padded[3]);
   PDBG("padded output dims are %d, %d, %d, %d\n", outdimA_padded[0],
        outdimA_padded[1], outdimA_padded[2], outdimA_padded[3]);
+#endif
 
   checkCudnnErr(cudnnCreate(&handle_));
 
@@ -940,16 +934,6 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   host_dw = (T_ELEM*)(dw.data);
   hostO = (T_ELEM*) (dout.data);
 
-#if 0
-  hostI = (T_ELEM*)calloc (insize, sizeof(hostI[0]) );
-  hostF = (T_ELEM*)calloc (filtersize, sizeof(hostF[0]) );
-  hostO = (T_ELEM*)calloc (outsize, sizeof(hostO[0]) );
-
-  initImage(hostI, insize);
-  initImage(hostF, filtersize);
-  initImage(hostO, outsize);
-#endif
-
   // backward data
   checkCudaErr(cudaMemcpy(devPtr_dx, host_dx, sizeof(host_dx[0]) * insize,
                           cudaMemcpyHostToDevice));
@@ -980,7 +964,7 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
     checkCudnnErr( cudnnSetConvolutionMathType(cudnnConvDesc, CUDNN_TENSOR_OP_MATH) );
   }
 
-  PDBG("Testing dgrad\n");
+  //  PDBG("Testing dgrad\n");
   numErrors = doDgrad<T_ELEM>(
       handle_, devPtr_dx, devPtr_w, devPtrO, host_dx, host_w, hostO, cudnnIdesc,
       cudnnFdesc,
@@ -1007,7 +991,7 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
     }
   }
 
-  PDBG("Testing wgrad\n");
+  //  PDBG("Testing wgrad\n");
   numErrors =
       doWgrad(handle_, devPtr_x, devPtr_dw, devPtrO, host_x, host_dw, hostO,
               cudnnIdesc, cudnnFdesc, cudnnOdesc, cudnnConvDesc, alpha, beta,
@@ -1056,7 +1040,7 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
 
   cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
 
-  PDBG("Testing using cudnn forward\n");
+  //  PDBG("Testing using cudnn forward\n");
 
   status_t ret =
       doForward<T>(x, w, y, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
@@ -1095,7 +1079,7 @@ status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache,
 
   cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
 
-  PDBG("Testing using cudnn backward data\n");
+  //  PDBG("Testing using cudnn backward data\n");
 
   status_t ret =
       doBackward<T>(x, dx, w, dw, dout, dimA, padA, convstrideA, filterdimA,
