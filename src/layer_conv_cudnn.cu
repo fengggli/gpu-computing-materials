@@ -84,6 +84,7 @@ static void generateStrides(const int* dimA, int* strideA, int nbDims, cudnnTens
   }
 }
 
+#ifdef USE_INTERNAL_TEST
 // Convert a linear index
 // i = d_1 s_1 ... s_n + d_2 s_2 ... s_n + d_n-1 s_n + d_n
 // into a multidimensional index
@@ -407,6 +408,7 @@ T getError(T dev, T ref) {
     return dev - ref;
 }
 
+#endif
 
 static inline int getFwdConvDilatedFilterDim(int filterDim,
                                              int dilation)
@@ -436,26 +438,26 @@ int doConv(
     T_ELEM* devPtrI,
     T_ELEM* devPtrF,
     T_ELEM* devPtrO,
-    T_ELEM* hostI,
-    T_ELEM* hostF,
-    T_ELEM* hostO,
+//    T_ELEM* hostI,
+//    T_ELEM* hostF,
+//    T_ELEM* hostO,
     cudnnTensorDescriptor_t cudnnIdesc,
     cudnnFilterDescriptor_t cudnnFdesc,
     cudnnTensorDescriptor_t cudnnOdesc,
     cudnnConvolutionDescriptor_t cudnnConvDesc,
     float alpha,
-    float beta,
-    cudnnTensorFormat_t filterFormat, const int* dimA,
-           const int*   filterdimA,
-    const int*   outdimA,
-    const int*   strideA,
-    const int*   outstrideA,
-    const int*   convstrideA,
-    const int*   padA,
-    const int*   dilationA,
-    const int   benchmark) {
-
-  int outsize = outstrideA[0]*outdimA[0];
+    float beta
+//    cudnnTensorFormat_t filterFormat,
+//    const int* dimA,
+//    const int*   filterdimA,
+//    const int*   outdimA,
+//    const int*   strideA,
+//    const int*   outstrideA,
+//    const int*   convstrideA,
+//    const int*   padA,
+//    const int*   dilationA,
+//    const int   benchmark
+    ) {
 
   /*cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;*/
   cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_FFT;
@@ -466,6 +468,7 @@ int doConv(
   size_t workSpaceSize;
   int numErrors = 0;
 #ifdef PRINT_VERBOSE
+  int outsize = outstrideA[0]*outdimA[0];
   T_ELEM* hostO_ref = (T_ELEM*)calloc(outsize, sizeof(hostO[0]));
   double start, stop;
 #endif
@@ -530,25 +533,26 @@ int doDgrad(
     T_ELEM* devPtrI,
     T_ELEM* devPtrF,
     T_ELEM* devPtrO,
-    T_ELEM* hostI,
-    T_ELEM* hostF,
-    T_ELEM* hostO,
+//    T_ELEM* hostI,
+//    T_ELEM* hostF,
+//    T_ELEM* hostO,
     cudnnTensorDescriptor_t cudnnIdesc,
     cudnnFilterDescriptor_t   cudnnFdesc,
     cudnnTensorDescriptor_t cudnnOdesc,
     cudnnConvolutionDescriptor_t cudnnConvDesc,
     float alpha,
-    float beta,
-    cudnnTensorFormat_t filterFormat,
-    const int*   dimA,
-    const int*   filterdimA,
-    const int*   outdimA,
-    const int*   strideA,
-    const int*   outstrideA,
-    const int*   convstrideA,
-    const int*   padA,
-    const int*   dilationA, const int notUseInternalTest) {
-  int insize = strideA[0]*dimA[0];
+    float beta
+//    cudnnTensorFormat_t filterFormat,
+//    const int*   dimA,
+//    const int*   filterdimA,
+//    const int*   outdimA,
+//    const int*   strideA,
+//    const int*   outstrideA,
+//    const int*   convstrideA,
+//    const int*   padA,
+//    const int*   dilationA,
+//    const int notUseInternalTest
+    ) {
 
   cudnnConvolutionBwdDataAlgo_t algo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
 
@@ -556,6 +560,7 @@ int doDgrad(
   size_t workSpaceSize;
   int numErrors = 0;
 #ifdef PRINT_VERBOSE
+  int insize = strideA[0]*dimA[0];
   T_ELEM* hostI_ref = (T_ELEM*)calloc(insize, sizeof(hostI[0]));
   double start, stop;
 #endif
@@ -619,34 +624,33 @@ int doWgrad(
     T_ELEM* devPtrI,
     T_ELEM* devPtrF,
     T_ELEM* devPtrO,
-    T_ELEM* hostI,
-    T_ELEM* hostF,
-    T_ELEM* hostO,
+//    T_ELEM* hostI,
+//    T_ELEM* hostF,
+//    T_ELEM* hostO,
     cudnnTensorDescriptor_t cudnnIdesc,
     cudnnFilterDescriptor_t cudnnFdesc,
     cudnnTensorDescriptor_t cudnnOdesc,
     cudnnConvolutionDescriptor_t cudnnConvDesc,
     float alpha,
-    float beta,
-    cudnnTensorFormat_t filterFormat,
-    const int*   dimA,
-    const int*   filterdimA,
-    const int*   outdimA,
-    const int*   strideA,
-    const int*   outstrideA,
-    const int*   convstrideA,
-    const int*   padA,
-    const int*   dilationA, const int notUseInternalTest) {
-  int filsize = filterdimA[0]*filterdimA[1]*filterdimA[2]*filterdimA[3];
+    float beta
+//    cudnnTensorFormat_t filterFormat,
+//    const int*   dimA,
+//    const int*   filterdimA,
+//    const int*   outdimA,
+//    const int*   strideA,
+//    const int*   outstrideA,
+//    const int*   convstrideA,
+//    const int*   padA,
+//    const int*   dilationA,
+//    const int notUseInternalTest
+    ) {
+
 
   cudnnConvolutionBwdFilterAlgo_t algo = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
 
   void *workSpace = 0;
   size_t workSpaceSize;
   int numErrors = 0;
-#ifdef PRINT_VERBOSE
-  double start, stop;
-#endif
 
   checkCudnnErr ( cudnnGetConvolutionBackwardFilterWorkspaceSize(handle_, cudnnIdesc, cudnnOdesc, cudnnConvDesc,
                                                                  cudnnFdesc, algo, &workSpaceSize) );
@@ -656,6 +660,8 @@ int doWgrad(
   }
 
 #ifdef PRINT_VERBOSE
+  int filsize = filterdimA[0]*filterdimA[1]*filterdimA[2]*filterdimA[3];
+  double start, stop;
   T_ELEM* hostFf_ref = (T_ELEM*)calloc(filsize, sizeof(hostF[0]));
   start = second();
 #endif
@@ -710,9 +716,9 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
   T_ELEM* devPtrI=x.data;
   T_ELEM* devPtrF=w.data;
   T_ELEM* devPtrO=y.data;
-  T_ELEM* hostI=NULL;
-  T_ELEM* hostF=NULL;
-  T_ELEM* hostO=NULL;
+//  T_ELEM* hostI=NULL;
+//  T_ELEM* hostF=NULL;
+//  T_ELEM* hostO=NULL;
 
   cudnnTensorDescriptor_t cudnnIdesc;
   cudnnFilterDescriptor_t cudnnFdesc;
@@ -725,10 +731,10 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
   float beta = 0.0;
   int numErrors = 0;
   int dilationA[] = {1, 1};
-  int insize = 0;
-  int filtersize = 0;
+//  int insize = 0;
+//  int filtersize = 0;
   int outdimA[4];
-  int outsize = 0;
+//  int outsize = 0;
 
   int dimA_padded[4];
   int outdimA_padded[4];
@@ -820,24 +826,26 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
       devPtrI,
       devPtrF,
       devPtrO,
-      hostI,
-      hostF,
-      hostO,
+//      hostI,
+//      hostF,
+//      hostO,
       cudnnIdesc,
       cudnnFdesc,
       cudnnOdesc,
       cudnnConvDesc,
       alpha,
-      beta,
-      filterFormat,
-      dimA_padded,
-      filterdimA_padded,
-      outdimA_padded,
-      strideA_padded,
-      outstrideA_padded,
-      convstrideA,
-      padA,
-      dilationA, notUseInternalTest);
+      beta
+//      filterFormat,
+//      dimA_padded,
+//      filterdimA_padded,
+//      outdimA_padded,
+//      strideA_padded,
+//      outstrideA_padded,
+//      convstrideA,
+//      padA,
+//      dilationA,
+//      notUseInternalTest
+      );
 
   if (!notUseInternalTest) {
     if (numErrors == 0) {
@@ -870,15 +878,15 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   cudnnHandle_t handle_;
   T_ELEM* devPtr_dx = dx.data;
   T_ELEM* devPtr_w = w.data;
-  T_ELEM* host_dx = NULL;
-  T_ELEM* host_w = NULL;
+//  T_ELEM* host_dx = NULL;
+//  T_ELEM* host_w = NULL;
 
   T_ELEM* devPtr_x = x.data;
   T_ELEM* devPtr_dw = dw.data;
-  T_ELEM* host_x = NULL;
-  T_ELEM* host_dw = NULL;
+//  T_ELEM* host_x = NULL;
+//  T_ELEM* host_dw = NULL;
 
-  T_ELEM* hostO=NULL;
+//  T_ELEM* hostO=NULL;
   T_ELEM* devPtrO = dout.data;
 
   cudnnTensorDescriptor_t cudnnIdesc;
@@ -892,10 +900,10 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   float beta = 0.0;
   int numErrors = 0;
   int dilationA[] = {1, 1};
-  int insize = 0;
-  int filtersize = 0;
+//  int insize = 0;
+//  int filtersize = 0;
   int outdimA[4];
-  int outsize = 0;
+//  int outsize = 0;
 
   int dimA_padded[4];
   int outdimA_padded[4];
@@ -944,13 +952,13 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   checkCudnnErr( cudnnCreateConvolutionDescriptor( &cudnnConvDesc ));
 
   generateStrides(dimA_padded, strideA_padded, 4, filterFormat);
-  insize = dimA_padded[0] * dimA_padded[1] * dimA_padded[2] * dimA_padded[3];
+//  insize = dimA_padded[0] * dimA_padded[1] * dimA_padded[2] * dimA_padded[3];
 
   generateStrides(filterdimA_padded, filterstrideA_padded, 4, filterFormat);
-  filtersize = filterdimA_padded[0] * filterdimA_padded[1] * filterdimA_padded[2] * filterdimA_padded[3];
+//  filtersize = filterdimA_padded[0] * filterdimA_padded[1] * filterdimA_padded[2] * filterdimA_padded[3];
 
   generateStrides(outdimA_padded, outstrideA_padded, 4, filterFormat);
-  outsize = outdimA_padded[0] * outdimA_padded[1] * outdimA_padded[2] * outdimA_padded[3];
+//  outsize = outdimA_padded[0] * outdimA_padded[1] * outdimA_padded[2] * outdimA_padded[3];
 
   // malloc device backward data
 //  cudaMalloc((void**)&(devPtr_dx), (insize) * sizeof(devPtr_dx[0]));
@@ -962,12 +970,12 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
 //  cudaMalloc ((void**)&(devPtrO), (outsize) * sizeof(devPtrO[0]) );
 
   // host pointer used to compute backward data
-  host_dx = (T_ELEM*)(dx.data);
-  host_w = (T_ELEM*)(w.data);
+//  host_dx = (T_ELEM*)(dx.data);
+//  host_w = (T_ELEM*)(w.data);
   // host poiinter used to compute backward weight
-  host_x = (T_ELEM*)(x.data);
-  host_dw = (T_ELEM*)(dw.data);
-  hostO = (T_ELEM*) (dout.data);
+//  host_x = (T_ELEM*)(x.data);
+//  host_dw = (T_ELEM*)(dw.data);
+//  hostO = (T_ELEM*) (dout.data);
 
   // backward data
 //  checkCudaErr(cudaMemcpy(devPtr_dx, host_dx, sizeof(host_dx[0]) * insize,
@@ -1001,21 +1009,30 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
 
   //  PDBG("Testing dgrad\n");
   numErrors = doDgrad<T_ELEM>(
-      handle_, devPtr_dx, devPtr_w, devPtrO, host_dx, host_w, hostO, cudnnIdesc,
+      handle_,
+      devPtr_dx,
+      devPtr_w,
+      devPtrO,
+//      host_dx,
+//      host_w,
+//      hostO,
+      cudnnIdesc,
       cudnnFdesc,
       cudnnOdesc,
       cudnnConvDesc,
       alpha,
-      beta,
-      filterFormat,
-      dimA,
-      filterdimA,
-      outdimA,
-      strideA_padded,
-      outstrideA_padded,
-      convstrideA,
-      padA,
-      dilationA, notUseInternalTest);
+      beta
+//      filterFormat,
+//      dimA,
+//      filterdimA,
+//      outdimA,
+//      strideA_padded,
+//      outstrideA_padded,
+//      convstrideA,
+//      padA,
+//      dilationA,
+//      notUseInternalTest
+      );
 
   if (!notUseInternalTest) {
     if (numErrors == 0) {
@@ -1027,10 +1044,31 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
 
   //  PDBG("Testing wgrad\n");
   numErrors =
-      doWgrad(handle_, devPtr_x, devPtr_dw, devPtrO, host_x, host_dw, hostO,
-              cudnnIdesc, cudnnFdesc, cudnnOdesc, cudnnConvDesc, alpha, beta,
-              filterFormat, dimA, filterdimA, outdimA, strideA_padded, outstrideA_padded, convstrideA, padA,
-                      dilationA, notUseInternalTest);
+      doWgrad(
+          handle_,
+          devPtr_x,
+          devPtr_dw,
+          devPtrO,
+//          host_x,
+//          host_dw,
+//          hostO,
+          cudnnIdesc,
+          cudnnFdesc,
+          cudnnOdesc,
+          cudnnConvDesc,
+          alpha,
+          beta
+//          filterFormat,
+//          dimA,
+//          filterdimA,
+//          outdimA,
+//          strideA_padded,
+//          outstrideA_padded,
+//          convstrideA,
+//          padA,
+//          dilationA,
+//          notUseInternalTest
+          );
 
   if (!notUseInternalTest) {
     if (numErrors == 0) {
