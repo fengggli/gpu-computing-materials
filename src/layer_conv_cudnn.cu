@@ -440,10 +440,8 @@ int doConv(
     cudnnConvolutionDescriptor_t cudnnConvDesc,
     float alpha,
     float beta,
-    cudnnTensorFormat_t filterFormat,
-           //    cudnnDataType_t dataType,
-           const int*   dimA,
-    const int*   filterdimA,
+    cudnnTensorFormat_t filterFormat, const int* dimA,
+           const int*   filterdimA,
     const int*   outdimA,
     const int*   strideA,
     const int*   outstrideA,
@@ -470,7 +468,9 @@ int doConv(
   if (workSpaceSize > 0) {
     cudaMalloc(&workSpace, workSpaceSize);
   }
+#define PRINT_VERBOSE
   start = second();
+#endif
   checkCudnnErr ( cudnnConvolutionForward (handle_,
                                            (void*)(&alpha),
                                            cudnnIdesc, devPtrI,
@@ -481,9 +481,11 @@ int doConv(
                                            (void*)(&beta),
                                            cudnnOdesc, devPtrO) );
   checkCudaErr( cudaDeviceSynchronize() );
+#define PRINT_VERBOSE
   stop = second();
   printPerf( stop - start, 0, 0,
              0, 0, 0, 0);
+#endif
   checkCudaErr(cudaMemcpy(hostO, devPtrO, sizeof(hostO[0]) * outsize,
                           cudaMemcpyDeviceToHost));
   checkCudaErr( cudaDeviceSynchronize() );
@@ -550,7 +552,9 @@ int doDgrad(
   if (workSpaceSize > 0) {
     cudaMalloc(&workSpace, workSpaceSize);
   }
+#define PRINT_VERBOSE
   start = second();
+#endif
   checkCudnnErr ( cudnnConvolutionBackwardData (handle_,
                                                 (void*)(&alpha),
                                                 cudnnFdesc, devPtrF,
@@ -561,9 +565,11 @@ int doDgrad(
                                                 (void*)(&beta),
                                                 cudnnIdesc, devPtrI) );
   checkCudaErr( cudaDeviceSynchronize() );
+#define PRINT_VERBOSE
   stop = second();
   printPerf( stop - start, 0, 0,
              0, 0, 0, 0);
+#endif
   checkCudaErr(cudaMemcpy(hostI, devPtrI, sizeof(hostI[0]) * insize,
                           cudaMemcpyDeviceToHost));
   checkCudaErr( cudaDeviceSynchronize() );
@@ -628,7 +634,9 @@ int doWgrad(
   if (workSpaceSize > 0) {
     cudaMalloc(&workSpace, workSpaceSize);
   }
+#define PRINT_VERBOSE
   start = second();
+#endif
   checkCudnnErr ( cudnnConvolutionBackwardFilter (handle_,
                                                   (void*)(&alpha),
                                                   cudnnIdesc, devPtrI,
@@ -639,9 +647,11 @@ int doWgrad(
                                                   (void*)(&beta),
                                                   cudnnFdesc, devPtrF) );
   checkCudaErr( cudaDeviceSynchronize() );
+#define PRINT_VERBOSE
   stop = second();
   printPerf( stop - start, 0, 0,
              0, 0, 0, 0);
+#endif
   checkCudaErr(cudaMemcpy(hostF, devPtrF, sizeof(hostF[0]) * filsize,
                           cudaMemcpyDeviceToHost));
   checkCudaErr( cudaDeviceSynchronize() );
@@ -777,7 +787,7 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
     checkCudnnErr( cudnnSetConvolutionMathType(cudnnConvDesc, CUDNN_TENSOR_OP_MATH) );
   }
 
-  PDBG("Testing conv\n");
+  //  PDBG("Testing conv\n");
   numErrors = doConv<T_ELEM>(
       handle_,
       devPtrI,
@@ -793,7 +803,6 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
       alpha,
       beta,
       filterFormat,
-      //      dataType,
       dimA_padded,
       filterdimA_padded,
       outdimA_padded,
@@ -1040,8 +1049,9 @@ status_t convolution_forward_cudnn(tensor_t const x, tensor_t const w, lcache_t*
 
   cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
 
-  //  PDBG("Testing using cudnn forward\n");
-
+#define PRINT_VERBOSE
+  PDBG("Testing using cudnn forward\n");
+#endif
   status_t ret =
       doForward<T>(x, w, y, dimA, padA, convstrideA, filterdimA, filterFormat, CUDNN_DATA_FLOAT, mathType, benchmark);
 
@@ -1079,7 +1089,9 @@ status_t convolution_backward_cudnn(tensor_t dx, tensor_t dw, lcache_t* cache,
 
   cudnnTensorFormat_t  filterFormat = CUDNN_TENSOR_NCHW;
 
-  //  PDBG("Testing using cudnn backward data\n");
+#define PRINT_VERBOSE
+  PDBG("Testing using cudnn backward data\n");
+#endif
 
   status_t ret =
       doBackward<T>(x, dx, w, dw, dout, dimA, padA, convstrideA, filterdimA,
