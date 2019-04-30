@@ -457,9 +457,10 @@ int doConv(
 
   int outsize = outstrideA[0]*outdimA[0];
 
-  cudnnConvolutionFwdAlgo_t algo =
-      CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
-  //  cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_GEMM;
+  /*cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;*/
+  cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_FFT;
+  /*cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING;*/
+  /*cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD;*/
 
   void *workSpace = 0;
   size_t workSpaceSize;
