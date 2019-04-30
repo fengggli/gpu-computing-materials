@@ -35,7 +35,8 @@ static void generateStrides(const int* dimA, int* strideA, int nbDims, cudnnTens
 
 template <typename T_ELEM>
 status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
-                   int* padA, int* convstrideA, int* filterdimA, cudnnTensorFormat_t filterFormat, cudnnDataType_t dataType,
+                   int* padA, int* convstrideA, int* filterdimA,
+                   cudnnTensorFormat_t filterFormat, cudnnDataType_t dataType,
                    int mathType,
                    cudnnHandle_t handle_, cudnnTensorDescriptor_t cudnnIdesc,
                    cudnnFilterDescriptor_t cudnnFdesc,
@@ -184,6 +185,7 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   generateStrides(filterdimA_padded, filterstrideA_padded, 4, filterFormat);
   generateStrides(outdimA_padded, outstrideA_padded, 4, filterFormat);
 
+  // set descriptor
   checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnIdesc, dataType, convDim+2, dimA_padded, strideA_padded) );
   checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnOdesc, dataType, convDim+2, outdimA_padded, outstrideA_padded) );
   checkCudnnErr( cudnnSetConvolutionNdDescriptor(cudnnConvDesc,
@@ -192,7 +194,6 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
                                                  convstrideA,
                                                  dilationA,
                                                  CUDNN_CONVOLUTION, dataType));
-
   checkCudnnErr( cudnnSetFilterNdDescriptor(cudnnFdesc, dataType, filterFormat, convDim+2, filterdimA_padded));
 
   if (mathType == 1) {
