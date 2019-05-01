@@ -1,8 +1,10 @@
 //
 // Created by cmgoebel on 4/29/19.
 //
+
 #include "memory.h"
 
+#include <stdio.h>
 
 static long TOTAL_TENSOR_ALLOC_HOST = 0;
 static long TOTAL_TENSOR_ALLOC_DEVICE = 0;
