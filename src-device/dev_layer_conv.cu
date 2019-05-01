@@ -316,13 +316,13 @@ status_t im2col_inner_device(tensor_t cols, tensor_t x_padded, uint N,  uint C, 
 
   tensor_t d_cols       = tensor_make_copy_h2d(cols);
   tensor_t d_x_padded   = tensor_make_copy_h2d(x_padded);
-  cudaDeviceSynchronize();
+
   // TODO: make it handler lager size
   dim3 threads(32);
   dim3 blocks(1);
   PINF("device code is called");
 
-  _do_im2col_inner_device_thread_per_element<<<blocks, threads>>>(d_cols, d_x_padded, N, C, H, W, HH, WW, filter_height, filter_width, padding, stride);
+  _do_im2col_inner_device_naive_thread_per_filter<<<blocks, threads>>>(d_cols, d_x_padded, N, C, H, W, HH, WW, filter_height, filter_width, padding, stride);
 
   tensor_copy_d2h(cols, d_cols);
 
@@ -374,7 +374,7 @@ tensor_t im2col_device(tensor_t const d_x, tensor_t const d_w, conv_param_t cons
   tensor_t d_flattened_x = tensor_make_zeros_device(flattened_x_shape, ARRAY_SIZE(flattened_x_shape)); // ALLOC
 
   /////////////////////////////////////////////////////////////////////////////
-  _do_im2col_inner_device_thread_per_element<<<32, 128>>>(d_flattened_x, d_x_padded, N, C, H, W, HH, WW, filter_height, filter_width, pad_sz, stride);
+  _do_im2col_inner_device_naive_thread_per_filter<<<32, 128>>>(d_flattened_x, d_x_padded, N, C, H, W, HH, WW, filter_height, filter_width, pad_sz, stride);
   /////////////////////////////////////////////////////////////////////////////
 
   tensor_destroy_device(&d_x_padded);
@@ -661,7 +661,7 @@ tensor_t col2im_device(tensor_t d_dx_cols, uint N, uint C, uint H, uint W, uint 
   tensor_t d_x_padded = tensor_make_zeros_device(x_padded_shape, ARRAY_SIZE(x_padded_shape));  // new mem created by returned
 
   ////////////////////////////////////////////////////////////////////////////
-  _do_col2im_inner_device_thread_per_element<<<32, 128>>>(d_dx_cols, d_x_padded, N, C, H, W, HH, WW, field_height, field_width, pad_sz, stride);
+  _do_col2im_inner_device_thread_per_filter<<<32, 128>>>(d_dx_cols, d_x_padded, N, C, H, W, HH, WW, field_height, field_width, pad_sz, stride);
   ////////////////////////////////////////////////////////////////////////////
 
   if (pad_sz) {
