@@ -87,9 +87,10 @@ TEST_F(LayerConvCUDNNTest, ConvForwardcudnn) {
       0.99532895};
 
   tensor_fill_list(y_ref, value_list, array_size(value_list));
+  //tensor_dump(y);
 
   T rel_err = tensor_rel_error(y_ref, y);
-  EXPECT_LT(rel_err, 1e-2);
+  EXPECT_LT(rel_err, 1e-7);
   PINF("Cudnn_forward Consistent with expected results");
 
   // free data
@@ -181,7 +182,7 @@ TEST_F(LayerConvCUDNNTest, ConvBackwardcudnn) {
         convolution_forward(in, w_copy, nullptr, conv_params, out);
       },
       x, dy, dx_ref);
-  EXPECT_LT(tensor_rel_error(dx_ref, dx), 2e-2);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-4);
   PINF("cudnn gradient check of x... is ok");
 
   // evaluate gradient of w
@@ -190,7 +191,7 @@ TEST_F(LayerConvCUDNNTest, ConvBackwardcudnn) {
         convolution_forward(x_copy, in, nullptr, conv_params, out);
       },
       w, dy, dw_ref);
-  EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-2);
+  EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-4);
   PINF("cudnn gradient check of w... is ok");
 
   EXPECT_EQ(ret, S_OK);

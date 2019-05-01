@@ -12,7 +12,7 @@
 #include "awnn/layer_cudnn.h"
 #define THRESHOLD               2.0e-2
 
-#define PRINT_VERBOSE
+/*#define PRINT_VERBOSE*/
 
 static void generateStrides(const int* dimA, int* strideA, int nbDims, cudnnTensorFormat_t filterFormat) {
   //For INT8x4 and INT8x32 we still compute standard strides here to input
@@ -50,7 +50,7 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
   size_t workSpaceSize;
 
   cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
-//  cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_FFT;
+  /*cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_FFT;*/
   /*cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING;*/
   /*cudnnConvolutionFwdAlgo_t algo = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD;*/
 
@@ -62,11 +62,12 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
 
   int* dimA_padded = dimA;
   int* outdimA_padded = (int*) (y.dim.dims);
+  /*int* outdim = (int*) (y.dim.dims);*/
   int* filterdimA_padded = filterdimA;
 
-  int strideA_padded[4] = {1,1,1,1};
-  int outstrideA_padded[4] = {1,1,1,1};
-  int filterstrideA_padded[4] = {1,1,1,1};
+  int strideA_padded[4];
+  int outstrideA_padded[4];
+  int filterstrideA_padded[4];
 
 #ifdef PRINT_VERBOSE
   PDBG("====PADDING DIMENSIONS====\n");
@@ -82,6 +83,7 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
   generateStrides(filterdimA_padded, filterstrideA_padded, 4, filterFormat);
   generateStrides(outdimA_padded, outstrideA_padded, 4, filterFormat);
 
+  // Use cudnnSetNdDescriptor
   checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnIdesc, dataType, convDim+2, dimA_padded, strideA_padded) );
   checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnOdesc, dataType, convDim+2, outdimA_padded, outstrideA_padded) );
   checkCudnnErr( cudnnSetConvolutionNdDescriptor(cudnnConvDesc,
@@ -89,9 +91,24 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
                                                  padA,
                                                  convstrideA,
                                                  dilationA,
-                                                 CUDNN_CONVOLUTION, dataType));
+                                                 CUDNN_CROSS_CORRELATION, dataType));
 
   checkCudnnErr( cudnnSetFilterNdDescriptor(cudnnFdesc, dataType, filterFormat, convDim+2, filterdimA_padded));
+
+  // Use cudnnSet4dDescriptor
+  /*checkCudnnErr( cudnnSetTensor4dDescriptor(cudnnIdesc, CUDNN_TENSOR_NCHW, dataType, dimA[0], dimA[1], dimA[2], dimA[3]) );*/
+  /*checkCudnnErr( cudnnSetTensor4dDescriptor(cudnnOdesc, CUDNN_TENSOR_NCHW, dataType, outdim[0], outdim[1], outdim[2], outdim[3]) );*/
+  /*checkCudnnErr( cudnnSetConvolution2dDescriptor(cudnnConvDesc,*/
+                                                 /*padA[0],*/
+                                                 /*padA[1],*/
+                                                 /*convstrideA[0],*/
+                                                 /*convstrideA[1],*/
+                                                 /*dilationA[0],*/
+                                                 /*dilationA[1],*/
+                                                 /*[>CUDNN_CONVOLUTION, dataType));<]*/
+                                                 /*CUDNN_CROSS_CORRELATION, dataType));*/
+
+  /*checkCudnnErr( cudnnSetFilter4dDescriptor(cudnnFdesc, dataType, CUDNN_TENSOR_NCHW, filterdimA[0], filterdimA[1], filterdimA[2], filterdimA[3]));*/
 
   if (mathType == 1) {
     checkCudnnErr( cudnnSetConvolutionMathType(cudnnConvDesc, CUDNN_TENSOR_OP_MATH) );
@@ -140,7 +157,12 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   T_ELEM* devPtrO = dout.data;
 
   cudnnConvolutionBwdDataAlgo_t algo_data = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
+  /*cudnnConvolutionBwdDataAlgo_t algo_data = CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD;*/ // has undefined problem
+  /*cudnnConvolutionBwdDataAlgo_t algo_data = CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT;*/
+
   cudnnConvolutionBwdFilterAlgo_t algo_weight = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
+  /*cudnnConvolutionBwdFilterAlgo_t algo_weight = CUDNN_CONVOLUTION_BWD_FILTER_WINOGRAD_NONFUSED;*/ // has undefined problem
+  /*cudnnConvolutionBwdFilterAlgo_t algo_weight = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT;*/
 
   void *workSpace = 0;
   size_t workSpaceSize;
@@ -151,14 +173,13 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   float beta = 0.0;
   int dilationA[] = {1, 1};
 
-//  int* dimA_padded = dimA; //
-  int dimA_padded[] = {2, 3, 5, 5};
+  int* dimA_padded = dimA;
   int* outdimA_padded = (int*) (dout.dim.dims);
   int* filterdimA_padded = filterdimA;
 
-  int strideA_padded[4] = {1,1,1,1};
-  int outstrideA_padded[4] = {1,1,1,1};
-  int filterstrideA_padded[4] = {1,1,1,1};
+  int strideA_padded[4];
+  int outstrideA_padded[4];
+  int filterstrideA_padded[4];
 
 #ifdef PRINT_VERBOSE
   PDBG("====PADDING DIMENSIONS====\n");
@@ -182,7 +203,7 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
                                                  padA,
                                                  convstrideA,
                                                  dilationA,
-                                                 CUDNN_CONVOLUTION, dataType));
+                                                 CUDNN_CROSS_CORRELATION, dataType));
   checkCudnnErr( cudnnSetFilterNdDescriptor(cudnnFdesc, dataType, filterFormat, convDim+2, filterdimA_padded));
 
   if (mathType == 1) {
