@@ -11,7 +11,7 @@
 #include "awnn/tensor.h"
 #include "awnn/layer_pool.h"
 
-#include "awnndevice/dev_layer_conv.cuh"
+#include "awnndevice/layer_conv_device.cuh"
 
 #include <gtest/gtest.h>
 

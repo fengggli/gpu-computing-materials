@@ -141,7 +141,7 @@ if(USE_CUDA)
   cuda_add_library(awnndevicelib
     include/awnndevice/range.cuh
     include/awnndevice/device_utils.cuh
-    include/awnndevice/dev_layer_conv.cuh
+    include/awnndevice/layer_conv_device.cuh
     include/awnndevice/cublas_wrappers.cuh
 
     src-device/tensor.cu

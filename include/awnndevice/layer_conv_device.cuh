@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+int set_blocks(int x);
+int set_threads(int x);
 
 status_t convolution_forward_device(cublasHandle_t handle, tensor_t const d_x, tensor_t d_w, lcache_t* cache, conv_param_t const params, tensor_t d_y);
 
