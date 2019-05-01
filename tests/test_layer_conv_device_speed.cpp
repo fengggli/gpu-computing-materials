@@ -17,6 +17,7 @@
 
 #include <gtest/gtest.h>
 #include <numeric>
+#include <cstdio>
 
 namespace {
 
@@ -182,6 +183,7 @@ TEST_F(TestLayerConvSpeed, bench_custom_forward_backward) {
     set_blocks(num_blk);
     for (auto & num_thrd : thread_arr) {
       set_threads(num_thrd);
+      printf("\n");
       for (auto nr_img : N_arrary) {
         for (auto nr_in_channel : C_arrary) {
           for (auto sz_img : H_arrary) {
