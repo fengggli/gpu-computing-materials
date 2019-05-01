@@ -63,9 +63,10 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
   int* dimA_padded = dimA;
   int* outdimA_padded = (int*) (y.dim.dims);
   int* filterdimA_padded = filterdimA;
-  int strideA_padded[4] = {0,0,1,1};
-  int outstrideA_padded[4] = {0,0,1,1};
-  int filterstrideA_padded[4] = {0,0,1,1};
+
+  int strideA_padded[4] = {1,1,1,1};
+  int outstrideA_padded[4] = {1,1,1,1};
+  int filterstrideA_padded[4] = {1,1,1,1};
 
 #ifdef PRINT_VERBOSE
   PDBG("====USER DIMENSIONS====\n");
@@ -160,9 +161,9 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   int* outdimA_padded = (int*) (dout.dim.dims);
   int* filterdimA_padded = filterdimA;
 
-  int strideA_padded[4] = {0,0,1,1};
-  int outstrideA_padded[4] = {0,0,1,1};
-  int filterstrideA_padded[4] = {0,0,1,1};
+  int strideA_padded[4] = {1,1,1,1};
+  int outstrideA_padded[4] = {1,1,1,1};
+  int filterstrideA_padded[4] = {1,1,1,1};
 
 #ifdef PRINT_VERBOSE
   PDBG("====USER DIMENSIONS====\n");
