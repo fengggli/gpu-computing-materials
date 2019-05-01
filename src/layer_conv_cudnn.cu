@@ -63,9 +63,9 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
   int* dimA_padded = dimA;
   int* outdimA_padded = (int*) (y.dim.dims);
   int* filterdimA_padded = filterdimA;
-  int strideA_padded[4];
-  int outstrideA_padded[4];
-  int filterstrideA_padded[4];
+  int strideA_padded[4] = {0,0,1,1};
+  int outstrideA_padded[4] = {0,0,1,1};
+  int filterstrideA_padded[4] = {0,0,1,1};
 
 #ifdef PRINT_VERBOSE
   PDBG("====USER DIMENSIONS====\n");
@@ -83,9 +83,9 @@ status_t doForward(tensor_t const x, tensor_t const w, tensor_t y, int* dimA,
        outdimA_padded[1], outdimA_padded[2], outdimA_padded[3]);
 #endif
 
-  generateStrides(dimA_padded, strideA_padded, 4, filterFormat);
-  generateStrides(filterdimA_padded, filterstrideA_padded, 4, filterFormat);
-  generateStrides(outdimA_padded, outstrideA_padded, 4, filterFormat);
+//  generateStrides(dimA_padded, strideA_padded, 4, filterFormat);
+//  generateStrides(filterdimA_padded, filterstrideA_padded, 4, filterFormat);
+//  generateStrides(outdimA_padded, outstrideA_padded, 4, filterFormat);
 
   checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnIdesc, dataType, convDim+2, dimA_padded, strideA_padded) );
   checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnOdesc, dataType, convDim+2, outdimA_padded, outstrideA_padded) );
@@ -155,15 +155,14 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
   float alpha = 1.0f;
   float beta = 0.0;
   int dilationA[] = {1, 1};
-//  int outdimA[4];
 
   int* dimA_padded = dimA;
   int* outdimA_padded = (int*) (dout.dim.dims);
   int* filterdimA_padded = filterdimA;
 
-  int strideA_padded[4];
-  int outstrideA_padded[4];
-  int filterstrideA_padded[4];
+  int strideA_padded[4] = {0,0,1,1};
+  int outstrideA_padded[4] = {0,0,1,1};
+  int filterstrideA_padded[4] = {0,0,1,1};
 
 #ifdef PRINT_VERBOSE
   PDBG("====USER DIMENSIONS====\n");
@@ -181,9 +180,9 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
        outdimA_padded[1], outdimA_padded[2], outdimA_padded[3]);
 #endif
 
-  generateStrides(dimA_padded, strideA_padded, 4, filterFormat);
-  generateStrides(filterdimA_padded, filterstrideA_padded, 4, filterFormat);
-  generateStrides(outdimA_padded, outstrideA_padded, 4, filterFormat);
+//  generateStrides(dimA_padded, strideA_padded, 4, filterFormat);
+//  generateStrides(filterdimA_padded, filterstrideA_padded, 4, filterFormat);
+//  generateStrides(outdimA_padded, outstrideA_padded, 4, filterFormat);
 
   // set descriptor
   checkCudnnErr( cudnnSetTensorNdDescriptor(cudnnIdesc, dataType, convDim+2, dimA_padded, strideA_padded) );
