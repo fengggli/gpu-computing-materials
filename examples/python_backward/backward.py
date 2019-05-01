@@ -50,16 +50,16 @@ def convolution_backward(dout, cache):
     w_T = w.reshape(num_filters, -1).T
     dx_cols = w_T.dot(dout_reshaped)
 
-    print()
-    print(dx_cols)
+    # print()
+    # print(dx_cols)
     # convert back to multidimensional
     # is gonna take a while
     dx = col2im(dx_cols, x.shape[0], x.shape[1], x.shape[2], x.shape[3],
                 filter_height, filter_width, pad, stride)
 
 
-    print(dx.shape)
-    print(list(dx.flatten()))
+    # print(dx.shape)
+    # print(list(dx.flatten()))
 
 
 
@@ -133,17 +133,33 @@ def col2im_inner(cols, x_padded,
                  N, C, H, W, HH, WW,
                  field_height, field_width, padding, stride):
 
-    for c in range(C):
-        for ii in range(field_height):
-            for jj in range(field_width):
-                row = c * field_width * field_height + ii * field_height + jj
-                for yy in range(HH):
-                    for xx in range(WW):
-                        for i in range(N):
+
+    print("N={}, C={}, H={}, W={}, HH={}, WW={}, field_height={}, field_width={}, padding={}, stride={}".format(N, C, H, W, HH, WW, field_height, field_width, padding, stride))
+
+    print("\ncols")
+    print(cols.shape)
+    print(list(cols.flatten()))
+    print("x_padded")
+    print(x_padded.shape)
+    print(list(x_padded.flatten()))
+
+    for i in range(N):
+        for c in range(C):
+            for ii in range(field_height):
+                for jj in range(field_width):
+                    row = c * field_width * field_height + ii * field_width + jj
+                    print("rowwwwwwwwwwwww={}".format(row))
+                    for yy in range(HH):
+                        for xx in range(WW):
+
                             col = yy * WW * N + xx * N + i
                             # print(cols[row, col])
+                            src_idx = row * cols.shape[1] + col
+                            target_idx = 0
+                            print("row={} col={}".format(row, col))
+                            # print("adding dx_cols[{}]={} to x_padded[{}]={}".format(src_idx, cols[row, col], target_idx, x_padded[i, c, stride * yy + ii, stride * xx + jj]))
                             x_padded[i, c, stride * yy + ii, stride * xx + jj] += cols[row, col]
 
-    # print()
-    # print(x_padded.shape)
-    # print(list(x_padded.flatten()))
+    print("after")
+    print(x_padded.shape)
+    print(list(x_padded.flatten()))

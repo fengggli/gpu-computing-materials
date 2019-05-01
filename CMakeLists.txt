@@ -2,15 +2,22 @@ cmake_minimum_required(VERSION 3.5)
 #set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 option(IS_CI_BUILD "Is a build for CI" OFF) # Reduce problem size if it is run in CI
-option(USE_CLANG "Use clang compiler set" OFF)
 option(USE_OPENBLAS "USE openblas for blas" ON)
-option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_CUDA "Build with CUDA" OFF)
+option(DEBUG_GPU_FUNC_ENTRY_NOTIFY "Print device function names upon function call" ON)
 option(USE_CUDNN "Build with CUDNN" OFF)
 option(USE_NNPACK "Build with NNPACK" OFF)
 option(AWNN_USE_FLT32 "Use single precision floating point" OFF)
+option(GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC "Count allocations and destroy globally" OFF)
 
+option(USE_CLANG "Use clang compiler set" OFF)
+option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_STRICT_CHECK "use pedantic flag" OFF)
+
+
+if (NOT AWNN_USE_FLT32 AND USE_NNPACK)
+  message(FATAL_ERROR 'nnpack only support float32')
+endif ()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
@@ -24,7 +31,6 @@ endif()
 
 set(CMAKE_CXX_STANDARD 11)
 
-
 set(GCC_COVERAGE_COMPILE_FLAGS "-Wall -Wextra -Wconversion -rdynamic")
 if(USE_STRICT_CHECK)
   set(GCC_COVERAGE_COMPILE_FLAGS "-pedantic ${GCC_COVERAGE_COMPILE_FLAGS}")
@@ -32,7 +38,6 @@ endif()
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
-
 project(awnn LANGUAGES C CXX)
 
 ## cuda
@@ -109,6 +114,7 @@ list(APPEND awnn_core_SOURCES
   src/layer_sandwich.c
   src/solver.c
   src/net_resnet.c
+  src/memory.c
   )
 
 if (USE_NNPACK)
@@ -133,8 +139,18 @@ set(AWNN_LIBS "awnn_core" "awnn_utils")
 
 if(USE_CUDA)
   cuda_add_library(awnndevicelib
-    src/tensor.cu
-    src/layer_pool.cu)
+    include/awnndevice/range.cuh
+    include/awnndevice/device_utils.cuh
+    include/awnndevice/dev_layer_conv.cuh
+    include/awnndevice/cublas_wrappers.cuh
+
+    src-device/tensor.cu
+    src-device/layer_pool.cu
+    src-device/dev_layer_conv.cu
+    src-device/cublas_wrappers.cu
+  )
+
+  target_link_libraries(awnndevicelib cudart cublas)
 
   set(AWNN_DEVICE_LIBS "awnndevicelib")
 endif(USE_CUDA)

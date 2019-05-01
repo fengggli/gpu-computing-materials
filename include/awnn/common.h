@@ -26,6 +26,8 @@ typedef float T;
 typedef double T;
 #endif
 
+
+
 typedef unsigned int label_t;
 label_t *label_make_random(uint nr_elem, uint range);
 void label_destroy(label_t *labels);
@@ -42,6 +44,12 @@ enum {
   MODE_TRAIN = 0,
   MODE_INFER = 1,
 };
+
+/** Moved from layer_conv.h, also used for device*/
+typedef struct{
+  int stride;
+  int padding;
+} conv_param_t;
 
 void print_trace();
 

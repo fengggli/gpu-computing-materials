@@ -20,6 +20,21 @@ add_executable(test-layer-conv test_layer_conv.cpp)
 target_link_libraries(test-layer-conv ${AWNN_LIBS}  gtest)
 add_test(test-layer-conv test-layer-conv)
 
+if(USE_CUDA)
+    add_executable(test-layer-conv-device test_layer_conv_device.cpp)
+    target_link_libraries(test-layer-conv-device ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} gtest)
+    add_test(test-layer-conv-device test-layer-conv-device)
+
+    add_executable(test-cublas-device-op test_cublas_device_op.cpp)
+    target_link_libraries(test-cublas-device-op ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} cudart cublas gtest)
+    add_test(test-cublas-device-op test-device-op)
+
+    add_executable(test-layer-conv-device-speed test_layer_conv_device_speed.cpp)
+    target_link_libraries(test-layer-conv-device-speed ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} cudart cublas gtest)
+    add_test(test-layer-conv-device-speed test-device-op)
+
+endif(USE_CUDA)
+
 if (USE_NNPACK)
 add_executable(test-layer-conv-nnpack test_layer_conv_nnpack.cpp)
 target_link_libraries(test-layer-conv-nnpack ${AWNN_LIBS} gtest)

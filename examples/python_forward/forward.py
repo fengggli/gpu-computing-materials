@@ -94,10 +94,7 @@ def get_flattened_x(x: np.array, w: np.array, conv_param: dict):
 
 def im2col_cython(x, filter_height, filter_width, padding, stride):
 
-    N = x.shape[0]
-    C = x.shape[1]
-    H = x.shape[2]
-    W = x.shape[3]
+    N, C, H, W = x.shape
 
     HH = int((H + 2 * padding - filter_height) / stride + 1)  # number of times filter will be applied in height dimension
     WW = int((W + 2 * padding - filter_width) / stride + 1)   # number of times filter will be applied in width dimension
@@ -108,7 +105,7 @@ def im2col_cython(x, filter_height, filter_width, padding, stride):
     # print(x_padded)
 
     # when creating our columns array, we are sizing it based on
-    # (Channels * filter size, number of images * total filter applications
+    # (Channels * filter size, number of images * filter applications (reduced)
     cols = np.zeros((C * filter_height * filter_width, N * HH * WW), dtype=x.dtype)  # field_height and width are filter
 
     im2col_cython_inner(cols, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, padding, stride)
@@ -119,9 +116,17 @@ def im2col_cython(x, filter_height, filter_width, padding, stride):
 def im2col_cython_inner(cols, x_padded,
                         N, C, H, W, HH, WW,
                         filter_height, filter_width, padding, stride):
-    img_sz = C * x_padded.shape[2] * x_padded.shape[3];
-    chan_sz = x_padded.shape[2] * x_padded.shape[3];
-    row_sz = x_padded.shape[2];
+
+    # print("\ncols")
+    # print(cols.shape)
+    # print(list(cols.flatten()))
+    # print("x_padded")
+    # print(x_padded.shape)
+    # print(list(x_padded.flatten()))
+
+    img_sz = C * x_padded.shape[2] * x_padded.shape[3]
+    chan_sz = x_padded.shape[2] * x_padded.shape[3]
+    row_sz = x_padded.shape[2]
 
     # print(x_padded.shape)
     for c in range(C):  # for each channel
@@ -129,10 +134,10 @@ def im2col_cython_inner(cols, x_padded,
             for xx in range(WW):
                 for ii in range(filter_height):
                     for jj in range(filter_width):
-                        row = c * filter_width * filter_height + ii * filter_height + jj
+                        row = c * filter_width * filter_height + ii * filter_width + jj  # just changed this to filter_width
                         for i in range(N):
                             col = yy * WW * N + xx * N + i
-                            test_idx = (i * img_sz) + (c * chan_sz) + (stride * yy + ii) * row_sz + stride * xx + jj;
+                            test_idx = (i * img_sz) + (c * chan_sz) + (stride * yy + ii) * row_sz + stride * xx + jj
                             # assert (x_padded[i, c, stride * yy + ii, stride * xx + jj], x_padded[test_idx])
 
                             x_p_val = x_padded[i, c, stride * yy + ii, stride * xx + jj]
@@ -142,3 +147,6 @@ def im2col_cython_inner(cols, x_padded,
                         # print()
                         # print(cols)
 
+    # print("cols after")
+    # print(cols.shape)
+    # print(list(cols.flatten()))

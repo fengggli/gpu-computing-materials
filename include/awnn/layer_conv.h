@@ -14,11 +14,6 @@
 extern "C" {
 #endif
 
-typedef struct conv_param {
-  uint stride;
-  uint padding;
-} conv_param_t;
-
 typedef enum conv_method_ {
   CONV_METHOD_NNPACK_AUTO = 0,
   CONV_METHOD_NNPACK_ft8x8 = 1,
@@ -52,6 +47,7 @@ void set_conv_method(conv_method_t);
  * See conv_forward_naive
  * https://github.com/fengggli/cs231n-assignments/blob/master/assignment2/cs231n/layers.py
  */
+
 status_t convolution_forward(tensor_t const x, tensor_t const w,
                              lcache_t* cache, conv_param_t const params,
                              tensor_t y);
@@ -60,7 +56,7 @@ tensor_t im2col(tensor_t const x, tensor_t const w, conv_param_t const params);
 
 status_t im2col_inner(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H,
                       uint W, uint HH, uint WW, uint filter_height,
-                      uint filter_width, uint padding, uint stride);
+                      uint filter_width, int padding, int stride);
 
 /*
  * @brief backprop
@@ -73,16 +69,18 @@ status_t im2col_inner(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H,
  * @return S_OK if success, otherwise S_ERR or define your error type in
  * common.h
  */
+status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache, conv_param_t const params, tensor_t const dout);
 
-status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache,
-                              conv_param_t const params, tensor_t const dout);
 
-tensor_t col2im(tensor_t cols, uint N, uint C, uint H, uint W,
-                uint field_height, uint field_width, uint padding, uint stride);
+tensor_t col2im(tensor_t dx_cols,
+                uint N, uint C, uint H, uint W,
+                uint field_height, uint field_width, int padding, int stride);
 
-void col2im_inner(tensor_t cols, tensor_t x_padded, uint N, uint C, uint H,
-                  uint W, uint HH, uint WW, uint field_height, uint field_width,
-                  uint padding, uint stride);
+
+void col2im_inner(tensor_t dx_cols, tensor_t x_padded,
+                  uint N, uint C, uint H, uint W, uint HH, uint WW,
+                  uint field_height, uint field_width, int padding, int stride);
+
 
 #ifdef USE_NNPACK
 status_t convolution_forward_nnpack(conv_method_t, tensor_t const x,
