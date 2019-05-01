@@ -146,7 +146,7 @@ if(USE_CUDA)
 
     src-device/tensor.cu
     src-device/layer_pool.cu
-    src-device/dev_layer_conv.cu
+    src-device/layer_conv_device.cu
     src-device/cublas_wrappers.cu
   )
 

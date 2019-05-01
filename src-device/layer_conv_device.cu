@@ -67,7 +67,7 @@ tensor_t tensor_make_transpose_3012_device(tensor_t t) {
   tensor_t d_transposed = tensor_make_copy_h2d(t);
   tensor_reshape_(&d_transposed, transposed_shape, ARRAY_SIZE(transposed_shape));
 
-  dim3 threads(1024);
+  dim3 threads(32);
   dim3 blocks(1);
   PINF("device code is called");
   _do_tensor_make_transpose_3012_device<<<blocks, threads>>>(d_transposed, d_src);
@@ -366,7 +366,7 @@ tensor_t im2col_device(tensor_t const d_x, tensor_t const d_w, conv_param_t cons
   tensor_t d_x_padded = tensor_make_device(padded_shape, ARRAY_SIZE(padded_shape));  // ALLOC
 
   /////////////////////////////////////////////////////////////////////////////
-  _do_tensor_make_padded_square_input_device<<<32, 128>>>(d_x_padded, d_x, pad_sz, 0);  // 0 is pad value
+  _do_tensor_make_padded_square_input_device<<<1, 32>>>(d_x_padded, d_x, pad_sz, 0);  // 0 is pad value
   /////////////////////////////////////////////////////////////////////////////
 
   uint flattened_x_shape[] = {C * filter_height * filter_width, N * HH * WW};
@@ -374,7 +374,7 @@ tensor_t im2col_device(tensor_t const d_x, tensor_t const d_w, conv_param_t cons
   tensor_t d_flattened_x = tensor_make_zeros_device(flattened_x_shape, ARRAY_SIZE(flattened_x_shape)); // ALLOC
 
   /////////////////////////////////////////////////////////////////////////////
-  _do_im2col_inner_device_thread_per_element<<<32, 128>>>(d_flattened_x, d_x_padded, N, C, H, W, HH, WW, filter_height, filter_width, pad_sz, stride);
+  _do_im2col_inner_device_thread_per_element<<<1, 32>>>(d_flattened_x, d_x_padded, N, C, H, W, HH, WW, filter_height, filter_width, pad_sz, stride);
   /////////////////////////////////////////////////////////////////////////////
 
   tensor_destroy_device(&d_x_padded);
@@ -412,7 +412,7 @@ status_t convolution_forward_device(cublasHandle_t handle, tensor_t const d_x, t
   tensor_reshape_(&d_y, transposed_shape, ARRAY_SIZE(transposed_shape));
 
   //////////////////////////////////////////////////////////////////////
-  _do_tensor_make_transpose_3012_device<<<32, 128>>>(d_y, d_out);
+  _do_tensor_make_transpose_3012_device<<<1, 32>>>(d_y, d_out);
   //////////////////////////////////////////////////////////////////////
 
   // fill cache
@@ -640,8 +640,8 @@ void col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint 
   tensor_t d_x_padded   = tensor_make_copy_h2d(x_padded);
 
   // TODO: make it handler lager size
-  dim3 threads(1);
-  dim3 blocks(1024);
+  dim3 threads(32);
+  dim3 blocks(1);
   PINF("device code is called");
   _do_col2im_inner_device_thread_per_element<<<blocks, threads>>>(d_cols, d_x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
 
@@ -661,14 +661,14 @@ tensor_t col2im_device(tensor_t d_dx_cols, uint N, uint C, uint H, uint W, uint 
   tensor_t d_x_padded = tensor_make_zeros_device(x_padded_shape, ARRAY_SIZE(x_padded_shape));  // new mem created by returned
 
   ////////////////////////////////////////////////////////////////////////////
-  _do_col2im_inner_device_thread_per_element<<<32, 128>>>(d_dx_cols, d_x_padded, N, C, H, W, HH, WW, field_height, field_width, pad_sz, stride);
+  _do_col2im_inner_device_thread_per_element<<<1, 32>>>(d_dx_cols, d_x_padded, N, C, H, W, HH, WW, field_height, field_width, pad_sz, stride);
   ////////////////////////////////////////////////////////////////////////////
 
   if (pad_sz) {
     uint padded_shape[] = { d_x_padded.dim.dims[0], d_x_padded.dim.dims[1], d_x_padded.dim.dims[2] - 2 * pad_sz, d_x_padded.dim.dims[3] - 2 * pad_sz };
     tensor_t padding_removed = tensor_make_device(padded_shape, ARRAY_SIZE(padded_shape));
     ////////////////////////////////////////////////////////////////////////////
-    _do_tensor_make_remove_padding_square_device<<<32, 128>>>(padding_removed, d_x_padded, pad_sz);
+    _do_tensor_make_remove_padding_square_device<<<1, 32>>>(padding_removed, d_x_padded, pad_sz);
     ////////////////////////////////////////////////////////////////////////////
 
 //    tensor_t padding_removed = tensor_make_remove_padding_square_device(d_x_padded, pad_sz);
@@ -713,7 +713,7 @@ tensor_t tensor_make_transpose_1230_device(tensor_t t)
   tensor_t d_transposed = tensor_make_copy_h2d(t);
   tensor_reshape_(&d_transposed, transposed_shape, ARRAY_SIZE(transposed_shape));
 
-  dim3 threads(1024);
+  dim3 threads(32);
   dim3 blocks(1);
   PINF("device code is called");
   _do_tensor_make_transpose_1230_device<<<blocks, threads>>>(d_transposed, d_src);
@@ -748,7 +748,7 @@ status_t convolution_backward_device(cublasHandle_t handle, tensor_t d_dx, tenso
   // 1. tensor transpose 1230 the dout (derivative of output layer)
   uint const d_dout_T_1230_shape[] = { d_dout.dim.dims[1], d_dout.dim.dims[2], d_dout.dim.dims[3], d_dout.dim.dims[0] };
   tensor_t d_dout_T_1230 = tensor_make_device(d_dout_T_1230_shape, ARRAY_SIZE(d_dout_T_1230_shape));
-  _do_tensor_make_transpose_1230_device<<<32, 128>>>(d_dout_T_1230, d_dout);
+  _do_tensor_make_transpose_1230_device<<<1, 32>>>(d_dout_T_1230, d_dout);
 
   // 2. reshape the dout_T to a 2D shape by collapsing the last 3 dims
   uint d_dout_2d_shape[] = { num_filters, d_dout_T_1230.dim.dims[1] * d_dout_T_1230.dim.dims[2] * d_dout_T_1230.dim.dims[3] };
@@ -785,7 +785,7 @@ status_t convolution_backward_device(cublasHandle_t handle, tensor_t d_dx, tenso
 
   // TODO : get rid of allocation of t by passing d_dx into col2im_device
   /////////////////////////////////////////////////////////////////////////////
-  tensor_copy_d2d<<<32, 128>>>(d_dx, t);
+  tensor_copy_d2d<<<1, 32>>>(d_dx, t);
   /////////////////////////////////////////////////////////////////////////////
 
   // cache
