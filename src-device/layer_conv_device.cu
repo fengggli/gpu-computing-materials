@@ -8,10 +8,12 @@ static int _blocks { 1 };
 static int _threads { 1 };
 
 int set_blocks(int x) {
-  _blocks = x; 
+  _blocks = x;
+  return _blocks;
 }
 int set_threads(int x) {
   _threads = x;
+  return _threads;
 }
 
 /*
@@ -379,7 +381,7 @@ tensor_t im2col_device(tensor_t const d_x, tensor_t const d_w, conv_param_t cons
   tensor_t d_flattened_x = tensor_make_zeros_device(flattened_x_shape, ARRAY_SIZE(flattened_x_shape)); // ALLOC
 
   /////////////////////////////////////////////////////////////////////////////
-  _do_im2col_inner_device_naive_thread_per_filter()<<<_blocks, _threads>>>(d_flattened_x, d_x_padded, N, C, H, W, HH, WW, filter_height, filter_width, pad_sz, stride);
+  _do_im2col_inner_device_naive_thread_per_filter<<<_blocks, _threads>>>(d_flattened_x, d_x_padded, N, C, H, W, HH, WW, filter_height, filter_width, pad_sz, stride);
   /////////////////////////////////////////////////////////////////////////////
 
   tensor_destroy_device(&d_x_padded);
@@ -643,7 +645,7 @@ void col2im_inner_device(tensor_t cols, tensor_t x_padded, uint N, uint C, uint 
   tensor_t d_x_padded   = tensor_make_copy_h2d(x_padded);
 
   PINF("device code is called");
-  _do_col2im_inner_device_thread_per_filter()<<<_blocks, _threads>>>(d_cols, d_x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
+  _do_col2im_inner_device_thread_per_filter<<<_blocks, _threads>>>(d_cols, d_x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
 
   tensor_copy_d2h(x_padded, d_x_padded);
 
