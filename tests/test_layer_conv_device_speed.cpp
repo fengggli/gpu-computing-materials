@@ -266,7 +266,7 @@ TEST_F(TestLayerConvSpeed, bench_custom_forward_backward) {
                 std::accumulate(backward_times.begin(), backward_times.end(),
                                 double(0)) /
                 backward_times.size();
-            
+
             PINF("stat-custom\t%u\t%u\t%u\t%u\t%u\t%.3f\t%.3f", nr_img, nr_in_channel,
                  sz_img, nr_filter, sz_filter, avg_fwd_ms, avg_bkwd_ms);
           }
