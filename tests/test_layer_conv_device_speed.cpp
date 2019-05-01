@@ -176,6 +176,7 @@ TEST_F(TestLayerConvSpeed, bench_custom_forward_backward) {
   std::vector<uint> F_arrary = {1, 4, 16}; // nr of filters/ output channels
   std::vector<uint> HH_arrary = {3}; // filter H / W
 
+  PINF("method\tN\tC\tH\tF\tHH\tavg_fwd_ms\tavg_bkwd_ms");
   for (auto nr_img : N_arrary) {
     for (auto nr_in_channel : C_arrary) {
       for (auto sz_img : H_arrary) {
@@ -266,7 +267,6 @@ TEST_F(TestLayerConvSpeed, bench_custom_forward_backward) {
                                 double(0)) /
                 backward_times.size();
             
-            PINF("method\tN\tC\tH\tF\tHH\tavg_fwd_ms\tavg_bkwd_ms");
             PINF("stat-custom\t%u\t%u\t%u\t%u\t%u\t%.3f\t%.3f", nr_img, nr_in_channel,
                  sz_img, nr_filter, sz_filter, avg_fwd_ms, avg_bkwd_ms);
           }
