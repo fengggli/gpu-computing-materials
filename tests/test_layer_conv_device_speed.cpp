@@ -179,16 +179,16 @@ TEST_F(TestLayerConvSpeed, bench_custom_forward_backward) {
   std::vector<uint> HH_arrary = {3}; // filter H / W
 
   PINF("method\tnum_blk\tnum_thrd\tN\tC\tH\tF\tHH\tavg_fwd_ms\tavg_bkwd_ms");
-  for (auto & num_blk : block_arr) {
-    set_blocks(num_blk);
-    for (auto & num_thrd : thread_arr) {
-      set_threads(num_thrd);
-      printf("\n");
-      for (auto nr_img : N_arrary) {
-        for (auto nr_in_channel : C_arrary) {
-          for (auto sz_img : H_arrary) {
-            for (auto nr_filter : F_arrary) {
-              for (auto sz_filter : HH_arrary) {
+  for (auto nr_img : N_arrary) {
+    for (auto nr_in_channel : C_arrary) {
+      for (auto sz_img : H_arrary) {
+        for (auto nr_filter : F_arrary) {
+          for (auto sz_filter : HH_arrary) {
+            printf("\n");
+            for (auto & num_blk : block_arr) {
+              set_blocks(num_blk);
+              for (auto & num_thrd : thread_arr) {
+                set_threads(num_thrd);
                 std::vector<double> forward_times;
                 std::vector<double> backward_times;
 
