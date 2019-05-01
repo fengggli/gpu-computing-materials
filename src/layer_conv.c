@@ -27,7 +27,7 @@ status_t convolution_forward(tensor_t const x, tensor_t const w,
                              tensor_t y) {
   status_t ret;
   switch (g_conv_method) {
-#ifdef USE_NNPACK
+#if defined(USE_NNPACK) && defined(AWNN_USE_FLT32)
     case CONV_METHOD_NNPACK_AUTO:
     case CONV_METHOD_NNPACK_ft8x8:
     case CONV_METHOD_NNPACK_ft16x16:
@@ -56,7 +56,7 @@ status_t convolution_backward(tensor_t dx, tensor_t dw, lcache_t* cache,
                               tensor_t const dout) {
   status_t ret;
   switch (g_conv_method) {
-#ifdef USE_NNPACK
+#if defined(USE_NNPACK) && defined(AWNN_USE_FLT32)
     case CONV_METHOD_NNPACK_AUTO:
     case CONV_METHOD_NNPACK_ft8x8:
     case CONV_METHOD_NNPACK_ft16x16:

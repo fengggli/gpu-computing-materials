@@ -9,6 +9,7 @@ option(USE_CUDA "Build with CUDA" OFF)
 option(USE_CUDNN "Build with CUDNN" OFF)
 option(USE_NNPACK "Build with NNPACK" OFF)
 option(AWNN_USE_FLT32 "Use single precision floating point" OFF)
+option(AWNN_USE_OPENMP "Use OpenMP" OFF)
 
 option(USE_STRICT_CHECK "use pedantic flag" OFF)
 
@@ -32,6 +33,12 @@ endif()
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
+
+if(AWNN_USE_OPENMP)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+		message("Use OPenMP")
+endif()
 
 project(awnn LANGUAGES C CXX)
 

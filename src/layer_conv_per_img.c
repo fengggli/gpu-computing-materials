@@ -1,6 +1,9 @@
 #include "awnn/im2col.h"
 #include "awnn/layer_conv.h"
 #include "cblas.h"
+#ifdef AWNN_USE_OPENMP
+#include <omp.h>
+#endif
 
 status_t conv_forward_perimg(tensor_t const x, tensor_t const w,
                              lcache_t* cache, conv_param_t const params,
@@ -30,7 +33,13 @@ status_t conv_forward_perimg(tensor_t const x, tensor_t const w,
   uint bottom_dim = C * H * W;
   uint top_dim = F * Hout * Wout;
 
+#ifdef AWNN_USE_OPENMP
+	// PINF("Convolution using thread =  %d", omp_get_num_threads());
+#pragma omp parallel
+  {
+#endif
   T* col_buff = alloc_col_buffer(C, HH, WW, Hout, Wout);
+  #pragma omp for
   for (uint n = 0; n < N; n++) {  // for each img
     im2col_cpu(x.data + n * (bottom_dim), C, H, W, HH, WW, pad, stride,
                col_buff);  //((C*HH*WW)*(Hout*Wout)
@@ -40,6 +49,10 @@ status_t conv_forward_perimg(tensor_t const x, tensor_t const w,
               w.data, col_buff, 0.0, y.data + n * (top_dim));
   }
   free_col_buffer(col_buff);
+#ifdef AWNN_USE_OPENMP
+  }
+#endif
+
   if (cache) {
     lcache_push(cache, x);
     lcache_push(cache, w);
@@ -78,11 +91,18 @@ status_t conv_backward_perimg(tensor_t dx, tensor_t dw, lcache_t* cache,
   uint bottom_dim = C * H * W;
   uint top_dim = F * Hout * Wout;
 
-  T* col_buff = alloc_col_buffer(C, HH, WW, Hout, Wout);
   uint col_buffer_size = (C * HH * WW) * (Hout * Wout);
 
   // clear dw
   tensor_fill_scalar(dw, 0);
+
+#ifdef AWNN_USE_OPENMP
+#pragma omp parallel
+  {
+#endif
+  T* col_buff = alloc_col_buffer(C, HH, WW, Hout, Wout);
+
+  #pragma omp for
   for (uint n = 0; n < N; n++) {  // for each img
     im2col_cpu(x.data + n * (bottom_dim), C, H, W, HH, WW, pad, stride,
                col_buff);  //((C*HH*WW)*(Hout*Wout)
@@ -96,6 +116,10 @@ status_t conv_backward_perimg(tensor_t dx, tensor_t dw, lcache_t* cache,
     col2im_cpu(col_buff, C, H, W, HH, WW, pad, stride,
                dx.data + n * (bottom_dim));  //((C*HH*WW)*(Hout*Wout)
   }
+
   free_col_buffer(col_buff);
+#ifdef AWNN_USE_OPENMP
+  }
+#endif
   return S_OK;
 }

@@ -4,5 +4,6 @@
 #cmakedefine USE_NNPACK
 #cmakedefine IS_CI_BUILD
 #cmakedefine AWNN_USE_FLT32
+#cmakedefine AWNN_USE_OPENMP
 
 #define CIFAR_PATH ("@CMAKE_SOURCE_DIR@/data/cifar10")

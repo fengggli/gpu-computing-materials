@@ -15,6 +15,7 @@
 #include "gtest/gtest.h"
 #include "test_util.h"
 
+// #define PROFILE_RESNET
 namespace {
 
 // The fixture for testing class Foo.
@@ -42,7 +43,7 @@ std::vector<conv_method_t> all_methods = {
     };
 
 TEST_F(NetResnetTest, Construct) {
-  uint batch_sz = 3;
+  uint batch_sz = 3; // change to other batchz might break
   uint input_shape[] = {batch_sz, 3, 32, 32};
   dim_t input_dim = make_dim_from_arr(array_size(input_shape), input_shape);
   uint output_dim = 10;
@@ -61,6 +62,8 @@ TEST_F(NetResnetTest, Construct) {
   "fc0.weight"));
             */
 }
+
+#ifndef PROFILE_RESNET
 TEST_F(NetResnetTest, ForwardInferOnly) {
   // set_conv_method(CONV_METHOD_PERIMG);
   tensor_t w0 = net_get_param(model.list_all_params, "conv1.weight")->data;
@@ -179,7 +182,7 @@ TEST_F(NetResnetTest, Measure_auto) {
 
       time_point_t t_begin, t_end;
       get_cur_time(t_begin);
-      uint nr_iterations = 100;
+      uint nr_iterations = 10;
       for (uint i = 0; i < nr_iterations; i++) {
         resnet_loss(&model, x, labels, &loss);
         // PINF("Loss without regulizer: %.3f", loss);
@@ -190,9 +193,11 @@ TEST_F(NetResnetTest, Measure_auto) {
   }
 }
 
+#else
+
 /* Profiler a certain conv layer */
 TEST_F(NetResnetTest, Measure_profiler) {
-  auto conv_method = CONV_METHOD_NAIVE;
+  auto conv_method = CONV_METHOD_PERIMG;
   PINF("Method:  %d", conv_method);
   set_conv_method(conv_method);
 
@@ -203,7 +208,7 @@ TEST_F(NetResnetTest, Measure_profiler) {
 
     time_point_t t_begin, t_end;
     get_cur_time(t_begin);
-    uint nr_iterations = 10;
+    uint nr_iterations = 100;
     for (uint i = 0; i < nr_iterations; i++) {
       resnet_loss(&model, x, labels, &loss);
       // PINF("Loss without regulizer: %.3f", loss);
@@ -211,6 +216,7 @@ TEST_F(NetResnetTest, Measure_profiler) {
     get_cur_time(t_end);
     print_time_in_ms(t_begin, t_end);
 }
+#endif
 
 TEST_F(NetResnetTest, Destroy) { resnet_finalize(&model); }
 
