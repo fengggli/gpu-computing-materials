@@ -10,6 +10,9 @@ status_t layer_relu_forward(tensor_t const x, lcache_t *cache, tensor_t y) {
   }
 
   tensor_copy(y, x);
+  if (y.mem_type == GPU_MEM) {
+
+  }
   tensor_elemwise_op_inplace(y, mask, TENSOR_OP_MUL);
 
   if (cache) {

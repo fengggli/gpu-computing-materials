@@ -60,6 +60,39 @@ static __global__ void print_tensor_device(tensor_t t) {
   printf("\n");
 }
 
+static __global__ void elementwise_add_inplace_device(tensor_t a, tensor_t b) {
+  assert(a.mem_type == GPU_MEM);
+  assert(b.mem_type == GPU_MEM);
+
+  for (uint i : grid_stride_range(0u, d_capacity(a))) {
+    a.data[i] += b.data[i];
+  }
+}
+
+static __global__ void elementwise_mul_inplace_device(tensor_t a, tensor_t b) {
+  assert(a.mem_type == GPU_MEM);
+  assert(b.mem_type == GPU_MEM);
+
+  for (uint i : grid_stride_range(0u, d_capacity(a))) {
+    a.data[i] *= b.data[i];
+  }
+}
+
+/**
+ *
+ * @param x
+ * @param mask
+ * @return
+ */
+static __global__ void build_mask_device(tensor_t x, tensor_t mask) {
+  assert(a.mem_type == GPU_MEM);
+  assert(b.mem_type == GPU_MEM);
+
+  tensor_t mask = tensor_make_alike(x);
+  for (uint i = 0; i < grid_stride_range(0u, d_capacity(mask)); i++) {
+    mask.data[i] = x.data[i] > 0 ? 1.0 : 0.0;
+  }
+}
 
 // write 0's into a device buffer
 static __global__ void tensor_fill_scalar_device(tensor_t t, T scalar)

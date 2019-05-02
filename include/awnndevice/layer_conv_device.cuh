@@ -17,6 +17,8 @@ extern "C" {
 int set_blocks(int x);
 int set_threads(int x);
 
+status_t apply_activation_function(tensor_t t);
+
 status_t convolution_forward_device(cublasHandle_t handle, tensor_t const d_x, tensor_t d_w, lcache_t* cache, conv_param_t const params, tensor_t d_y);
 
 status_t convolution_forward_device_host_harness(cublasHandle_t handle,
