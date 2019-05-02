@@ -53,6 +53,8 @@ tensor_t tensor_make_remove_padding_square_device(tensor_t t, uint p);
 
 tensor_t tensor_make_transpose_1230_device(tensor_t t);
 
+void elementwise_add_device_host_harness(tensor_t h_a, tensor_t h_b);
+
 #ifdef __cplusplus
 }
 #endif

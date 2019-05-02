@@ -1659,6 +1659,27 @@ TEST_F(LayerConvTestDevice, forward_caches_proper_values) {
   }
 
 
+TEST_F(LayerConvTestDevice, elementwise_mult_host_harness) {
+  uint dim1 = 4;
+  uint dim2 = 2;
+
+  uint src_shape[] = { dim1, dim2 };
+  tensor_t h_src = tensor_make_patterned(src_shape, dim_of_shape(src_shape));
+  tensor_t h_out = tensor_make_alike(h_src);
+
+  ////////////////////////////////////////////////////////
+  elementwise_add_device_host_harness()<<<1, 1>>>(h_out, h_src); // sums into d_a
+  ////////////////////////////////////////////////////////
+
+
+  for (int i = 0; i < tensor_get_capacity(h_src); ++i) {
+    ASSERT_EQ(h_src.data[i] + h_src.data[i], h_out.data[i]);
+  }
+
+  tensor_destroy(&h_src);
+  tensor_destroy(&h_out);
+}
+
 
 #endif
 

@@ -60,7 +60,7 @@ static __global__ void print_tensor_device(tensor_t t) {
   printf("\n");
 }
 
-static __global__ void elementwise_add_inplace_device(tensor_t a, tensor_t b) {
+static __global__ void elementwise_add_inplace_device(tensor_t a, tensor_t const b) {
   assert(a.mem_type == GPU_MEM);
   assert(b.mem_type == GPU_MEM);
 
