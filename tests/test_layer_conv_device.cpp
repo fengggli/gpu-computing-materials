@@ -1668,7 +1668,7 @@ TEST_F(LayerConvTestDevice, elementwise_mult_host_harness) {
   tensor_t h_out = tensor_make_alike(h_src);
 
   ////////////////////////////////////////////////////////
-  elementwise_add_device_host_harness()<<<1, 1>>>(h_out, h_src); // sums into d_a
+  elementwise_add_device_host_harness(h_out, h_src); // sums into d_a
   ////////////////////////////////////////////////////////
 
 
