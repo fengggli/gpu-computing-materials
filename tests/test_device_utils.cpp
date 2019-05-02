@@ -62,7 +62,7 @@ protected:
 #ifdef USE_CUDA
 
 
-TEST_F(TestDeviceUtil, bench_custom_forward_backward) {
+TEST_F(TestDeviceUtil, elementwise_add_inplace_device) {
   uint dim1 = 4;
   uint dim2 = 2;
 
@@ -73,7 +73,7 @@ TEST_F(TestDeviceUtil, bench_custom_forward_backward) {
   tensor_t d_b = tensor_make_copy_h2d(h_src);
 
   ////////////////////////////////////////////////////////
-  elementwise_add_inplace_device(d_a, d_b); // sums into d_a
+  elementwise_add_inplace_device<<<1, 1>>>(d_a, d_b); // sums into d_a
   ////////////////////////////////////////////////////////
 
   tensor_copy_d2h(h_out, d_a);
