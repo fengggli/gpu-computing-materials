@@ -2,12 +2,12 @@
 // Created by Christopher Goebel on 2019-05-02.
 //
 
-//#include "awnn/layer_conv.h"
-//#include "awnn/layer_pool.h"
-//#include "awnn/tensor.h"
+#include "awnn/layer_conv.h"
+#include "awnn/layer_pool.h"
+#include "awnn/tensor.h"
 //#include "awnndevice/device_utils.cuh"
-//#include "awnndevice/layer_conv_device.cuh"
-//#include "test_util.h"
+#include "awnndevice/layer_conv_device.cuh"
+#include "test_util.h"
 
 #ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
 #include "awnn/memory.h"
