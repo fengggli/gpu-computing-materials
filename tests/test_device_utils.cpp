@@ -5,6 +5,7 @@
 #include "awnn/layer_conv.h"
 #include "awnn/layer_pool.h"
 #include "awnn/tensor.h"
+#include "awnndevice/device_utils.cuh"
 #include "awnndevice/layer_conv_device.cuh"
 #include "test_util.h"
 
