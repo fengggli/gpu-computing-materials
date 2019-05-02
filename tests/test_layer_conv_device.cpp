@@ -1335,8 +1335,8 @@ TEST_F(LayerConvTestDevice, forward_caches_proper_values) {
   tensor_t x_cached = tensor_make_alike(d_x_cached);
   tensor_copy_d2h(x_cached, d_x_cached);
 
-  tensor_print_flat(x);
-  tensor_print_flat(x_cached);
+//  tensor_print_flat(x);
+//  tensor_print_flat(x_cached);
 
   tensor_t w_cached = tensor_make_alike(d_w_cached);
   tensor_copy_d2h(w_cached, d_w_cached);
@@ -1451,12 +1451,6 @@ TEST_F(LayerConvTestDevice, forward_caches_proper_values) {
         w, h_dy, dw_ref);
 
     tensor_copy_d2h(h_dw, d_dw);
-
-    std::cout << "dw_ref\n";
-    tensor_print_flat(dw_ref);
-    std::cout << "dw\n";
-    tensor_print_flat(h_dw);
-
 
     double err2 = tensor_rel_error(dw_ref, h_dw);
     EXPECT_LT(err2, 1e-3);
@@ -1671,10 +1665,12 @@ TEST_F(LayerConvTestDevice, elementwise_mult_host_harness) {
   elementwise_add_device_host_harness(h_out, h_src); // sums into d_a
   ////////////////////////////////////////////////////////
 
-
   for (int i = 0; i < tensor_get_capacity(h_src); ++i) {
     ASSERT_EQ(h_src.data[i] + h_src.data[i], h_out.data[i]);
   }
+
+  tensor_print_flat(h_src);
+  tensor_print_flat(h_out);
 
   tensor_destroy(&h_src);
   tensor_destroy(&h_out);
