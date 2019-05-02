@@ -804,7 +804,7 @@ void elementwise_add_device_host_harness(tensor_t h_a, tensor_t h_b) {
   tensor_t d_a = tensor_make_copy_h2d(h_a);
   tensor_t d_b = tensor_make_copy_h2d(h_b);
 
-  elementwise_add_inplace_device(d_a, d_b);
+  elementwise_add_inplace_device<<<_blocks, _threads>>>(d_a, d_b);
   tensor_copy_d2h(h_a, d_a);
 
   tensor_destroy_device(&d_a);
