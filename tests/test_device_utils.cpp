@@ -49,35 +49,40 @@ class cublasOpTests : public ::testing::Test {
 
 #ifdef USE_CUDA
 
-
 TEST_F(deviceUtilTests, elementwise_add) {
   uint dim1 = 4;
   uint dim2 = 2;
 
   uint src_shape[] = { dim1, dim2 };
   tensor_t h_src = tensor_make_patterned(src_shape, dim_of_shape(src_shape));
-  tensor_t
+  tensor_t h_out = tensor_make_alike(h_src);
   tensor_t d_a = tensor_make_copy_h2d(h_src);
   tensor_t d_b = tensor_make_copy_h2d(h_src);
 
   ////////////////////////////////////////////////////////
-  tensor_t d_tpose = elementwise_add_inplace_device(d_a, d_b);
+  elementwise_add_inplace_device(d_a, d_b); // sums into d_a
   ////////////////////////////////////////////////////////
 
-  tensor_copy_d2h(h_tpose, d_tpose);
-
+  tensor_copy_d2h(h_out, d_a);
 
   for (int i = 0; i < tensor_get_capacity(h_src); ++i) {
-      ASSERT_EQ(h_src.data[i] * h_src.data[i], );
+      ASSERT_EQ(h_src.data[i] + h_src.data[i], h_out[i]);
   }
 
   tensor_destroy(&h_src);
+  tensor_destroy(&h_out);
 
-  tensor_destroy_device(&d_src);
-  tensor_destroy_device(&d_tpose);
+  tensor_destroy_device(&d_a);
+  tensor_destroy_device(&d_b);
 }
 
 #endif // USE_CUDA
 
 
 } // end namespace
+
+
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
