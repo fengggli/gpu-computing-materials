@@ -87,6 +87,14 @@ void get_cur_time(time_point_t &t){
   t = high_resolution_clock::now();
 }
 
+inline time_point_t get_timepoint() {
+    return high_resolution_clock::now();
+}
+
+double elapsed_ms(time_point_t &begin, time_point_t &end) {
+    return ((double)duration_cast<microseconds>(end - begin).count()) / 1000;
+}
+
 void print_time_in_ms(time_point_t &begin, time_point_t &end){
   PINF("Time difference = %.3f  ms",((double)duration_cast<microseconds>(end - begin).count())/1000);
 }

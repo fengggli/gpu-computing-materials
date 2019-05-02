@@ -40,7 +40,7 @@ if(USE_CUDA)
   find_package(CUDA REQUIRED)
   set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
   set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda/)
-  set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -std=c++11 -O3 -DCONFIG_DEBUG -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=sm_35 -gencode arch=compute_37,code=sm_37 -gencode arch=compute_50,code=sm_50 -gencode arch=compute_52,code=sm_52 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_70,code=compute_70)
+  set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} -std=c++11 -O3 -DCONFIG_DEBUG -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=sm_35 -gencode arch=compute_37,code=sm_37 -gencode arch=compute_50,code=sm_50 -gencode arch=compute_52,code=sm_52 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_70,code=compute_70)
   set(CUDA_HOST_COMPILATION_CPP ON)
   set(CUDA_SEPARABLE_COMPILATION ON)
   set(CUDA_VERBOSE ON)
@@ -134,7 +134,10 @@ set(AWNN_LIBS "awnn_core" "awnn_utils")
 if(USE_CUDA)
   cuda_add_library(awnndevicelib
     src/tensor.cu
-    src/layer_pool.cu)
+    src/layer_pool.cu
+    src/layer_conv_cudnn.cu)
+
+  target_link_libraries(awnndevicelib cudart cudnn cublas)
 
   set(AWNN_DEVICE_LIBS "awnndevicelib")
 endif(USE_CUDA)
