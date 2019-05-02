@@ -142,11 +142,13 @@ if(USE_CUDA)
     include/awnndevice/range.cuh
     include/awnndevice/device_utils.cuh
     include/awnndevice/layer_conv_device.cuh
+    include/awnndevice/layer_sandwich_device.cuh
     include/awnndevice/cublas_wrappers.cuh
 
     src-device/tensor.cu
     src-device/layer_pool.cu
     src-device/layer_conv_device.cu
+    src-device/layer_sandwich_device.cu
     src-device/cublas_wrappers.cu
   )
 
