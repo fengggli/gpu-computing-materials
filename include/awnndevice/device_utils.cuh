@@ -88,7 +88,6 @@ static __global__ void build_mask_device(tensor_t x, tensor_t mask) {
   assert(a.mem_type == GPU_MEM);
   assert(b.mem_type == GPU_MEM);
 
-  tensor_t mask = tensor_make_alike(x);
   for (uint i = 0; i < grid_stride_range(0u, d_capacity(mask)); i++) {
     mask.data[i] = x.data[i] > 0 ? 1.0 : 0.0;
   }
