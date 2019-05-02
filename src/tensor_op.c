@@ -47,6 +47,8 @@ tensor_t tensor_make_transpose_1230(tensor_t t) {
 status_t awnn_gemm(const int TransA,
     const int TransB, const int M, const int N, const int K, const double alpha,
     const T* A, const T* B, const double beta, T*C){
+  goto_set_num_threads(AWNN_GEMM_THREADS);
+  openblas_set_num_threads(AWNN_GEMM_THREADS);
   int lda = (TransA == CblasNoTrans)? K: M;
   int ldb = (TransB == CblasNoTrans)? N: K;
 #ifndef AWNN_USE_FLT32

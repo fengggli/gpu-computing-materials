@@ -52,6 +52,7 @@ status_t resnet_init(
 
   uint filter_sz = 3;
   uint nr_filter = 16;
+
   /*
    * I.  preparation
    */

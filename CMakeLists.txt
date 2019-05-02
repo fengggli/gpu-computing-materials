@@ -10,6 +10,7 @@ option(USE_CUDNN "Build with CUDNN" OFF)
 option(USE_NNPACK "Build with NNPACK" OFF)
 option(AWNN_USE_FLT32 "Use single precision floating point" OFF)
 option(AWNN_USE_OPENMP "Use OpenMP" OFF)
+set (AWNN_GEMM_THREADS 1 CACHE STRING "number of openblas threads")
 
 option(USE_STRICT_CHECK "use pedantic flag" OFF)
 

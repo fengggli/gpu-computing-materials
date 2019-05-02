@@ -5,5 +5,6 @@
 #cmakedefine IS_CI_BUILD
 #cmakedefine AWNN_USE_FLT32
 #cmakedefine AWNN_USE_OPENMP
+#cmakedefine AWNN_GEMM_THREADS (@AWNN_GEMM_THREADS@)
 
 #define CIFAR_PATH ("@CMAKE_SOURCE_DIR@/data/cifar10")

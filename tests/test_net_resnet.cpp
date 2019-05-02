@@ -15,7 +15,7 @@
 #include "gtest/gtest.h"
 #include "test_util.h"
 
-// #define PROFILE_RESNET
+#define PROFILE_RESNET
 namespace {
 
 // The fixture for testing class Foo.
@@ -174,7 +174,8 @@ TEST_F(NetResnetTest, Measure_auto) {
     PINF("Method:  %d", *conv_method);
     set_conv_method(*conv_method);
 
-    for (uint i = 0; i < 3; i++) {
+    uint nr_iterations = 100;
+    for (uint i = 0; i < 3; i++) { // run 3 times
       T loss = 0;
 
       tensor_t x = tensor_make_linspace(-5.5, 4.5, model.input_dim.dims, 4);
@@ -182,7 +183,6 @@ TEST_F(NetResnetTest, Measure_auto) {
 
       time_point_t t_begin, t_end;
       get_cur_time(t_begin);
-      uint nr_iterations = 10;
       for (uint i = 0; i < nr_iterations; i++) {
         resnet_loss(&model, x, labels, &loss);
         // PINF("Loss without regulizer: %.3f", loss);
