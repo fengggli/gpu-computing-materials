@@ -102,7 +102,7 @@ TEST_F(LayerResBlockDevice, ResidualBlock) {
   tensor_t d_y = tensor_make_copy_h2d(y) ;
 
 
-  ASSERT_EQ(S_OK, residual_basic_no_bn_forward_device(d_x, d_w1, d_w2, &cache, params, d_y));
+  ASSERT_EQ(S_OK, resblock_forward_device(handle_, d_x, d_w1, d_w2, &cache, params, d_y));
   PINF("forward value checked!!!!!");
 
   // copy output back
@@ -132,7 +132,7 @@ TEST_F(LayerResBlockDevice, ResidualBlock) {
   tensor_t d_dy = tensor_make_copy_h2d(dy);
 
   EXPECT_EQ(S_OK,
-            residual_basic_no_bn_backward_device(d_dx, d_dw1, d_dw2, &cache, params, d_dy));
+            resblock_backward_device(handle_, d_dx, d_dw1, d_dw2, &cache, params, d_dy));
 
   // copy gradient back
   tensor_copy_d2h(dx, d_dx);
