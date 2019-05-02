@@ -13,10 +13,10 @@
 #include "awnn/layer_cudnn.h"
 
 namespace {
-class LayerBenchConvDeviceTest : public ::testing::Test {};
+class LayerBenchConvCuDnnTest : public ::testing::Test {};
 }  // namespace
 
-TEST_F(LayerBenchConvDeviceTest, BenchCUDNN) {
+TEST_F(LayerBenchConvCuDnnTest, BenchCUDNN) {
   uint nr_iterations = 100;
   std::vector<uint> N_arrary = {1, 4, 16}; // nr_imgs
   std::vector<uint> C_arrary = {4}; // nr_input_channels

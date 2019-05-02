@@ -1,5 +1,5 @@
 /*
- * Description:
+ * Description: test case for cudnn forward & backward pass
  *
  * Author: Yuankun Fu
  * e-mail: fu121@purdue.edu

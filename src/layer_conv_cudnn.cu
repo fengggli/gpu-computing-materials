@@ -1,5 +1,5 @@
 /*
- * Description:
+ * Description: cudnn forward & backward pass
  *
  * Author: Yuankun Fu
  * e-mail: qoofyk@gmail.com
@@ -156,13 +156,18 @@ status_t doBackward(tensor_t x, tensor_t dx, tensor_t w, tensor_t dw,
 
   T_ELEM* devPtrO = dout.data;
 
-  cudnnConvolutionBwdDataAlgo_t algo_data = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
+  // cudnnConvolutionBwdDataAlgo_t algo_data = CUDNN_CONVOLUTION_BWD_DATA_ALGO_0; // explicit gemm, results are non-deterministic
+  cudnnConvolutionBwdDataAlgo_t algo_data = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1; // implicity gemm, results are deterministic
   /*cudnnConvolutionBwdDataAlgo_t algo_data = CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD;*/ // has undefined problem
   /*cudnnConvolutionBwdDataAlgo_t algo_data = CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT;*/
+  /*cudnnConvolutionBwdDataAlgo_t algo_data = CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT_TILING;*/
 
-  cudnnConvolutionBwdFilterAlgo_t algo_weight = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
+  // cudnnConvolutionBwdFilterAlgo_t algo_weight = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0; // explicit gemm, results are non-deterministic
+  cudnnConvolutionBwdFilterAlgo_t algo_weight = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1; // implicit gemm, deterministic
+  // cudnnConvolutionBwdFilterAlgo_t algo_weight = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_3; // same as 0, non-deterministic, but uses some small workspace to precomputes some indices.
   /*cudnnConvolutionBwdFilterAlgo_t algo_weight = CUDNN_CONVOLUTION_BWD_FILTER_WINOGRAD_NONFUSED;*/ // has undefined problem
   /*cudnnConvolutionBwdFilterAlgo_t algo_weight = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT;*/
+  /*cudnnConvolutionBwdFilterAlgo_t algo_weight = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT_TILING;*/
 
   void *workSpace = 0;
   size_t workSpaceSize;

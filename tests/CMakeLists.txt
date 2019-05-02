@@ -25,9 +25,9 @@ add_executable(test-layer-conv-cudnn test_layer_conv_cudnn.cpp)
 target_link_libraries(test-layer-conv-cudnn ${AWNN_LIBS}  ${AWNN_DEVICE_LIBS} gtest)
 add_test(test-layer-conv-cudnn test-layer-conv-cudnn)
 
-add_executable(bench-conv-device bench_conv_device.cpp)
-target_link_libraries(bench-conv-device ${AWNN_LIBS}  ${AWNN_DEVICE_LIBS} gtest)
-add_test(bench-conv-device bench-conv-device)
+add_executable(bench-conv-cudnn bench_conv_cudnn.cpp)
+target_link_libraries(bench-conv-cudnn ${AWNN_LIBS}  ${AWNN_DEVICE_LIBS} gtest)
+add_test(bench-conv-cudnn bench-conv-cudnn)
 endif()
 
 if (USE_NNPACK)

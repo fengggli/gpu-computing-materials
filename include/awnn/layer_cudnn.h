@@ -1,3 +1,10 @@
+/*
+ * Description: cudnn layer header
+ *
+ * Author: Yuankun Fu
+ * e-mail: fu121@purdue.edu
+ */
+
 #include <cuda_runtime.h>
 #include <cudnn.h>
 
