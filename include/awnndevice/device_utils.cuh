@@ -61,8 +61,12 @@ static __global__ void print_tensor_device(tensor_t t) {
 }
 
 static __global__ void elementwise_add_inplace_device(tensor_t a, tensor_t const b) {
-  assert(a.mem_type == GPU_MEM);
-  assert(b.mem_type == GPU_MEM);
+  if(global_idx() == 0) {
+    assert(a.mem_type == GPU_MEM);
+    assert(b.mem_type == GPU_MEM);
+
+    assert(d_capacity(a) == d_capacity(b));
+  }
 
   for (uint i : grid_stride_range(0u, d_capacity(a))) {
     a.data[i] += b.data[i];
@@ -70,23 +74,26 @@ static __global__ void elementwise_add_inplace_device(tensor_t a, tensor_t const
 }
 
 static __global__ void elementwise_mul_inplace_device(tensor_t a, tensor_t b) {
-  assert(a.mem_type == GPU_MEM);
-  assert(b.mem_type == GPU_MEM);
+  if(global_idx() == 0) {
+    assert(a.mem_type == GPU_MEM);
+    assert(b.mem_type == GPU_MEM);
+
+    assert(d_capacity(a) == d_capacity(b));
+  }
 
   for (uint i : grid_stride_range(0u, d_capacity(a))) {
     a.data[i] *= b.data[i];
   }
 }
 
-/**
- *
- * @param x
- * @param mask
- * @return
- */
+
 static __global__ void build_mask_device(tensor_t x, tensor_t mask) {
-  assert(a.mem_type == GPU_MEM);
-  assert(b.mem_type == GPU_MEM);
+  if(global_idx() == 0) {
+    assert(x.mem_type == GPU_MEM);
+    assert(mask.mem_type == GPU_MEM);
+
+    assert(d_capacity(x) == d_capacity(mask));
+  }
 
   for (uint i : grid_stride_range(0u, d_capacity(mask))) {
     mask.data[i] = x.data[i] > 0 ? 1.0 : 0.0;
