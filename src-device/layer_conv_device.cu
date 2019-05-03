@@ -47,7 +47,7 @@ int set_all_threads(int x) {
   _remove_padding_threads = x;
   _make_padded_threads = x;
 
-  _transpose_3012_threads = x
+  _transpose_3012_threads = x;
   _transpose_1230_threads = x;
 
   _im2col_inner_threads = x;

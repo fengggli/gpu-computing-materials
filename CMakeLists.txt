@@ -144,14 +144,14 @@ if(USE_CUDA)
     include/awnndevice/layer_conv_device.cuh
     include/awnndevice/layer_sandwich_device.cuh
     include/awnndevice/cublas_wrappers.cuh
-    include/awnndevice/device_utils_host_harness.cuh
+    include/awnndevice/device_utils_harness.cuh
 
     src-device/tensor.cu
     src-device/layer_pool.cu
     src-device/layer_conv_device.cu
     src-device/layer_sandwich_device.cu
     src-device/cublas_wrappers.cu
-    src-device/device_utils_host_harness.cu
+    src-device/device_utils_harness.cu
   )
 
   target_link_libraries(awnndevicelib cudart cublas)
