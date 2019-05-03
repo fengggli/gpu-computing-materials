@@ -75,6 +75,7 @@ void elementwise_mul_device_harness(tensor_t d_a, tensor_t d_b) {
 void build_mask_device_harness(tensor_t d_a, tensor_t d_mask) {
   assert(d_a.mem_type == GPU_MEM);
   assert(d_mask.mem_type == GPU_MEM);
+
   build_mask_device<<<_build_mask_blocks, _build_mask_threads>>>(d_a, d_mask);
 }
 
