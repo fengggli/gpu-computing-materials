@@ -157,11 +157,12 @@ if(USE_CUDA)
     list(APPEND awnndevicelib_SOURCES
         src/layer_conv_cudnn.cu)
     add_subdirectory(examples/mnistCUDNN)
+    target_link_libraries(awnndevicelib cudnn)
   endif(USE_CUDNN)
 
   cuda_add_library(awnndevicelib ${awnndevicelib_SOURCES})
 
-  target_link_libraries(awnndevicelib cudart cudnn cublas)
+  target_link_libraries(awnndevicelib cudart cublas)
   set(AWNN_DEVICE_LIBS "awnndevicelib")
 endif(USE_CUDA)
 
