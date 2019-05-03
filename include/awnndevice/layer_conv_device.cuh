@@ -14,10 +14,23 @@
 extern "C" {
 #endif
 
-int set_blocks(int x);
-int set_threads(int x);
+int set_all_blocks(int x);
+int set_all_threads(int x);
 
-status_t apply_activation_function(tensor_t t);
+int set_copy_d2d_blocks(int x);
+int set_copy_d2d_threads(int x);
+int set_im2col_inner_blocks(int x);
+int set_im2col_inner_threads(int x);
+int set_col2im_inner_blocks(int x);
+int set_col2im_inner_threads(int x);
+int set_make_padded_blocks(int x);
+int set_make_padded_threads(int x);
+int set_remove_padding_blocks(int x);
+int set_remove_padding_threads(int x);
+int set_transpose_3012_blocks(int x);
+int set_transpose_3012_threads(int x);
+int set_transpose_1230_blocks(int x);
+int set_transpose_1230_threads(int x);
 
 status_t convolution_forward_device(cublasHandle_t handle, tensor_t const d_x, tensor_t d_w, lcache_t* cache, conv_param_t const params, tensor_t d_y);
 
@@ -57,9 +70,7 @@ tensor_t tensor_make_remove_padding_square_device(tensor_t t, uint p);
 
 tensor_t tensor_make_transpose_1230_device(tensor_t t);
 
-void elementwise_add_device_host_harness(tensor_t h_a, tensor_t h_b);
-void elementwise_mul_device_host_harness(tensor_t h_a, tensor_t h_b);
-void build_mask_device_host_harness(tensor_t h_a, tensor_t h_mask);
+
 
 #ifdef __cplusplus
 }

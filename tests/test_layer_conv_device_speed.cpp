@@ -186,9 +186,9 @@ TEST_F(TestLayerConvSpeed, bench_custom_forward_backward) {
           for (auto sz_filter : HH_arrary) {
             printf("\n");
             for (auto & num_blk : block_arr) {
-              set_blocks(num_blk);
+              set_all_blocks(num_blk);
               for (auto & num_thrd : thread_arr) {
-                set_threads(num_thrd);
+                set_all_threads(num_thrd);
                 std::vector<double> forward_times;
                 std::vector<double> backward_times;
 
