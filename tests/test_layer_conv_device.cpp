@@ -1700,6 +1700,38 @@ TEST_F(LayerConvTestDevice, elementwise_mul_host_harness) {
 }
 
 
+TEST_F(LayerConvTestDevice, apply_mask_host_harness) {
+  uint dim1 = 4;
+  uint dim2 = 2;
+
+  uint src_shape[] = { dim1, dim2 };
+  tensor_t h_mask = tensor_make(src_shape, dim_of_shape(src_shape));
+
+  for(int i = 0; i < dim1 * dim2; ++i) {
+    if(i % 2 == 0) {
+      h_mask.data[i] = 33;
+    }
+  }
+
+  tensor_t h_a = tensor_make_scalar(src_shape, dim_of_shape(src_shape), 0.0);
+
+  ////////////////////////////////////////////////////////
+  apply_mask_device_host_harness(h_a, h_mask); // sums into d_a
+  ///////////////////////////////////////////////////////
+
+  for (int i = 0; i < tensor_get_capacity(h_src); ++i) {
+    if(i % 2 == 0) {
+      EXPECT_FLOAT_EQ(1, h_a.data[i]);
+    }
+  }
+
+  tensor_print_flat(h_a);
+  tensor_print_flat(h_mask);
+
+  tensor_destroy(&h_a);
+  tensor_destroy(&h_mask);
+}
+
 #endif
 
 }
