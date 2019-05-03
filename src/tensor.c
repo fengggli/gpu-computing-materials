@@ -210,7 +210,11 @@ tensor_t tensor_make_copy(tensor_t t) {
 }
 
 // TODO : refactor to reflect host creation / mem_type, etc...
-tensor_t tensor_make_alike(tensor_t t) { return _tensor_make(t.dim); }
+tensor_t tensor_make_alike(tensor_t t) { 
+  AWNN_CHECK_EQ(t.mem_type, CPU_MEM);
+  return _tensor_make(t.dim); 
+}
+
 tensor_t tensor_make_zeros_alike(tensor_t t) {
   tensor_t ret = _tensor_make(t.dim);
   tensor_fill_scalar(ret, 0.0);

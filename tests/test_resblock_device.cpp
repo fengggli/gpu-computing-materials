@@ -103,7 +103,6 @@ TEST_F(LayerResBlockDevice, ResidualBlock) {
 
 
   ASSERT_EQ(S_OK, resblock_forward_device(handle_, d_x, d_w1, d_w2, &cache, params, d_y));
-  PINF("forward value checked!!!!!");
 
   // copy output back
   tensor_copy_d2h(y, d_y);
@@ -111,10 +110,13 @@ TEST_F(LayerResBlockDevice, ResidualBlock) {
   tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
 
 
-  EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
+  ASSERT_LT(tensor_rel_error(y_ref, y), 1e-7);
   if (tensor_rel_error(y_ref, y) > 1e-7) {
     tensor_dump(y);
     tensor_dump(y_ref);
+  }
+  else{
+    PINF("forward value checked!!!!!");
   }
 
   // backward
