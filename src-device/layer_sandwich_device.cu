@@ -33,10 +33,11 @@ status_t relu_forward_device(tensor_t const d_x,
 status_t relu_backward_device(tensor_t const d_dx,
                                   lcache_t* cache,
                                   tensor_t d_dy) {
+  lcache_dump_stat(cache);
   tensor_t d_x = lcache_pop(cache);
-  PINF("DEVICE");
+  PINF("RELU_BACKWARD d_dx");
 /*  print_tensor_device<<<1,1>>>(d_dy);*/
-  /*print_tensor_device<<<1,1>>>(d_x);*/
+  print_tensor_device<<<1,1>>>(d_x);
   /*print_tensor_device<<<1,1>>>(d_dx);*/
   do_device_relu_backward<<<32, 1024>>>(d_dx, d_x, d_dy);
 /*  print_tensor_device<<<1,1>>>(d_dy);*/
@@ -54,14 +55,16 @@ status_t conv_relu_forward_device(cublasHandle_t handle, tensor_t const d_x,
   AWNN_CHECK_EQ(d_x.mem_type, GPU_MEM);
   AWNN_CHECK_EQ(d_w.mem_type, GPU_MEM);
   AWNN_CHECK_EQ(d_y.mem_type, GPU_MEM);
-  status_t ret = S_ERR;
   tensor_t d_tmp = tensor_make_alike_device(d_y);
 
+  print_tensor_device<<<1,1>>>(d_x);
   AWNN_CHECK_EQ(S_OK, convolution_forward_device(handle, d_x, d_w, cache, params, d_tmp));
   AWNN_CHECK_EQ(S_OK, relu_forward_device(d_tmp, cache, d_y));
 
-  tensor_destroy_device(&d_tmp);
+  if(cache == NULL) // if its inference free it here, other wise free in backward
+    tensor_destroy_device(&d_tmp);
 
+  lcache_dump_stat(cache);
   return S_OK;
 }
 
@@ -74,9 +77,16 @@ status_t conv_relu_backward_device(cublasHandle_t handle, tensor_t d_dx,
   AWNN_CHECK_EQ(d_dy.mem_type, GPU_MEM);
   status_t ret = S_ERR;
 
+  PINF("CONV_RELU_BACKWARD");
   tensor_t d_tmp = tensor_make_alike_device(d_dy);
+  PINF("d_dy");
+  lcache_dump_stat(cache);
+  print_tensor_device<<<1,1>>>(d_dy);
+
 
   AWNN_CHECK_EQ(S_OK, relu_backward_device(d_tmp, cache, d_dy));
+  PINF("AFTER relu backward: d_dtmp");
+  print_tensor_device<<<1,1>>>(d_tmp);
   AWNN_CHECK_EQ(S_OK, convolution_backward_device(handle, d_dx, d_dw, cache, params, d_tmp));
 
   tensor_destroy_device(&d_tmp);
@@ -103,7 +113,8 @@ status_t conv_iden_relu_forward_device(
   // tensor_elemwise_op_inplace(tmp, iden, TENSOR_OP_ADD);
 
   AWNN_CHECK_EQ(S_OK, relu_forward_device(d_tmp, cache, d_y));
-  tensor_destroy_device(&d_tmp);
+  if(cache == NULL)
+    tensor_destroy_device(&d_tmp);
   return S_OK;
 }
 

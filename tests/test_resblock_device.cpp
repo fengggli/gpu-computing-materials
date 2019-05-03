@@ -19,7 +19,7 @@
 #include "test_util.h"
 
 #include "awnndevice/layer_sandwich_device.cuh"
-#define TEST_MORE
+// #define TEST_MORE
 
 namespace {
 
@@ -45,12 +45,18 @@ class LayerResBlockDevice : public ::testing::Test {
 };
 
 
-TEST_F(LayerResBlockDevice, DISABLED_ConvRelu) {
+TEST_F(LayerResBlockDevice, ConvRelu) {
   lcache_t cache;
 
+#ifdef TEST_MORE
   uint shape_x[] = {2, 3, 8, 8};
   uint shape_w[] = {4, 3, 3, 3};
   uint shape_y[] = {2, 4, 8, 8};
+#else
+  uint shape_x[] = {1, 1, 4, 4};
+  uint shape_w[] = {1, 1, 3, 3};
+  uint shape_y[] = {1, 1, 4, 4};
+#endif
 
   conv_param_t params;
   params.stride = 1;
@@ -70,6 +76,7 @@ TEST_F(LayerResBlockDevice, DISABLED_ConvRelu) {
   EXPECT_EQ(S_OK, conv_relu_forward_device(handle_, d_x, d_w, &cache, params, d_y));
 
   // backward
+  PWRN("Now Backward");
   tensor_t dy = tensor_make_linspace_alike(0.1, 0.5, y);  // make it radom
 
   // output for backward
@@ -146,7 +153,9 @@ TEST_F(LayerResBlockDevice, ResidualBlock) {
   tensor_t d_y = tensor_make_copy_h2d(y) ;
 
 
+  lcache_dump_stat(&cache);
   ASSERT_EQ(S_OK, resblock_forward_device(handle_, d_x, d_w1, d_w2, &cache, params, d_y));
+  lcache_dump_stat(&cache);
 
   // copy output back
   tensor_copy_d2h(y, d_y);
@@ -188,7 +197,7 @@ TEST_F(LayerResBlockDevice, ResidualBlock) {
     tensor_dump(y_ref);
   }
   else{
-    PINF("forward value checked!!!!!");
+    PWRN("forward value checked!!!!!");
   }
 #endif
 
@@ -206,8 +215,10 @@ TEST_F(LayerResBlockDevice, ResidualBlock) {
   tensor_t d_dw2 = tensor_make_copy_h2d(dw2);
   tensor_t d_dy = tensor_make_copy_h2d(dy);
 
+  lcache_dump_stat(&cache);
   EXPECT_EQ(S_OK,
             resblock_backward_device(handle_, d_dx, d_dw1, d_dw2, &cache, params, d_dy));
+  lcache_dump_stat(&cache);
 
   // copy gradient back
   tensor_copy_d2h(dx, d_dx);
