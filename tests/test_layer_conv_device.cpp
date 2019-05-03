@@ -1653,20 +1653,43 @@ TEST_F(LayerConvTestDevice, forward_caches_proper_values) {
   }
 
 
-TEST_F(LayerConvTestDevice, elementwise_mult_host_harness) {
+TEST_F(LayerConvTestDevice, elementwise_add_host_harness) {
   uint dim1 = 4;
   uint dim2 = 2;
 
   uint src_shape[] = { dim1, dim2 };
   tensor_t h_src = tensor_make_patterned(src_shape, dim_of_shape(src_shape));
-  tensor_t h_out = tensor_make_alike(h_src);
+  tensor_t h_out = tensor_make_copy(h_src);
 
   ////////////////////////////////////////////////////////
   elementwise_add_device_host_harness(h_out, h_src); // sums into d_a
-  ////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////
 
   for (int i = 0; i < tensor_get_capacity(h_src); ++i) {
-    ASSERT_EQ(h_src.data[i] + h_src.data[i], h_out.data[i]);
+    EXPECT_FLOAT_EQ(float(h_src.data[i] + h_src.data[i]), float(h_out.data[i]));
+  }
+
+  tensor_print_flat(h_src);
+  tensor_print_flat(h_out);
+
+  tensor_destroy(&h_src);
+  tensor_destroy(&h_out);
+}
+
+TEST_F(LayerConvTestDevice, elementwise_mul_host_harness) {
+  uint dim1 = 4;
+  uint dim2 = 2;
+
+  uint src_shape[] = { dim1, dim2 };
+  tensor_t h_src = tensor_make_patterned(src_shape, dim_of_shape(src_shape));
+  tensor_t h_out = tensor_make_copy(h_src);
+
+  ////////////////////////////////////////////////////////
+  elementwise_mul_device_host_harness(h_out, h_src); // sums into d_a
+  ///////////////////////////////////////////////////////
+
+  for (int i = 0; i < tensor_get_capacity(h_src); ++i) {
+    EXPECT_FLOAT_EQ(float(h_src.data[i] * h_src.data[i]), float(h_out.data[i]));
   }
 
   tensor_print_flat(h_src);

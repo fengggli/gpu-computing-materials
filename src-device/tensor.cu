@@ -30,7 +30,6 @@ void mem_free_device(void* d_data) {
   }
 }
 
-
 tensor_t _tensor_make_device(dim_t dim) {
   tensor_t t;
   uint capacity;
