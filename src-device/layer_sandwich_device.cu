@@ -5,6 +5,11 @@
 #include "awnndevice/layer_sandwich_device.cuh"
 #include "awnndevice/layer_conv_device.cuh"
 
+void layer_context_destroy_device(struct layer_context_device *context){
+  tensor_destroy_device(&context->d_tmp);
+  tensor_destroy_device(&context->d_dtmp);
+}
+
 __global__ void do_device_relu_forward(tensor_t d_x, tensor_t d_y){
   for (uint i : grid_stride_range(0u, d_capacity(d_x))) {
     d_y.data[i] = d_x.data[i] > 0 ? d_x.data[i] : 0.0;
@@ -51,18 +56,15 @@ status_t relu_backward_device(tensor_t const d_dx,
 
 status_t conv_relu_forward_device(cublasHandle_t handle, tensor_t const d_x,
                                   tensor_t d_w, lcache_t* cache,
-                                  conv_param_t const params, tensor_t d_y) {
+                                  conv_param_t const params, tensor_t d_y, struct layer_context_device * context) {
   AWNN_CHECK_EQ(d_x.mem_type, GPU_MEM);
   AWNN_CHECK_EQ(d_w.mem_type, GPU_MEM);
   AWNN_CHECK_EQ(d_y.mem_type, GPU_MEM);
-  tensor_t d_tmp = tensor_make_alike_device(d_y);
+  tensor_t d_tmp = context->d_tmp;
 
   print_tensor_device<<<1,1>>>(d_x);
   AWNN_CHECK_EQ(S_OK, convolution_forward_device(handle, d_x, d_w, cache, params, d_tmp));
   AWNN_CHECK_EQ(S_OK, relu_forward_device(d_tmp, cache, d_y));
-
-  if(cache == NULL) // if its inference free it here, other wise free in backward
-    tensor_destroy_device(&d_tmp);
 
   lcache_dump_stat(cache);
   return S_OK;
@@ -71,14 +73,14 @@ status_t conv_relu_forward_device(cublasHandle_t handle, tensor_t const d_x,
 status_t conv_relu_backward_device(cublasHandle_t handle, tensor_t d_dx,
                                    tensor_t d_dw, lcache_t* cache,
                                    conv_param_t const params,
-                                   tensor_t const d_dy) {
+                                   tensor_t const d_dy, struct layer_context_device * context) {
   AWNN_CHECK_EQ(d_dx.mem_type, GPU_MEM);
   AWNN_CHECK_EQ(d_dw.mem_type, GPU_MEM);
   AWNN_CHECK_EQ(d_dy.mem_type, GPU_MEM);
   status_t ret = S_ERR;
 
   PINF("CONV_RELU_BACKWARD");
-  tensor_t d_tmp = tensor_make_alike_device(d_dy);
+  tensor_t d_tmp = context->d_dtmp;
   PINF("d_dy");
   lcache_dump_stat(cache);
   print_tensor_device<<<1,1>>>(d_dy);
@@ -139,7 +141,8 @@ status_t resblock_forward_device(cublasHandle_t handle, tensor_t const d_x,
                                  tensor_t d_w1, tensor_t d_w2, lcache_t* cache,
                                  conv_param_t const params, tensor_t d_y) {
   tensor_t d_tmp = tensor_make_alike_device(d_y);
-  conv_relu_forward_device(handle, d_x, d_w1, cache, params, d_tmp);
+  // TODO: pass context
+  conv_relu_forward_device(handle, d_x, d_w1, cache, params, d_tmp, NULL);
   conv_iden_relu_forward_device(handle, d_tmp, d_x, d_w2, cache, params, d_y);
 
   tensor_destroy_device(&d_tmp);
@@ -154,7 +157,8 @@ status_t resblock_backward_device(cublasHandle_t handle, tensor_t d_dx,
 
   conv_iden_relu_backward_device(handle, d_tmp, d_dx_iden, d_dw2, cache, params,
                                  d_dy);
-  conv_relu_backward_device(handle, d_dx, d_dw1, cache, params, d_tmp);
+  // TODO: pass context
+  conv_relu_backward_device(handle, d_dx, d_dw1, cache, params, d_tmp, NULL);
 
 
   elementwise_add_inplace_device<<<32, 1024>>>(d_dx, d_dx_iden);
