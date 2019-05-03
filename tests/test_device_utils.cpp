@@ -5,7 +5,6 @@
 #include "awnn/layer_conv.h"
 #include "awnn/layer_pool.h"
 #include "awnn/tensor.h"
-//#include "awnndevice/device_utils.cuh"
 #include "awnndevice/layer_conv_device.cuh"
 #include "test_util.h"
 
@@ -62,31 +61,74 @@ protected:
 #ifdef USE_CUDA
 
 
-TEST_F(TestDeviceUtil, elementwise_add_inplace_device) {
-//  uint dim1 = 4;
-//  uint dim2 = 2;
-//
-//  uint src_shape[] = { dim1, dim2 };
-//  tensor_t h_src = tensor_make_patterned(src_shape, dim_of_shape(src_shape));
-//  tensor_t h_out = tensor_make_alike(h_src);
-//  tensor_t d_a = tensor_make_copy_h2d(h_src);
-//  tensor_t d_b = tensor_make_copy_h2d(h_src);
-//
-//  ////////////////////////////////////////////////////////
-//  elementwise_add_inplace_device<<<1, 1>>>(d_a, d_b); // sums into d_a
-//  ////////////////////////////////////////////////////////
-//
-//  tensor_copy_d2h(h_out, d_a);
-//
-//  for (int i = 0; i < tensor_get_capacity(h_src); ++i) {
-//    ASSERT_EQ(h_src.data[i] + h_src.data[i], h_out.data[i]);
-//  }
-//
-//  tensor_destroy(&h_src);
-//  tensor_destroy(&h_out);
-//
-//  tensor_destroy_device(&d_a);
-//  tensor_destroy_device(&d_b);
+TEST_F(TestDeviceUtil, elementwise_add_host_harness) {
+  uint dim1 = 4;
+  uint dim2 = 2;
+
+  uint src_shape[] = { dim1, dim2 };
+  tensor_t h_src = tensor_make_patterned(src_shape, dim_of_shape(src_shape));
+  tensor_t h_out = tensor_make_copy(h_src);
+
+  ////////////////////////////////////////////////////////
+  elementwise_add_device_host_harness(h_out, h_src); // sums into d_a
+  ///////////////////////////////////////////////////////
+
+  for (int i = 0; i < tensor_get_capacity(h_src); ++i) {
+    EXPECT_FLOAT_EQ(float(h_src.data[i] + h_src.data[i]), float(h_out.data[i]));
+  }
+
+  tensor_destroy(&h_src);
+  tensor_destroy(&h_out);
+}
+
+TEST_F(TestDeviceUtil, apply_mask_host_harness) {
+  uint dim1 = 4;
+  uint dim2 = 2;
+
+  uint src_shape[] = { dim1, dim2 };
+  tensor_t h_a = tensor_make(src_shape, dim_of_shape(src_shape));
+  tensor_t h_mask = tensor_make_zeros_alike(h_a);
+
+  for(int i = 0; i < dim1 * dim2; ++i) {
+    if(i % 2 == 0) {
+      h_a.data[i] = 33;
+    } else {
+      h_a.data[i] = 0;
+    }
+  }
+
+  ////////////////////////////////////////////////////////
+  build_mask_device_host_harness(h_a, h_mask); // sums into d_a
+  ///////////////////////////////////////////////////////
+
+  for (int i = 0; i < tensor_get_capacity(h_a); ++i) {
+    if(i % 2 == 0) {
+      EXPECT_FLOAT_EQ(1, h_mask.data[i]);
+    }
+  }
+
+  tensor_destroy(&h_a);
+  tensor_destroy(&h_mask);
+}
+
+TEST_F(TestDeviceUtil, elementwise_mul_host_harness) {
+  uint dim1 = 4;
+  uint dim2 = 2;
+
+  uint src_shape[] = { dim1, dim2 };
+  tensor_t h_src = tensor_make_patterned(src_shape, dim_of_shape(src_shape));
+  tensor_t h_out = tensor_make_copy(h_src);
+
+  ////////////////////////////////////////////////////////
+  elementwise_mul_device_host_harness(h_out, h_src); // sums into d_a
+  ///////////////////////////////////////////////////////
+
+  for (int i = 0; i < tensor_get_capacity(h_src); ++i) {
+    EXPECT_FLOAT_EQ(float(h_src.data[i] * h_src.data[i]), float(h_out.data[i]));
+  }
+
+  tensor_destroy(&h_src);
+  tensor_destroy(&h_out);
 }
 
 #endif // USE_CUDA

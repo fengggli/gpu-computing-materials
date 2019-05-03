@@ -386,8 +386,8 @@ namespace {
     // 1 x 1 x 1 x 1 -> 1 x 1 x 0 x 0
     tensor_t padded_in = tensor_make_padded_square_input_device(in, pad_size, pad_val);
 
-    tensor_dump(in);
-    tensor_dump(padded_in);
+    // tensor_dump(in);
+    // tensor_dump(padded_in);
 
     ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
     ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
@@ -1653,76 +1653,6 @@ TEST_F(LayerConvTestDevice, forward_caches_proper_values) {
   }
 
 
-TEST_F(LayerConvTestDevice, elementwise_add_host_harness) {
-  uint dim1 = 4;
-  uint dim2 = 2;
-
-  uint src_shape[] = { dim1, dim2 };
-  tensor_t h_src = tensor_make_patterned(src_shape, dim_of_shape(src_shape));
-  tensor_t h_out = tensor_make_copy(h_src);
-
-  ////////////////////////////////////////////////////////
-  elementwise_add_device_host_harness(h_out, h_src); // sums into d_a
-  ///////////////////////////////////////////////////////
-
-  for (int i = 0; i < tensor_get_capacity(h_src); ++i) {
-    EXPECT_FLOAT_EQ(float(h_src.data[i] + h_src.data[i]), float(h_out.data[i]));
-  }
-
-  tensor_destroy(&h_src);
-  tensor_destroy(&h_out);
-}
-
-TEST_F(LayerConvTestDevice, elementwise_mul_host_harness) {
-  uint dim1 = 4;
-  uint dim2 = 2;
-
-  uint src_shape[] = { dim1, dim2 };
-  tensor_t h_src = tensor_make_patterned(src_shape, dim_of_shape(src_shape));
-  tensor_t h_out = tensor_make_copy(h_src);
-
-  ////////////////////////////////////////////////////////
-  elementwise_mul_device_host_harness(h_out, h_src); // sums into d_a
-  ///////////////////////////////////////////////////////
-
-  for (int i = 0; i < tensor_get_capacity(h_src); ++i) {
-    EXPECT_FLOAT_EQ(float(h_src.data[i] * h_src.data[i]), float(h_out.data[i]));
-  }
-
-  tensor_destroy(&h_src);
-  tensor_destroy(&h_out);
-}
-
-
-TEST_F(LayerConvTestDevice, apply_mask_host_harness) {
-  uint dim1 = 4;
-  uint dim2 = 2;
-
-  uint src_shape[] = { dim1, dim2 };
-  tensor_t h_a = tensor_make(src_shape, dim_of_shape(src_shape));
-  tensor_t h_mask = tensor_make_zeros_alike(h_a);
-
-  for(int i = 0; i < dim1 * dim2; ++i) {
-    if(i % 2 == 0) {
-      h_a.data[i] = 33;
-    } else {
-      h_a.data[i] = 0;
-    }
-  }
-
-  ////////////////////////////////////////////////////////
-  build_mask_device_host_harness(h_a, h_mask); // sums into d_a
-  ///////////////////////////////////////////////////////
-
-  for (int i = 0; i < tensor_get_capacity(h_a); ++i) {
-    if(i % 2 == 0) {
-      EXPECT_FLOAT_EQ(1, h_mask.data[i]);
-    }
-  }
-
-  tensor_destroy(&h_a);
-  tensor_destroy(&h_mask);
-}
 
 #endif
 
