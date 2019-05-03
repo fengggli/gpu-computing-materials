@@ -185,6 +185,7 @@ static inline void _div(T *to, T *from, uint len) {
 
 /* create a tensor directly on the device from a shape */
 tensor_t tensor_make_device(uint const shape[], uint const ndims);
+tensor_t tensor_make_alike_device(tensor_t t); // d2d make alike
 tensor_t tensor_make_zeros_device(uint const shape[], uint const ndims);
 /* Allocate a tensor in GPU, based on the value from a host tensor*/
 tensor_t tensor_make_copy_h2d(tensor_t t_host);
