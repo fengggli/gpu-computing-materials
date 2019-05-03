@@ -807,15 +807,15 @@ status_t convolution_forward_device_host_harness(cublasHandle_t handle, tensor_t
   tensor_t d_dw = tensor_make_copy_h2d(h_dw);
   tensor_t d_dout = tensor_make_copy_h2d(h_dout);
 
-  convolution_backward_device(handle, d_dx, d_dw, cache, params, d_dout);
+  convolution_backward_device(handle, d_dx, d_dw, hcache, params, d_dout);
 
-  tensor_copy_d2h(h_dx, d_x);
-  tensor_copy_d2h(h_dw, d_w);
+  tensor_copy_d2h(h_dx, d_dx);
+  tensor_copy_d2h(h_dw, d_dw);
   tensor_copy_d2h(h_dout, d_dout);
 
   tensor_destroy_device(&d_dx);
   tensor_destroy_device(&d_dw);
-  tensor_destroy_device(&d_out);
+  tensor_destroy_device(&d_dout);
 
   return S_OK;
 }
