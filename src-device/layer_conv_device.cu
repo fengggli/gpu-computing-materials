@@ -439,7 +439,7 @@ status_t convolution_forward_device(cublasHandle_t handle, tensor_t const d_x, t
 
 
 // Call this function from the host ONLY
-// cache will be filled with
+// cache will be filled with device mem
 status_t convolution_forward_device_host_harness(cublasHandle_t handle,
                                                  tensor_t h_x, tensor_t h_w,
                                                  lcache_t* hcache,
@@ -798,6 +798,27 @@ status_t convolution_backward_device(cublasHandle_t handle, tensor_t d_dx, tenso
   return S_OK;
 }
 
+
+// Call this function from the host ONLY
+// cache is expected to be filled with device mem
+status_t convolution_forward_device_host_harness(cublasHandle_t handle, tensor_t h_dx, tensor_t h_dw, lcache_t* hcache, conv_param_t const params, tensor_t const h_dout)
+{
+  tensor_t d_dx = tensor_make_copy_h2d(h_dx);
+  tensor_t d_dw = tensor_make_copy_h2d(h_dw);
+  tensor_t d_dout = tensor_make_copy_h2d(h_dout);
+
+  convolution_backward_device(handle, d_dx, d_dw, cache, params, d_dout);
+
+  tensor_copy_d2h(h_dx, d_x);
+  tensor_copy_d2h(h_dw, d_w);
+  tensor_copy_d2h(h_dout, d_dout);
+
+  tensor_destroy_device(&d_dx);
+  tensor_destroy_device(&d_dw);
+  tensor_destroy_device(&d_out);
+
+  return S_OK;
+}
 
 
 void elementwise_add_device_host_harness(tensor_t h_a, tensor_t h_b) {
