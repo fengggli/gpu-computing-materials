@@ -147,8 +147,8 @@ TEST_F(TestLayerConvSpeed, forward_and_backward_loop) {
   cout << "END LOOP\n";
   cout << "-----------------------------------------------------------------\n";
 
-  double avg_fwd_ms = std::accumulate(forward_times.begin(), forward_times.end(), double(0)) / forward_times.size();
-  double avg_bkwd_ms = std::accumulate(backward_times.begin(), backward_times.end(), double(0)) / backward_times.size();
+  double avg_fwd_ms = std::accumulate(forward_times.begin(), forward_times.end(), double(0)) / (double)forward_times.size();
+  double avg_bkwd_ms = std::accumulate(backward_times.begin(), backward_times.end(), double(0)) / (double)backward_times.size();
 
   std::cout << "avg_fwd_ms=" << avg_fwd_ms << ", avg_bkwd_ms=" << avg_bkwd_ms << '\n';
 
@@ -168,10 +168,10 @@ TEST_F(TestLayerConvSpeed, forward_and_backward_loop) {
 #endif // #ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
 
 
-TEST_F(TestLayerConvSpeed, DISABLED_bench_custom_forward_backward) {
+TEST_F(TestLayerConvSpeed, bench_custom_forward_backward) {
   uint nr_iterations = 100;
-  std::vector<int> block_arr = { 1, 2, 4, 8, 16, 32, 64 };
-  std::vector<int> thread_arr = { 1, 2, 4, 8, 16, 32, 64, 96, 128, 160, 192, 224, 256, 288, 512, 768, 1024, 2048 };
+  std::vector<int> block_arr = { 32 };
+  std::vector<int> thread_arr = { 128 };
   std::vector<uint> N_arrary = {1, 4, 16}; // nr_imgs
   std::vector<uint> C_arrary = {4}; // nr_input_channels
   std::vector<uint> H_arrary = {32}; // input img sizes
