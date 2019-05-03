@@ -62,7 +62,7 @@ make
     ```
 
 #### Documentation
-* TODO: add slides
+* [Final presentation Slides](https://github.com/fengggli/gpu-computing-materials/blob/test-speed-1-32/docs/Project%20Final%20Presentation.pdf)
 
 * TODO: report 
 
