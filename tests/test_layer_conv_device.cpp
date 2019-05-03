@@ -1669,9 +1669,6 @@ TEST_F(LayerConvTestDevice, elementwise_add_host_harness) {
     EXPECT_FLOAT_EQ(float(h_src.data[i] + h_src.data[i]), float(h_out.data[i]));
   }
 
-  tensor_print_flat(h_src);
-  tensor_print_flat(h_out);
-
   tensor_destroy(&h_src);
   tensor_destroy(&h_out);
 }
@@ -1691,9 +1688,6 @@ TEST_F(LayerConvTestDevice, elementwise_mul_host_harness) {
   for (int i = 0; i < tensor_get_capacity(h_src); ++i) {
     EXPECT_FLOAT_EQ(float(h_src.data[i] * h_src.data[i]), float(h_out.data[i]));
   }
-
-  tensor_print_flat(h_src);
-  tensor_print_flat(h_out);
 
   tensor_destroy(&h_src);
   tensor_destroy(&h_out);
@@ -1725,9 +1719,6 @@ TEST_F(LayerConvTestDevice, apply_mask_host_harness) {
       EXPECT_FLOAT_EQ(1, h_mask.data[i]);
     }
   }
-
-  tensor_print_flat(h_a);
-  tensor_print_flat(h_mask);
 
   tensor_destroy(&h_a);
   tensor_destroy(&h_mask);
