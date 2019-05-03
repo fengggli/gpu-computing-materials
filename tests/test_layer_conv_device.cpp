@@ -1165,7 +1165,7 @@ namespace {
     im2col_inner_device(cols, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, padding, stride);
 
 //    tensor_dump(x_padded);
-    tensor_print_flat(x_padded);
+//    tensor_print_flat(x_padded);
 
     EXPECT_LT(tensor_rel_error(cols_ref, cols), 1e-7);
     PINF("Consistent with expected results");
@@ -1191,7 +1191,7 @@ namespace {
   im2col_inner_device(cols, x_padded, N, C, H, W, HH, WW, filter_height, filter_width, padding, stride);
 
 //    tensor_dump(x_padded);
-  tensor_print_flat(cols);
+//  tensor_print_flat(cols);
 
   EXPECT_LT(tensor_rel_error(cols_ref, cols), 1e-7);
   PINF("Consistent with expected results");
