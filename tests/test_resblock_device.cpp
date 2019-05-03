@@ -19,6 +19,7 @@
 #include "test_util.h"
 
 #include "awnndevice/layer_sandwich_device.cuh"
+#define TEST_MORE
 
 namespace {
 
@@ -44,12 +45,81 @@ class LayerResBlockDevice : public ::testing::Test {
 };
 
 
+TEST_F(LayerResBlockDevice, DISABLED_ConvRelu) {
+  lcache_t cache;
+
+  uint shape_x[] = {2, 3, 8, 8};
+  uint shape_w[] = {4, 3, 3, 3};
+  uint shape_y[] = {2, 4, 8, 8};
+
+  conv_param_t params;
+  params.stride = 1;
+  params.padding = 1;
+
+  tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, array_size(shape_x));
+  tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, array_size(shape_w));
+
+  tensor_t y = tensor_make_zeros(shape_y, array_size(shape_y));
+
+  make_empty_lcache(&cache);
+
+  tensor_t d_x = tensor_make_copy_h2d(x);
+  tensor_t d_w = tensor_make_copy_h2d(w);
+  tensor_t d_y = tensor_make_copy_h2d(y);
+  // forward
+  EXPECT_EQ(S_OK, conv_relu_forward_device(handle_, d_x, d_w, &cache, params, d_y));
+
+  // backward
+  tensor_t dy = tensor_make_linspace_alike(0.1, 0.5, y);  // make it radom
+
+  // output for backward
+  tensor_t dx = tensor_make_alike(x);
+  tensor_t dw = tensor_make_alike(w);
+
+  tensor_t d_dy = tensor_make_copy_h2d(dy);
+  tensor_t d_dx = tensor_make_copy_h2d(dx);
+  tensor_t d_dw = tensor_make_copy_h2d(dw);
+
+  EXPECT_EQ(S_OK, conv_relu_backward_device(handle_, d_dx, d_dw, &cache, params, d_dy));
+
+  tensor_copy_d2h(dx, d_dx);
+  tensor_copy_d2h(dw, d_dw);
+
+  // numerical check
+  tensor_t dx_ref = tensor_make_alike(x);
+  tensor_t dw_ref = tensor_make_alike(w);
+
+  // evaluate gradient of x
+  eval_numerical_gradient(
+      [w, params](tensor_t const in, tensor_t out) {
+        conv_relu_forward(in, w, NULL, params, out);
+      },
+      x, dy, dx_ref);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-3);
+  PINF("gradient check of x... is ok");
+
+  // evaluate gradient of w
+  eval_numerical_gradient(
+      [x, params](tensor_t const in, tensor_t out) {
+        conv_relu_forward(x, in, NULL, params, out);
+      },
+      w, dy, dw_ref);
+  EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-3);
+  PINF("gradient check of w... is ok");
+}
+
+
 TEST_F(LayerResBlockDevice, ResidualBlock) {
   lcache_t cache;
 
   uint N, C, H, W, F, HH, WW;
+#ifdef TEST_MORE
   N = 2, C = 3, H = 5, W = 5;
   F = 3, HH = 3, WW = 3;
+#else
+  N = 1, C = 1, H = 4, W = 4;
+  F = 1, HH = 3, WW = 3;
+#endif
 
   uint shape_x[] = {N, C, H, W};
   uint shape_w[] = {F, C, HH, WW};
@@ -68,6 +138,20 @@ TEST_F(LayerResBlockDevice, ResidualBlock) {
 
   make_empty_lcache(&cache);
   // forward
+
+  // copy input to device
+  tensor_t d_x = tensor_make_copy_h2d(x);
+  tensor_t d_w1 = tensor_make_copy_h2d(w1) ;
+  tensor_t d_w2 = tensor_make_copy_h2d(w2) ;
+  tensor_t d_y = tensor_make_copy_h2d(y) ;
+
+
+  ASSERT_EQ(S_OK, resblock_forward_device(handle_, d_x, d_w1, d_w2, &cache, params, d_y));
+
+  // copy output back
+  tensor_copy_d2h(y, d_y);
+
+#ifdef TEST_MORE
   double value_list[] = {
       -0.,        -0.,        -0.,        -0.,        -0.,        -0.,
       -0.,        -0.,        -0.,        -0.,        -0.,        -0.,
@@ -95,29 +179,18 @@ TEST_F(LayerResBlockDevice, ResidualBlock) {
       6.29048228, 4.07110329, 3.77567282, 5.71614398, 6.37538926, 5.7192327,
       3.72408263, 2.50945543, 3.69612185, 4.09955233, 3.6991228,  2.48080883};
 
-  // copy input to device
-  tensor_t d_x = tensor_make_copy_h2d(x);
-  tensor_t d_w1 = tensor_make_copy_h2d(w1) ;
-  tensor_t d_w2 = tensor_make_copy_h2d(w2) ;
-  tensor_t d_y = tensor_make_copy_h2d(y) ;
-
-
-  ASSERT_EQ(S_OK, resblock_forward_device(handle_, d_x, d_w1, d_w2, &cache, params, d_y));
-
-  // copy output back
-  tensor_copy_d2h(y, d_y);
-
   tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
 
 
-  ASSERT_LT(tensor_rel_error(y_ref, y), 1e-7);
-  if (tensor_rel_error(y_ref, y) > 1e-7) {
+  ASSERT_LT(tensor_rel_error(y_ref, y), 1e-3);
+  if (tensor_rel_error(y_ref, y) > 1e-3) {
     tensor_dump(y);
     tensor_dump(y_ref);
   }
   else{
     PINF("forward value checked!!!!!");
   }
+#endif
 
   // backward
   tensor_t dy = tensor_make_linspace_alike(0.1, 0.5, y);  // make it radom
@@ -152,7 +225,7 @@ TEST_F(LayerResBlockDevice, ResidualBlock) {
         residual_basic_no_bn_forward(in, w1, w2, NULL, params, out);
       },
       x, dy, dx_ref);
-  ASSERT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
+  ASSERT_LT(tensor_rel_error(dx_ref, dx), 1e-3);
   PINF("gradient check of x... is ok");
 
   // evaluate gradient of w1
@@ -161,7 +234,7 @@ TEST_F(LayerResBlockDevice, ResidualBlock) {
         residual_basic_no_bn_forward(x, in, w2, NULL, params, out);
       },
       w1, dy, dw1_ref);
-  ASSERT_LT(tensor_rel_error(dw1_ref, dw1), 1e-7);
+  ASSERT_LT(tensor_rel_error(dw1_ref, dw1), 1e-3);
   PINF("gradient check of w1... is ok");
 
   // evaluate gradient of w2
@@ -170,7 +243,7 @@ TEST_F(LayerResBlockDevice, ResidualBlock) {
         residual_basic_no_bn_forward(x, w1, in, NULL, params, out);
       },
       w2, dy, dw2_ref);
-  ASSERT_LT(tensor_rel_error(dw2_ref, dw2), 1e-7);
+  ASSERT_LT(tensor_rel_error(dw2_ref, dw2), 1e-3);
   PINF("gradient check of w2... is ok");
 
   tensor_destroy_device(&d_x);

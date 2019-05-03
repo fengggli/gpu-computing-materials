@@ -34,9 +34,9 @@ status_t relu_backward_device(tensor_t const d_dx,
                                   lcache_t* cache,
                                   tensor_t d_dy) {
   tensor_t d_x = lcache_pop(cache);
-  PINF("relu cache");
+  PINF("DEVICE");
 /*  print_tensor_device<<<1,1>>>(d_dy);*/
-  print_tensor_device<<<1,1>>>(d_x);
+  /*print_tensor_device<<<1,1>>>(d_x);*/
   /*print_tensor_device<<<1,1>>>(d_dx);*/
   do_device_relu_backward<<<32, 1024>>>(d_dx, d_x, d_dy);
 /*  print_tensor_device<<<1,1>>>(d_dy);*/
@@ -51,6 +51,9 @@ status_t relu_backward_device(tensor_t const d_dx,
 status_t conv_relu_forward_device(cublasHandle_t handle, tensor_t const d_x,
                                   tensor_t d_w, lcache_t* cache,
                                   conv_param_t const params, tensor_t d_y) {
+  AWNN_CHECK_EQ(d_x.mem_type, GPU_MEM);
+  AWNN_CHECK_EQ(d_w.mem_type, GPU_MEM);
+  AWNN_CHECK_EQ(d_y.mem_type, GPU_MEM);
   status_t ret = S_ERR;
   tensor_t d_tmp = tensor_make_alike_device(d_y);
 
@@ -66,6 +69,9 @@ status_t conv_relu_backward_device(cublasHandle_t handle, tensor_t d_dx,
                                    tensor_t d_dw, lcache_t* cache,
                                    conv_param_t const params,
                                    tensor_t const d_dy) {
+  AWNN_CHECK_EQ(d_dx.mem_type, GPU_MEM);
+  AWNN_CHECK_EQ(d_dw.mem_type, GPU_MEM);
+  AWNN_CHECK_EQ(d_dy.mem_type, GPU_MEM);
   status_t ret = S_ERR;
 
   tensor_t d_tmp = tensor_make_alike_device(d_dy);
@@ -81,6 +87,10 @@ status_t conv_relu_backward_device(cublasHandle_t handle, tensor_t d_dx,
 status_t conv_iden_relu_forward_device(
     cublasHandle_t handle, tensor_t const d_x, tensor_t const d_iden,
     tensor_t d_w, lcache_t* cache, conv_param_t const params, tensor_t d_y) {
+  AWNN_CHECK_EQ(d_x.mem_type, GPU_MEM);
+  AWNN_CHECK_EQ(d_iden.mem_type, GPU_MEM);
+  AWNN_CHECK_EQ(d_w.mem_type, GPU_MEM);
+  AWNN_CHECK_EQ(d_y.mem_type, GPU_MEM);
   AWNN_CHECK_EQ(
       d_x.dim.dims[3],
       d_y.dim.dims[3]);  // in resnet tensor h/w doesn't change in each stage
@@ -102,6 +112,11 @@ status_t conv_iden_relu_backward_device(cublasHandle_t handle, tensor_t d_dx,
                                         lcache_t* cache,
                                         conv_param_t const params,
                                         tensor_t const d_dy) {
+  AWNN_CHECK_EQ(d_dx.mem_type, GPU_MEM);
+  AWNN_CHECK_EQ(d_diden.mem_type, GPU_MEM);
+  AWNN_CHECK_EQ(d_dw.mem_type, GPU_MEM);
+  AWNN_CHECK_EQ(d_dy.mem_type, GPU_MEM);
+
 
   AWNN_CHECK_EQ(S_OK, relu_backward_device(d_diden, cache, d_dy));
   AWNN_CHECK_EQ(S_OK, convolution_backward_device(handle, d_dx, d_dw, cache, params, d_diden));

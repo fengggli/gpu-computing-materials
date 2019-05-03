@@ -72,6 +72,7 @@ tensor_t tensor_make_zeros_device(uint const shape[], uint const ndims) {
 }
 
 tensor_t tensor_make_copy_h2d(tensor_t t_host) {
+  assert(t_host.mem_type == CPU_MEM);
   uint capacity = tensor_get_capacity(t_host);
   T* d_data = (T*)mem_alloc_device(
       capacity * sizeof(T));  // raw data at gpu mem in flat format

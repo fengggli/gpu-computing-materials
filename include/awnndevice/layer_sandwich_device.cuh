@@ -15,6 +15,15 @@ status_t relu_forward_device(tensor_t const d_x,
 status_t relu_backward_device(tensor_t const d_dx,
                                   lcache_t* cache,
                                   tensor_t d_dy);
+status_t conv_relu_forward_device(cublasHandle_t handle, tensor_t const d_x,
+                                  tensor_t d_w, lcache_t* cache,
+                                  conv_param_t const params, tensor_t d_y);
+status_t conv_relu_backward_device(cublasHandle_t handle, tensor_t d_dx,
+                                   tensor_t d_dw, lcache_t* cache,
+                                   conv_param_t const params,
+                                   tensor_t const d_dy);
+
+
 
 
 status_t resblock_forward_device(cublasHandle_t handle, tensor_t const d_x, tensor_t d_w1, tensor_t d_w2, lcache_t* cache, conv_param_t const params, tensor_t d_y);
