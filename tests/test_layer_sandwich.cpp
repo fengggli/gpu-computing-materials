@@ -10,7 +10,7 @@
 #include "config.h"
 #include "gtest/gtest.h"
 #include "test_util.h"
-#define TEST_MORE
+//#define TEST_MORE
 namespace {
 
 // The fixture for testing class Foo.
@@ -145,13 +145,27 @@ TEST_F(LayerSandwich, ResidualBlock_noBN) {
   // backward
   tensor_t dy = tensor_make_linspace_alike(0.1, 0.5, y);  // make it radom
 
+
   // output for backward
-  tensor_t dx = tensor_make_alike(x);
-  tensor_t dw1 = tensor_make_alike(w1);
-  tensor_t dw2 = tensor_make_alike(w2);
+  tensor_t dx = tensor_make_zeros_alike(x);
+  tensor_t dw1 = tensor_make_zeros_alike(w1);
+  tensor_t dw2 = tensor_make_zeros_alike(w2);
+
+  std::cout << "cache size " << cache.count << '\n';
+  tensor_print_flat(cache.all_tensors[cache.count -1]);
+  tensor_print_flat(cache.all_tensors[cache.count -2]);
 
   EXPECT_EQ(S_OK,
             residual_basic_no_bn_backward(dx, dw1, dw2, &cache, params, dy));
+
+//  tensor_print_flat(x);
+//  tensor_print_flat(dx);
+//
+//  tensor_print_flat(w1);
+//  tensor_print_flat(dw1);
+//
+//  tensor_print_flat(w2);
+//  tensor_print_flat(dw2);
 
   // numerical check
   tensor_t dx_ref = tensor_make_alike(x);

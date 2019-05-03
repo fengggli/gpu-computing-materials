@@ -303,6 +303,8 @@ status_t tensor_reshape_flat_(tensor_t * t) {
 
 
 void tensor_print_flat(tensor_t t) {
+  assert(t.mem_type == CPU_MEM);
+
   uint capacity = tensor_get_capacity(t);
   printf("[");
   uint i;
