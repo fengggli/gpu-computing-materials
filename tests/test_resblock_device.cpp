@@ -19,31 +19,30 @@
 #include "test_util.h"
 
 #include "awnndevice/layer_sandwich_device.cuh"
-// #define TEST_MORE
+#define TEST_MORE
 
 namespace {
 
 // The fixture for testing class Foo.
 class LayerResBlockDevice : public ::testing::Test {
  protected:
-    LayerResBlockDevice() {
-      // You can do set-up work for each test here.
-      stat = cublasCreate(&handle_);
-      if (stat != CUBLAS_STATUS_SUCCESS) {
-        PERR("CUBLAS initialization failed\n");
-      }
+  LayerResBlockDevice() {
+    // You can do set-up work for each test here.
+    stat = cublasCreate(&handle_);
+    if (stat != CUBLAS_STATUS_SUCCESS) {
+      PERR("CUBLAS initialization failed\n");
     }
+  }
 
-    ~LayerResBlockDevice() override {
-      // You can do clean-up work that doesn't throw exceptions here.
-      cublasDestroy(handle_);
-    }
+  ~LayerResBlockDevice() override {
+    // You can do clean-up work that doesn't throw exceptions here.
+    cublasDestroy(handle_);
+  }
 
   // Objects declared here can be used by all tests in the test case for Foo.
   cublasHandle_t handle_;
   cublasStatus_t stat;
 };
-
 
 TEST_F(LayerResBlockDevice, ConvRelu) {
   lcache_t cache;
@@ -73,14 +72,15 @@ TEST_F(LayerResBlockDevice, ConvRelu) {
   tensor_t d_w = tensor_make_copy_h2d(w);
   tensor_t d_y = tensor_make_copy_h2d(y);
   // forward
-  struct layer_context_device context={
-    .d_tmp = tensor_make_alike_device(d_y),
-    .d_dtmp = tensor_make_alike_device(d_y)
+  struct layer_context_device context = {
+      .d_tmp = tensor_make_alike_device(d_y),
+      .d_dtmp = tensor_make_alike_device(d_y),
   };
-  EXPECT_EQ(S_OK, conv_relu_forward_device(handle_, d_x, d_w, &cache, params, d_y, &context));
+  EXPECT_EQ(S_OK, conv_relu_forward_device(handle_, d_x, d_w, &cache, params,
+                                           d_y, &context));
 
   // backward
-  PWRN("Now Backward");
+  PINF("Now Backward");
   tensor_t dy = tensor_make_linspace_alike(0.1, 0.5, y);  // make it radom
 
   // output for backward
@@ -91,7 +91,8 @@ TEST_F(LayerResBlockDevice, ConvRelu) {
   tensor_t d_dx = tensor_make_copy_h2d(dx);
   tensor_t d_dw = tensor_make_copy_h2d(dw);
 
-  EXPECT_EQ(S_OK, conv_relu_backward_device(handle_, d_dx, d_dw, &cache, params, d_dy, &context));
+  EXPECT_EQ(S_OK, conv_relu_backward_device(handle_, d_dx, d_dw, &cache, params,
+                                            d_dy, &context));
 
   tensor_copy_d2h(dx, d_dx);
   tensor_copy_d2h(dw, d_dw);
@@ -118,11 +119,10 @@ TEST_F(LayerResBlockDevice, ConvRelu) {
   EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-3);
   PINF("gradient check of w... is ok");
 
-  // layer_context_destroy_device(&context);
+  layer_context_destroy_device(&context);
 }
 
-
-TEST_F(LayerResBlockDevice, DISABLED_ResidualBlock) {
+TEST_F(LayerResBlockDevice, ResidualBlock) {
   lcache_t cache;
 
   uint N, C, H, W, F, HH, WW;
@@ -154,14 +154,15 @@ TEST_F(LayerResBlockDevice, DISABLED_ResidualBlock) {
 
   // copy input to device
   tensor_t d_x = tensor_make_copy_h2d(x);
-  tensor_t d_w1 = tensor_make_copy_h2d(w1) ;
-  tensor_t d_w2 = tensor_make_copy_h2d(w2) ;
-  tensor_t d_y = tensor_make_copy_h2d(y) ;
+  tensor_t d_w1 = tensor_make_copy_h2d(w1);
+  tensor_t d_w2 = tensor_make_copy_h2d(w2);
+  tensor_t d_y = tensor_make_copy_h2d(y);
 
+  struct layer_context_device *context;
+  resblock_create_context_device(&context, d_y);  // 1+2 contexts
 
-  lcache_dump_stat(&cache);
-  ASSERT_EQ(S_OK, resblock_forward_device(handle_, d_x, d_w1, d_w2, &cache, params, d_y));
-  lcache_dump_stat(&cache);
+  ASSERT_EQ(S_OK, resblock_forward_device(handle_, d_x, d_w1, d_w2, &cache,
+                                          params, d_y, context));
 
   // copy output back
   tensor_copy_d2h(y, d_y);
@@ -196,14 +197,12 @@ TEST_F(LayerResBlockDevice, DISABLED_ResidualBlock) {
 
   tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
 
-
   ASSERT_LT(tensor_rel_error(y_ref, y), 1e-3);
   if (tensor_rel_error(y_ref, y) > 1e-3) {
     tensor_dump(y);
     tensor_dump(y_ref);
-  }
-  else{
-    PWRN("forward value checked!!!!!");
+  } else {
+    PINF("forward value checked!!!!!");
   }
 #endif
 
@@ -221,10 +220,8 @@ TEST_F(LayerResBlockDevice, DISABLED_ResidualBlock) {
   tensor_t d_dw2 = tensor_make_copy_h2d(dw2);
   tensor_t d_dy = tensor_make_copy_h2d(dy);
 
-  lcache_dump_stat(&cache);
-  EXPECT_EQ(S_OK,
-            resblock_backward_device(handle_, d_dx, d_dw1, d_dw2, &cache, params, d_dy));
-  lcache_dump_stat(&cache);
+  EXPECT_EQ(S_OK, resblock_backward_device(handle_, d_dx, d_dw1, d_dw2, &cache,
+                                           params, d_dy, context));
 
   // copy gradient back
   tensor_copy_d2h(dx, d_dx);
@@ -271,6 +268,7 @@ TEST_F(LayerResBlockDevice, DISABLED_ResidualBlock) {
   tensor_destroy_device(&d_dw1);
   tensor_destroy_device(&d_dw2);
   tensor_destroy_device(&d_dy);
+  resblock_destroy_context_device(context);
 }
 
 }  // namespace
