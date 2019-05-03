@@ -59,7 +59,7 @@ tensor_t tensor_make_transpose_1230_device(tensor_t t);
 
 void elementwise_add_device_host_harness(tensor_t h_a, tensor_t h_b);
 void elementwise_mul_device_host_harness(tensor_t h_a, tensor_t h_b);
-void apply_mask_device_host_harness(tensor_t h_a, tensor_t h_mask);
+void build_mask_device_host_harness(tensor_t h_a, tensor_t h_mask);
 
 #ifdef __cplusplus
 }

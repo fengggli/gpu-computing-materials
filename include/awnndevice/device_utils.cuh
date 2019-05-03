@@ -87,7 +87,7 @@ static __global__ void elementwise_mul_inplace_device(tensor_t a, tensor_t b) {
 }
 
 
-static __global__ void apply_mask_device(tensor_t x, tensor_t mask) {
+static __global__ void build_mask_device(tensor_t x, tensor_t mask) {
   if(global_idx() == 0) {
     assert(x.mem_type == GPU_MEM);
     assert(mask.mem_type == GPU_MEM);

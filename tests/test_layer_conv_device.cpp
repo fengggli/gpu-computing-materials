@@ -1705,25 +1705,24 @@ TEST_F(LayerConvTestDevice, apply_mask_host_harness) {
   uint dim2 = 2;
 
   uint src_shape[] = { dim1, dim2 };
-  tensor_t h_mask = tensor_make(src_shape, dim_of_shape(src_shape));
+  tensor_t h_a = tensor_make(src_shape, dim_of_shape(src_shape));
+  tensor_t h_mask = tensor_make_zeros_alike(h_a);
 
   for(int i = 0; i < dim1 * dim2; ++i) {
     if(i % 2 == 0) {
-      h_mask.data[i] = 33;
+      h_a.data[i] = 33;
     } else {
-      h_mask.data[i] = 0;
+      h_a.data[i] = 0;
     }
   }
 
-  tensor_t h_a = tensor_make_scalar(src_shape, dim_of_shape(src_shape), 0.0);
-
   ////////////////////////////////////////////////////////
-  apply_mask_device_host_harness(h_a, h_mask); // sums into d_a
+  build_mask_device_host_harness(h_a, h_mask); // sums into d_a
   ///////////////////////////////////////////////////////
 
   for (int i = 0; i < tensor_get_capacity(h_a); ++i) {
     if(i % 2 == 0) {
-      EXPECT_FLOAT_EQ(1, h_a.data[i]);
+      EXPECT_FLOAT_EQ(1, h_mask.data[i]);
     }
   }
 

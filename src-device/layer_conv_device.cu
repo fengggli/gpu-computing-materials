@@ -845,11 +845,11 @@ void elementwise_mul_device_host_harness(tensor_t h_a, tensor_t h_b) {
 }
 
 
-void apply_mask_device_host_harness(tensor_t h_a, tensor_t h_mask) {
+void build_mask_device_host_harness(tensor_t h_a, tensor_t h_mask) {
   tensor_t d_a = tensor_make_copy_h2d(h_a);
   tensor_t d_mask = tensor_make_copy_h2d(h_mask);
 
-  apply_mask_device<<<_blocks, _threads>>>(d_a, d_mask);
+  build_mask_device<<<_blocks, _threads>>>(d_a, d_mask);
   tensor_copy_d2h(h_a, d_a);
 
   tensor_destroy_device(&d_a);
