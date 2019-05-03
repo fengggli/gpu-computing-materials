@@ -801,7 +801,7 @@ status_t convolution_backward_device(cublasHandle_t handle, tensor_t d_dx, tenso
 
 // Call this function from the host ONLY
 // cache is expected to be filled with device mem
-status_t convolution_forward_device_host_harness(cublasHandle_t handle, tensor_t h_dx, tensor_t h_dw, lcache_t* hcache, conv_param_t const params, tensor_t const h_dout)
+status_t convolution_backward_device_host_harness(cublasHandle_t handle, tensor_t h_dx, tensor_t h_dw, lcache_t* hcache, conv_param_t const params, tensor_t const h_dout)
 {
   tensor_t d_dx = tensor_make_copy_h2d(h_dx);
   tensor_t d_dw = tensor_make_copy_h2d(h_dw);

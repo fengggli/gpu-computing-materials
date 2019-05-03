@@ -39,7 +39,7 @@ tensor_t tensor_make_padded_square_input_device(tensor_t h_t, uint p, T val);
 tensor_t tensor_make_transpose_3012_device(tensor_t t);
 
 status_t convolution_backward_device(cublasHandle_t handle, tensor_t d_dx, tensor_t d_dw, lcache_t* cache, conv_param_t const params, tensor_t const d_dout);
-status_t convolution_forward_device_host_harness(cublasHandle_t handle,
+status_t convolution_backward_device_host_harness(cublasHandle_t handle,
     tensor_t h_dx, tensor_t h_dw, lcache_t* hcache, conv_param_t const params,
     tensor_t const h_dout);
 
