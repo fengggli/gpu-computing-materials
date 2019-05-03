@@ -50,14 +50,15 @@ static __device__ uint d_capacity(tensor_t t) {
 
 static __global__ void print_tensor_device(tensor_t t) {
   if (threadIdx.x == 0) {
-    printf("entered print_tensor_device capacity t= %u\n", threadIdx.x,
-    d_capacity(t));
+    printf("entered print_tensor_device capacity = %u\n", d_capacity(t));
 
-    for (int i = 0; i < d_capacity(t); ++i) {
-      printf("data[%u] = %f ", i, t.data[i]);
+    printf("[");
+    uint i = 0;
+    for (; i < d_capacity(t) - 1; ++i) {
+      printf("%f ", i, t.data[i]);
     }
+    printf("%f]\n", t.data[i]);
   }
-  printf("\n");
 }
 
 static __global__ void elementwise_add_inplace_device(tensor_t a, tensor_t const b) {
