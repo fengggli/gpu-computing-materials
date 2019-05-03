@@ -1719,7 +1719,7 @@ TEST_F(LayerConvTestDevice, apply_mask_host_harness) {
   apply_mask_device_host_harness(h_a, h_mask); // sums into d_a
   ///////////////////////////////////////////////////////
 
-  for (int i = 0; i < tensor_get_capacity(h_src); ++i) {
+  for (int i = 0; i < tensor_get_capacity(h_a); ++i) {
     if(i % 2 == 0) {
       EXPECT_FLOAT_EQ(1, h_a.data[i]);
     }
