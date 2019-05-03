@@ -63,7 +63,7 @@ target_link_libraries(test-utility ${AWNN_LIBS}  gtest)
 add_test(test-utility test-utility)
 
 add_executable(test-layer-relu test_layer_relu.cpp)
-target_link_libraries(test-layer-relu ${AWNN_LIBS}  gtest)
+target_link_libraries(test-layer-relu ${AWNN_LIBS} ${AWNN_DEVICE_LIBS}  gtest)
 add_test(test-layer-relu test-layer-relu)
 
 add_executable(test-loss-softmax test_loss_softmax.cpp)
