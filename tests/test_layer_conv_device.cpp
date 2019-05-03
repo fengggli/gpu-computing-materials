@@ -1710,6 +1710,8 @@ TEST_F(LayerConvTestDevice, apply_mask_host_harness) {
   for(int i = 0; i < dim1 * dim2; ++i) {
     if(i % 2 == 0) {
       h_mask.data[i] = 33;
+    } else {
+      h_mask.data[i] = 0;
     }
   }
 
