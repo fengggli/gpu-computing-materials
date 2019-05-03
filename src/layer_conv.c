@@ -359,7 +359,7 @@ tensor_t col2im(tensor_t dx_cols, uint N, uint C, uint H, uint W, uint field_hei
   uint WW = (W + 2 * padding - field_width) / stride + 1;
 
   uint x_padded_shape[] = { N, C, H + 2 * padding, W + 2 * padding };
-  tensor_t x_padded = tensor_make_scalar(x_padded_shape, ARRAY_SIZE(x_padded_shape), 0);                                    // new mem created by returned
+  tensor_t x_padded = tensor_make_scalar(x_padded_shape, ARRAY_SIZE(x_padded_shape), 0);
 
   col2im_inner(dx_cols, x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride);
   if (padding) {

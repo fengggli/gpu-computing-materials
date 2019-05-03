@@ -72,7 +72,7 @@ status_t resnet_init(
 
   // layer out
   uint feature_sz =
-      1 + (H + 2 * conv_param.padding - filter_sz) / conv_param.stride;
+      1 + (H + 2 * conv_param.padding - filter_sz) / (uint)conv_param.stride;
   AWNN_CHECK_EQ(feature_sz, 32);
   uint out_shape[] = {N, nr_filter, feature_sz, feature_sz};
   out = tensor_make(out_shape, 4);
@@ -120,7 +120,7 @@ status_t resnet_init(
 
       // out
       uint feature_sz =
-          1 + (H + 2 * conv_param.padding - filter_sz) / conv_param.stride;
+          1 + (H + 2 * conv_param.padding - filter_sz) / (uint)conv_param.stride;
       AWNN_CHECK_EQ(feature_sz, 32);
       uint out_shape[] = {N, nr_filter, feature_sz, feature_sz};
       out = tensor_make(out_shape, 4);
