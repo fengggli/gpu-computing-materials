@@ -1329,16 +1329,16 @@ TEST_F(LayerConvTestDevice, forward_caches_proper_values) {
   EXPECT_EQ(d_w_cached.mem_type, GPU_MEM);
   EXPECT_EQ(d_x_cached.mem_type, GPU_MEM);
 
-  tensor_t flatten_x_cached = tensor_make_alike(d_flatten_x_cached);
+  uint shape_flatten_x_cached[] = { d_flatten_x_cached.dim.dims[0], d_flatten_x_cached.dim.dims[1], d_flatten_x_cached.dim.dims[2], d_flatten_x_cached.dim.dims[3]};
+  tensor_t flatten_x_cached = tensor_make(shape_flatten_x_cached, dim_of_shape(shape_flatten_x_cached));
   tensor_copy_d2h(flatten_x_cached, d_flatten_x_cached);
 
-  tensor_t x_cached = tensor_make_alike(d_x_cached);
+  uint shape_x_cached[] = { d_x_cached.dim.dims[0], d_x_cached.dim.dims[1], d_x_cached.dim.dims[2], d_x_cached.dim.dims[3]};
+  tensor_t x_cached = tensor_make(shape_x_cached, dim_of_shape(shape_x_cached));
   tensor_copy_d2h(x_cached, d_x_cached);
 
-//  tensor_print_flat(x);
-//  tensor_print_flat(x_cached);
-
-  tensor_t w_cached = tensor_make_alike(d_w_cached);
+  uint shape_w_cached[] = { d_w_cached.dim.dims[0], d_w_cached.dim.dims[1], d_w_cached.dim.dims[2], d_w_cached.dim.dims[3]};
+  tensor_t w_cached = tensor_make(shape_w_cached, dim_of_shape(shape_w_cached));
   tensor_copy_d2h(w_cached, d_w_cached);
 
 
@@ -1369,10 +1369,6 @@ TEST_F(LayerConvTestDevice, forward_caches_proper_values) {
   EXPECT_EQ(w_cached.dim.dims[3], w.dim.dims[3]);
 }
 
-
-  /*
-   * why is this passing?
-   */
   TEST_F(LayerConvTestDevice, convolution_backward_device_numeric) {
     conv_param_t params;
 

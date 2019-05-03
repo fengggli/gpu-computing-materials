@@ -168,7 +168,7 @@ TEST_F(TestLayerConvSpeed, forward_and_backward_loop) {
 #endif // #ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
 
 
-TEST_F(TestLayerConvSpeed, bench_custom_forward_backward) {
+TEST_F(TestLayerConvSpeed, DISABLED_bench_custom_forward_backward) {
   uint nr_iterations = 100;
   std::vector<int> block_arr = { 1, 2, 4, 8, 16, 32, 64 };
   std::vector<int> thread_arr = { 1, 2, 4, 8, 16, 32, 64, 96, 128, 160, 192, 224, 256, 288, 512, 768, 1024, 2048 };
