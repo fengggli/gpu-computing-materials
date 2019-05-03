@@ -16,7 +16,7 @@ sievert.cs.iupui.edu(with ubuntu 16.04 and cuda 10.0)
 If cuda 10.0 is not detected when you login, check your login message and follow
 instructions.
 
-#### prepare (Optional)
+#### prepare
 We use openblas for cpu gemm.
 ```
 sudo ./install-apt.sh
