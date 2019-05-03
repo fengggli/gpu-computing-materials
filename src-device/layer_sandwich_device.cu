@@ -7,6 +7,7 @@
 #include "awnndevice/layer_conv_device.cuh"
 #include "awnndevice/layer_sandwich_device.cuh"
 
+/** Destroy all cache only for this context*/
 void layer_context_destroy_device(struct layer_context_device* context) {
   tensor_destroy_device(&context->d_tmp);
   tensor_destroy_device(&context->d_dtmp);
@@ -122,22 +123,25 @@ status_t conv_iden_relu_backward_device(cublasHandle_t handle, tensor_t d_dx,
   return S_OK;
 }
 
+/** Create cache memory for this and all its childer layers */
 void resblock_create_context_device(struct layer_context_device** ptr_context,
                                     tensor_t d_y) {
   // one context for this layer, the other two for its children
   uint nr_child_context = 2;
   *ptr_context = (struct layer_context_device*)mem_alloc(
-      sizeof(struct layer_context_device) * (1 + nr_child_context));
+      sizeof(struct layer_context_device) * (2 + nr_child_context));
 
   struct layer_context_device* context = *ptr_context;
-  for (uint i = 0; i < nr_child_context + 1; i++) {
+  for (uint i = 0; i < nr_child_context + 2; i++) {
     context[i].d_tmp = tensor_make_alike_device(d_y);
     context[i].d_dtmp = tensor_make_alike_device(d_y);
   }
 }
+
+/** Free cache memory for this and all its childer layers */
 void resblock_destroy_context_device(struct layer_context_device* context) {
   uint nr_child_context = 2;
-  for (uint i = 0; i < nr_child_context + 1; i++) {
+  for (uint i = 0; i < nr_child_context + 2; i++) {
     layer_context_destroy_device(&context[i]);
   }
   mem_free(context);
@@ -150,9 +154,9 @@ status_t resblock_forward_device(cublasHandle_t handle, tensor_t const d_x,
   tensor_t d_tmp = context[0].d_tmp;
   // TODO: pass context
   conv_relu_forward_device(handle, d_x, d_w1, cache, params, d_tmp,
-                           &context[1]);
+                           &context[2]);
   conv_iden_relu_forward_device(handle, d_tmp, d_x, d_w2, cache, params, d_y,
-                                &context[2]);
+                                &context[3]);
 
   return S_OK;
 }
@@ -162,18 +166,15 @@ status_t resblock_backward_device(cublasHandle_t handle, tensor_t d_dx,
                                   tensor_t const d_dy,
                                   struct layer_context_device* context) {
   tensor_t d_dtmp = context[0].d_dtmp;
-  tensor_t d_dx_iden =
-      tensor_make_alike_device(d_dx);  // we still need this to accumulate
+  tensor_t d_dx_iden = context[1].d_dtmp;
 
   conv_iden_relu_backward_device(handle, d_dtmp, d_dx_iden, d_dw2, cache,
-                                 params, d_dy, &context[2]);
+                                 params, d_dy, &context[3]);
   // TODO: pass context
   conv_relu_backward_device(handle, d_dx, d_dw1, cache, params, d_dtmp,
-                            &context[1]);
+                            &context[2]);
 
   elementwise_add_inplace_device<<<32, 1024>>>(d_dx, d_dx_iden);
-  // tensor_elemwise_op_inplace_device(d_dx, d_dx_iden, TENSOR_OP_ADD);
-  tensor_destroy_device(&d_dx_iden);
 
   return S_OK;
 }
