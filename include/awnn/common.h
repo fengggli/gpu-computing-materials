@@ -19,7 +19,6 @@ extern "C" {
 #endif
 
 typedef unsigned int uint;
-
 #ifdef AWNN_USE_FLT32
 typedef float T;
 #else

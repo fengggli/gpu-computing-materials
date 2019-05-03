@@ -4,11 +4,10 @@
  * Author: Feng Li
  * e-mail: fengggli@yahoo.com
  */
-
-#include "test_util.h"
 #include "awnn/layer_conv.h"
 #include "awnn/tensor.h"
 #include "gtest/gtest.h"
+#include "test_util.h"
 
 namespace {
 

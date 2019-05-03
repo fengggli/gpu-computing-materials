@@ -17,7 +17,7 @@ target_link_libraries(test-tensor-op ${AWNN_LIBS}  gtest)
 add_test(test-tensor-op test-tensor-op)
 
 add_executable(test-layer-conv test_layer_conv.cpp)
-target_link_libraries(test-layer-conv ${AWNN_LIBS}  gtest)
+target_link_libraries(test-layer-conv ${AWNN_LIBS} gtest)
 add_test(test-layer-conv test-layer-conv)
 
 if(USE_CUDA)
@@ -34,15 +34,19 @@ if(USE_CUDA)
     target_link_libraries(test-cublas-device-op ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} cudart cublas gtest)
     add_test(test-cublas-device-op test-cublas-device-op)
 
-    add_executable(test-layer-conv-device-speed test_layer_conv_device_speed.cpp)
-    target_link_libraries(test-layer-conv-device-speed ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} cudart cublas gtest)
-    add_test(test-layer-conv-device-speed test-layer-conv-device-speed)
-
     add_executable(test-device-util test_device_utils.cpp)
     target_link_libraries(test-device-util ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} cudart cublas gtest)
     add_test(test-device-util test-device-util)
 
 endif(USE_CUDA)
+
+if(USE_CUDA AND USE_CUDNN)
+add_executable(test-layer-conv-cudnn test_layer_conv_cudnn.cpp)
+target_link_libraries(test-layer-conv-cudnn ${AWNN_LIBS}  ${AWNN_DEVICE_LIBS} gtest)
+add_test(test-layer-conv-cudnn test-layer-conv-cudnn)
+
+
+endif()
 
 if (USE_NNPACK)
 add_executable(test-layer-conv-nnpack test_layer_conv_nnpack.cpp)

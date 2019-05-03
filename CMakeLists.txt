@@ -45,7 +45,7 @@ if(USE_CUDA)
   find_package(CUDA REQUIRED)
   set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
   set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda/)
-  set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -std=c++11 -O3 -DCONFIG_DEBUG -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=sm_35 -gencode arch=compute_37,code=sm_37 -gencode arch=compute_50,code=sm_50 -gencode arch=compute_52,code=sm_52 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_70,code=compute_70)
+  set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} -std=c++11 -O3 -DCONFIG_DEBUG -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=sm_35 -gencode arch=compute_37,code=sm_37 -gencode arch=compute_50,code=sm_50 -gencode arch=compute_52,code=sm_52 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_70,code=compute_70)
   set(CUDA_HOST_COMPILATION_CPP ON)
   set(CUDA_SEPARABLE_COMPILATION ON)
   set(CUDA_VERBOSE ON)
@@ -138,30 +138,32 @@ target_link_libraries(awnn_utils awnn_core)
 set(AWNN_LIBS "awnn_core" "awnn_utils")
 
 if(USE_CUDA)
-  cuda_add_library(awnndevicelib
-    include/awnndevice/range.cuh
-    include/awnndevice/device_utils.cuh
-    include/awnndevice/layer_conv_device.cuh
-    include/awnndevice/layer_sandwich_device.cuh
-    include/awnndevice/cublas_wrappers.cuh
-    include/awnndevice/device_utils_harness.cuh
+  list(APPEND awnndevicelib_SOURCES
+      include/awnndevice/range.cuh
+      include/awnndevice/device_utils.cuh
+      include/awnndevice/layer_conv_device.cuh
+      include/awnndevice/layer_sandwich_device.cuh
+      include/awnndevice/cublas_wrappers.cuh
+      include/awnndevice/device_utils_harness.cuh
 
-    src-device/tensor.cu
-    src-device/layer_pool.cu
-    src-device/layer_conv_device.cu
-    src-device/layer_sandwich_device.cu
-    src-device/cublas_wrappers.cu
-    src-device/device_utils_harness.cu
+      src-device/tensor.cu
+      src-device/layer_pool.cu
+      src-device/layer_conv_device.cu
+      src-device/layer_sandwich_device.cu
+      src-device/cublas_wrappers.cu
+      src-device/device_utils_harness.cu
   )
+  if(USE_CUDNN)
+    list(APPEND awnndevicelib_SOURCES
+        src/layer_conv_cudnn.cu)
+    add_subdirectory(examples/mnistCUDNN)
+  endif(USE_CUDNN)
 
-  target_link_libraries(awnndevicelib cudart cublas)
+  cuda_add_library(awnndevicelib ${awnndevicelib_SOURCES})
 
+  target_link_libraries(awnndevicelib cudart cudnn cublas)
   set(AWNN_DEVICE_LIBS "awnndevicelib")
 endif(USE_CUDA)
-
-if(USE_CUDA AND USE_CUDNN)
-  add_subdirectory(examples/mnistCUDNN)
-endif()
 
 # nnpack and gtest
 add_subdirectory(extern)
@@ -169,4 +171,5 @@ add_subdirectory(extern)
 if(BUILD_TEST)
   enable_testing()
   add_subdirectory(tests)
+  add_subdirectory(bench)
 endif()
