@@ -730,7 +730,7 @@ static __global__ void _do_col2im_inner_device_thread_per_element(
         + stride * w + fj;
 
 #ifdef AWNN_USE_FLT32
-    atomicAdd(&(x_padded.data[target_idx]), d_cols.data[src_idx]); // TODO fix this
+    atomicAdd(&(x_padded.data[target_idx]), d_cols.data[src_idx]);
 #else
     atomicAddDouble(&(x_padded.data[target_idx]), d_cols.data[src_idx]);
 #endif
@@ -845,7 +845,10 @@ status_t convolution_backward_device(cublasHandle_t handle, tensor_t d_dx, tenso
   // 1. tensor transpose 1230 the dout (derivative of output layer)
   uint const d_dout_T_1230_shape[] = { d_dout.dim.dims[1], d_dout.dim.dims[2], d_dout.dim.dims[3], d_dout.dim.dims[0] };
   tensor_t d_dout_T_1230 = tensor_make_device(d_dout_T_1230_shape, ARRAY_SIZE(d_dout_T_1230_shape));
+
+  //////////////////////////////////////////////////////////////////////////////
   _do_tensor_make_transpose_1230_device<<<_transpose_1230_blocks, _transpose_1230_threads>>>(d_dout_T_1230, d_dout);
+  //////////////////////////////////////////////////////////////////////////////
 
   // 2. reshape the dout_T to a 2D shape by collapsing the last 3 dims
   uint d_dout_2d_shape[] = { num_filters, d_dout_T_1230.dim.dims[1] * d_dout_T_1230.dim.dims[2] * d_dout_T_1230.dim.dims[3] };
