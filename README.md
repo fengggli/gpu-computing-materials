@@ -33,7 +33,7 @@ git submodule update --init
 mkdir build
 cd build
 cmake -DUSE_CUDA=on -DUSE_CUDNN=on -DAWNN_USE_FLT32=on -DCMAKE_BUILD_TYPE=Release .. 
-make
+make -j 16
 ```
 
 #### run test
