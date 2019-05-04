@@ -5,9 +5,13 @@
 | master | [![Build Master](https://travis-ci.com/fengggli/gpu-computing-materials.svg?token=21ngWpDjfcY4FxnxdNnA&branch=master)](https://travis-ci.com/fengggli/gpu-computing-materials) |
 | feng | [![Build feng](https://travis-ci.com/fengggli/gpu-computing-materials.svg?token=21ngWpDjfcY4FxnxdNnA&branch=feng)](https://travis-ci.com/fengggli/gpu-computing-materials) |
 
+
 * For the most recent documentations, see [here](https://fengggli.github.io/gpu-computing-materials)
 * There is a changelog in the link above.
 
+## Important: All the GPU-computing class related materials are in the [gpu-computing-submission branch](https://github.com/fengggli/gpu-computing-materials/tree/gpu-computing-submission)
+
+* Because master is also for Feng's research use, we will trim some unused code in gpu-computing-submission branch before we merge it in.
 
 ## Code guideline
 
