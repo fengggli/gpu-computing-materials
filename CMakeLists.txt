@@ -154,16 +154,21 @@ if(USE_CUDA)
       src-device/device_utils_harness.cu
   )
 
-  cuda_add_library(awnndevicelib ${awnndevicelib_SOURCES})
   if(USE_CUDNN)
     list(APPEND awnndevicelib_SOURCES
         src/layer_conv_cudnn.cu)
     add_subdirectory(examples/mnistCUDNN)
-    target_link_libraries(awnndevicelib cudnn)
   endif(USE_CUDNN)
+
+  cuda_add_library(awnndevicelib ${awnndevicelib_SOURCES})
 
 
   target_link_libraries(awnndevicelib cudart cublas)
+
+  if(USE_CUDNN)
+    target_link_libraries(awnndevicelib cudnn)
+  endif(USE_CUDNN)
+
   set(AWNN_DEVICE_LIBS "awnndevicelib")
 endif(USE_CUDA)
 
