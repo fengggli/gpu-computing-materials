@@ -18,9 +18,14 @@ instructions.
 
 #### prepare
 We use openblas for cpu gemm.
+(In sievert you don't need this, since openblas is already installed)
+
 ```
 sudo ./install-apt.sh
 ```
+
+If you use another machine, make sure openblas library 
+and headers are in searchable paths
 
 #### start
 ```
@@ -62,7 +67,8 @@ make
     ```
 
 #### Documentation
-* [Final presentation Slides](https://github.com/fengggli/gpu-computing-materials/blob/test-speed-1-32/docs/Project%20Final%20Presentation.pdf)
+* [Final presentation Slides](/docs/Project%20Final%20Presentation.pdf)
+* [Final Report](/docs/gpu-computing-19/gpu_resnet_project_report.pdf)
 
 * TODO: report 
 
