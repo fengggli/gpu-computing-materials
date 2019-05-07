@@ -1,5 +1,10 @@
-#include "awnndevice/cublas_wrappers.cuh"
+//
+// Created by cmgoebel on 5/5/19.
+//
+
 #include "awnndevice/memory.cuh"
+#include "awnndevice/tensor.cuh"
+#include "awnndevice/cublas_wrappers.cuh"
 
 
 //// transpose call double
@@ -18,6 +23,7 @@ static inline cublasStatus_t cublasTgeam(cublasHandle_t handle,
 }
 
 
+#if(0)
 static cublasStatus_t inline cublasTgeam(cublasHandle_t handle,
                                   cublasOperation_t transa,
                                   cublasOperation_t transb,
@@ -31,7 +37,7 @@ static cublasStatus_t inline cublasTgeam(cublasHandle_t handle,
   return cublasSgeam(handle, transa, transb, m, n, alpha, A, lda,
                      beta, B, ldb, C, ldc);
 }
-
+#endif
 
 
 tensor_t cublas_transpose_launch (cublasHandle_t handle, tensor_t src)
@@ -57,7 +63,7 @@ tensor_t cublas_transpose_launch (cublasHandle_t handle, tensor_t src)
   return trans;
 }
 
-
+#if(0)
 static cublasStatus_t cublasTgemm(cublasHandle_t handle,
                                          cublasOperation_t op_a,
                                          cublasOperation_t op_b,
@@ -69,7 +75,7 @@ static cublasStatus_t cublasTgemm(cublasHandle_t handle,
   return cublasSgemm(handle, op_a, op_b, m, n, k, alpha, A,
                      lda, B, ldb, beta, C, ldc);
 }
-
+#endif
 
 static cublasStatus_t cublasTgemm(cublasHandle_t handle,
                                          cublasOperation_t op_a,

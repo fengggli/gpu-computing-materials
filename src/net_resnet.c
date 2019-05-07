@@ -12,9 +12,9 @@ static conv_param_t conv_param;
 status_t resnet_init(
     model_t *model,   // output
     dim_t input_dim,  // NCHW
-    uint output_dim,  // nr_classes
-    uint nr_stages,
-    uint nr_blocks[MAX_STAGES],  // how many residual blocks in each stage
+    int output_dim,  // nr_classes
+    int nr_stages,
+    int nr_blocks[MAX_STAGES],  // how many residual blocks in each stage
     T reg, normalize_method_t normalize_method) {
   AWNN_NO_USE(normalize_method);
   // save this configuration
@@ -23,7 +23,7 @@ status_t resnet_init(
 
   model->nr_stages = nr_stages;
   model->reg = reg;
-  for (uint i = 0; i < MAX_STAGES; ++i) {
+  for (int i = 0; i < MAX_STAGES; ++i) {
     if (i < nr_stages)
       model->nr_blocks[i] = nr_blocks[i];
     else
@@ -46,12 +46,12 @@ status_t resnet_init(
   char out_name[MAX_STR_LENGTH];
   char cache_name[MAX_STR_LENGTH];
 
-  uint N = input_dim.dims[0];
-  uint C = input_dim.dims[1];  // 3.
-  uint H = input_dim.dims[2];
+  int N = input_dim.dims[0];
+  int C = input_dim.dims[1];  // 3.
+  int H = input_dim.dims[2];
 
-  uint filter_sz = 3;
-  uint nr_filter = 16;
+  int filter_sz = 3;
+  int nr_filter = 16;
   /*
    * I.  preparation
    */
@@ -62,7 +62,7 @@ status_t resnet_init(
   net_attach_param(model->list_layer_in, in_name, in, din);
 
   // prepare and init weights
-  uint w_shape[] = {nr_filter, C, filter_sz, filter_sz};
+  int w_shape[] = {nr_filter, C, filter_sz, filter_sz};
   tensor_t w = tensor_make(w_shape, 4);
   tensor_t dw = tensor_make(w_shape, 4);
   char w_name[MAX_STR_LENGTH];
@@ -71,10 +71,10 @@ status_t resnet_init(
   weight_init_kaiming(w);
 
   // layer out
-  uint feature_sz =
-      1 + (H + 2 * conv_param.padding - filter_sz) / (uint)conv_param.stride;
+  int feature_sz =
+      1 + (H + 2 * conv_param.padding - filter_sz) / (int)conv_param.stride;
   AWNN_CHECK_EQ(feature_sz, 32);
-  uint out_shape[] = {N, nr_filter, feature_sz, feature_sz};
+  int out_shape[] = {N, nr_filter, feature_sz, feature_sz};
   out = tensor_make(out_shape, 4);
   dout = tensor_make(out_shape, 4);
   snprintf(out_name, MAX_STR_LENGTH, "conv1.out");
@@ -89,8 +89,8 @@ status_t resnet_init(
   /*
    * II.  main stage
    */
-  for (uint i_stage = 1; i_stage <= nr_stages; i_stage++) {
-    for (uint i_blk = 1; i_blk <= nr_blocks[i_stage - 1]; i_blk++) {
+  for (int i_stage = 1; i_stage <= nr_stages; i_stage++) {
+    for (int i_blk = 1; i_blk <= nr_blocks[i_stage - 1]; i_blk++) {
       char prefix[MAX_STR_LENGTH];
       snprintf(prefix, MAX_STR_LENGTH, "layer%u.%u", i_stage, i_blk);
 
@@ -101,7 +101,7 @@ status_t resnet_init(
       net_attach_param(model->list_layer_in, in_name, in, din);
 
       // weight
-      uint w_shape[] = {nr_filter, C, filter_sz, filter_sz};
+      int w_shape[] = {nr_filter, C, filter_sz, filter_sz};
 
       tensor_t w1 = tensor_make(w_shape, 4);
       tensor_t dw1 = tensor_make_alike(w1);
@@ -119,10 +119,10 @@ status_t resnet_init(
       weight_init_kaiming(w2);
 
       // out
-      uint feature_sz =
-          1 + (H + 2 * conv_param.padding - filter_sz) / (uint)conv_param.stride;
+      int feature_sz =
+          1 + (H + 2 * conv_param.padding - filter_sz) / (int)conv_param.stride;
       AWNN_CHECK_EQ(feature_sz, 32);
-      uint out_shape[] = {N, nr_filter, feature_sz, feature_sz};
+      int out_shape[] = {N, nr_filter, feature_sz, feature_sz};
       out = tensor_make(out_shape, 4);
       dout = tensor_make(out_shape, 4);
       snprintf(out_name, MAX_STR_LENGTH, "%s.out", prefix);
@@ -143,7 +143,7 @@ status_t resnet_init(
   net_attach_param(model->list_layer_in, in_name, in, din);
 
   // out
-  uint pool_shape[] = {N, 16, 1, 1};
+  int pool_shape[] = {N, 16, 1, 1};
   out = tensor_make(pool_shape, 4);
   dout = tensor_make(pool_shape, 4);
   snprintf(out_name, MAX_STR_LENGTH, "pool.out");
@@ -161,13 +161,13 @@ status_t resnet_init(
   net_attach_param(model->list_layer_in, in_name, in, din);
 
   // weight
-  uint weight_shape_fc[] = {C, output_dim};
+  int weight_shape_fc[] = {C, output_dim};
   tensor_t w_fc = tensor_make(weight_shape_fc, 2);
   tensor_t dw_fc = tensor_make_alike(w_fc);
   net_attach_param(model->list_all_params, "fc.weight", w_fc, dw_fc);
 
   // bias
-  uint bias_shape_fc[] = {output_dim};
+  int bias_shape_fc[] = {output_dim};
   tensor_t b_fc = tensor_make(bias_shape_fc, 1);
   tensor_t db_fc = tensor_make_alike(b_fc);
   net_attach_param(model->list_all_params, "fc.bias", b_fc, db_fc);
@@ -175,7 +175,7 @@ status_t resnet_init(
   weight_init_fc_kaiming(w_fc, b_fc);
 
   // out
-  uint fc_shape[] = {N, output_dim};
+  int fc_shape[] = {N, output_dim};
   out = tensor_make(fc_shape, 2);
   dout = tensor_make(fc_shape, 2);
   snprintf(out_name, MAX_STR_LENGTH, "fc.out");
@@ -218,8 +218,8 @@ tensor_t _do_resnet_forward(model_t const *model, tensor_t x,
   /*
    * II.  main stage
    */
-  for (uint i_stage = 1; i_stage <= model->nr_stages; i_stage++) {
-    for (uint i_blk = 1; i_blk <= model->nr_blocks[i_stage - 1]; i_blk++) {
+  for (int i_stage = 1; i_stage <= model->nr_stages; i_stage++) {
+    for (int i_blk = 1; i_blk <= model->nr_blocks[i_stage - 1]; i_blk++) {
       char prefix[MAX_STR_LENGTH];
       snprintf(prefix, MAX_STR_LENGTH, "layer%u.%u", i_stage, i_blk);
 
@@ -303,8 +303,8 @@ status_t resnet_backward(model_t const *model, tensor_t dout, T *ptr_loss) {
   dout = din;
 
   /* residual blocks*/
-  for (uint i_stage = model->nr_stages; i_stage != 0; i_stage--) {
-    for (uint i_blk = model->nr_blocks[i_stage - 1]; i_blk != 0; i_blk--) {
+  for (int i_stage = model->nr_stages; i_stage != 0; i_stage--) {
+    for (int i_blk = model->nr_blocks[i_stage - 1]; i_blk != 0; i_blk--) {
       char prefix[MAX_STR_LENGTH];
       snprintf(prefix, MAX_STR_LENGTH, "layer%u.%u", i_stage, i_blk);
 

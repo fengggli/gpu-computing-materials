@@ -3,6 +3,7 @@
 //
 
 #include "awnndevice/memory.cuh"
+#include "awnndevice/tensor.cuh"
 #include "awnndevice/device_utils.cuh"
 #include "awnndevice/device_utils_harness.cuh"
 

@@ -100,7 +100,7 @@ T tensor_get_sum(tensor_t t) {
 }
 
 void tensor_fill_random(tensor_t t, int seed) {
-  srand(seed);
+  srand((uint)seed);
   int capacity = dim_get_capacity(t.dim);
   int i;
   for (i = 0; i < capacity; i++) {
@@ -111,7 +111,7 @@ void tensor_fill_random(tensor_t t, int seed) {
 void tensor_fill_random_uniform(tensor_t t, double const low, double const high,
                                 int seed) {
   assert(high > low);
-  srand(seed);
+  srand((uint)seed);
   int capacity = dim_get_capacity(t.dim);
   int i;
   for (i = 0; i < capacity; i++) {

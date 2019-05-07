@@ -1,4 +1,5 @@
 #include "awnndevice/memory.cuh"
+#include "awnndevice/tensor.cuh"
 #include "awnndevice/layer_pool.cuh"
 
 /* Forward kernel */

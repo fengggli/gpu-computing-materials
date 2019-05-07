@@ -29,7 +29,6 @@ if(USE_CUDA)
     target_link_libraries(test-resblock-device ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} gtest)
     add_test(test-resblock-device test-resblock-device)
 
-
     add_executable(test-cublas-device-op test_cublas_device_op.cpp)
     target_link_libraries(test-cublas-device-op ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} cudart cublas gtest)
     add_test(test-cublas-device-op test-cublas-device-op)
@@ -38,6 +37,9 @@ if(USE_CUDA)
     target_link_libraries(test-device-util ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} cudart cublas gtest)
     add_test(test-device-util test-device-util)
 
+    add_executable(test-mem-op-device test_mem_op_device.cpp)
+    target_link_libraries(test-mem-op-device ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} cudart cublas gtest)
+    add_test(test-mem-op-device test-mem-op-device)
 endif(USE_CUDA)
 
 if(USE_CUDA AND USE_CUDNN)

@@ -36,6 +36,7 @@ if(USE_STRICT_CHECK)
   set(GCC_COVERAGE_COMPILE_FLAGS "-pedantic ${GCC_COVERAGE_COMPILE_FLAGS}")
 endif()
 
+
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 project(awnn LANGUAGES C CXX)
@@ -147,6 +148,7 @@ if(USE_CUDA)
       include/awnndevice/device_utils_harness.cuh
       include/awnndevice/memory.cuh
       include/awnndevice/layer_pool.cuh
+      include/awnndevice/tensor.cuh
 
       src-device/tensor.cu
       src-device/layer_pool.cu

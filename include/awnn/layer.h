@@ -16,6 +16,7 @@ extern "C" {
 
 
 #define MAX_CACHE_SIZE (10)
+
 /*
  * @brief layer cache
  *
@@ -31,6 +32,7 @@ typedef struct {
   char name[MAX_STR_LENGTH];
   struct list_head list;  // for inter-layer traversal
 } lcache_t;
+
 void lcache_push(lcache_t *cache, tensor_t t);
 tensor_t lcache_pop(lcache_t *cache);
 void make_empty_lcache(lcache_t *cache);

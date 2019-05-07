@@ -1,8 +1,13 @@
+//
+// Created by cmgoebel on 5/5/19.
+//
+
 #include "awnn/common.h"
 
 #include "awnndevice/memory.cuh"
-#include "awnndevice/cublas_wrappers.cuh"
+#include "awnndevice/tensor.cuh"
 #include "awnndevice/device_utils.cuh"
+#include "awnndevice/cublas_wrappers.cuh"
 #include "awnndevice/layer_conv_device.cuh"
 
 static int _im2col_inner_blocks{ 1 };
@@ -360,6 +365,7 @@ static __global__ void _do_im2col_inner_device_naive_thread_per_filter(
  * thread per filter, I allocate 1 thread per element.  This means
  * a significantly higher degree of parallelism can be achieved.
  */
+#if(0)
 static __global__ void _do_im2col_inner_device_thread_per_element(
     tensor_t cols, tensor_t x_padded, int N, int C, int H, int W, int HH,
     int WW, int filter_height, int filter_width, int padding, int stride)
@@ -410,6 +416,7 @@ static __global__ void _do_im2col_inner_device_thread_per_element(
     cols.data[target_idx] = x_padded.data[src_idx]; // do copy
   }
 }
+#endif // if(0)
 
 /**
  * im2col_inner_device is a setup function for the real call to
@@ -692,6 +699,7 @@ static __global__ void _do_col2im_inner_device_thread_per_filter(
 }
 
 
+#if(0)
 static __global__ void _do_col2im_inner_device_thread_per_element(
     tensor_t d_cols, tensor_t x_padded, int N, int C, int H, int W, int HH,
     int WW, int field_height, int field_width, int padding, int stride)
@@ -735,6 +743,7 @@ static __global__ void _do_col2im_inner_device_thread_per_element(
 #endif
   }
 }
+#endif // if(0)
 
 void col2im_inner_device(tensor_t cols, tensor_t x_padded, int N, int C, int H, int W, int HH, int WW, int field_height, int field_width, int padding, int stride) {
   tensor_t d_cols       = tensor_make_copy_h2d(cols);

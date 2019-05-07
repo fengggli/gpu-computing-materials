@@ -51,13 +51,6 @@ static inline void mem_free(void* data) {
   }
 }
 
-void* mem_alloc_device(size_t size);
-
-int mem_free_device(void* data);
-
-
-
-
 #ifdef __cplusplus
 }
 #endif

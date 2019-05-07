@@ -4,7 +4,7 @@
 #include <math.h>
 
 label_t *label_make_random(int nr_elem, int range){
-  label_t *labels = (label_t*)mem_alloc(sizeof(label_t)*nr_elem);
+  label_t *labels = (label_t*)mem_alloc(sizeof(label_t)*(uint)nr_elem);
   for(int i =0; i< nr_elem; i++){
     labels[i] = ((int)rand())%range;
   }

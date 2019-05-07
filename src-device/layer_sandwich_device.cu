@@ -1,9 +1,10 @@
 #include "awnn/common.h"
 #include "awnn/memory.h"
-#include "awnndevice/memory.cuh"
 
-#include "awnndevice/cublas_wrappers.cuh"
+#include "awnndevice/memory.cuh"
+#include "awnndevice/tensor.cuh"
 #include "awnndevice/device_utils.cuh"
+#include "awnndevice/cublas_wrappers.cuh"
 #include "awnndevice/layer_conv_device.cuh"
 #include "awnndevice/layer_sandwich_device.cuh"
 

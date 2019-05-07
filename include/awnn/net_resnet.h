@@ -27,9 +27,9 @@ typedef enum {
 
 typedef struct model {
   dim_t input_dim;
-  uint output_dim;
-  uint nr_stages;
-  uint nr_blocks[MAX_STAGES];
+  int output_dim;
+  int nr_stages;
+  int nr_blocks[MAX_STAGES];
   T reg;
 
   struct list_head list_all_params[1];   // list of all learnable params
@@ -41,9 +41,9 @@ typedef struct model {
 status_t resnet_init(
     model_t *model,  // output
     dim_t input_dim,
-    uint output_dim,  // nr_classes
-    uint nr_stages,
-    uint nr_blocks[MAX_STAGES],  // how many residual blocks in each stage
+    int output_dim,  // nr_classes
+    int nr_stages,
+    int nr_blocks[MAX_STAGES],  // how many residual blocks in each stage
     T reg, normalize_method_t normalize_method);
 
 /*
