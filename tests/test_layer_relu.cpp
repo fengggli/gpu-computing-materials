@@ -55,7 +55,7 @@ tensor_t LayerReluTest::x;
 lcache_t LayerReluTest::cache;
 
 TEST_F(LayerReluTest, Construct) {
-  uint const shape_x[] = {3, 4};  // e.g. 2 images, 4 channels, width =5 hight=6
+  int const shape_x[] = {3, 4};  // e.g. 2 images, 4 channels, width =5 hight=6
   x = tensor_make_linspace(-0.5, 0.5, shape_x, dim_of_shape(shape_x));
 
   make_empty_lcache(&cache);

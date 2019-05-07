@@ -1,11 +1,13 @@
-#include <stdlib.h>
 #include "awnn/common.h"
 #include "awnn/memory.h"
+#include "awnndevice/memory.cuh"
 
 #include "awnndevice/cublas_wrappers.cuh"
 #include "awnndevice/device_utils.cuh"
 #include "awnndevice/layer_conv_device.cuh"
 #include "awnndevice/layer_sandwich_device.cuh"
+
+#include <stdlib.h>
 
 /** Destroy all cache only for this context*/
 void layer_context_destroy_device(struct layer_context_device* context) {
@@ -14,13 +16,13 @@ void layer_context_destroy_device(struct layer_context_device* context) {
 }
 
 __global__ void do_device_relu_forward(tensor_t d_x, tensor_t d_y) {
-  for (uint i : grid_stride_range(0u, d_capacity(d_x))) {
+  for (int i : grid_stride_range(0, d_capacity(d_x))) {
     d_y.data[i] = d_x.data[i] > 0 ? d_x.data[i] : 0.0;
   }
 }
 __global__ void do_device_relu_backward(tensor_t d_dx, tensor_t d_x,
                                         tensor_t d_dy) {
-  for (uint i : grid_stride_range(0u, d_capacity(d_x))) {
+  for (int i : grid_stride_range(0, d_capacity(d_x))) {
     d_dx.data[i] = d_x.data[i] > 0 ? d_dy.data[i] : 0.0;
   }
 }
@@ -127,12 +129,12 @@ status_t conv_iden_relu_backward_device(cublasHandle_t handle, tensor_t d_dx,
 void resblock_create_context_device(struct layer_context_device** ptr_context,
                                     tensor_t d_y) {
   // one context for this layer, the other two for its children
-  uint nr_child_context = 2;
+  int nr_child_context = 2;
   *ptr_context = (struct layer_context_device*)mem_alloc(
       sizeof(struct layer_context_device) * (2 + nr_child_context));
 
   struct layer_context_device* context = *ptr_context;
-  for (uint i = 0; i < nr_child_context + 2; i++) {
+  for (int i = 0; i < nr_child_context + 2; i++) {
     context[i].d_tmp = tensor_make_alike_device(d_y);
     context[i].d_dtmp = tensor_make_alike_device(d_y);
   }
@@ -140,8 +142,8 @@ void resblock_create_context_device(struct layer_context_device** ptr_context,
 
 /** Free cache memory for this and all its childer layers */
 void resblock_destroy_context_device(struct layer_context_device* context) {
-  uint nr_child_context = 2;
-  for (uint i = 0; i < nr_child_context + 2; i++) {
+  int nr_child_context = 2;
+  for (int i = 0; i < nr_child_context + 2; i++) {
     layer_context_destroy_device(&context[i]);
   }
   mem_free(context);

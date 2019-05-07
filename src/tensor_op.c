@@ -9,14 +9,14 @@
 
 // used for forward
 tensor_t tensor_make_transpose_3012(tensor_t t) {
-  uint target_idx = 0;
+  int target_idx = 0;
   tensor_t tpose = tensor_make_copy(t);
-  for (uint i = 0; i < t.dim.dims[3]; ++i) {  // for each of the new dim 0
-    for (uint j = 0; j < t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2]; ++j) {
+  for (int i = 0; i < t.dim.dims[3]; ++i) {  // for each of the new dim 0
+    for (int j = 0; j < t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2]; ++j) {
       tpose.data[target_idx++] = t.data[i + j * t.dim.dims[3]];
     }
   }
-  uint const shape[] = { t.dim.dims[3], t.dim.dims[0], t.dim.dims[1], t.dim.dims[2] };
+  int const shape[] = { t.dim.dims[3], t.dim.dims[0], t.dim.dims[1], t.dim.dims[2] };
   tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
   return tpose;
 }
@@ -28,20 +28,20 @@ tensor_t tensor_make_transpose_3012(tensor_t t) {
  * a translation to cuda
  */
 tensor_t tensor_make_transpose_3012(tensor_t t) {
-  uint mod = t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2];
-  uint capacity = tensor_get_capacity(t);
-  uint stride = t.dim.dims[3];
+  int mod = t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2];
+  int capacity = tensor_get_capacity(t);
+  int stride = t.dim.dims[3];
 
   tensor_t tpose = tensor_make_copy(t);
 
-  for (uint i = 0; i < capacity; ++i) {
-    uint src_idx = i / mod;
+  for (int i = 0; i < capacity; ++i) {
+    int src_idx = i / mod;
     src_idx += (i % mod) * stride;
     tpose.data[i] = t.data[src_idx];
     printf("targetIdx=%u, src_idx=%u\n", i, src_idx);
   }
 
-  uint const shape[] = { t.dim.dims[3], t.dim.dims[0], t.dim.dims[1], t.dim.dims[2] };
+  int const shape[] = { t.dim.dims[3], t.dim.dims[0], t.dim.dims[1], t.dim.dims[2] };
   tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
   return tpose;
 }
@@ -50,22 +50,22 @@ tensor_t tensor_make_transpose_3012(tensor_t t) {
 
 // used for backward
 tensor_t tensor_make_transpose_1230(tensor_t t) {
-  uint src_idx = 0, target_idx = 0;
-  uint original_dim_0 = t.dim.dims[0];
-  uint original_dim_1 = t.dim.dims[1];
-  uint original_dim_2 = t.dim.dims[2];
-  uint original_dim_3 = t.dim.dims[3];
+  int src_idx = 0, target_idx = 0;
+  int original_dim_0 = t.dim.dims[0];
+  int original_dim_1 = t.dim.dims[1];
+  int original_dim_2 = t.dim.dims[2];
+  int original_dim_3 = t.dim.dims[3];
 
   tensor_t tpose = tensor_make_copy(t);
 
-  for (uint i = 0; i < original_dim_0; ++i) {
-    for (uint j = 0; j < original_dim_1 * original_dim_2 * original_dim_3; ++j) {
+  for (int i = 0; i < original_dim_0; ++i) {
+    for (int j = 0; j < original_dim_1 * original_dim_2 * original_dim_3; ++j) {
       target_idx = (i + j * original_dim_0);
       tpose.data[target_idx] = t.data[src_idx++];
     }
   }
 
-  uint const shape[] = { original_dim_1, original_dim_2, original_dim_3, original_dim_0 };
+  int const shape[] = { original_dim_1, original_dim_2, original_dim_3, original_dim_0 };
   tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
   return tpose;
 }
@@ -73,20 +73,20 @@ tensor_t tensor_make_transpose_1230(tensor_t t) {
 #if 0
 // used for backward
 tensor_t tensor_make_transpose_1230(tensor_t t) {
-  uint src_idx = 0, target_idx = 0;
-  uint original_dim_0 = t.dim.dims[0];
-  uint og_dim_1 = t.dim.dims[1];
-  uint og_dim_2 = t.dim.dims[2];
-  uint og_dim_3 = t.dim.dims[3];
+  int src_idx = 0, target_idx = 0;
+  int original_dim_0 = t.dim.dims[0];
+  int og_dim_1 = t.dim.dims[1];
+  int og_dim_2 = t.dim.dims[2];
+  int og_dim_3 = t.dim.dims[3];
 
   tensor_t tpose = tensor_make_copy(t);
 
-  uint abc = og_dim_1 * og_dim_2 * og_dim_3;
+  int abc = og_dim_1 * og_dim_2 * og_dim_3;
 
-  uint iter = 0;
-  for (uint i = 0; i < original_dim_0; ++i) {
-    for (uint j = 0; j < og_dim_1 * og_dim_2 * og_dim_3; ++j) {
-      uint tidx = (iter / abc);
+  int iter = 0;
+  for (int i = 0; i < original_dim_0; ++i) {
+    for (int j = 0; j < og_dim_1 * og_dim_2 * og_dim_3; ++j) {
+      int tidx = (iter / abc);
       tidx += (iter % abc) * original_dim_0;
 
       target_idx = (i + j * original_dim_0);
@@ -97,7 +97,7 @@ tensor_t tensor_make_transpose_1230(tensor_t t) {
     }
   }
 
-  uint const shape[] = { og_dim_1, og_dim_2, og_dim_3, original_dim_0 };
+  int const shape[] = { og_dim_1, og_dim_2, og_dim_3, original_dim_0 };
   tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
   return tpose;
 }
@@ -125,9 +125,9 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
     print_trace();
     goto end;
   }
-  uint m = in1.dim.dims[0];
-  uint k = in1.dim.dims[1];
-  uint n = in2.dim.dims[1];
+  int m = in1.dim.dims[0];
+  int k = in1.dim.dims[1];
+  int n = in2.dim.dims[1];
 
   // PDBG("mnk = [%u, %u, %u]", m,n,k);
 
@@ -146,7 +146,7 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
               1, in1.data, (int)k, in2.data, (int)n, 1.0, out.data, (int)n);
 #endif
 #else
-  uint ii, jj, kk; // A[i.j] with B[j,k]
+  int ii, jj, kk; // A[i.j] with B[j,k]
   for(ii = 0; ii < m; ii++){
     for(kk = 0; kk < n; kk++){
       T tmp = 0;
@@ -193,15 +193,15 @@ status_t tensor_elemwise_op_inplace(tensor_t to, tensor_t from, tensor_op_t op){
 
 T tensor_sum_of_square(tensor_t const t) {
   T ret = 0;
-  for (uint i = 0; i < tensor_get_capacity(t); i++) {
+  for (int i = 0; i < tensor_get_capacity(t); i++) {
     ret += (t.data[i]) * (t.data[i]);
   }
   return ret;
 }
 
 status_t tensor_copy(tensor_t out, tensor_t in){
-  uint i;
-  uint capacity = dim_get_capacity(out.dim);
+  int i;
+  int capacity = dim_get_capacity(out.dim);
   if( S_OK == dim_is_same(out.dim, in.dim)){
     for(i = 0; i < capacity; i++){
       out.data[i] = in.data[i];
@@ -234,9 +234,9 @@ status_t tensor_add_vector_inplace(tensor_t t, tensor_t v) {
     print_trace();
     return S_ERR;
   }
-  uint v_capacity = v.dim.dims[0];
-  uint d1 = 1;
-  uint i_dim;
+  int v_capacity = v.dim.dims[0];
+  int d1 = 1;
+  int i_dim;
   for(i_dim = 0; i_dim < tensor_get_ndims(t) -1; i_dim++ ){
     d1 *= t.dim.dims[i_dim];
   }
@@ -246,9 +246,9 @@ status_t tensor_add_vector_inplace(tensor_t t, tensor_t v) {
     return S_ERR;
   }
 
-  uint const tmp_shape[] = {d1, v_capacity};
+  int const tmp_shape[] = {d1, v_capacity};
   tensor_reshape_(&t, tmp_shape, 2); // reshape to 2d
-  for( uint i = 0; i< d1; i++ ){
+  for( int i = 0; i< d1; i++ ){
     _add(t.data + i*v_capacity, v.data, v_capacity);
   }
   t.dim = old_dim;
@@ -256,9 +256,9 @@ status_t tensor_add_vector_inplace(tensor_t t, tensor_t v) {
   // v should fit the last dimension
 }
 
-status_t tensor_reshape_(tensor_t* ptr_t, uint const shape[], uint const ndims){
+status_t tensor_reshape_(tensor_t* ptr_t, int const shape[], int const ndims){
   dim_t req_dim;
-  uint i;
+  int i;
   if(ndims == 0){
     PINF("make zero");
     req_dim = make_dim(0,0);
@@ -272,8 +272,8 @@ status_t tensor_reshape_(tensor_t* ptr_t, uint const shape[], uint const ndims){
       req_dim.dims[i] = 0;
   }
 
-  uint original_capacity = dim_get_capacity(ptr_t->dim);
-  uint requested_capacity = dim_get_capacity(req_dim);
+  int original_capacity = dim_get_capacity(ptr_t->dim);
+  int requested_capacity = dim_get_capacity(req_dim);
 
   if(requested_capacity != original_capacity){
     PERR("[tensor reshape]: dimension not matched");
@@ -290,8 +290,8 @@ status_t tensor_reshape_(tensor_t* ptr_t, uint const shape[], uint const ndims){
 
 
 status_t tensor_reshape_flat_(tensor_t * t) {
-  uint capacity = dim_get_capacity(t->dim);
-  uint shape[MAX_DIM];
+  int capacity = dim_get_capacity(t->dim);
+  int shape[MAX_DIM];
   int i;
   for (i = 0; i < MAX_DIM - 1; ++i) {
     shape[i] = 1;
@@ -305,9 +305,9 @@ status_t tensor_reshape_flat_(tensor_t * t) {
 void tensor_print_flat(tensor_t t) {
   assert(t.mem_type == CPU_MEM);
 
-  uint capacity = tensor_get_capacity(t);
+  int capacity = tensor_get_capacity(t);
   printf("[");
-  uint i;
+  int i;
   for (i = 0; i < capacity - 1; ++i) {
     printf("%.10f, ", t.data[i]);
   }

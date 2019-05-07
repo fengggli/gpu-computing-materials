@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.5)
 option(IS_CI_BUILD "Is a build for CI" OFF) # Reduce problem size if it is run in CI
 option(USE_OPENBLAS "USE openblas for blas" ON)
 option(USE_CUDA "Build with CUDA" OFF)
-option(DEBUG_GPU_FUNC_ENTRY_NOTIFY "Print device function names upon function call" ON)
+option(DEBUG_GPU_FUNC_ENTRY_NOTIFY "Print device function names upon function call" OFF)
 option(USE_CUDNN "Build with CUDNN" OFF)
 option(USE_NNPACK "Build with NNPACK" OFF)
 option(AWNN_USE_FLT32 "Use single precision floating point" OFF)
@@ -145,6 +145,8 @@ if(USE_CUDA)
       include/awnndevice/layer_sandwich_device.cuh
       include/awnndevice/cublas_wrappers.cuh
       include/awnndevice/device_utils_harness.cuh
+      include/awnndevice/memory.cuh
+      include/awnndevice/layer_pool.cuh
 
       src-device/tensor.cu
       src-device/layer_pool.cu
@@ -152,6 +154,7 @@ if(USE_CUDA)
       src-device/layer_sandwich_device.cu
       src-device/cublas_wrappers.cu
       src-device/device_utils_harness.cu
+      src-device/memory.cu
   )
 
   if(USE_CUDNN)
@@ -161,8 +164,6 @@ if(USE_CUDA)
   endif(USE_CUDNN)
 
   cuda_add_library(awnndevicelib ${awnndevicelib_SOURCES})
-
-
   target_link_libraries(awnndevicelib cudart cublas)
 
   if(USE_CUDNN)
@@ -170,6 +171,9 @@ if(USE_CUDA)
   endif(USE_CUDNN)
 
   set(AWNN_DEVICE_LIBS "awnndevicelib")
+
+  add_executable(cuda-leaktest leakcheck.cpp)
+  target_link_libraries(cuda-leaktest ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} cudart cublas)
 endif(USE_CUDA)
 
 # nnpack and gtest

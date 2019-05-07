@@ -3,10 +3,10 @@
 #include "awnn/memory.h"
 #include <math.h>
 
-label_t *label_make_random(uint nr_elem, uint range){
+label_t *label_make_random(int nr_elem, int range){
   label_t *labels = (label_t*)mem_alloc(sizeof(label_t)*nr_elem);
-  for(uint i =0; i< nr_elem; i++){
-    labels[i] = ((uint)rand())%range;
+  for(int i =0; i< nr_elem; i++){
+    labels[i] = ((int)rand())%range;
   }
   return labels;
 }
@@ -20,12 +20,12 @@ status_t loss_softmax(tensor_t const x, label_t const * real_labels, T *ptr_loss
   status_t ret = S_ERR;
 
   tensor_t scores = tensor_make_copy(x);
-  const uint cnt_imgs = scores.dim.dims[0];
-  const uint cnt_classes = scores.dim.dims[1];
+  const int cnt_imgs = scores.dim.dims[0];
+  const int cnt_classes = scores.dim.dims[1];
 
   T loss = 0;
 
-  for(uint i_img = 0 ; i_img < cnt_imgs; ++i_img){
+  for(int i_img = 0 ; i_img < cnt_imgs; ++i_img){
     label_t this_label = real_labels[i_img];
     if(this_label >= cnt_classes){
       PERR("label id should be between [0, %u]", cnt_classes);
@@ -35,10 +35,10 @@ status_t loss_softmax(tensor_t const x, label_t const * real_labels, T *ptr_loss
     T sum_exp_this_img = 0;
 
     // get the maximum score
-    for(uint i_class = 0; i_class < cnt_classes; ++i_class){
+    for(int i_class = 0; i_class < cnt_classes; ++i_class){
       if(scores.data[i_img * cnt_classes + i_class] > max_score) max_score = scores.data[i_img * cnt_classes + i_class];
     }
-    for(uint i_class = 0; i_class < cnt_classes; ++i_class){
+    for(int i_class = 0; i_class < cnt_classes; ++i_class){
       scores.data[i_img * cnt_classes + i_class] -= max_score; // subtract maximum for numerical stability
       T tmp_exp = exp(scores.data[i_img * cnt_classes + i_class]);
       sum_exp_this_img += tmp_exp;
@@ -51,7 +51,7 @@ status_t loss_softmax(tensor_t const x, label_t const * real_labels, T *ptr_loss
     }
 
     if(mode != MODE_INFER){
-      for(uint i_class = 0; i_class < cnt_classes; ++i_class){
+      for(int i_class = 0; i_class < cnt_classes; ++i_class){
         T point_gradient = dx.data[i_img * cnt_classes + i_class];
         point_gradient/=(sum_exp_this_img);
         if(i_class == this_label){

@@ -11,8 +11,8 @@
 #include "awnn/tensor.h"
 #include "utils/weight_init.h"
 
-status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
-                  uint output_dim, uint nr_hidden_layers, uint hidden_dims[],
+status_t mlp_init(model_t *model, int max_batch_sz, int input_dim,
+                  int output_dim, int nr_hidden_layers, int hidden_dims[],
                   T reg) {
   status_t ret = S_ERR;
 
@@ -22,7 +22,7 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
   model->output_dim = output_dim;
   model->nr_hidden_layers = nr_hidden_layers;
   model->reg = reg;
-  for (uint i = 0; i < MAX_DIM; ++i) {
+  for (int i = 0; i < MAX_DIM; ++i) {
     if (i < nr_hidden_layers)
       model->hidden_dims[i] = hidden_dims[i];
     else
@@ -39,8 +39,8 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
   tensor_t out_prev;
   tensor_t dout_prev;
 
-  for (uint i = 0; i < nr_hidden_layers + 1; ++i) {
-    uint fan_in, fan_out;
+  for (int i = 0; i < nr_hidden_layers + 1; ++i) {
+    int fan_in, fan_out;
     fan_in = (i == 0 ? input_dim : hidden_dims[i - 1]);
     fan_out = (i == nr_hidden_layers ? output_dim : hidden_dims[i]);
 
@@ -48,7 +48,7 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
     tensor_t in;
     tensor_t din;
     if (i == 0) {
-      uint in_shape[] = {max_batch_sz, fan_in};
+      int in_shape[] = {max_batch_sz, fan_in};
       in = tensor_make_placeholder(in_shape, 2);
       din = tensor_make(in_shape, 2);
     } else {
@@ -60,7 +60,7 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
     net_attach_param(model->list_layer_in, in_name, in, din);
 
     // prepare weights
-    uint w_shape[] = {fan_in, fan_out};
+    int w_shape[] = {fan_in, fan_out};
     tensor_t w = tensor_make(w_shape, 2);
     tensor_t dw = tensor_make(w_shape, 2);
     char w_name[MAX_STR_LENGTH];
@@ -68,7 +68,7 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
     net_attach_param(model->list_all_params, w_name, w, dw);
 
     // prepare bias
-    uint b_shape[] = {fan_out};
+    int b_shape[] = {fan_out};
     tensor_t b = tensor_make(b_shape, 1);
     tensor_t db = tensor_make(b_shape, 1);
     char b_name[MAX_STR_LENGTH];
@@ -81,7 +81,7 @@ status_t mlp_init(model_t *model, uint max_batch_sz, uint input_dim,
     weight_init_fc_kaiming(w, b);
 
     // prepare layer output
-    uint out_shape[] = {max_batch_sz, fan_out};
+    int out_shape[] = {max_batch_sz, fan_out};
     tensor_t out = tensor_make(out_shape, 2);
     tensor_t dout = tensor_make(out_shape, 2);
     char out_name[MAX_STR_LENGTH];
@@ -116,7 +116,7 @@ status_t mlp_finalize(model_t *model) {
 tensor_t mlp_forward_infer(model_t const *model, tensor_t x) {
   tensor_t layer_input = x;
   tensor_t layer_out;
-  for (uint i = 0; i < model->nr_hidden_layers + 1; i++) {
+  for (int i = 0; i < model->nr_hidden_layers + 1; i++) {
     char w_name[MAX_STR_LENGTH];
     char b_name[MAX_STR_LENGTH];
     snprintf(w_name, MAX_STR_LENGTH, "fc%u.weight", i);
@@ -146,7 +146,7 @@ tensor_t mlp_forward_infer(model_t const *model, tensor_t x) {
 tensor_t mlp_forward(model_t const *model, tensor_t x) {
   tensor_t layer_input = x;
   tensor_t layer_out;
-  for (uint i = 0; i < model->nr_hidden_layers + 1; i++) {
+  for (int i = 0; i < model->nr_hidden_layers + 1; i++) {
     char w_name[MAX_STR_LENGTH];
     char b_name[MAX_STR_LENGTH];
     snprintf(w_name, MAX_STR_LENGTH, "fc%u.weight", i);
@@ -200,7 +200,7 @@ status_t mlp_loss(model_t const *model, tensor_t x, label_t const *labels,
   AWNN_CHECK_EQ(S_OK, loss_softmax(out, labels, &loss, mode, dout));
 
   // backprop
-  uint i = model->nr_hidden_layers;
+  int i = model->nr_hidden_layers;
   while (1) {
     // locate preallocated layer_in gradient
     char in_name[MAX_STR_LENGTH];

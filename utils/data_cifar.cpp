@@ -10,17 +10,17 @@
 
 // This read all data into memory and calculate offset of each batch
 
-const uint C = 3;
-const uint H = 32;
-const uint W = 32;
+const int C = 3;
+const int H = 32;
+const int W = 32;
 
 // cifar 10 training set will be split into train/val
-static const uint nr_train_img = 50000;
-static const uint nr_test_img = 10000;
+static const int nr_train_img = 50000;
+static const int nr_test_img = 10000;
 
 // default train/val split, can be overwritten with cifar_split_train
-static const uint nr_default_train_sz = 49000;
-static const uint nr_default_val_sz = 1000;
+static const int nr_default_train_sz = 49000;
+static const int nr_default_val_sz = 1000;
 
 // mean value from deep 500 dataset/cifar.py
 static const double channel_mean[] = {0.4914, 0.4822, 0.4465};
@@ -38,8 +38,8 @@ void read_image(FILE *file, label_t *label, char *buffer) {
 // Saves a float/double
 // TODO: substract mean
 inline void preprocess_data(char *buffer_str, T *buffer_float, size_t nr_elem) {
-  for (uint i = 0; i < nr_elem; i++) {
-    uint channel_id = i / (H * W);
+  for (int i = 0; i < nr_elem; i++) {
+    int channel_id = i / (H * W);
     // buffer_float[i] = T(buffer_str[i]);
     // normalize to (0, 255) -> (0, 1), then rescale to N(0,1)
     double byte_value = ((unsigned char)(buffer_str[i]) / 255.0);
@@ -52,7 +52,7 @@ inline void preprocess_data(char *buffer_str, T *buffer_float, size_t nr_elem) {
 
 status_t cifar_open(data_loader_t *loader, const char *input_folder) {
   label_t label;
-  uint bytes_per_img = C * H * W;
+  int bytes_per_img = C * H * W;
   char *buffer_str = (char *)mem_alloc(bytes_per_img);
   char inFileName[MAX_STR_LENGTH];
 
@@ -75,7 +75,7 @@ status_t cifar_open(data_loader_t *loader, const char *input_folder) {
     exit(-1);
   }
 
-  for (uint itemid = 0; itemid < nr_train_img; ++itemid) {
+  for (int itemid = 0; itemid < nr_train_img; ++itemid) {
     read_image(data_file, &label, buffer_str);
     loader->label_train[itemid] = label;
     preprocess_data(buffer_str, &loader->data_train[itemid * bytes_per_img],
@@ -101,7 +101,7 @@ status_t cifar_open(data_loader_t *loader, const char *input_folder) {
     exit(-1);
   }
 
-  for (uint itemid = 0; itemid < nr_test_img; ++itemid) {
+  for (int itemid = 0; itemid < nr_test_img; ++itemid) {
     read_image(data_file, &label, buffer_str);
     loader->label_test[itemid] = label;
     preprocess_data(buffer_str, &loader->data_test[itemid * bytes_per_img],
@@ -116,8 +116,8 @@ status_t cifar_open(data_loader_t *loader, const char *input_folder) {
   return S_OK;
 }
 
-status_t cifar_split_train(data_loader_t *loader, uint train_sz,
-                           uint validation_sz) {
+status_t cifar_split_train(data_loader_t *loader, int train_sz,
+                           int validation_sz) {
   if (train_sz + validation_sz > nr_train_img) {
     PERR("train_sz + val_sz > nr_train_img");
     return S_ERR;
@@ -137,15 +137,15 @@ status_t cifar_close(data_loader_t *loader) {
 }
 
 // Finer get
-uint get_train_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
-                     uint batch_id, uint batch_sz) {
-  uint i_start = batch_id * batch_sz;
-  uint i_end = i_start + batch_sz;
+int get_train_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
+                     int batch_id, int batch_sz) {
+  int i_start = batch_id * batch_sz;
+  int i_end = i_start + batch_sz;
 
   if (i_end > loader->train_split) i_end = loader->train_split;
-  uint nr_imgs = i_end - i_start;
+  int nr_imgs = i_end - i_start;
 
-  uint shape_batch[] = {nr_imgs, C, H, W};
+  int shape_batch[] = {nr_imgs, C, H, W};
   x->dim = make_dim_from_arr(4, shape_batch);
   x->data = loader->data_train + i_start * (C * H * W);
   *label = loader->label_train + i_start;
@@ -153,30 +153,30 @@ uint get_train_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
 }
 
 // Finer get
-uint get_validation_batch(data_loader_t const *loader, tensor_t *x,
-                          label_t **label, uint batch_id, uint batch_sz) {
-  uint i_start = batch_id * batch_sz + loader->val_split;
-  uint i_end = i_start + batch_sz;
+int get_validation_batch(data_loader_t const *loader, tensor_t *x,
+                          label_t **label, int batch_id, int batch_sz) {
+  int i_start = batch_id * batch_sz + loader->val_split;
+  int i_end = i_start + batch_sz;
 
   if (i_end > nr_train_img) i_end = nr_train_img;
-  uint nr_imgs = i_end - i_start;
+  int nr_imgs = i_end - i_start;
 
-  uint shape_batch[] = {nr_imgs, C, H, W};
+  int shape_batch[] = {nr_imgs, C, H, W};
   x->dim = make_dim_from_arr(4, shape_batch);
   x->data = loader->data_train + i_start * (C * H * W);
   *label = loader->label_train + i_start;
   return nr_imgs;
 }
 
-uint get_test_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
-                    uint batch_id, uint batch_sz) {
-  uint i_start = batch_id * batch_sz;
-  uint i_end = i_start + batch_sz;
+int get_test_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
+                    int batch_id, int batch_sz) {
+  int i_start = batch_id * batch_sz;
+  int i_end = i_start + batch_sz;
 
   if (i_end > nr_test_img) i_end = nr_test_img;
-  uint nr_imgs = i_end - i_start;
+  int nr_imgs = i_end - i_start;
 
-  uint shape_batch[] = {nr_imgs, C, H, W};
+  int shape_batch[] = {nr_imgs, C, H, W};
   x->dim = make_dim_from_arr(4, shape_batch);
   x->data = loader->data_test + i_start * (C * H * W);
   *label = loader->label_test + i_start;

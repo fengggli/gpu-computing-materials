@@ -48,7 +48,7 @@ tensor_t TensorTest::t;
 
 // Tests that the Foo::Bar() method does Abc.
 TEST_F(TensorTest, Construct) {
-  uint const shape[] = {2, 3, 4};;
+  int const shape[] = {2, 3, 4};;
   t = tensor_make(shape, dim_of_shape(shape));
   EXPECT_TRUE(t.data != nullptr);
 }
@@ -57,56 +57,56 @@ TEST_F(TensorTest, Destroy) { tensor_destroy(&t); }
 
 TEST_F(TensorTest, Dumpd0) {
 
-  uint const shape[] = {0}; // a scalar
+  int const shape[] = {0}; // a scalar
   tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
   tensor_destroy(&tt);
 }
 
 TEST_F(TensorTest, Dumpd1) {
-  uint const shape[] = {2}; // a scalar
+  int const shape[] = {2}; // a scalar
   tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
   tensor_destroy(&tt);
 }
 
 TEST_F(TensorTest, Dumpd2) {
-  uint const shape[] = {2, 3}; // a scalar
+  int const shape[] = {2, 3}; // a scalar
   tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
   tensor_destroy(&tt);
 }
 
 TEST_F(TensorTest, Dumpd3) {
-  uint const shape[] = {2, 3, 4}; // a scalar
+  int const shape[] = {2, 3, 4}; // a scalar
   tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
   tensor_destroy(&tt);
 }
 
 TEST_F(TensorTest, Dumpd4) {
-  uint const shape[] = {2, 3, 4, 5}; // a scalar
+  int const shape[] = {2, 3, 4, 5}; // a scalar
   tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
   tensor_destroy(&tt);
 }
 
 TEST_F(TensorTest, Dumpd4_2) {
-  uint const shape[] = {2, 3, 1, 1}; // a 4-d tensor, but in memory this is the same as {2,3}
+  int const shape[] = {2, 3, 1, 1}; // a 4-d tensor, but in memory this is the same as {2,3}
   tensor_t tt = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_dump(tt);
   tensor_destroy(&tt);
 }
 
 TEST_F(TensorTest, MakeLinspace) {
-  uint const shape[] = {2, 2, 2, 2}; // a scalar
+  int const shape[] = {2, 2, 2, 2}; // a scalar
   tensor_t t1 = tensor_make_linspace(-0.1, 0.1, shape, dim_of_shape(shape));
   tensor_dump(t1);
   tensor_destroy(&t1);
 }
 
 TEST_F(TensorTest, MakeCopy) {
-  uint const shape[] = {2, 3, 4, 5}; // a scalar
+  int const shape[] = {2, 3, 4, 5}; // a scalar
   tensor_t t1 = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_t t2 = tensor_make_copy(t1);
   EXPECT_EQ(S_OK, dim_is_same(t1.dim, t2.dim));
@@ -116,7 +116,7 @@ TEST_F(TensorTest, MakeCopy) {
 }
 
 TEST_F(TensorTest, GetElem) {
-  uint const shape[] = {2, 3, 4}; // a scalar
+  int const shape[] = {2, 3, 4}; // a scalar
   tensor_t t1 = tensor_make_patterned(shape, dim_of_shape(shape));
 
   dim_t loc1 = make_dim(3,0,0,0);
@@ -127,7 +127,7 @@ TEST_F(TensorTest, GetElem) {
 }
 
 TEST_F(TensorTest, MakeTranspose) {
-  uint const shape[] = {3, 4}; // a scalar
+  int const shape[] = {3, 4}; // a scalar
   tensor_t t1 = tensor_make_patterned(shape, dim_of_shape(shape));
   PINF("[-- dump t1]");
   tensor_dump(t1);
@@ -141,9 +141,9 @@ TEST_F(TensorTest, MakeTranspose) {
 }
 
 TEST_F(TensorTest, MakeSum) {
-  uint const shape[] = {3, 4}; // a scalar
+  int const shape[] = {3, 4}; // a scalar
   tensor_t t1 = tensor_make_patterned(shape, dim_of_shape(shape));
-  uint axis_id = 0; // the axis along which sum will be performed.
+  int axis_id = 0; // the axis along which sum will be performed.
   tensor_t t2 = tensor_make_sum(t1, axis_id);
 
   // t2 will have shape [1,4]
@@ -160,7 +160,7 @@ TEST_F(TensorTest, MakeSum) {
 }
 
 TEST_F(TensorTest, RelError) {
-  uint const shape[] = {3, 4}; // a scalar
+  int const shape[] = {3, 4}; // a scalar
   tensor_t t1 = tensor_make_patterned(shape, dim_of_shape(shape));
   tensor_t t2 = tensor_make_copy(t1);
 
@@ -181,7 +181,7 @@ TEST_F(TensorTest, RelError) {
 }
 
 TEST_F(TensorTest, MAKE_EMPTY_WITH_DIM){
-//  uint const shape[] = {6,2};
+//  int const shape[] = {6,2};
   dim_t empty = make_dim(4, 6, 5, 3, 2);
   tensor_t t = tensor_make_empty_with_dim(empty);
 

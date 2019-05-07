@@ -16,12 +16,12 @@ extern "C" {
 void sgd_update(param_t *p_param, T learning_rate);
 void sgd_update_momentum(param_t *p_param, T learning_rate, T momentum);
 
-double check_val_accuracy(data_loader_t *loader, uint val_sz, uint batch_sz,
+double check_val_accuracy(data_loader_t *loader, int val_sz, int batch_sz,
                           model_t const *model,
                           tensor_t (*func_forward_infer)(model_t const *,
                                                          tensor_t));
-double check_train_accuracy(data_loader_t *loader, uint sample_sz,
-                            uint batch_sz, model_t const *model,
+double check_train_accuracy(data_loader_t *loader, int sample_sz,
+                            int batch_sz, model_t const *model,
                             tensor_t (*func_forward_infer)(model_t const *,
                                                            tensor_t));
 

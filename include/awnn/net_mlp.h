@@ -19,11 +19,11 @@ extern "C" {
 #endif
 
 typedef struct model {
-  uint input_dim;
-  uint output_dim;
-  uint nr_hidden_layers;
-  uint hidden_dims[MAX_DIM];
-  uint max_batch_sz;
+  int input_dim;
+  int output_dim;
+  int nr_hidden_layers;
+  int hidden_dims[MAX_DIM];
+  int max_batch_sz;
   T reg;
 
   struct list_head list_all_params[1];   // list of all learnable params
@@ -40,9 +40,9 @@ typedef struct model {
  * TODO: allocate space for cache
  */
 status_t mlp_init(model_t *model,  // output
-                  uint max_batch_sz,
-                  uint input_dim,  //
-                  uint output_dim, uint nr_hidden_layers, uint hidden_dim[],
+                  int max_batch_sz,
+                  int input_dim,  //
+                  int output_dim, int nr_hidden_layers, int hidden_dim[],
                   T reg);
 
 /*

@@ -54,10 +54,10 @@ lcache_t LayerFcTest::cache;
 
 TEST_F(LayerFcTest, Construct) {
 
-  uint const shape_x[] = {2, 4, 5,
+  int const shape_x[] = {2, 4, 5,
                           6}; // e.g. 2 images, 4 channels, width =5 hight=6
-  uint const shape_w[] = {120, 3}; // fc 120~3  neurons
-  uint const shape_b[] = {3};      // 3n
+  int const shape_w[] = {120, 3}; // fc 120~3  neurons
+  int const shape_b[] = {3};      // 3n
   x   = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
   w   = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
   b   = tensor_make_linspace(-0.3, 0.1,shape_b, dim_of_shape(shape_b));
@@ -68,7 +68,7 @@ TEST_F(LayerFcTest, Construct) {
 TEST_F(LayerFcTest, Forward){
   /* I. Perform the forwarding */
   status_t ret;
-  uint const shape_y[] = {x.dim.dims[0], w.dim.dims[1]};
+  int const shape_y[] = {x.dim.dims[0], w.dim.dims[1]};
   tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
 
   ret = layer_fc_forward(x,w,b, &cache,y);// forward function should allocate and populate cache;
@@ -92,7 +92,7 @@ TEST_F(LayerFcTest, Forward){
 TEST_F(LayerFcTest, Backward) {
   /* I. Perform the backwarding */
   status_t ret;
-  uint const shape_y[] = {x.dim.dims[0], w.dim.dims[1]};
+  int const shape_y[] = {x.dim.dims[0], w.dim.dims[1]};
 
   // input for backward
   tensor_t dy = tensor_make_linspace(0.1, 0.5, shape_y,

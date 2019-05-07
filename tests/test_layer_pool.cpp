@@ -30,8 +30,8 @@ lcache_t LayerGlobalAvgPoolTest::cache;
 
 // skeleton
 TEST_F(LayerGlobalAvgPoolTest, Construct) {
-  uint const shape_x[] = {6, 2, 7, 7};  // 6 images, 2x7x7
-  uint const shape_y[] = {6, 2, 1, 1};
+  int const shape_x[] = {6, 2, 7, 7};  // 6 images, 2x7x7
+  int const shape_y[] = {6, 2, 1, 1};
 
   x = tensor_make(shape_x, dim_of_shape(shape_x));
   dx = tensor_make(shape_x, dim_of_shape(shape_x));
@@ -43,8 +43,8 @@ TEST_F(LayerGlobalAvgPoolTest, Construct) {
 
 // channel_mean
 TEST_F(LayerGlobalAvgPoolTest, channel_mean) {
-  uint channel_capacity = x.dim.dims[2] * x.dim.dims[3];  // each chanel
-  uint target_channel = 0;
+  int channel_capacity = x.dim.dims[2] * x.dim.dims[3];  // each chanel
+  int target_channel = 0;
   T* start = x.data + channel_capacity * target_channel;
 
   T res = channel_mean(start, channel_capacity);
@@ -53,8 +53,8 @@ TEST_F(LayerGlobalAvgPoolTest, channel_mean) {
 
 // TODO : document tests
 TEST_F(LayerGlobalAvgPoolTest, Forward) {
-  uint const shape_x[] = {6, 2, 7, 7};  // 6 images, 2x7x7
-  uint const shape_y[] = {6, 2, 1, 1};
+  int const shape_x[] = {6, 2, 7, 7};  // 6 images, 2x7x7
+  int const shape_y[] = {6, 2, 1, 1};
 
   tensor_t in = tensor_make(shape_x, dim_of_shape(shape_x));
   tensor_t out = tensor_make(shape_y, dim_of_shape(shape_y));
@@ -68,8 +68,8 @@ TEST_F(LayerGlobalAvgPoolTest, Forward) {
 
 // TODO : document tests
 TEST_F(LayerGlobalAvgPoolTest, Backward) {
-  uint const shape_x[] = {6, 2, 7, 7};  // 6 images, 2x7x7
-  uint const shape_y[] = {6, 2, 1, 1};
+  int const shape_x[] = {6, 2, 7, 7};  // 6 images, 2x7x7
+  int const shape_y[] = {6, 2, 1, 1};
 
   tensor_t x = tensor_make_linspace(0.1, 0.3, shape_x, dim_of_shape(shape_x));
   tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
@@ -115,8 +115,8 @@ TEST_F(LayerGlobalAvgPoolTest, Backward) {
 
 #ifdef USE_CUDA
 TEST_F(LayerGlobalAvgPoolTest, BackwardDevice) {
-  uint const shape_x[] = {6, 2, 7, 7};  // 6 images, 2x7x7
-  uint const shape_y[] = {6, 2, 1, 1};
+  int const shape_x[] = {6, 2, 7, 7};  // 6 images, 2x7x7
+  int const shape_y[] = {6, 2, 1, 1};
 
   tensor_t x = tensor_make_linspace(0.1, 0.3, shape_x, dim_of_shape(shape_x));
   tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));

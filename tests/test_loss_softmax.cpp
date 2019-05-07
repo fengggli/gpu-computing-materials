@@ -45,10 +45,10 @@ protected:
 
 TEST_F(LostSoftmaxTest, OneImg) {
 
-  uint nr_classes = 3;
-  uint nr_images = 2;
+  int nr_classes = 3;
+  int nr_images = 2;
 
-  uint const shape_x[] = {
+  int const shape_x[] = {
       nr_images, nr_classes}; // e.g. nr_images images, nr_classes features (softmax usually
                               // follows fc, which is already flattened to 2d)
   tensor_t x = tensor_make(shape_x, dim_of_shape(shape_x));
@@ -78,7 +78,7 @@ TEST_F(LostSoftmaxTest, OneImg) {
     output.data[0] = ref_loss;
   };
 
-  uint const unit_shape[] = {1};
+  int const unit_shape[] = {1};
   tensor_t unit_t = tensor_make_ones(unit_shape, dim_of_shape(unit_shape));
   tensor_t dx_ref = tensor_make_alike(x);
   eval_numerical_gradient(func_softmax, x, unit_t, dx_ref, 1e-3);
@@ -97,10 +97,10 @@ TEST_F(LostSoftmaxTest, MultiImg) {
 
   T loss;
 
-  uint nr_images = 6;
-  uint nr_classes = 10;
+  int nr_images = 6;
+  int nr_classes = 10;
 
-  uint const shape_x[] = {
+  int const shape_x[] = {
       nr_images, nr_classes}; // e.g. 3 images, 4 features (softmax usually
                               // follows fc, which is already flattened to 2d)
   tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
@@ -117,7 +117,7 @@ TEST_F(LostSoftmaxTest, MultiImg) {
     output.data[0] = ref_loss;
   };
 
-  uint const unit_shape[] = {1};
+  int const unit_shape[] = {1};
   tensor_t unit_t = tensor_make_ones(
       unit_shape,
       dim_of_shape(

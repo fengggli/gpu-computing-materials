@@ -70,10 +70,10 @@ protected:
 
 
 TEST_F(TestDeviceUtil, elementwise_add_host_harness) {
-  uint dim1 = 4;
-  uint dim2 = 2;
+  int dim1 = 4;
+  int dim2 = 2;
 
-  uint src_shape[] = { dim1, dim2 };
+  int src_shape[] = { dim1, dim2 };
   tensor_t h_src = tensor_make_patterned(src_shape, dim_of_shape(src_shape));
   tensor_t h_out = tensor_make_copy(h_src);
 
@@ -90,10 +90,10 @@ TEST_F(TestDeviceUtil, elementwise_add_host_harness) {
 }
 
 TEST_F(TestDeviceUtil, elementwise_add_device_harness) {
-  uint dim1 = 4;
-  uint dim2 = 2;
+  int dim1 = 4;
+  int dim2 = 2;
 
-  uint src_shape[] = { dim1, dim2 };
+  int src_shape[] = { dim1, dim2 };
   tensor_t h_b = tensor_make_patterned(src_shape, dim_of_shape(src_shape));
   tensor_t h_a = tensor_make_copy(h_b);
 
@@ -118,10 +118,10 @@ TEST_F(TestDeviceUtil, elementwise_add_device_harness) {
 }
 
 TEST_F(TestDeviceUtil, elementwise_mul_host_harness) {
-  uint dim1 = 4;
-  uint dim2 = 2;
+  int dim1 = 4;
+  int dim2 = 2;
 
-  uint src_shape[] = { dim1, dim2 };
+  int src_shape[] = { dim1, dim2 };
   tensor_t h_src = tensor_make_patterned(src_shape, dim_of_shape(src_shape));
   tensor_t h_out = tensor_make_copy(h_src);
 
@@ -139,10 +139,10 @@ TEST_F(TestDeviceUtil, elementwise_mul_host_harness) {
 
 
 TEST_F(TestDeviceUtil, elementwise_mul_device_harness) {
-  uint dim1 = 4;
-  uint dim2 = 2;
+  int dim1 = 4;
+  int dim2 = 2;
 
-  uint src_shape[] = { dim1, dim2 };
+  int src_shape[] = { dim1, dim2 };
   tensor_t h_b = tensor_make_patterned(src_shape, dim_of_shape(src_shape));
   tensor_t h_a = tensor_make_copy(h_b);
 
@@ -170,10 +170,10 @@ TEST_F(TestDeviceUtil, elementwise_mul_device_harness) {
 
 
 TEST_F(TestDeviceUtil, apply_mask_host_harness) {
-  uint dim1 = 4;
-  uint dim2 = 2;
+  int dim1 = 4;
+  int dim2 = 2;
 
-  uint src_shape[] = { dim1, dim2 };
+  int src_shape[] = { dim1, dim2 };
   tensor_t h_a = tensor_make(src_shape, dim_of_shape(src_shape));
   tensor_t h_mask = tensor_make_zeros_alike(h_a);
 
@@ -201,10 +201,10 @@ TEST_F(TestDeviceUtil, apply_mask_host_harness) {
 
 
 TEST_F(TestDeviceUtil, apply_mask_device_harness) {
-  uint dim1 = 4;
-  uint dim2 = 2;
+  int dim1 = 4;
+  int dim2 = 2;
 
-  uint src_shape[] = { dim1, dim2 };
+  int src_shape[] = { dim1, dim2 };
   tensor_t h_a = tensor_make(src_shape, dim_of_shape(src_shape));
   tensor_t h_mask = tensor_make_zeros_alike(h_a);
 

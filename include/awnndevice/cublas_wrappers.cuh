@@ -1,6 +1,5 @@
 #pragma once
 
-#include "awnn/common.h"
 #include "awnn/tensor.h"
 
 #include <cublas_v2.h>

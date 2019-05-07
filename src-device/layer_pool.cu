@@ -1,14 +1,15 @@
-#include "awnn/layer_pool.h"
+#include "awnndevice/memory.cuh"
+#include "awnndevice/layer_pool.cuh"
 
 /* Forward kernel */
-static __global__ void _do_forward(T *x, uint num_image, uint num_channel,
-                                   uint channel_capacity, T *y) {
+static __global__ void _do_forward(T *x, int num_image, int num_channel,
+                                   int channel_capacity, T *y) {
   int idx =
       blockIdx.x * blockDim.x + threadIdx.x;  // threadIdx=0, threadIdx=1, ...
   if (idx < num_image * num_channel) {        // totally 6imagesx2channels
     T mean = 0;
     T *channel_start = x + idx * channel_capacity;
-    for (uint i = 0; i < channel_capacity; i++) {
+    for (int i = 0; i < channel_capacity; i++) {
       mean += channel_start[i];
     }
     mean /= channel_capacity;
@@ -19,10 +20,10 @@ static __global__ void _do_forward(T *x, uint num_image, uint num_channel,
 // y: N, C, 1, 1
 status_t global_avg_pool_forward_device(tensor_t const x, lcache_t *cache,
                                         tensor_t y) {
-  uint N = x.dim.dims[0];
-  uint C = x.dim.dims[1];
-  uint H = x.dim.dims[2];
-  uint W = x.dim.dims[3];
+  int N = x.dim.dims[0];
+  int C = x.dim.dims[1];
+  int H = x.dim.dims[2];
+  int W = x.dim.dims[3];
 
   tensor_t d_x = tensor_make_copy_h2d(x);
   tensor_t d_y = tensor_make_copy_h2d(y);
@@ -48,14 +49,14 @@ status_t global_avg_pool_forward_device(tensor_t const x, lcache_t *cache,
 }
 
 /* Backward kernel */
-static __global__ void _do_backward(T *dx, uint num_image, uint num_channel,
-                                    uint channel_capacity, T *dy) {
+static __global__ void _do_backward(T *dx, int num_image, int num_channel,
+                                    int channel_capacity, T *dy) {
   int idx =
       blockIdx.x * blockDim.x + threadIdx.x;  // threadIdx=0, threadIdx=1, ...
   if (idx < num_image * num_channel) {        // totally 6imagesx2channels
     T scale_by = 1.0 / (channel_capacity);
     T *channel_start = dx + idx * channel_capacity;
-    for (uint i = 0; i < channel_capacity; i++) {
+    for (int i = 0; i < channel_capacity; i++) {
       channel_start[i] = scale_by * dy[idx];
     }
   }
@@ -64,10 +65,10 @@ static __global__ void _do_backward(T *dx, uint num_image, uint num_channel,
 status_t global_avg_pool_backward_device(tensor_t dx, lcache_t *cache,
                                          tensor_t const dy) {
   tensor_t t = lcache_pop(cache);
-  uint N = t.dim.dims[0];
-  uint C = t.dim.dims[1];
-  uint H = t.dim.dims[2];
-  uint W = t.dim.dims[3];
+  int N = t.dim.dims[0];
+  int C = t.dim.dims[1];
+  int H = t.dim.dims[2];
+  int W = t.dim.dims[3];
 
   tensor_t d_dx = tensor_make_copy_h2d(dx);
   tensor_t d_dy = tensor_make_copy_h2d(dy);

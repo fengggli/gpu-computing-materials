@@ -17,12 +17,12 @@ class LayerBenchConvCuDnnTest : public ::testing::Test {};
 }  // namespace
 
 TEST_F(LayerBenchConvCuDnnTest, BenchCUDNN) {
-  uint nr_iterations = 100;
-  std::vector<uint> N_arrary = {1, 4, 16}; // nr_imgs
-  std::vector<uint> C_arrary = {4}; // nr_input_channels
-  std::vector<uint> H_arrary = {32}; // input img sizes
-  std::vector<uint> F_arrary = {1, 4, 16}; // nr of filters/ output channels
-  std::vector<uint> HH_arrary = {3}; // filter H / W
+  int nr_iterations = 100;
+  std::vector<int> N_arrary = {1, 4, 16}; // nr_imgs
+  std::vector<int> C_arrary = {4}; // nr_input_channels
+  std::vector<int> H_arrary = {32}; // input img sizes
+  std::vector<int> F_arrary = {1, 4, 16}; // nr of filters/ output channels
+  std::vector<int> HH_arrary = {3}; // filter H / W
 
   for (auto nr_img : N_arrary) {
     for (auto nr_in_channel : C_arrary) {
@@ -36,15 +36,15 @@ TEST_F(LayerBenchConvCuDnnTest, BenchCUDNN) {
 
             conv_params.stride = 1;
             conv_params.padding = 1;
-            uint sz_out = 1 + (sz_img + 2 * conv_params.padding - sz_filter) /
+            int sz_out = 1 + (sz_img + 2 * conv_params.padding - sz_filter) /
                                   conv_params.stride;
             // EXPECT_EQ(4, sz_out);
 
-            uint const shape_x[] = {nr_img, nr_in_channel, sz_img,
+            int const shape_x[] = {nr_img, nr_in_channel, sz_img,
                                     sz_img};  // 2x3x4x4
-            uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter,
+            int const shape_w[] = {nr_filter, nr_in_channel, sz_filter,
                                     sz_filter};  // 3x3x3x3
-            uint const shape_y[] = {nr_img, nr_filter, sz_out,
+            int const shape_y[] = {nr_img, nr_filter, sz_out,
                                     sz_out};  // 2x3x4x4
 
             tensor_t x =
@@ -84,7 +84,7 @@ TEST_F(LayerBenchConvCuDnnTest, BenchCUDNN) {
             checkCudnnErr( cudnnCreateTensorDescriptor( &cudnnOdesc ));
             checkCudnnErr( cudnnCreateConvolutionDescriptor( &cudnnConvDesc ));
 
-            for (uint i = 0; i < nr_iterations; i++) {
+            for (int i = 0; i < nr_iterations; i++) {
               auto t1 = get_timepoint();
 
               // FORWARD

@@ -50,11 +50,11 @@ class NetMLPTest : public ::testing::Test {
 model_t NetMLPTest::model;
 
 TEST_F(NetMLPTest, Construct) {
-  uint batch_sz = 3;
-  uint input_dim = 5;
-  uint output_dim = 7;
-  uint nr_hidden_layers = 1;
-  uint hidden_dims[] = {50};
+  int batch_sz = 3;
+  int input_dim = 5;
+  int output_dim = 7;
+  int nr_hidden_layers = 1;
+  int hidden_dims[] = {50};
   T reg = 0;
 
   mlp_init(&model, batch_sz, input_dim, output_dim, nr_hidden_layers,
@@ -68,7 +68,7 @@ TEST_F(NetMLPTest, Construct) {
 
 /* Interference-only forward*/
 TEST_F(NetMLPTest, ForwardInferOnly) {
-  uint x_shape[] = {model.max_batch_sz, model.input_dim};
+  int x_shape[] = {model.max_batch_sz, model.input_dim};
   tensor_t w0 = net_get_param(model.list_all_params, "fc0.weight")->data;
   tensor_t b0 = net_get_param(model.list_all_params, "fc0.bias")->data;
   tensor_t w1 = net_get_param(model.list_all_params, "fc1.weight")->data;
@@ -105,7 +105,7 @@ TEST_F(NetMLPTest, ForwardInferOnly) {
 /* Check both forward/backward*/
 TEST_F(NetMLPTest, Loss) {
   T loss = 0;
-  uint x_shape[] = {model.max_batch_sz, model.input_dim};
+  int x_shape[] = {model.max_batch_sz, model.input_dim};
 
   tensor_t x = tensor_make_linspace(-5.5, 4.5, x_shape, 2);
   label_t labels[] = {0, 5, 1};
@@ -121,7 +121,7 @@ TEST_F(NetMLPTest, Loss) {
 
   // Check with numerical gradient
   model_t model_copy = model;
-  uint y_shape[] = {1};
+  int y_shape[] = {1};
   tensor_t dy = tensor_make_ones(y_shape, dim_of_shape(y_shape));
   dy.data[0] = 1.0;  // the y is the loss, no upper layer
 

@@ -21,20 +21,20 @@ TEST_F(LayerConvCUDNNTest, ConvForwardcudnn) {
   conv_params.stride = 1;
   conv_params.padding = 1;
 
-  uint nr_img = 2;
-  uint sz_img = 4;
-  uint nr_in_channel = 3;
-  uint sz_filter = 3;
-  uint nr_filter = 3;
+  int nr_img = 2;
+  int sz_img = 4;
+  int nr_in_channel = 3;
+  int sz_filter = 3;
+  int nr_filter = 3;
 
-  uint sz_out =
+  int sz_out =
       1 + (sz_img + 2 * conv_params.padding - sz_filter) / conv_params.stride;
   EXPECT_EQ(4, sz_out);
 
-  uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img};  // 2x3x4x4
-  uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter,
+  int const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img};  // 2x3x4x4
+  int const shape_w[] = {nr_filter, nr_in_channel, sz_filter,
                           sz_filter};                          // 3x3x3x3
-  uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out};  // 2x3x4x4
+  int const shape_y[] = {nr_img, nr_filter, sz_out, sz_out};  // 2x3x4x4
 
   tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
   tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
@@ -107,20 +107,20 @@ TEST_F(LayerConvCUDNNTest, ConvBackwardcudnn) {
   conv_params.stride = 1;
   conv_params.padding = 1;
 
-  uint nr_img = 2;
-  uint sz_img = 4;
-  uint nr_in_channel = 3;
-  uint sz_filter = 3;
-  uint nr_filter = 3;
+  int nr_img = 2;
+  int sz_img = 4;
+  int nr_in_channel = 3;
+  int sz_filter = 3;
+  int nr_filter = 3;
 
-  uint sz_out =
+  int sz_out =
       1 + (sz_img + 2 * conv_params.padding - sz_filter) / conv_params.stride;
   EXPECT_EQ(4, sz_out);
 
-  uint const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img};  // 2x3x4x4
-  uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter,
+  int const shape_x[] = {nr_img, nr_in_channel, sz_img, sz_img};  // 2x3x4x4
+  int const shape_w[] = {nr_filter, nr_in_channel, sz_filter,
                           sz_filter};                          // 3x3x3x3
-  uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out};  // 2x3x4x4
+  int const shape_y[] = {nr_img, nr_filter, sz_out, sz_out};  // 2x3x4x4
 
   tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
   tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));

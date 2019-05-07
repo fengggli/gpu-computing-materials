@@ -15,11 +15,11 @@
 #include <functional>
 #include <chrono>
 
-template<uint SIZE, class T> inline uint array_size(T (&)[SIZE]) {
+template<int SIZE, class T> inline int array_size(T (&)[SIZE]) {
   return SIZE;
 }
 
-template <uint SIZE, class T> inline uint dim_of_shape(T const (&)[SIZE]) {
+template <int SIZE, class T> inline int dim_of_shape(T const (&)[SIZE]) {
   return SIZE;
 }
 
@@ -43,8 +43,8 @@ status_t eval_numerical_gradient(
 
   // func(x, y_pos);
   // return S_OK;
-  uint capacity = tensor_get_capacity(x);
-  for (uint i = 0; i < capacity; i++) {
+  int capacity = tensor_get_capacity(x);
+  for (int i = 0; i < capacity; i++) {
     // PINF("[--numerical check]: [%d ] (%u, %u)",i/(capacity/100) , i, capacity);
     PDBG("\n\n===================================================");
     PDBG("calculating dx at flat position [%d]...", i);

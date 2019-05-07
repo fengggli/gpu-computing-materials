@@ -18,7 +18,7 @@ extern "C" {
 #endif
 
 typedef struct param {
-  // uint id_param;
+  // int id_param;
   char name[MAX_STR_LENGTH];
   tensor_t data;
   tensor_t diff;

@@ -1,4 +1,5 @@
 #include "awnndevice/cublas_wrappers.cuh"
+#include "awnndevice/memory.cuh"
 
 
 //// transpose call double
@@ -37,7 +38,7 @@ tensor_t cublas_transpose_launch (cublasHandle_t handle, tensor_t src)
 {
   assert(src.mem_type == GPU_MEM);
 
-  uint trans_shape[] = { src.dim.dims[1], src.dim.dims[0] };
+  int trans_shape[] = { src.dim.dims[1], src.dim.dims[0] };
   tensor_t trans = tensor_make_device(trans_shape, ARRAY_SIZE(trans_shape));
 
   T const alpha(1.0);
@@ -96,7 +97,7 @@ tensor_t cublas_gemm_launch(cublasHandle_t handle, tensor_t d_A, tensor_t d_B) {
   const T * srcA  = d_A.data;
   const T * srcB  = d_B.data;
 
-  uint shape_res[] = { (uint)rowA, (uint)colB };
+  int shape_res[] = { (int)rowA, (int)colB };
   tensor_t result = tensor_make_device(shape_res, ARRAY_SIZE(shape_res));
   T * out   = result.data;
 

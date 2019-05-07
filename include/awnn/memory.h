@@ -16,16 +16,19 @@
 extern "C" {
 #endif
 
+#ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
+int INC_TOTAL_TENSOR_ALLOC_HOST();
+int INC_TOTAL_TENSOR_DEALLOC_HOST();
 
-long INC_TOTAL_TENSOR_ALLOC_HOST();
-long INC_TOTAL_TENSOR_ALLOC_DEVICE();
-long INC_TOTAL_TENSOR_DEALLOC_HOST();
-long INC_TOTAL_TENSOR_DEALLOC_DEVICE();
+int GET_TOTAL_TENSOR_ALLOC_HOST();
+int GET_TOTAL_TENSOR_DEALLOC_HOST();
 
-long GET_TOTAL_TENSOR_ALLOC_HOST();
-long GET_TOTAL_TENSOR_DEALLOC_HOST();
-long GET_TOTAL_TENSOR_ALLOC_DEVICE();
-long GET_TOTAL_TENSOR_DEALLOC_DEVICE();
+void print_memory_alloc_dealloc_totals();
+int reset_TOTAL_TENSOR_ALLOC_HOST();
+int reset_TOTAL_TENSOR_DEALLOC_HOST();
+void reset_all_tensor_device_alloc_dealloc_stats();
+#endif
+
 
 static inline void* mem_alloc(size_t size) {
   void* ret = malloc(size);
@@ -50,16 +53,10 @@ static inline void mem_free(void* data) {
 
 void* mem_alloc_device(size_t size);
 
-void mem_free_device(void* data);
+int mem_free_device(void* data);
 
-#ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
-void print_memory_alloc_dealloc_totals();
-long reset_TOTAL_TENSOR_ALLOC_HOST();
-long reset_TOTAL_TENSOR_DEALLOC_HOST();
-long reset_TOTAL_TENSOR_ALLOC_DEVICE();
-long reset_TOTAL_TENSOR_DEALLOC_DEVICE();
-void reset_all_tensor_alloc_dealloc_stats();
-#endif
+
+
 
 #ifdef __cplusplus
 }

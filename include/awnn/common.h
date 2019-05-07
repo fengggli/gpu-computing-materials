@@ -28,7 +28,7 @@ typedef double T;
 
 
 typedef unsigned int label_t;
-label_t *label_make_random(uint nr_elem, uint range);
+label_t *label_make_random(int nr_elem, int range);
 void label_destroy(label_t *labels);
 
 enum { MAX_STR_LENGTH = 255 };

@@ -2,6 +2,7 @@
 // Created by Christopher Goebel on 2019-05-03.
 //
 
+#include "awnndevice/memory.cuh"
 #include "awnndevice/device_utils.cuh"
 #include "awnndevice/device_utils_harness.cuh"
 

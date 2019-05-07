@@ -49,7 +49,7 @@ TEST_F(DimTest, FourDims) {
 }
 
 TEST_F(DimTest, DimFromArray) {
-  uint shape[] = {3, 4, 5, 6};
+  int shape[] = {3, 4, 5, 6};
   dim_t dim = make_dim_from_arr(4, shape);
   EXPECT_EQ(dim.dims[0], 3);
   EXPECT_EQ(dim.dims[1], 4);

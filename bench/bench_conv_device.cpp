@@ -73,18 +73,18 @@ TEST_F(TestLayerConvSpeed, forward_and_backward_loop) {
 
   conv_param_t params = { .stride = 2, .padding = 1 };
 
-  uint nr_img = 2;
-  uint sz_img = 4;
-  uint nr_in_channel = 3;
-  uint sz_filter = 4;
-  uint nr_filter = 3;
+  int nr_img = 2;
+  int sz_img = 4;
+  int nr_in_channel = 3;
+  int sz_filter = 4;
+  int nr_filter = 3;
 
-  uint sz_out = 1 + (sz_img + 2 * params.padding - sz_filter) / params.stride;
+  int sz_out = 1 + (sz_img + 2 * params.padding - sz_filter) / params.stride;
   EXPECT_EQ(2, sz_out);
 
-  uint const shape_x[] = { nr_img, nr_in_channel, sz_img, sz_img }; // 2x3x4x4
-  uint const shape_w[] = { nr_filter, nr_in_channel, sz_filter, sz_filter }; // 3x3x4x4
-  uint const shape_y[] = { nr_img, nr_filter, sz_out, sz_out }; // 2x3x2x2
+  int const shape_x[] = { nr_img, nr_in_channel, sz_img, sz_img }; // 2x3x4x4
+  int const shape_w[] = { nr_filter, nr_in_channel, sz_filter, sz_filter }; // 3x3x4x4
+  int const shape_y[] = { nr_img, nr_filter, sz_out, sz_out }; // 2x3x2x2
 
   tensor_t h_x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
   tensor_t h_w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
@@ -105,7 +105,7 @@ TEST_F(TestLayerConvSpeed, forward_and_backward_loop) {
   for (int i = 0; i < iterations; ++i) {
     assert(cache.count == 0);
 
-    reset_all_tensor_alloc_dealloc_stats();
+    reset_all_tensor_device_alloc_dealloc_stats();
 
     tensor_t d_y = tensor_make_copy_h2d(h_y);
     tensor_t d_x = tensor_make_copy_h2d(h_x);
@@ -122,7 +122,7 @@ TEST_F(TestLayerConvSpeed, forward_and_backward_loop) {
 
     ASSERT_EQ(GET_TOTAL_TENSOR_ALLOC_DEVICE(), GET_TOTAL_TENSOR_DEALLOC_DEVICE() + cache.count);
 
-    reset_all_tensor_alloc_dealloc_stats();
+    reset_all_tensor_device_alloc_dealloc_stats();
 
     tensor_t d_dy = tensor_make_copy_h2d(h_dy);
     tensor_t d_dx = tensor_make_copy_h2d(h_x);
@@ -141,7 +141,7 @@ TEST_F(TestLayerConvSpeed, forward_and_backward_loop) {
 
     ASSERT_EQ(GET_TOTAL_TENSOR_ALLOC_DEVICE() + cache.count, GET_TOTAL_TENSOR_DEALLOC_DEVICE());
 
-    reset_all_tensor_alloc_dealloc_stats();
+    reset_all_tensor_device_alloc_dealloc_stats();
   }
 
   cout << "END LOOP\n";
@@ -169,14 +169,14 @@ TEST_F(TestLayerConvSpeed, forward_and_backward_loop) {
 
 
 TEST_F(TestLayerConvSpeed, bench_custom_forward_backward) {
-  uint nr_iterations = 100;
+  int nr_iterations = 100;
   std::vector<int> block_arr = { 32 };
   std::vector<int> thread_arr = { 128 };
-  std::vector<uint> N_arrary = {1, 4, 16}; // nr_imgs
-  std::vector<uint> C_arrary = {4}; // nr_input_channels
-  std::vector<uint> H_arrary = {32}; // input img sizes
-  std::vector<uint> F_arrary = {1, 4, 16}; // nr of filters/ output channels
-  std::vector<uint> HH_arrary = {3}; // filter H / W
+  std::vector<int> N_arrary = {1, 4, 16}; // nr_imgs
+  std::vector<int> C_arrary = {4}; // nr_input_channels
+  std::vector<int> H_arrary = {32}; // input img sizes
+  std::vector<int> F_arrary = {1, 4, 16}; // nr of filters/ output channels
+  std::vector<int> HH_arrary = {3}; // filter H / W
 
   PINF("method\tnum_blk\tnum_thrd\tN\tC\tH\tF\tHH\tavg_fwd_ms\tavg_bkwd_ms");
   for (auto nr_img : N_arrary) {
@@ -196,16 +196,16 @@ TEST_F(TestLayerConvSpeed, bench_custom_forward_backward) {
 
                 conv_params.stride = 1;
                 conv_params.padding = 1;
-                uint sz_out =
+                int sz_out =
                     1 + (sz_img + 2 * conv_params.padding - sz_filter) /
                             conv_params.stride;
                 // EXPECT_EQ(4, sz_out);
 
-                uint const shape_x[] = {nr_img, nr_in_channel, sz_img,
+                int const shape_x[] = {nr_img, nr_in_channel, sz_img,
                                         sz_img};  // 2x3x4x4
-                uint const shape_w[] = {nr_filter, nr_in_channel, sz_filter,
+                int const shape_w[] = {nr_filter, nr_in_channel, sz_filter,
                                         sz_filter};  // 3x3x3x3
-                uint const shape_y[] = {nr_img, nr_filter, sz_out,
+                int const shape_y[] = {nr_img, nr_filter, sz_out,
                                         sz_out};  // 2x3x4x4
 
                 tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x,
@@ -232,7 +232,7 @@ TEST_F(TestLayerConvSpeed, bench_custom_forward_backward) {
                 lcache_t cache;
                 make_empty_lcache(&cache);
 
-                for (uint i = 0; i < nr_iterations; i++) {
+                for (int i = 0; i < nr_iterations; i++) {
                   auto t1 = get_timepoint();
 
                   // FORWARD

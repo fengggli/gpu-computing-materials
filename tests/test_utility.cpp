@@ -42,18 +42,18 @@ protected:
 };
 
 TEST_F(UtilityTest, NumericalGradientSimple) {
-  uint const shape[] = {2, 3}; // a 2x3 matrix
+  int const shape[] = {2, 3}; // a 2x3 matrix
   tensor_t x = tensor_make_linspace(1, 6, shape, dim_of_shape(shape));
   tensor_t dx = tensor_make(shape, dim_of_shape(shape));
 
-  uint const y_shape[] = {1};
+  int const y_shape[] = {1};
   T val_dy = 3.0;
   tensor_t dy = tensor_make_scalar(y_shape, dim_of_shape(y_shape), val_dy);
 
   // the gradient in each xi will by val_dy
   auto func_add = [](tensor_t const input, tensor_t output) {
     output.data[0] = 0;
-    for (uint i = 0; i < tensor_get_capacity(input); i++) {
+    for (int i = 0; i < tensor_get_capacity(input); i++) {
       PLOG("[+ %.7f at %u]", input.data[i], i);
       output.data[0] += input.data[i];
     }
@@ -62,7 +62,7 @@ TEST_F(UtilityTest, NumericalGradientSimple) {
 
   eval_numerical_gradient(func_add, x, dy, dx, 1e-5);
 
-  for (uint i = 0; i < tensor_get_capacity(x); i++)
+  for (int i = 0; i < tensor_get_capacity(x); i++)
     EXPECT_NEAR(val_dy, dx.data[i], 1e-7);
 }
 

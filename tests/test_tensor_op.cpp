@@ -37,7 +37,7 @@ protected:
 };
 
 TEST_F(TensorOpTest, test_tpose1230_1) {
-  uint const shape_p[] = {1, 2, 3, 3}; // 1x2x3x3
+  int const shape_p[] = {1, 2, 3, 3}; // 1x2x3x3
 
   tensor_t p = tensor_make(shape_p, dim_of_shape(shape_p));
   double p_vals[] = {1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2};
@@ -53,7 +53,7 @@ TEST_F(TensorOpTest, test_tpose1230_1) {
   tensor_t p_ref = tensor_make(shape_p, dim_of_shape(shape_p));
   double p1230[] = {1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2};
   tensor_fill_list(p_ref, p1230, array_size(p1230));
-  uint shape_tpose_p[] = {p.dim.dims[1], p.dim.dims[2], p.dim.dims[3], p.dim.dims[0]};
+  int shape_tpose_p[] = {p.dim.dims[1], p.dim.dims[2], p.dim.dims[3], p.dim.dims[0]};
   tensor_reshape_(&p_ref, shape_tpose_p, dim_of_shape(shape_tpose_p));
 
   EXPECT_LT(tensor_rel_error(p_tpose_1230, p_ref), 1e-7);
@@ -63,7 +63,7 @@ TEST_F(TensorOpTest, test_tpose1230_1) {
 }
 
 TEST_F(TensorOpTest, test_tpose1230_2) {
-  uint const shape_x[] = { 2, 3, 4, 4 }; // 2x3x4x4
+  int const shape_x[] = { 2, 3, 4, 4 }; // 2x3x4x4
 
   tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
 
@@ -172,7 +172,7 @@ TEST_F(TensorOpTest, test_tpose1230_2) {
                     0.1968421052631579,
                     0.5};
   tensor_fill_list(x_ref, x3012, array_size(x3012));
-  uint shape_tpose_x[] = {x.dim.dims[1], x.dim.dims[2], x.dim.dims[3], x.dim.dims[0]};
+  int shape_tpose_x[] = {x.dim.dims[1], x.dim.dims[2], x.dim.dims[3], x.dim.dims[0]};
   tensor_reshape_(&x_ref, shape_tpose_x, dim_of_shape(shape_tpose_x));
 
   EXPECT_LT(tensor_rel_error(x_tpose_1230, x_ref), 1e-7);
@@ -182,7 +182,7 @@ TEST_F(TensorOpTest, test_tpose1230_2) {
 }
 
 TEST_F(TensorOpTest, test_tpose1230_3) {
-  uint const shape_w[] = {3, 3, 4, 6}; // 3x3x4x6
+  int const shape_w[] = {3, 3, 4, 6}; // 3x3x4x6
 
   tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
 
@@ -411,7 +411,7 @@ TEST_F(TensorOpTest, test_tpose1230_3) {
                     0.1325581395348837,
                     0.3};
   tensor_fill_list(w_ref, w3012, array_size(w3012));
-  uint shape_tpose_w[] = {w.dim.dims[1], w.dim.dims[2], w.dim.dims[3], w.dim.dims[0]};
+  int shape_tpose_w[] = {w.dim.dims[1], w.dim.dims[2], w.dim.dims[3], w.dim.dims[0]};
   tensor_reshape_(&w_ref, shape_tpose_w, dim_of_shape(shape_tpose_w));
 
   EXPECT_LT(tensor_rel_error(w_tpose_1230, w_ref), 1e-7);
@@ -421,7 +421,7 @@ TEST_F(TensorOpTest, test_tpose1230_3) {
 }
 
 TEST_F(TensorOpTest, test_tpose3012_1) {
-  uint const shape_p[] = {1, 2, 3, 3}; // 1x2x3x3
+  int const shape_p[] = {1, 2, 3, 3}; // 1x2x3x3
 
   tensor_t p = tensor_make(shape_p, dim_of_shape(shape_p));
   double p_vals[] = {1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2};
@@ -432,7 +432,7 @@ TEST_F(TensorOpTest, test_tpose3012_1) {
   tensor_t p_ref = tensor_make(shape_p, dim_of_shape(shape_p));
   double p3012[] = {1, 0, 1, 2, 1, 2, 0, 1, 1, 3, 0, 1, 1, 0, 1, 2, 1, 2};
   tensor_fill_list(p_ref, p3012, array_size(p3012));
-  uint shape_tpose_p[] = {p.dim.dims[3], p.dim.dims[0], p.dim.dims[1], p.dim.dims[2]};
+  int shape_tpose_p[] = {p.dim.dims[3], p.dim.dims[0], p.dim.dims[1], p.dim.dims[2]};
   tensor_reshape_(&p_ref, shape_tpose_p, dim_of_shape(shape_tpose_p));
 
   EXPECT_LT(tensor_rel_error(p_tpose_3012, p_ref), 1e-7);
@@ -442,7 +442,7 @@ TEST_F(TensorOpTest, test_tpose3012_1) {
 }
 
 TEST_F(TensorOpTest, test_tpose3012_2) {
-  uint const shape_x[] = {2, 3, 4, 4}; // 2x3x4x4
+  int const shape_x[] = {2, 3, 4, 4}; // 2x3x4x4
 
   tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
 
@@ -546,7 +546,7 @@ TEST_F(TensorOpTest, test_tpose3012_2) {
                     0.4747368421052631,
                     0.5};
   tensor_fill_list(x_ref, x3012, array_size(x3012));
-  uint shape_tpose_x[] = {x.dim.dims[3], x.dim.dims[0], x.dim.dims[1], x.dim.dims[2]};
+  int shape_tpose_x[] = {x.dim.dims[3], x.dim.dims[0], x.dim.dims[1], x.dim.dims[2]};
   tensor_reshape_(&x_ref, shape_tpose_x, dim_of_shape(shape_tpose_x));
 
   EXPECT_LT(tensor_rel_error(x_tpose_3012, x_ref), 1e-7);
@@ -556,7 +556,7 @@ TEST_F(TensorOpTest, test_tpose3012_2) {
 }
 
 TEST_F(TensorOpTest, test_tpose3012_3) {
-  uint const shape_w[] = {3, 3, 4, 6}; // 3x3x4x6
+  int const shape_w[] = {3, 3, 4, 6}; // 3x3x4x6
 
   tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
 
@@ -780,7 +780,7 @@ TEST_F(TensorOpTest, test_tpose3012_3) {
                     0.28604651162790695,
                     0.3};
   tensor_fill_list(w_ref, w3012, array_size(w3012));
-  uint shape_tpose_w[] = {w.dim.dims[3], w.dim.dims[0], w.dim.dims[1], w.dim.dims[2]};
+  int shape_tpose_w[] = {w.dim.dims[3], w.dim.dims[0], w.dim.dims[1], w.dim.dims[2]};
   tensor_reshape_(&w_ref, shape_tpose_w, dim_of_shape(shape_tpose_w));
 
   EXPECT_LT(tensor_rel_error(w_tpose_3012, w_ref), 1e-7);
@@ -792,13 +792,13 @@ TEST_F(TensorOpTest, test_tpose3012_3) {
 // Tests that the Foo::Bar() method does Abc.
 TEST_F(TensorOpTest, DotWrongInput) {
   tensor_t in1, in2, out;
-  uint const shape1[] = {2, 3};
+  int const shape1[] = {2, 3};
   in1 = tensor_make_patterned(shape1, dim_of_shape(shape1));
 
-  uint const shape2[] = {2, 4};
+  int const shape2[] = {2, 4};
   in2 = tensor_make_patterned(shape2, dim_of_shape(shape2));
 
-  uint const shape3[] = {3, 4};
+  int const shape3[] = {3, 4};
   out = tensor_make_patterned(shape3, dim_of_shape(shape3));
 
   EXPECT_TRUE(S_ERR == tensor_matmul(in1, in2, out));
@@ -806,15 +806,15 @@ TEST_F(TensorOpTest, DotWrongInput) {
 
 TEST_F(TensorOpTest, Dot) {
   tensor_t in1, in2, out;
-  uint const shape1[] = {2, 3};
+  int const shape1[] = {2, 3};
   in1 = tensor_make_patterned(shape1, dim_of_shape(shape1));
   // tensor_dump(in1);
 
-  uint const shape2[] = {3, 2};
+  int const shape2[] = {3, 2};
   in2 = tensor_make_patterned(shape2, dim_of_shape(shape2));
   // tensor_dump(in2);
 
-  uint const shape3[] = {2, 2};
+  int const shape3[] = {2, 2};
   out = tensor_make_patterned(shape3, dim_of_shape(shape3));
 
   // int correct_result[] = {10, 13, 28, 40};
@@ -829,15 +829,15 @@ TEST_F(TensorOpTest, Dot) {
 
 TEST_F(TensorOpTest, PLUS) {
   tensor_t in1, in2, out;
-  uint const shape1[] = {2, 3};
+  int const shape1[] = {2, 3};
   in1 = tensor_make_patterned(shape1, dim_of_shape(shape1));
   // tensor_dump(in1);
 
-  uint const shape2[] = {2, 3};
+  int const shape2[] = {2, 3};
   in2 = tensor_make_patterned(shape2, dim_of_shape(shape2));
   // tensor_dump(in2);
 
-  uint const shape3[] = {2, 3};
+  int const shape3[] = {2, 3};
   out = tensor_make(shape3, dim_of_shape(shape3));
 
   EXPECT_EQ(S_OK, tensor_add_sameshape(in1, in2, out));
@@ -851,10 +851,10 @@ TEST_F(TensorOpTest, PLUS) {
 
 TEST_F(TensorOpTest, PLUS_INPLACE) {
   tensor_t from, to;
-  uint const shape1[] = {2, 3};
+  int const shape1[] = {2, 3};
   from = tensor_make_patterned(shape1, dim_of_shape(shape1));
 
-  uint const shape2[] = {2, 3};
+  int const shape2[] = {2, 3};
   to = tensor_make_patterned(shape2, dim_of_shape(shape2));
 
   EXPECT_EQ(S_OK, tensor_elemwise_op_inplace(to, from, TENSOR_OP_ADD));
@@ -869,13 +869,13 @@ TEST_F(TensorOpTest, PLUS_INPLACE) {
 
 TEST_F(TensorOpTest, RESHAPE) {
   tensor_t t;
-  uint const shape1[] = {2, 3, 4};
+  int const shape1[] = {2, 3, 4};
   t = tensor_make_patterned(shape1, dim_of_shape(shape1));
 
-  uint const shape2[] = {2, 13}; // this shall gives a error
-  uint const shape3[] = {2, 3, 2, 2};
-  uint const shape4[] = {2, 12};
-  uint const shape5[] = {24};
+  int const shape2[] = {2, 13}; // this shall gives a error
+  int const shape3[] = {2, 3, 2, 2};
+  int const shape4[] = {2, 12};
+  int const shape5[] = {24};
 
   EXPECT_EQ(S_BAD_DIM, tensor_reshape_(&t, shape2, 2));
   EXPECT_EQ(S_OK, tensor_reshape_(&t, shape3, 4));
@@ -888,8 +888,8 @@ TEST_F(TensorOpTest, RESHAPE) {
 
 TEST_F(TensorOpTest, AddVector) {
   tensor_t t, v;
-  uint const shape1[] = {2, 3, 4, 5};
-  uint const shape2[] = {5};
+  int const shape1[] = {2, 3, 4, 5};
+  int const shape2[] = {5};
   t = tensor_make_patterned(shape1, dim_of_shape(shape1));
   v = tensor_make_patterned(shape2, dim_of_shape(shape2));
 
@@ -905,14 +905,14 @@ TEST_F(TensorOpTest, AddVector) {
 
 TEST_F(TensorOpTest, tensor_reshape_flat_) {
   tensor_t t;
-  uint const shape1[] = {2, 3, 4, 5};
+  int const shape1[] = {2, 3, 4, 5};
   t = tensor_make_patterned(shape1, dim_of_shape(shape1));
 
-  uint original_capacity_of_t = tensor_get_capacity(t);
+  int original_capacity_of_t = tensor_get_capacity(t);
 
   tensor_reshape_flat_(&t);
 
-  uint new_capacity_of_t = tensor_get_capacity(t);
+  int new_capacity_of_t = tensor_get_capacity(t);
 
   ASSERT_EQ(original_capacity_of_t, new_capacity_of_t);
 
@@ -924,10 +924,10 @@ TEST_F(TensorOpTest, tensor_reshape_flat_) {
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test0) {
-  uint const shape[] = { 1, 1, 1, 1 };
+  int const shape[] = { 1, 1, 1, 1 };
   tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
-  uint pad_size = 0;
+  int pad_size = 0;
   float pad_val = 0;
 
   // 1 x 1 x 1 x 1 -> 1 x 1 x 0 x 0
@@ -939,11 +939,11 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test0) {
   ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
   ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
 
-  uint h = padded_in.dim.dims[2];
-  uint w = padded_in.dim.dims[3];
+  int h = padded_in.dim.dims[2];
+  int w = padded_in.dim.dims[3];
   for (int i = 0; i < h; ++i) {
     for (int j = 0; j < w; ++j) {
-      uint target_idx = i * w + j;
+      int target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else if (i >= h - pad_size) {
@@ -953,7 +953,7 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test0) {
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else {
-        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        int src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
       }
     }
@@ -963,10 +963,10 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test0) {
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test1) {
-  uint const shape[] = { 1, 1, 1, 1 };
+  int const shape[] = { 1, 1, 1, 1 };
   tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
-  uint pad_size = 1;
+  int pad_size = 1;
   float pad_val = 0;
 
   // 1 x 1 x 1 x 1 -> 1 x 1 x 3 x 3
@@ -978,11 +978,11 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test1) {
   ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
   ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
 
-  uint h = padded_in.dim.dims[2];
-  uint w = padded_in.dim.dims[3];
+  int h = padded_in.dim.dims[2];
+  int w = padded_in.dim.dims[3];
   for (int i = 0; i < h; ++i) {
     for (int j = 0; j < w; ++j) {
-      uint target_idx = i * w + j;
+      int target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else if (i >= h - pad_size) {
@@ -992,7 +992,7 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test1) {
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else {
-        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        int src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
       }
     }
@@ -1002,10 +1002,10 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test1) {
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test2) {
-  uint const shape[] = { 1, 1, 1, 1 };
+  int const shape[] = { 1, 1, 1, 1 };
   tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
-  uint pad_size = 2;
+  int pad_size = 2;
   float pad_val = 0;
 
   // 1 x 1 x 1 x 1 -> 1 x 1 x 3 x 3
@@ -1017,11 +1017,11 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test2) {
   ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
   ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
 
-  uint h = padded_in.dim.dims[2];
-  uint w = padded_in.dim.dims[3];
+  int h = padded_in.dim.dims[2];
+  int w = padded_in.dim.dims[3];
   for (int i = 0; i < h; ++i) {
     for (int j = 0; j < w; ++j) {
-      uint target_idx = i * w + j;
+      int target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else if (i >= h - pad_size) {
@@ -1031,7 +1031,7 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test2) {
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else {
-        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        int src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
       }
     }
@@ -1041,10 +1041,10 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test2) {
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test3) {
-  uint const shape[] = { 1, 1, 1, 2 };
+  int const shape[] = { 1, 1, 1, 2 };
   tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
-  uint pad_size = 1;
+  int pad_size = 1;
   float pad_val = 0;
 
   // 1 x 1 x 1 x 1 -> 1 x 1 x 3 x 3
@@ -1056,11 +1056,11 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test3) {
   ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
   ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
 
-  uint h = padded_in.dim.dims[2];
-  uint w = padded_in.dim.dims[3];
+  int h = padded_in.dim.dims[2];
+  int w = padded_in.dim.dims[3];
   for (int i = 0; i < h; ++i) {
     for (int j = 0; j < w; ++j) {
-      uint target_idx = i * w + j;
+      int target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else if (i >= h - pad_size) {
@@ -1070,7 +1070,7 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test3) {
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else {
-        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        int src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
       }
     }
@@ -1080,10 +1080,10 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test3) {
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test4) {
-  uint const shape[] = { 1, 1, 2, 2 };
+  int const shape[] = { 1, 1, 2, 2 };
   tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
-  uint pad_size = 1;
+  int pad_size = 1;
   float pad_val = 0;
 
   // 1 x 1 x 2 x 2 -> 1 x 1 x 4 x 4
@@ -1095,11 +1095,11 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test4) {
   ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
   ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
 
-  uint h = padded_in.dim.dims[2];
-  uint w = padded_in.dim.dims[3];
+  int h = padded_in.dim.dims[2];
+  int w = padded_in.dim.dims[3];
   for (int i = 0; i < h; ++i) {
     for (int j = 0; j < w; ++j) {
-      uint target_idx = i * w + j;
+      int target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else if (i >= h - pad_size) {
@@ -1109,7 +1109,7 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test4) {
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else {
-        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        int src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
       }
     }
@@ -1119,10 +1119,10 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test4) {
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test5) {
-  uint const shape[] = { 1, 1, 2, 2 };
+  int const shape[] = { 1, 1, 2, 2 };
   tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
-  uint pad_size = 2;
+  int pad_size = 2;
   float pad_val = 0;
 
   // 1 x 1 x 2 x 2 -> 1 x 1 x 6 x 6
@@ -1134,11 +1134,11 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test5) {
   ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
   ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
 
-  uint h = padded_in.dim.dims[2];
-  uint w = padded_in.dim.dims[3];
+  int h = padded_in.dim.dims[2];
+  int w = padded_in.dim.dims[3];
   for (int i = 0; i < h; ++i) {
     for (int j = 0; j < w; ++j) {
-      uint target_idx = i * w + j;
+      int target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else if (i >= h - pad_size) {
@@ -1148,7 +1148,7 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test5) {
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else {
-        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        int src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
       }
     }
@@ -1158,10 +1158,10 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test5) {
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test6) {
-  uint const shape[] = { 1, 1, 3, 2 };
+  int const shape[] = { 1, 1, 3, 2 };
   tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
-  uint pad_size = 1;
+  int pad_size = 1;
   float pad_val = 0;
 
   // 1 x 1 x 3 x 2 -> 1 x 1 x 5 x 4
@@ -1173,11 +1173,11 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test6) {
   ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
   ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
 
-  uint h = padded_in.dim.dims[2];
-  uint w = padded_in.dim.dims[3];
+  int h = padded_in.dim.dims[2];
+  int w = padded_in.dim.dims[3];
   for (int i = 0; i < h; ++i) {
     for (int j = 0; j < w; ++j) {
-      uint target_idx = i * w + j;
+      int target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else if (i >= h - pad_size) {
@@ -1187,7 +1187,7 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test6) {
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else {
-        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        int src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
       }
     }
@@ -1197,10 +1197,10 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test6) {
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test7) {
-  uint const shape[] = { 1, 1, 3, 2 };
+  int const shape[] = { 1, 1, 3, 2 };
   tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
-  uint pad_size = 2;
+  int pad_size = 2;
   float pad_val = 0;
 
   // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
@@ -1212,11 +1212,11 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test7) {
   ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
   ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
 
-  uint h = padded_in.dim.dims[2];
-  uint w = padded_in.dim.dims[3];
+  int h = padded_in.dim.dims[2];
+  int w = padded_in.dim.dims[3];
   for (int i = 0; i < h; ++i) {
     for (int j = 0; j < w; ++j) {
-      uint target_idx = i * w + j;
+      int target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else if (i >= h - pad_size) {
@@ -1226,7 +1226,7 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test7) {
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else {
-        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        int src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
       }
     }
@@ -1236,10 +1236,10 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test7) {
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test8) {
-  uint const shape[] = { 1, 1, 2, 3 };
+  int const shape[] = { 1, 1, 2, 3 };
   tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
-  uint pad_size = 2;
+  int pad_size = 2;
   float pad_val = 0;
 
   // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
@@ -1251,11 +1251,11 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test8) {
   ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
   ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
 
-  uint h = padded_in.dim.dims[2];
-  uint w = padded_in.dim.dims[3];
+  int h = padded_in.dim.dims[2];
+  int w = padded_in.dim.dims[3];
   for (int i = 0; i < h; ++i) {
     for (int j = 0; j < w; ++j) {
-      uint target_idx = i * w + j;
+      int target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else if (i >= h - pad_size) {
@@ -1265,7 +1265,7 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test8) {
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else {
-        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        int src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
       }
     }
@@ -1275,10 +1275,10 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test8) {
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test9) {
-  uint const shape[] = { 1, 2, 2, 3 };
+  int const shape[] = { 1, 2, 2, 3 };
   tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
-  uint pad_size = 1;
+  int pad_size = 1;
   float pad_val = 0;
 
   // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
@@ -1290,11 +1290,11 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test9) {
   ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
   ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
 
-  uint h = padded_in.dim.dims[2];
-  uint w = padded_in.dim.dims[3];
+  int h = padded_in.dim.dims[2];
+  int w = padded_in.dim.dims[3];
   for (int i = 0; i < h; ++i) {
     for (int j = 0; j < w; ++j) {
-      uint target_idx = i * w + j;
+      int target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else if (i >= h - pad_size) {
@@ -1304,7 +1304,7 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test9) {
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else {
-        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        int src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
       }
     }
@@ -1314,10 +1314,10 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test9) {
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test10) {
-  uint const shape[] = { 2, 1, 2, 3 };
+  int const shape[] = { 2, 1, 2, 3 };
   tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
-  uint pad_size = 1;
+  int pad_size = 1;
   float pad_val = 0;
 
   // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
@@ -1329,11 +1329,11 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test10) {
   ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
   ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
 
-  uint h = padded_in.dim.dims[2];
-  uint w = padded_in.dim.dims[3];
+  int h = padded_in.dim.dims[2];
+  int w = padded_in.dim.dims[3];
   for (int i = 0; i < h; ++i) {
     for (int j = 0; j < w; ++j) {
-      uint target_idx = i * w + j;
+      int target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else if (i >= h - pad_size) {
@@ -1343,7 +1343,7 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test10) {
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else {
-        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        int src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
       }
     }
@@ -1353,10 +1353,10 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test10) {
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test11) {
-  uint const shape[] = { 2, 2, 2, 3 };
+  int const shape[] = { 2, 2, 2, 3 };
   tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
-  uint pad_size = 1;
+  int pad_size = 1;
   float pad_val = 0;
 
   // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
@@ -1368,11 +1368,11 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test11) {
   ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
   ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
 
-  uint h = padded_in.dim.dims[2];
-  uint w = padded_in.dim.dims[3];
+  int h = padded_in.dim.dims[2];
+  int w = padded_in.dim.dims[3];
   for (int i = 0; i < h; ++i) {
     for (int j = 0; j < w; ++j) {
-      uint target_idx = i * w + j;
+      int target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else if (i >= h - pad_size) {
@@ -1382,7 +1382,7 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test11) {
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else {
-        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        int src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
       }
     }
@@ -1392,10 +1392,10 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test11) {
 }
 
 TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test12) {
-  uint const shape[] = { 5, 4, 2, 3 };
+  int const shape[] = { 5, 4, 2, 3 };
   tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
 
-  uint pad_size = 1;
+  int pad_size = 1;
   float pad_val = 0;
 
   // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
@@ -1407,11 +1407,11 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test12) {
   ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
   ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
 
-  uint h = padded_in.dim.dims[2];
-  uint w = padded_in.dim.dims[3];
+  int h = padded_in.dim.dims[2];
+  int w = padded_in.dim.dims[3];
   for (int i = 0; i < h; ++i) {
     for (int j = 0; j < w; ++j) {
-      uint target_idx = i * w + j;
+      int target_idx = i * w + j;
       if (i < pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else if (i >= h - pad_size) {
@@ -1421,7 +1421,7 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test12) {
       } else if (j >= w - pad_size) {
         ASSERT_EQ(pad_val, padded_in.data[target_idx]);
       } else {
-        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        int src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
         ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
       }
     }
@@ -1432,15 +1432,15 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test12) {
 
 
 TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test0) {
-  uint pad_size = 1;
+  int pad_size = 1;
   float pad_val = 0;
 
-  uint const in_shape[] = { 1, 1, 2, 2 };
+  int const in_shape[] = { 1, 1, 2, 2 };
   tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
   tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x2x2 -> 1x1x4x4
 
-  uint new_h = padded_in.dim.dims[2];
-  uint new_w = padded_in.dim.dims[3];
+  int new_h = padded_in.dim.dims[2];
+  int new_w = padded_in.dim.dims[3];
 
   tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
 
@@ -1460,15 +1460,15 @@ TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test0) {
 }
 
 TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test1) {
-  uint pad_size = 1;
+  int pad_size = 1;
   float pad_val = 0;
 
-  uint const in_shape[] = { 1, 1, 3, 2 };
+  int const in_shape[] = { 1, 1, 3, 2 };
   tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
   tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x3x2 -> 1x1x5x4
 
-  uint new_h = padded_in.dim.dims[2];
-  uint new_w = padded_in.dim.dims[3];
+  int new_h = padded_in.dim.dims[2];
+  int new_w = padded_in.dim.dims[3];
 
   tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
 
@@ -1488,15 +1488,15 @@ TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test1) {
 }
 
 TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test3) {
-  uint pad_size = 1;
+  int pad_size = 1;
   float pad_val = 0;
 
-  uint const in_shape[] = { 1, 1, 2, 3 };
+  int const in_shape[] = { 1, 1, 2, 3 };
   tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
   tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x2x3 -> 1x1x4x5
 
-  uint new_h = padded_in.dim.dims[2];
-  uint new_w = padded_in.dim.dims[3];
+  int new_h = padded_in.dim.dims[2];
+  int new_w = padded_in.dim.dims[3];
 
   tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
 
@@ -1516,15 +1516,15 @@ TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test3) {
 }
 
 TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test4) {
-  uint pad_size = 2;
+  int pad_size = 2;
   float pad_val = 0;
 
-  uint const in_shape[] = { 1, 1, 3, 2 };
+  int const in_shape[] = { 1, 1, 3, 2 };
   tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
   tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x2x3 -> 1x1x7x6
 
-  uint new_h = padded_in.dim.dims[2];
-  uint new_w = padded_in.dim.dims[3];
+  int new_h = padded_in.dim.dims[2];
+  int new_w = padded_in.dim.dims[3];
 
   tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
 
@@ -1544,15 +1544,15 @@ TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test4) {
 }
 
 TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test5) {
-  uint pad_size = 2;
+  int pad_size = 2;
   float pad_val = 0;
 
-  uint const in_shape[] = { 1, 1, 2, 3 };
+  int const in_shape[] = { 1, 1, 2, 3 };
   tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
   tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x1x2x3 -> 1x1x6x7
 
-  uint new_h = padded_in.dim.dims[2];
-  uint new_w = padded_in.dim.dims[3];
+  int new_h = padded_in.dim.dims[2];
+  int new_w = padded_in.dim.dims[3];
 
   tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
 
@@ -1572,15 +1572,15 @@ TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test5) {
 }
 
 TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test6) {
-  uint pad_size = 1;
+  int pad_size = 1;
   float pad_val = 0;
 
-  uint const in_shape[] = { 1, 2, 2, 2 };
+  int const in_shape[] = { 1, 2, 2, 2 };
   tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
   tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x2x2x2 -> 1x2x4x4
 
-  uint new_h = padded_in.dim.dims[2];
-  uint new_w = padded_in.dim.dims[3];
+  int new_h = padded_in.dim.dims[2];
+  int new_w = padded_in.dim.dims[3];
 
   tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
 
@@ -1600,15 +1600,15 @@ TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test6) {
 }
 
 TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test7) {
-  uint pad_size = 1;
+  int pad_size = 1;
   float pad_val = 0;
 
-  uint const in_shape[] = { 1, 2, 3, 2 };
+  int const in_shape[] = { 1, 2, 3, 2 };
   tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
   tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x2x3x2 -> 1x2x5x4
 
-  uint new_h = padded_in.dim.dims[2];
-  uint new_w = padded_in.dim.dims[3];
+  int new_h = padded_in.dim.dims[2];
+  int new_w = padded_in.dim.dims[3];
 
   tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
 
@@ -1628,15 +1628,15 @@ TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test7) {
 }
 
 TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test8) {
-  uint pad_size = 2;
+  int pad_size = 2;
   float pad_val = 0;
 
-  uint const in_shape[] = { 1, 2, 3, 2 };
+  int const in_shape[] = { 1, 2, 3, 2 };
   tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
   tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 1x2x3x2 -> 1x2x7x6
 
-  uint new_h = padded_in.dim.dims[2];
-  uint new_w = padded_in.dim.dims[3];
+  int new_h = padded_in.dim.dims[2];
+  int new_w = padded_in.dim.dims[3];
 
   tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
 
@@ -1656,15 +1656,15 @@ TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test8) {
 }
 
 TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test9) {
-  uint pad_size = 1;
+  int pad_size = 1;
   float pad_val = 0;
 
-  uint const in_shape[] = { 2, 2, 2, 2 };
+  int const in_shape[] = { 2, 2, 2, 2 };
   tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
   tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 2x2x2x2 -> 2x2x4x4
 
-  uint new_h = padded_in.dim.dims[2];
-  uint new_w = padded_in.dim.dims[3];
+  int new_h = padded_in.dim.dims[2];
+  int new_w = padded_in.dim.dims[3];
 
   tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
 
@@ -1684,15 +1684,15 @@ TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test9) {
 }
 
 TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test10) {
-  uint pad_size = 5;
+  int pad_size = 5;
   float pad_val = 0;
 
-  uint const in_shape[] = { 5, 13, 7, 20 };
+  int const in_shape[] = { 5, 13, 7, 20 };
   tensor_t in = tensor_make_patterned(in_shape, dim_of_shape(in_shape));
   tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val); // 2x2x2x2 -> 2x2x4x4
 
-  uint new_h = padded_in.dim.dims[2];
-  uint new_w = padded_in.dim.dims[3];
+  int new_h = padded_in.dim.dims[2];
+  int new_w = padded_in.dim.dims[3];
 
   tensor_t out = tensor_make_remove_padding_square(padded_in, pad_size);
 

@@ -30,7 +30,7 @@ extern "C" {
  * See https://fengggli.github.io/gpu-computing-materials/layers/pool.html 
  */
 status_t global_avg_pool_forward(tensor_t const x, lcache_t *cache, tensor_t y);
-status_t global_avg_pool_forward_device(tensor_t const x, lcache_t *cache, tensor_t y);
+
 
 /*
  * @brief backprop
@@ -44,7 +44,6 @@ status_t global_avg_pool_forward_device(tensor_t const x, lcache_t *cache, tenso
  * Note: all tensor_t should be pre-allocated
  */
 status_t global_avg_pool_backward(tensor_t dx, lcache_t *cache, tensor_t const dy);
-status_t global_avg_pool_backward_device(tensor_t dx, lcache_t *cache, tensor_t const dy);
 
 
 #ifdef __cplusplus

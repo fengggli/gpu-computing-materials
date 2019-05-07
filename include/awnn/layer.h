@@ -26,7 +26,7 @@ extern "C" {
  *
  * */
 typedef struct {
-  uint count;  // number of tensors
+  int count;  // number of tensors
   tensor_t all_tensors[MAX_CACHE_SIZE];
   char name[MAX_STR_LENGTH];
   struct list_head list;  // for inter-layer traversal

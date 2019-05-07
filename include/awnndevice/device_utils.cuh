@@ -29,8 +29,8 @@ static __device__ int global_idx() {
   return threadId;
 }
 
-static __device__ uint d_capacity(tensor_t t) {
-  uint c = 0;
+static __device__ int d_capacity(tensor_t t) {
+  int c = 0;
 
   if (t.dim.dims[0] == 0) {
     return c;
@@ -53,7 +53,7 @@ static __global__ void print_tensor_device(tensor_t t) {
     printf("entered print_tensor_device capacity = %u\n", d_capacity(t));
 
     printf("[");
-    uint i = 0;
+    int i = 0;
     for (; i < d_capacity(t) - 1; ++i) {
       printf("%f ", i, t.data[i]);
     }
@@ -69,7 +69,7 @@ static __global__ void elementwise_add_inplace_device(tensor_t a, tensor_t const
     assert(d_capacity(a) == d_capacity(b));
   }
 
-  for (uint i : grid_stride_range(0u, d_capacity(a))) {
+  for (int i : grid_stride_range(0, d_capacity(a))) {
     a.data[i] += b.data[i];
   }
 }
@@ -82,7 +82,7 @@ static __global__ void elementwise_mul_inplace_device(tensor_t a, tensor_t b) {
     assert(d_capacity(a) == d_capacity(b));
   }
 
-  for (uint i : grid_stride_range(0u, d_capacity(a))) {
+  for (int i : grid_stride_range(0, d_capacity(a))) {
     a.data[i] *= b.data[i];
   }
 }
@@ -96,7 +96,7 @@ static __global__ void build_mask_device(tensor_t x, tensor_t mask) {
     assert(d_capacity(x) == d_capacity(mask));
   }
 
-  for (uint i : grid_stride_range(0u, d_capacity(mask))) {
+  for (int i : grid_stride_range(0, d_capacity(mask))) {
     mask.data[i] = x.data[i] > 0 ? 1.0 : 0.0;
   }
 }
@@ -105,7 +105,7 @@ static __global__ void build_mask_device(tensor_t x, tensor_t mask) {
 static __global__ void tensor_fill_scalar_device(tensor_t t, T scalar)
 {
   assert(t.mem_type == GPU_MEM);
-  for (uint i : grid_stride_range(0u, d_capacity(t))) {
+  for (int i : grid_stride_range(0, d_capacity(t))) {
     t.data[i] = 0;
   }
 }
@@ -123,7 +123,7 @@ static __global__ void tensor_copy_d2d(tensor_t copy_to, tensor_t copy_from)
     assert(copy_to.dim.dims[3] == copy_from.dim.dims[3]);
   }
 
-  for (uint i : grid_stride_range(0u, d_capacity(copy_to))) {
+  for (int i : grid_stride_range(0, d_capacity(copy_to))) {
     copy_to.data[i] = copy_from.data[i];
   }
 }

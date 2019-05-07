@@ -8,8 +8,8 @@ status_t layer_fc_forward(tensor_t const x, tensor_t const w, tensor_t const b,
                           lcache_t *cache, tensor_t y) {
   // flatten x to from N-d to 2-d
   tensor_t x_reshaped = tensor_make_copy(x);
-  uint N = x.dim.dims[0];
-  uint const flat_shape[] = {N, tensor_get_capacity(x) / N};
+  int N = x.dim.dims[0];
+  int const flat_shape[] = {N, tensor_get_capacity(x) / N};
   tensor_reshape_(&x_reshaped, flat_shape, 2);
 
   // forwarding
@@ -44,8 +44,8 @@ status_t layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db,
   tensor_t x_reshaped_T = lcache_pop(cache);
 
   // calculate gradient: dx = dy*w^T
-  uint N = dx.dim.dims[0];
-  uint const flat_shape[] = {N, tensor_get_capacity(dx) / N};
+  int N = dx.dim.dims[0];
+  int const flat_shape[] = {N, tensor_get_capacity(dx) / N};
   dim_t old_dim = dx.dim;  // save to recover later
   if (S_OK != tensor_reshape_(&dx, flat_shape, 2)) goto end;
   tensor_matmul(dy, w_T, dx);
@@ -56,9 +56,9 @@ status_t layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db,
 
   // gradient db = sum(dy, axis =1)
   // this make [N, M] sum to [1,M];
-  uint axis_id = 0;
+  int axis_id = 0;
   tensor_t sum = tensor_make_sum(dy, axis_id);
-  uint const tmp_shape[] = {tensor_get_capacity(db)};
+  int const tmp_shape[] = {tensor_get_capacity(db)};
   if (S_OK != tensor_reshape_(&sum, tmp_shape, 1)) goto end;  // reshape to 2d
   tensor_copy(db, sum);
   tensor_destroy(&sum);

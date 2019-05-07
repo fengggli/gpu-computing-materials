@@ -48,13 +48,13 @@ TEST_F(LayerResBlockDevice, ConvRelu) {
   lcache_t cache;
 
 #ifdef TEST_MORE
-  uint shape_x[] = {2, 3, 8, 8};
-  uint shape_w[] = {4, 3, 3, 3};
-  uint shape_y[] = {2, 4, 8, 8};
+  int shape_x[] = {2, 3, 8, 8};
+  int shape_w[] = {4, 3, 3, 3};
+  int shape_y[] = {2, 4, 8, 8};
 #else
-  uint shape_x[] = {1, 1, 4, 4};
-  uint shape_w[] = {1, 1, 3, 3};
-  uint shape_y[] = {1, 1, 4, 4};
+  int shape_x[] = {1, 1, 4, 4};
+  int shape_w[] = {1, 1, 3, 3};
+  int shape_y[] = {1, 1, 4, 4};
 #endif
 
   conv_param_t params;
@@ -125,7 +125,7 @@ TEST_F(LayerResBlockDevice, ConvRelu) {
 TEST_F(LayerResBlockDevice, ResidualBlock) {
   lcache_t cache;
 
-  uint N, C, H, W, F, HH, WW;
+  int N, C, H, W, F, HH, WW;
 #ifdef TEST_MORE
   N = 2, C = 3, H = 5, W = 5;
   F = 3, HH = 3, WW = 3;
@@ -134,9 +134,9 @@ TEST_F(LayerResBlockDevice, ResidualBlock) {
   F = 1, HH = 3, WW = 3;
 #endif
 
-  uint shape_x[] = {N, C, H, W};
-  uint shape_w[] = {F, C, HH, WW};
-  uint shape_y[] = {N, F, H, W};  // stride=1 padding=1 won't change feature H/W
+  int shape_x[] = {N, C, H, W};
+  int shape_w[] = {F, C, HH, WW};
+  int shape_y[] = {N, F, H, W};  // stride=1 padding=1 won't change feature H/W
 
   conv_param_t params;
   params.stride = 1;

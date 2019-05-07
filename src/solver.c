@@ -10,7 +10,7 @@ void sgd_update(param_t *p_param, T learning_rate) {
   tensor_t param = p_param->data;
   tensor_t dparam = p_param->diff;
   T *pelem;
-  uint ii;
+  int ii;
   AWNN_CHECK_GT(learning_rate, 0);
 
   tensor_for_each_entry(pelem, ii, dparam) { (*pelem) *= learning_rate; }
@@ -28,7 +28,7 @@ void sgd_update_momentum(param_t *p_param, T learning_rate, T momentum) {
   tensor_t velocity = *ptr_velocity;
 
   T *pelem;
-  uint ii;
+  int ii;
   AWNN_CHECK_GT(learning_rate, 0);
 
   tensor_for_each_entry(pelem, ii, dparam) { (*pelem) *= learning_rate; }
@@ -39,20 +39,20 @@ void sgd_update_momentum(param_t *p_param, T learning_rate, T momentum) {
   PDBG("updating %s complete.", p_param->name);
 }
 
-static uint _get_correct_count(tensor_t const x, label_t const *labels,
-                               uint nr_record, model_t const *model,
+static int _get_correct_count(tensor_t const x, label_t const *labels,
+                               int nr_record, model_t const *model,
                                tensor_t (*func_forward_infer)(model_t const *,
                                                               tensor_t)) {
   AWNN_CHECK_EQ(x.dim.dims[0], nr_record);
   tensor_t scores = func_forward_infer(model, x);
   label_t label_predicted[nr_record];
 
-  uint nr_classes = scores.dim.dims[1];
-  for (uint i = 0; i < nr_record; i++) {
-    uint predicted_cls_id = CLS_ID_NULL;
+  int nr_classes = scores.dim.dims[1];
+  for (int i = 0; i < nr_record; i++) {
+    int predicted_cls_id = CLS_ID_NULL;
     T max_score = -1000;
 
-    for (uint j = 0; j < nr_classes; j++) {
+    for (int j = 0; j < nr_classes; j++) {
       T this_score = scores.data[i * nr_classes + j];
       if (this_score > max_score) {
         max_score = this_score;
@@ -62,8 +62,8 @@ static uint _get_correct_count(tensor_t const x, label_t const *labels,
     label_predicted[i] = predicted_cls_id;
   }
   // get the accuracy
-  uint nr_correct = 0;
-  for (uint i = 0; i < nr_record; i++) {
+  int nr_correct = 0;
+  for (int i = 0; i < nr_record; i++) {
     if (labels[i] == label_predicted[i]) nr_correct++;
   }
   return nr_correct;
@@ -71,20 +71,20 @@ static uint _get_correct_count(tensor_t const x, label_t const *labels,
 /*
  * get accuracy of validation data
  */
-double check_val_accuracy(data_loader_t *loader, uint val_sz, uint batch_sz,
+double check_val_accuracy(data_loader_t *loader, int val_sz, int batch_sz,
                           model_t const *model,
                           tensor_t (*func_forward_infer)(model_t const *,
                                                          tensor_t)) {
-  uint nr_correct = 0;
-  uint nr_total = 0;
+  int nr_correct = 0;
+  int nr_total = 0;
 
   tensor_t x_val;
   label_t *labels_val;
 
-  uint nr_iterations = val_sz / batch_sz;
+  int nr_iterations = val_sz / batch_sz;
 
-  for (uint iteration = 0; iteration < nr_iterations; iteration++) {
-    uint nr_record =
+  for (int iteration = 0; iteration < nr_iterations; iteration++) {
+    int nr_record =
         get_validation_batch(loader, &x_val, &labels_val, iteration, batch_sz);
     nr_correct += _get_correct_count(x_val, labels_val, nr_record, model,
                                      func_forward_infer);
@@ -99,26 +99,26 @@ double check_val_accuracy(data_loader_t *loader, uint val_sz, uint batch_sz,
 /*
  * Get accuracy of a sample of train data
  */
-double check_train_accuracy(data_loader_t *loader, uint sample_sz,
-                            uint batch_sz, model_t const *model,
+double check_train_accuracy(data_loader_t *loader, int sample_sz,
+                            int batch_sz, model_t const *model,
                             tensor_t (*func_forward_infer)(model_t const *,
                                                            tensor_t)) {
-  uint nr_correct = 0;
-  uint nr_total = 0;
+  int nr_correct = 0;
+  int nr_total = 0;
 
   tensor_t x_train_sampled;
   label_t *labels_train_sampled;
 
-  uint train_sz = loader->train_split;
-  uint iterations_per_epoch =
+  int train_sz = loader->train_split;
+  int iterations_per_epoch =
       train_sz / batch_sz;  // how many batches in each epoch
-  uint nr_iterations = sample_sz / batch_sz;
+  int nr_iterations = sample_sz / batch_sz;
 
-  for (uint iteration = 0; iteration < nr_iterations; iteration++) {
+  for (int iteration = 0; iteration < nr_iterations; iteration++) {
     // each time choose a random batch
-    uint batch_id = (uint)rand() % iterations_per_epoch;
+    int batch_id = (int)rand() % iterations_per_epoch;
     // PINF("[---traning accuracy] [%u, %u)", batch_id, batch_id + 1);
-    uint nr_record = get_train_batch(loader, &x_train_sampled,
+    int nr_record = get_train_batch(loader, &x_train_sampled,
                                      &labels_train_sampled, batch_id, batch_sz);
     nr_correct += _get_correct_count(x_train_sampled, labels_train_sampled,
                                      nr_record, model, func_forward_infer);

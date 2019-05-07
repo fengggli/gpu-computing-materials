@@ -11,13 +11,13 @@
 extern "C" {
 #endif
 typedef struct {
-  uint nr_imgs;
+  int nr_imgs;
   T *data;
   label_t *label;
 } dataset_t;
 
 typedef struct {
-  uint batch_sz;
+  int batch_sz;
 
   // from orignal data, points to allocated mem
   T * data_train;
@@ -26,8 +26,8 @@ typedef struct {
   label_t * label_test;
 
   // Used to split data above to train set/ validation set;
-  uint train_split; // [0, train_split) wll be train set
-  uint val_split; // [val_split, 50000) will be val set
+  int train_split; // [0, train_split) wll be train set
+  int val_split; // [val_split, 50000) will be val set
 
 } data_loader_t;
 
