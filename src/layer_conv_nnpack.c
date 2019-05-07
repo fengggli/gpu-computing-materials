@@ -20,11 +20,11 @@ status_t convolution_forward_nnpack(conv_method_t algo, tensor_t const x,
   uint batch_size = x.dim.dims[0];
   uint input_channel = x.dim.dims[1];
   uint output_channel = w.dim.dims[0];
-  struct nnp_size input_size, kernel_size;
+  struct nnp_size input_size, kernel_size, output_size;
   input_size.height = x.dim.dims[2];
   input_size.width = x.dim.dims[3];
-  /*output_size.height = y.dim.dims[2];*/
-  /*output_size.width = y.dim.dims[3];*/
+  output_size.height = y.dim.dims[2];
+  output_size.width = y.dim.dims[3];
   struct nnp_padding pad;
   pad.bottom = params.padding;
   pad.top = params.padding;
@@ -50,56 +50,59 @@ status_t convolution_forward_nnpack(conv_method_t algo, tensor_t const x,
     nnpack_initialized = 1;
   }
 
-  // allocate mem space
-  // TODO: this can be in the first iteration
-#if 0
-  size_t scratch_size = 0;
-  status = nnp_convolution_output(algo, batch_size,
-                                  input_channel, output_channel, input_size,
-                                  pad, kernel_size, NULL, NULL, NULL, NULL,
-                                  NULL, &scratch_size, nnp_activation_identity,
-                                  NULL,  // activation param
-                                  thrd_pool, profile);
-  AWNN_CHECK_EQ(status, nnp_status_success);
+  struct nnp_size output_subsampling;
+  output_subsampling.height = 1;
+  output_subsampling.width = 1;
 
-  // TODO: this must be 64 aligned, see nnpack.h
-  float *scratch_mem = mem_alloc(scratch_size);
+  if (cache) {  // its during training
+    // nnpack doesn't support those two for training
+    AWNN_CHECK_NE(algo, CONV_METHOD_NNPACK_direct);
+    AWNN_CHECK_NE(algo, CONV_METHOD_NNPACK_implicit_gemm);
+    if (algo != CONV_METHOD_NNPACK_REF) {
+      status = nnp_convolution_output(algo, batch_size, input_channel,
+                                      output_channel, input_size, pad,
+                                      kernel_size, input, kernel, bias, output,
+                                      NULL, NULL, nnp_activation_identity,
+                                      NULL,  // activation param
+                                      thrd_pool, profile);
+      AWNN_CHECK_EQ(status, nnp_status_success);
+    } else {
+      nnp_convolution_output__reference(batch_size, input_channel,
+                                        output_channel, input_size, pad,
+                                        kernel_size, output_subsampling, input,
+                                        kernel, bias, output, thrd_pool);
+    }
 
-  status = nnp_convolution_output(
-      algo, batch_size, input_channel,
-      output_channel, input_size, pad, kernel_size, input, kernel, bias,
-      output, scratch_mem, &scratch_size, nnp_activation_identity,
-      NULL,  // activation param
-      thrd_pool, profile);
-#else
-  if (algo != CONV_METHOD_NNPACK_REF) {
-    status =
-      nnp_convolution_output(algo, batch_size, input_channel, output_channel,
-                             input_size, pad, kernel_size, input, kernel, bias,
-                             output, NULL, NULL, nnp_activation_identity,
-                             NULL,  // activation param
-                             thrd_pool, profile);
-    AWNN_CHECK_EQ(status, nnp_status_success);
-  } else {
-    struct nnp_size output_subsampling;
-    output_subsampling.height = 1;
-    output_subsampling.width = 1;
+    // shadow copy
+    tensor_t cached_x_shadow = x;
+    tensor_t cached_w_shadow = w;
 
-    nnp_convolution_output__reference(
-        batch_size, input_channel, output_channel, input_size, pad, kernel_size,
-        output_subsampling, input, kernel, bias, output, thrd_pool);
-  }
-#endif
-
-  // shadow copy
-  tensor_t cached_x_shadow = x;
-  tensor_t cached_w_shadow = w;
-
-  // TODO put w and data
-  if (cache) {
+    // TODO put w and data
     lcache_push(cache, cached_x_shadow);
     lcache_push(cache, cached_w_shadow);
+
+  } else {  // it's a inference
+    for (uint b = 0; b < batch_size; batch_size++) {
+      if (algo != CONV_METHOD_NNPACK_REF) {
+        status = nnp_convolution_inference(
+            algo, nnp_convolution_transform_strategy_compute, input_channel,
+            output_channel, input_size, pad, kernel_size, output_subsampling,
+            input, kernel, bias, output, NULL, NULL, nnp_activation_identity,
+            NULL,  // activation param
+            thrd_pool, profile);
+        AWNN_CHECK_EQ(status, nnp_status_success);
+      } else {
+        nnp_convolution_output__reference(
+            batch_size, input_channel, output_channel, input_size, pad,
+            kernel_size, output_subsampling, input, kernel, bias, output,
+            thrd_pool);
+      }
+
+      input += input_channel * input_size.height * input_size.width;
+      output += output_channel * output_size.height * output_size.width;
+    }
   }
+
   tensor_destroy(&t_bias);
 
   return S_OK;
@@ -138,6 +141,9 @@ status_t convolution_backward_nnpack(conv_method_t algo, tensor_t dx,
   pthreadpool_t thrd_pool = NULL;
   struct nnp_profile* profile = NULL;
 
+  // nnpack doesn't support those two for training
+  AWNN_CHECK_NE(algo, CONV_METHOD_NNPACK_direct);
+  AWNN_CHECK_NE(algo, CONV_METHOD_NNPACK_implicit_gemm);
   // How about bias?
   // input gradient
   if (algo != CONV_METHOD_NNPACK_REF) {

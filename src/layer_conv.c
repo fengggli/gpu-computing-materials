@@ -32,9 +32,9 @@ status_t convolution_forward(tensor_t const x, tensor_t const w,
     case CONV_METHOD_NNPACK_ft8x8:
     case CONV_METHOD_NNPACK_ft16x16:
     case CONV_METHOD_NNPACK_wt8x8:
+    case CONV_METHOD_NNPACK_REF:
     case CONV_METHOD_NNPACK_implicit_gemm:
     case CONV_METHOD_NNPACK_direct:
-    case CONV_METHOD_NNPACK_REF:
       ret = convolution_forward_nnpack(g_conv_method, x, w, cache, params, y);
       break;
 #endif
