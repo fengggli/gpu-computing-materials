@@ -45,7 +45,7 @@ void reset_all_tensor_device_alloc_dealloc_stats() {
 int mem_alloc_device(tensor_t *d_t) {
   assert(d_t->mem_type == GPU_MEM);
 
-  int size = tensor_get_capacity(*d_t) * sizeof(T);
+  int size = tensor_get_capacity(*d_t) * (int)sizeof(T);
 
   cudaError_t cudaStat;
   cudaStat = cudaMalloc((void**)&d_t->data, size);

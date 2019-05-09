@@ -140,9 +140,8 @@ void tensor_fill_list(tensor_t const t, double const value_list[],
 // TODO : add error handling
 tensor_t _tensor_make(dim_t dim) {
   tensor_t t;
-  int capacity;
-  capacity = dim_get_capacity(dim);
-  t.data = mem_alloc(capacity * sizeof(T));
+  int capacity = dim_get_capacity(dim);
+  t.data = mem_alloc((long unsigned int)capacity * (long unsigned int)sizeof(T));
   t.mem_type = CPU_MEM;
   t.dim = dim;
   AWNN_CHECK_NE(NULL, t.data);

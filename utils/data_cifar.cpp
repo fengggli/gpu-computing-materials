@@ -38,7 +38,7 @@ void read_image(FILE *file, label_t *label, char *buffer) {
 // Saves a float/double
 // TODO: substract mean
 inline void preprocess_data(char *buffer_str, T *buffer_float, size_t nr_elem) {
-  for (int i = 0; i < nr_elem; i++) {
+  for (int i = 0; (size_t)i < nr_elem; i++) {
     int channel_id = i / (H * W);
     // buffer_float[i] = T(buffer_str[i]);
     // normalize to (0, 255) -> (0, 1), then rescale to N(0,1)
