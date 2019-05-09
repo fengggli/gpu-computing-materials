@@ -898,6 +898,7 @@ status_t convolution_backward_device(cublasHandle_t handle, tensor_t d_dx, tenso
 
   // cache
   tensor_destroy_device(&d_x_cols);
+  tensor_destroy_device(&d_dx_cols);
   tensor_destroy_device(&d_dout_T_1230);
   tensor_destroy_device(&d_x_cols_T);
   tensor_destroy_device(&d_w_T);

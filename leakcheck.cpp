@@ -11,6 +11,8 @@
 
 #include "awnndevice/layer_conv_device.cuh"
 #include "awnndevice/memory.cuh"
+#include "awnndevice/tensor.cuh"
+
 #include <cstdio>
 #include <numeric>
 #include <vector>
@@ -27,10 +29,10 @@ int main() {
   }
 
   int nr_iterations = 1;
-//  std::vector<int> block_arr = { 1, 2, 4, 8, 16, 32, 64 };
-//  std::vector<int> thread_arr = { 2, 4, 8, 16, 32, 64, 128, 256, 512};
-  std::vector<int> block_arr = { 64 };
-  std::vector<int> thread_arr = { 256 };
+  std::vector<int> block_arr = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 };
+  std::vector<int> thread_arr = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+//  std::vector<int> block_arr = { 64 };
+//  std::vector<int> thread_arr = { 256 };
 
   std::vector<int> N_arrary = {1, 4, 16}; // nr_imgs
   std::vector<int> C_arrary = {4}; // nr_input_channels
@@ -122,13 +124,13 @@ int main() {
                 tensor_destroy(&dx);
                 tensor_destroy(&dw);
 
-                tensor_destroy_device(d_x);
-                tensor_destroy_device(d_w);
-                tensor_destroy_device(d_y);
+                tensor_destroy_device(&d_x);
+                tensor_destroy_device(&d_w);
+                tensor_destroy_device(&d_y);
 
-                tensor_destroy_device(d_dx);
-                tensor_destroy_device(d_dw);
-                tensor_destroy_device(d_dy);
+                tensor_destroy_device(&d_dx);
+                tensor_destroy_device(&d_dw);
+                tensor_destroy_device(&d_dy);
 
                 double avg_fwd_ms =
                     std::accumulate(forward_times.begin(), forward_times.end(),
