@@ -15,7 +15,7 @@
 #include "gtest/gtest.h"
 #include "test_util.h"
 
-#define PROFILE_RESNET
+// #define PROFILE_RESNET
 namespace {
 
 // The fixture for testing class Foo.

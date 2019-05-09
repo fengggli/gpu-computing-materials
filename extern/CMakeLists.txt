@@ -2,8 +2,8 @@
 set(CMAKE_C_FLAGS_DEBUG "" )
 set(CMAKE_CXX_FLAGS_DEBUG "")
 
-set(CMAKE_C_FLAGS "" )
-set(CMAKE_CXX_FLAGS "")
+set(CMAKE_C_FLAGS "-fPIC" )
+set(CMAKE_CXX_FLAGS "-fPIC")
 
 if(USE_NNPACK)
   add_subdirectory(NNPACK NNPACK)

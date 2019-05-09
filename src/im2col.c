@@ -40,12 +40,18 @@ int dilation_w = 1;
             }
           } else {
             int input_col = -pad_w + kernel_col * dilation_w;
+#if 1
             for (int output_col = output_w; output_col; output_col--) {
               if (is_a_ge_zero_and_a_lt_b(input_col, width)) {
                 *(data_col++) = data_im[input_row * width + input_col];
               } else {
                 *(data_col++) = 0;
               }
+#else
+            if (is_a_ge_zero_and_a_lt_b(input_col, width)) {
+            } else {
+            }
+#endif
               input_col += stride_w;
             }
           }
