@@ -13,21 +13,26 @@ Current
 
   Ask Feng for access.
 
-Working in progress
---------------------
-
-* Batchnorm
-* More measurement
 
 TODO List
 ----------
 
+* Extend to more layers
 * Theoretical model.
 * Parallize it.
 
 =========
 Previous
 =========
+
+0.4.8
+======
+:Data 2019-05-12
+
+* Add nnpack support, resnet can use nnpack backend for the convolution operations(https://github.com/fengggli/gpu-computing-materials/pull/41)
+* Initial implementation of convolution is slow due to explict transpose and memory copies. (https://github.com/fengggli/gpu-computing-materials/pull/41#issuecomment-486513801), we did performance analysis and improvement for the convolution layer.
+* Add per-image convolution like in Caffe(https://github.com/fengggli/gpu-computing-materials/pull/49).
+* There is also a comparision of AWNN vs caffe in the case of (1)NNPACK or (2)per-img im2col+openblas gemm when different batch sizes are used (https://github.com/fengggli/gpu-computing-materials/pull/49#issuecomment-490657411): Our implementation is slightly faster than Caffe when using openblas gemm; nnpack in caffe patch doesn't provide backward implementation, I can add it though.
 
 0.4.7
 ======
