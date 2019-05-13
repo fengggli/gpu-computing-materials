@@ -94,37 +94,37 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#current">Current</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#working-in-progress">Working in progress</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#todo-list">TODO List</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#previous">Previous</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id2">0.4.7</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id3">0.4.6</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">0.4.8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">0.4.7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">0.4.6</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#added">Added</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id4">0.4.5</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id5">Added</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">0.4.5</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Added</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id6">0.4.4</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id7">Added</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">0.4.4</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Added</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id8">0.4.3</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id9">Added</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">0.4.3</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Added</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#others">others</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id10">0.4.2</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id11">Added</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id11">0.4.2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id12">Added</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id12">&lt; 0.4.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id13">&lt; 0.4.1</a></li>
 </ul>
 </li>
 </ul>
@@ -200,16 +200,10 @@
 <p>Code is maintained in <a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/">https://github.com/fengggli/gpu-computing-materials/</a></p>
 <p class="last">Ask Feng for access.</p>
 </div>
-<div class="section" id="working-in-progress">
-<h3>Working in progress<a class="headerlink" href="#working-in-progress" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li>Batchnorm</li>
-<li>More measurement</li>
-</ul>
-</div>
 <div class="section" id="todo-list">
 <h3>TODO List<a class="headerlink" href="#todo-list" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
+<li>Extend to more layers</li>
 <li>Theoretical model.</li>
 <li>Parallize it.</li>
 </ul>
@@ -219,7 +213,17 @@
 <div class="section" id="previous">
 <h1>Previous<a class="headerlink" href="#previous" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id2">
-<h2>0.4.7<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<h2>0.4.8<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>:Data 2019-05-12</p>
+<ul class="simple">
+<li>Add nnpack support, resnet can use nnpack backend for the convolution operations(<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/pull/41">https://github.com/fengggli/gpu-computing-materials/pull/41</a>)</li>
+<li>Initial implementation of convolution is slow due to explict transpose and memory copies. (<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/pull/41#issuecomment-486513801">https://github.com/fengggli/gpu-computing-materials/pull/41#issuecomment-486513801</a>), we did performance analysis and improvement for the convolution layer.</li>
+<li>Add per-image convolution like in Caffe(<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/pull/49">https://github.com/fengggli/gpu-computing-materials/pull/49</a>).</li>
+<li>There is also a comparision of AWNN vs caffe in the case of (1)NNPACK or (2)per-img im2col+openblas gemm when different batch sizes are used (<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/pull/49#issuecomment-490657411">https://github.com/fengggli/gpu-computing-materials/pull/49#issuecomment-490657411</a>): Our implementation is slightly faster than Caffe when using openblas gemm; nnpack in caffe patch doesn’t provide backward implementation, I can add it though.</li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h2>0.4.7<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <p>:Data 2019-04-22</p>
 <ul class="simple">
 <li>Simplified resnet(<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/pull/38">https://github.com/fengggli/gpu-computing-materials/pull/38</a>)</li>
@@ -227,8 +231,8 @@
 <li>Initializer (kaiming initialization)</li>
 </ul>
 </div>
-<div class="section" id="id3">
-<h2>0.4.6<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id4">
+<h2>0.4.6<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
 <p>:Data 2019-04-15</p>
 <div class="section" id="added">
 <h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
@@ -237,11 +241,11 @@
 </ul>
 </div>
 </div>
-<div class="section" id="id4">
-<h2>0.4.5<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
-<p>:Date 2019-04-10</p>
 <div class="section" id="id5">
-<h3>Added<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<h2>0.4.5<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<p>:Date 2019-04-10</p>
+<div class="section" id="id6">
+<h3>Added<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>utils for debug use (tensor mean/std, etc)</li>
 <li>fixed several bugs</li>
@@ -250,11 +254,11 @@
 </ul>
 </div>
 </div>
-<div class="section" id="id6">
-<h2>0.4.4<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
-<p>:Date 2019-04-08</p>
 <div class="section" id="id7">
-<h3>Added<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<h2>0.4.4<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+<p>:Date 2019-04-08</p>
+<div class="section" id="id8">
+<h3>Added<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>cifar Data loader:</li>
 </ol>
@@ -300,12 +304,12 @@
 </div></blockquote>
 </div>
 </div>
-<div class="section" id="id8">
-<h2>0.4.3<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id9">
+<h2>0.4.3<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
 <p>:Date 2019-04-01</p>
 <p>See (<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/pull/19">https://github.com/fengggli/gpu-computing-materials/pull/19</a>)</p>
-<div class="section" id="id9">
-<h3>Added<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id10">
+<h3>Added<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>a fc_relu sandwich layer</li>
 <li>weight initialization (currently only linspace is used)</li>
@@ -333,11 +337,11 @@
 </ul>
 </div>
 </div>
-<div class="section" id="id10">
-<h2>0.4.2<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h2>
-<p>:Date 2019-03-30</p>
 <div class="section" id="id11">
-<h3>Added<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<h2>0.4.2<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h2>
+<p>:Date 2019-03-30</p>
+<div class="section" id="id12">
+<h3>Added<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Layers:</li>
 </ol>
@@ -360,8 +364,8 @@
 </div></blockquote>
 </div>
 </div>
-<div class="section" id="id12">
-<h2>&lt; 0.4.1<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id13">
+<h2>&lt; 0.4.1<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
 <p>see dl-docs for changelog prior to 0.4.1</p>
 </div>
 </div>
