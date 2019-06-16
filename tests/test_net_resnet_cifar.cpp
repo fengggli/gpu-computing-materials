@@ -32,7 +32,7 @@ TEST_F(NetMLPTest, CifarTest) {
   uint train_sz = 4000;
   // uint train_sz = 4000;
   uint nr_epoches = 5;
-  uint batch_sz = 128;
+  uint batch_sz = 64;
 #endif
 
   uint input_shape[] = {batch_sz, 3, 32, 32};
@@ -40,10 +40,11 @@ TEST_F(NetMLPTest, CifarTest) {
   uint output_dim = 10;
   uint nr_stages = 1;
   uint nr_blocks[MAX_STAGES] = {2};
-  T reg = 0;
+  T reg = 0.001;
   normalize_method_t normalize_method = NORMALIZE_NONE;  // no batchnorm now
 
-  set_conv_method(CONV_METHOD_NNPACK_AUTO);
+  // set_conv_method(CONV_METHOD_NNPACK_AUTO);
+  set_conv_method(CONV_METHOD_PERIMG);
   resnet_init(&model, input_dim, output_dim, nr_stages, nr_blocks, reg,
               normalize_method);
 
@@ -57,7 +58,7 @@ TEST_F(NetMLPTest, CifarTest) {
   EXPECT_EQ(S_OK, ret);
 
   uint val_sz = 1000;
-  T learning_rate = 0.1;
+  T learning_rate = 0.01;
 
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
