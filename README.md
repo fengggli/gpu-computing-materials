@@ -16,18 +16,46 @@
 ## Code guideline
 
 #### prepare (Optional)
-This is only needed for feng's experiments in CPU implementation. you can ignore it.
+  This is only needed for feng's experiments in CPU implementation(using cblas). you can ignore it.
 sudo ./install-apt.sh
 
 #### start
-```
-git submodule update --init
-mkdir build
-cd build
-cmake .. 
-  * (optional )use cmake -DUSE_CLANG=on if you want to build with clang)
-make
-```
+
+1. Prepare build directory
+
+    ```
+    git submodule update --init
+    mkdir build
+    cd build
+    ```
+
+2. configurate build options
+
+    There are several backends for covolution, also we can choose FLT32/FLT64; you can check
+    kicurrently enabled configurations in build/config.h
+
+    * CI is build with minimal configurations
+    ```
+    cmake -DIS_CI_BUILD=on ..
+    ```
+
+    * to use CUDA with flt32
+    ```
+    cmake -DUSE_CUDA=on -DUSE_CUDNN=on -DAWNN_USE_FLT32=on -DCMAKE_BUILD_TYPE=Release  ..
+    ```
+
+    * To use NNPACK with flt32 use
+    ```
+    cmake -DUSE_NNPACK=on -DAWNN_USE_FLT32=on -DCMAKE_BUILD_TYPE=Release ..
+    ```
+
+3. In the builddir run:
+
+    ```
+    make
+    ```
+
+4. (optional )use cmake -DUSE_CLANG=on if you want to build with clang)
 
 #### run test
 1. run all tests(in the build directory)

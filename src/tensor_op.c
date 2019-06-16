@@ -43,6 +43,35 @@ tensor_t tensor_make_transpose_1230(tensor_t t) {
   return tpose;
 }
 
+#ifdef USE_OPENBLAS
+status_t awnn_gemm(const int TransA,
+    const int TransB, const int M, const int N, const int K, const double alpha,
+    const T* A, const T* B, const double beta, T*C){
+#ifndef IS_CI_BUILD // openblas installed by apt doesn't support those...but we can set the environment vars
+  goto_set_num_threads(AWNN_GEMM_THREADS);
+  openblas_set_num_threads(AWNN_GEMM_THREADS);
+#endif
+  int lda = (TransA == CblasNoTrans)? K: M;
+  int ldb = (TransB == CblasNoTrans)? N: K;
+#ifndef AWNN_USE_FLT32
+  cblas_dgemm(CblasRowMajor, TransA, TransB,
+      M, N, K,
+      (double)alpha, A, lda,
+      B, ldb,
+      (double)beta, C, N);
+
+#else
+  cblas_sgemm(CblasRowMajor, (CBLAS_TRANSPOSE)TransA, (CBLAS_TRANSPOSE)TransB,
+      M, N, K,
+      (float)alpha, A, lda,
+      B, ldb,
+      (float)beta, C, N);
+#endif
+
+  return S_OK;
+}
+#endif
+
 // TODO:  results not correct
 status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
   status_t ret = S_ERR;
@@ -64,26 +93,15 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
     print_trace();
     goto end;
   }
-  uint m = in1.dim.dims[0];
-  uint k = in1.dim.dims[1];
-  uint n = in2.dim.dims[1];
+  int m = (int)in1.dim.dims[0];
+  int k = (int)in1.dim.dims[1];
+  int n = (int)in2.dim.dims[1];
 
   // PDBG("mnk = [%u, %u, %u]", m,n,k);
-
 #ifdef USE_OPENBLAS
   // https://software.intel.com/en-us/mkl-tutorial-c-multiplying-matrices-using-dgemm
   tensor_fill_scalar(out, 0.0);
-#ifndef AWNN_USE_FLT32
-  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-      (int)m, (int)n, (int)k,
-      1, in1.data, (int)k,
-      in2.data, (int)n,
-      1.0, out.data, (int)n);
-
-#else
-  cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, (int)m, (int)n, (int)k,
-              1, in1.data, (int)k, in2.data, (int)n, 1.0, out.data, (int)n);
-#endif
+  awnn_gemm(CblasNoTrans, CblasNoTrans, m, n, k, 1.0, in1.data, in2.data, 1.0, out.data);
 #else
   uint ii, jj, kk; // A[i.j] with B[j,k]
   for(ii = 0; ii < m; ii++){

@@ -15,6 +15,7 @@
 #include "gtest/gtest.h"
 #include "test_util.h"
 
+// #define PROFILE_RESNET
 namespace {
 
 // The fixture for testing class Foo.
@@ -26,16 +27,23 @@ class NetResnetTest : public ::testing::Test {
 
 // input of forward
 model_t NetResnetTest::model;
+
+// CONV_METHOD_NNPACK_wt8x8,  // returns 26
+// CONV_METHOD_NNPACK_implicit_gemm,  // returns 26
+// CONV_METHOD_NNPACK_direct, // returns 26
+// CONV_METHOD_NNPACK_REF, very slow
 std::vector<conv_method_t> all_methods = {
-    CONV_METHOD_NNPACK_AUTO, CONV_METHOD_NNPACK_ft8x8,
-    CONV_METHOD_NNPACK_ft16x16,
-    // CONV_METHOD_NNPACK_wt8x8,  // returns 26
-    // CONV_METHOD_NNPACK_implicit_gemm,  // returns 26
-    // CONV_METHOD_NNPACK_direct, // returns 26
-    CONV_METHOD_NNPACK_REF, CONV_METHOD_NAIVE};
+#ifndef IS_CI_BUILD // nnpack requires instruct set not avaible in ci
+     CONV_METHOD_NNPACK_AUTO,
+     CONV_METHOD_NNPACK_ft8x8,
+     CONV_METHOD_NNPACK_ft16x16,
+#endif
+    CONV_METHOD_NAIVE,
+    CONV_METHOD_PERIMG,
+    };
 
 TEST_F(NetResnetTest, Construct) {
-  uint batch_sz = 3;
+  uint batch_sz = 3; // change to other batchz might break
   uint input_shape[] = {batch_sz, 3, 32, 32};
   dim_t input_dim = make_dim_from_arr(array_size(input_shape), input_shape);
   uint output_dim = 10;
@@ -54,7 +62,10 @@ TEST_F(NetResnetTest, Construct) {
   "fc0.weight"));
             */
 }
+
+#ifndef PROFILE_RESNET
 TEST_F(NetResnetTest, ForwardInferOnly) {
+  // set_conv_method(CONV_METHOD_PERIMG);
   tensor_t w0 = net_get_param(model.list_all_params, "conv1.weight")->data;
   tensor_t w1 =
       net_get_param(model.list_all_params, "layer1.1.conv1.weight")->data;
@@ -94,13 +105,6 @@ TEST_F(NetResnetTest, ForwardInferOnly) {
 }
 TEST_F(NetResnetTest, Loss) {
   T loss = 0;
-  std::vector<conv_method_t> all_methods = {
-      CONV_METHOD_NNPACK_AUTO, CONV_METHOD_NNPACK_ft8x8,
-      CONV_METHOD_NNPACK_ft16x16,
-      // CONV_METHOD_NNPACK_wt8x8,  // returns 26
-      // CONV_METHOD_NNPACK_implicit_gemm,  // returns 26
-      // CONV_METHOD_NNPACK_direct, // returns 26
-      CONV_METHOD_NNPACK_REF, CONV_METHOD_NAIVE};
 
   // fill some init values as in cs231n
   tensor_t x = tensor_make_linspace(-0.2, 0.3, model.input_dim.dims, 4);
@@ -125,7 +129,12 @@ TEST_F(NetResnetTest, Loss) {
 }
 
 /* Check both forward/backward, time consuming*/
-TEST_F(NetResnetTest, DISABLED_BackNumerical) {
+/* This doesn't pass in float32 because of precision */
+#ifndef AWNN_USE_FLT32
+TEST_F(NetResnetTest, BackNumerical) {
+  // set_conv_method(CONV_METHOD_NNPACK_AUTO);
+  conv_method_t method = get_conv_method();
+  // AWNN_CHECK_EQ(method, CONV_METHOD_NAIVE);
   // fill some init values as in cs231n
   tensor_t x = tensor_make_linspace(-0.2, 0.3, model.input_dim.dims, 4);
 
@@ -156,15 +165,17 @@ TEST_F(NetResnetTest, DISABLED_BackNumerical) {
     PINF("Gradient check of %s passed", p_param->name);
   }
 }
+#endif
 
-/* Check both forward/backward*/
+/* Compare across different conv layers*/
 TEST_F(NetResnetTest, Measure_auto) {
   for (auto conv_method = all_methods.begin(); conv_method != all_methods.end();
        conv_method++) {
     PINF("Method:  %d", *conv_method);
     set_conv_method(*conv_method);
 
-    for (uint i = 0; i < 3; i++) {
+    uint nr_iterations = 100;
+    for (uint i = 0; i < 3; i++) { // run 3 times
       T loss = 0;
 
       tensor_t x = tensor_make_linspace(-5.5, 4.5, model.input_dim.dims, 4);
@@ -172,7 +183,6 @@ TEST_F(NetResnetTest, Measure_auto) {
 
       time_point_t t_begin, t_end;
       get_cur_time(t_begin);
-      uint nr_iterations = 100;
       for (uint i = 0; i < nr_iterations; i++) {
         resnet_loss(&model, x, labels, &loss);
         // PINF("Loss without regulizer: %.3f", loss);
@@ -182,6 +192,31 @@ TEST_F(NetResnetTest, Measure_auto) {
     }
   }
 }
+
+#else
+
+/* Profiler a certain conv layer */
+TEST_F(NetResnetTest, Measure_profiler) {
+  auto conv_method = CONV_METHOD_PERIMG;
+  PINF("Method:  %d", conv_method);
+  set_conv_method(conv_method);
+
+    T loss = 0;
+
+    tensor_t x = tensor_make_linspace(-5.5, 4.5, model.input_dim.dims, 4);
+    label_t labels[] = {0, 5, 1};
+
+    time_point_t t_begin, t_end;
+    get_cur_time(t_begin);
+    uint nr_iterations = 100;
+    for (uint i = 0; i < nr_iterations; i++) {
+      resnet_loss(&model, x, labels, &loss);
+      // PINF("Loss without regulizer: %.3f", loss);
+    }
+    get_cur_time(t_end);
+    print_time_in_ms(t_begin, t_end);
+}
+#endif
 
 TEST_F(NetResnetTest, Destroy) { resnet_finalize(&model); }
 
