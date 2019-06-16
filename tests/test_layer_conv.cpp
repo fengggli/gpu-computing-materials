@@ -4,11 +4,10 @@
  * Author: Feng Li
  * e-mail: fengggli@yahoo.com
  */
-
-#include "test_util.h"
 #include "awnn/layer_conv.h"
 #include "awnn/tensor.h"
 #include "gtest/gtest.h"
+#include "test_util.h"
 
 namespace {
 
@@ -8994,9 +8993,6 @@ TEST_F(LayerConvTest, Forward){
   EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
   PINF("Consistent with expected results");
 }
-
-
-// TODO: check with cudnn
 
 TEST_F(LayerConvTest,CheckLcache){
 //  EXPECT_EQ(cache.count, 0); // backward needs to pop all all caches and destroy them
