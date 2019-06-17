@@ -6,6 +6,7 @@ Changelog
 
 Current
 =======
+:Data 2019-06-16
 
 .. note::
 
@@ -13,17 +14,21 @@ Current
 
   Ask Feng for access.
 
+Working on
+------------
+1. Extend the resnet to more layers.
+2. Adding downsampling in the beginning of stage 3,4,5, more details see https://github.com/fengggli/gpu-computing-materials/issues/51
 
 TODO List
 ----------
 
-* Extend to more layers
 * Theoretical model.
 * Parallize it.
 
 =========
 Previous
 =========
+
 
 0.4.8
 ======
