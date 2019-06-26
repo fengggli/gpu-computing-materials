@@ -92,6 +92,9 @@ status_t resnet_init(
    */
   for (uint i_stage = 1; i_stage <= nr_stages; i_stage++) {
     for (uint i_blk = 1; i_blk <= nr_blocks[i_stage - 1]; i_blk++) {
+      if (i_stage > 1 &&
+          i_blk == 1) {  // subsampling for for both identity and first conv
+      }
       char prefix[MAX_STR_LENGTH];
       snprintf(prefix, MAX_STR_LENGTH, "layer%u.%u", i_stage, i_blk);
 
