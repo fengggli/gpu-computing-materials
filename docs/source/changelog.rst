@@ -17,7 +17,11 @@ Current
 Working on
 ------------
 1. Extend the resnet to more layers.
-2. Adding downsampling in the beginning of stage 3,4,5, more details see https://github.com/fengggli/gpu-computing-materials/issues/51
+
+Added
+--------
+1. Adding downsampling in the beginning of stage 3,4,5, more details see https://github.com/fengggli/gpu-computing-materials/issues/51, ignoring the boundries.
+2. Residual blocks using with downsampling support and its tests.
 
 TODO List
 ----------

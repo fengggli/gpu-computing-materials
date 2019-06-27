@@ -150,7 +150,6 @@ tensor_t im2col(tensor_t const x, tensor_t const w, conv_param_t const params) {
   stride = params.stride;
   pad = params.padding;
 
-  // Check dimensions
   assert((W + 2 * pad - filter_width) % stride == 0);
   assert((H + 2 * pad - filter_height) % stride == 0);
 

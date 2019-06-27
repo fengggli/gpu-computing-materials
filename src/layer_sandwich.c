@@ -131,9 +131,9 @@ status_t residual_basic_no_bn_backward(tensor_t dx, tensor_t dw1, tensor_t dw2,
  * Residual Block WITH subsampling in the beginning
  *
  * @param x
- * @param w_sample weight for the subsampling convolution
- * @param w1
- * @param w2
+ * @param w_sample weight for the subsampling convolution(1x1)
+ * @param w1 first 3x3 convolution
+ * @param w2 second 3x3 convolution
  * @param cache
  * @param conv_param1 the dimension will be checked to handle the sub-sampling
  * in the first block of the stage 2,3,4
@@ -150,11 +150,12 @@ status_t residual_basic_no_bn_subspl_forward(tensor_t x, tensor_t w_sample,
                                              tensor_t y) {
   AWNN_CHECK_EQ(conv_param1.stride, 2);
   AWNN_CHECK_EQ(x.dim.dims[3], 2 * y.dim.dims[3]);
+  AWNN_CHECK_EQ(w_sample.dim.dims[3], 1);
 
   tensor_t tmp = tensor_make_alike(y);
 
   tensor_t x_identity = tensor_make_alike(y);               // identity
-  conv_param_t subspl_param = {.stride = 2, .padding = 0};  // 3x3 kernel
+  conv_param_t subspl_param = {.stride = 2, .padding = 0};  // 1x1 kernel
   convolution_forward(x, w_sample, cache, subspl_param, x_identity);
 
   conv_relu_forward(x, w1, cache, conv_param1, tmp);
