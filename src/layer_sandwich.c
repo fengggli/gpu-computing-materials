@@ -180,7 +180,7 @@ status_t residual_basic_no_bn_subspl_backward(tensor_t dx, tensor_t dw_sample,
   conv_iden_relu_backward(tmp, dx_iden, dw2, cache, conv_param2, dy);
   conv_relu_backward(dx, dw1, cache, conv_param1, tmp);
 
-  conv_param_t subspl_param = {.stride = 2, .padding = 0};  // 3x3 kernel
+  conv_param_t subspl_param = {.stride = 2, .padding = 0};  // 1x1 kernel
   convolution_backward(dx_2, dw_sample, cache, subspl_param, dx_iden);
 
   tensor_elemwise_op_inplace(dx, dx_2, TENSOR_OP_ADD);

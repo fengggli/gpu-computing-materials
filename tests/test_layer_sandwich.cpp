@@ -59,7 +59,7 @@ TEST_F(LayerSandwich, conv_relu) {
         conv_relu_forward(in, w, NULL, params, out);
       },
       x, dy, dx_ref);
-  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-7);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-4);
   PINF("gradient check of x... is ok");
 
   // evaluate gradient of w
@@ -68,7 +68,7 @@ TEST_F(LayerSandwich, conv_relu) {
         conv_relu_forward(x, in, NULL, params, out);
       },
       w, dy, dw_ref);
-  EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-7);
+  EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-4);
   PINF("gradient check of w... is ok");
 }
 
@@ -194,7 +194,7 @@ TEST_F(LayerSandwich, ResidualBlock_subsampling_noBN) {
   uint shape_w[] = {F, C, HH, WW};
   uint shape_y[] = {N, F, H_out, W_out};
 
-  conv_param_t params1 = {.stride = 2, .padding = 0};
+  conv_param_t params1 = {.stride = 2, .padding = 1};
   conv_param_t params2 = {.stride = 1, .padding = 1};
 
   tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, array_size(shape_x));
@@ -213,7 +213,7 @@ TEST_F(LayerSandwich, ResidualBlock_subsampling_noBN) {
   PINF("forward value checked!!!!!");
 
   // backward
-  tensor_t dy = tensor_make_linspace_alike(0.1, 0.5, y);  // make it radom
+  tensor_t dy = tensor_make_linspace_alike(0.1, 0.3, y);  // make it radom
 
   // output for backward
   tensor_t dx = tensor_make_alike(x);
@@ -237,7 +237,7 @@ TEST_F(LayerSandwich, ResidualBlock_subsampling_noBN) {
                                             params2, out);
       },
       x, dy, dx_ref);
-  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-4);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-3);
   PINF("gradient check of x... is ok");
 
   // evaluate gradient of w_sample
@@ -247,6 +247,7 @@ TEST_F(LayerSandwich, ResidualBlock_subsampling_noBN) {
                                             params2, out);
       },
       w_sample, dy, dw_sample_ref);
+  ASSERT_LT(tensor_rel_error(dw_sample_ref, dw_sample), 1e-4);
   PINF("gradient check of w_sample... is ok");
 
   // evaluate gradient of w1
@@ -256,7 +257,7 @@ TEST_F(LayerSandwich, ResidualBlock_subsampling_noBN) {
                                             params2, out);
       },
       w1, dy, dw1_ref);
-  EXPECT_LT(tensor_rel_error(dw1_ref, dw1), 1e-4);
+  ASSERT_LT(tensor_rel_error(dw1_ref, dw1), 1e-4);
   PINF("gradient check of w1... is ok");
 
   // evaluate gradient of w2
@@ -266,7 +267,7 @@ TEST_F(LayerSandwich, ResidualBlock_subsampling_noBN) {
                                             params2, out);
       },
       w2, dy, dw2_ref);
-  EXPECT_LT(tensor_rel_error(dw2_ref, dw2), 1e-4);
+  ASSERT_LT(tensor_rel_error(dw2_ref, dw2), 1e-4);
   PINF("gradient check of w2... is ok");
 }
 
