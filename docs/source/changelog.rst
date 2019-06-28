@@ -6,7 +6,7 @@ Changelog
 
 Current
 =======
-:Data 2019-06-16
+:Data 2019-06-27
 
 .. note::
 
@@ -14,14 +14,15 @@ Current
 
   Ask Feng for access.
 
-Working on
-------------
-1. Extend the resnet to more layers.
-
 Added
 --------
 1. Adding downsampling in the beginning of stage 3,4,5, more details see https://github.com/fengggli/gpu-computing-materials/issues/51, ignoring the boundries.
 2. Residual blocks using with downsampling support and its tests.
+3. Add resnet14, made of 3 stages, each stage containing 2 residual blocks.
+
+Working on
+------------
+1. Debug and evaluation resnet14.
 
 TODO List
 ----------

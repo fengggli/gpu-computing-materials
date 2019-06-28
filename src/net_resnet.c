@@ -7,7 +7,8 @@
 #include "awnn/net_resnet.h"
 #include "utils/weight_init.h"
 
-static conv_param_t conv_param;
+static conv_param_t conv3x3_param = {.stride = 1, .padding = 1};
+static conv_param_t conv3x3_with_sample_param = {.stride = 2, .padding = 1};
 
 status_t resnet_init(
     model_t *model,   // output
@@ -29,9 +30,6 @@ status_t resnet_init(
     else
       model->nr_blocks[i] = 0;
   }
-
-  conv_param.stride = 1;
-  conv_param.padding = 1;
 
   // init all list structure
   init_list_head(model->list_all_params);
@@ -73,7 +71,7 @@ status_t resnet_init(
 
   // layer out
   uint feature_sz =
-      1 + (H + 2 * conv_param.padding - filter_sz) / conv_param.stride;
+      1 + (H + 2 * conv3x3_param.padding - filter_sz) / conv3x3_param.stride;
   AWNN_CHECK_EQ(feature_sz, 32);
   uint out_shape[] = {N, nr_filter, feature_sz, feature_sz};
   out = tensor_make(out_shape, 4);
@@ -92,17 +90,37 @@ status_t resnet_init(
    */
   for (uint i_stage = 1; i_stage <= nr_stages; i_stage++) {
     for (uint i_blk = 1; i_blk <= nr_blocks[i_stage - 1]; i_blk++) {
-      if (i_stage > 1 &&
-          i_blk == 1) {  // subsampling for for both identity and first conv
-      }
       char prefix[MAX_STR_LENGTH];
       snprintf(prefix, MAX_STR_LENGTH, "layer%u.%u", i_stage, i_blk);
+
+      conv_param_t conv_param1, conv_param2;
+      uint feature_sz;
 
       // In
       in = out;
       din = dout;
       snprintf(in_name, MAX_STR_LENGTH, "%s.in", prefix);
       net_attach_param(model->list_layer_in, in_name, in, din);
+
+      if (i_stage > 1 &&
+          i_blk == 1) {  // subsampling for for both identity and first conv
+        uint w_sample_shape[] = {nr_filter, C, 1, 1};
+        tensor_t w_sample = tensor_make(w_sample_shape, 4);
+        tensor_t dw_sample = tensor_make_alike(w_sample);
+        char w_sample_name[MAX_STR_LENGTH];
+        snprintf(w_sample_name, MAX_STR_LENGTH, "%s.sample.weight", prefix);
+        net_attach_param(model->list_all_params, w_sample_name, w_sample,
+                         dw_sample);
+        weight_init_kaiming(w_sample);
+
+        conv_param1.padding = 1, conv_param1.stride = 2;
+        feature_sz = in.dim.dims[3] / 2;
+      } else {
+        conv_param1.padding = 1, conv_param1.stride = 1;
+        ;
+        feature_sz = in.dim.dims[3];
+      }
+      conv_param2.padding = 1, conv_param2.stride = 1;
 
       // weight
       uint w_shape[] = {nr_filter, C, filter_sz, filter_sz};
@@ -123,9 +141,6 @@ status_t resnet_init(
       weight_init_kaiming(w2);
 
       // out
-      uint feature_sz =
-          1 + (H + 2 * conv_param.padding - filter_sz) / conv_param.stride;
-      AWNN_CHECK_EQ(feature_sz, 32);
       uint out_shape[] = {N, nr_filter, feature_sz, feature_sz};
       out = tensor_make(out_shape, 4);
       dout = tensor_make(out_shape, 4);
@@ -136,6 +151,8 @@ status_t resnet_init(
       snprintf(cache_name, MAX_STR_LENGTH, "%s.cache", prefix);
       net_attach_cache(model->list_layer_cache, cache_name);
     }
+    C = nr_filter;
+    nr_filter *= 2;
   }
 
   /* Pool */
@@ -216,7 +233,7 @@ tensor_t _do_resnet_forward(model_t const *model, tensor_t x,
     cache = net_get_cache(model->list_layer_cache, "conv1.cache");
   else
     cache = NULL;
-  conv_relu_forward(layer_in, w, cache, conv_param, layer_out);
+  conv_relu_forward(layer_in, w, cache, conv3x3_param, layer_out);
   layer_in = layer_out;
 
   /*
@@ -244,8 +261,20 @@ tensor_t _do_resnet_forward(model_t const *model, tensor_t x,
         cache = net_get_cache(model->list_layer_cache, cache_name);
       else
         cache = NULL;
-      residual_basic_no_bn_forward(layer_in, w1, w2, cache, conv_param,
-                                   layer_out);
+
+      if (i_stage > 1 &&
+          i_blk == 1) {  // subsampling for for both identity and first conv
+        char w_sample_name[MAX_STR_LENGTH];
+        snprintf(w_sample_name, MAX_STR_LENGTH, "%s.sample.weight", prefix);
+        tensor_t w_sample =
+            net_get_param(model->list_all_params, w_sample_name)->data;
+        residual_basic_no_bn_subspl_forward(layer_in, w_sample, w1, w2, cache,
+                                            conv3x3_with_sample_param,
+                                            conv3x3_param, layer_out);
+      } else {
+        residual_basic_no_bn_forward(layer_in, w1, w2, cache, conv3x3_param,
+                                     layer_out);
+      }
       layer_in = layer_out;
     }
   }
@@ -330,7 +359,23 @@ status_t resnet_backward(model_t const *model, tensor_t dout, T *ptr_loss) {
       char cache_name[MAX_STR_LENGTH];
       snprintf(cache_name, MAX_STR_LENGTH, "%s.cache", prefix);
       cache = net_get_cache(model->list_layer_cache, cache_name);
-      residual_basic_no_bn_backward(din, dw1, dw2, cache, conv_param, dout);
+
+      if (i_stage > 1 &&
+          i_blk == 1) {  // subsampling for for both identity and first conv
+        char w_sample_name[MAX_STR_LENGTH];
+        snprintf(w_sample_name, MAX_STR_LENGTH, "%s.sample.weight", prefix);
+        tensor_t w_sample =
+            net_get_param(model->list_all_params, w_sample_name)->data;
+        tensor_t dw_sample =
+            net_get_param(model->list_all_params, w_sample_name)->diff;
+        loss += 0.5 * (model->reg) * tensor_sum_of_square(w_sample);
+        residual_basic_no_bn_subspl_backward(din, dw_sample, dw1, dw2, cache,
+                                             conv3x3_with_sample_param,
+                                             conv3x3_param, dout);
+      } else {
+        residual_basic_no_bn_backward(din, dw1, dw2, cache, conv3x3_param,
+                                      dout);
+      }
 
       update_regulizer_gradient(w1, dw1, model->reg);
       update_regulizer_gradient(w2, dw2, model->reg);
@@ -344,7 +389,7 @@ status_t resnet_backward(model_t const *model, tensor_t dout, T *ptr_loss) {
   loss += 0.5 * (model->reg) * tensor_sum_of_square(w);
 
   cache = net_get_cache(model->list_layer_cache, "conv1.cache");
-  conv_relu_backward(din, dw, cache, conv_param, dout);
+  conv_relu_backward(din, dw, cache, conv3x3_param, dout);
   // TODO: regulizer
   update_regulizer_gradient(w, dw, model->reg);
   *ptr_loss = loss;

@@ -86,6 +86,9 @@ add_test(test-layer-sandwich test-layer-sandwich)
 
 add_executable(test-net-resnet test_net_resnet.cpp)
 target_link_libraries(test-net-resnet ${AWNN_LIBS}  gtest)
+
+add_executable(test-net-resnet14 test_net_resnet14.cpp)
+target_link_libraries(test-net-resnet14 ${AWNN_LIBS} gtest)
 if(NOT IS_CI_BUILD)
   add_test(test-net-resnet test-net-resnet)
 endif()
