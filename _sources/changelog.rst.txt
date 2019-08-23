@@ -4,25 +4,26 @@
 Changelog
 =========
 
-Current
-=======
-:Data 2019-06-27
-
 .. note::
 
   Code is maintained in https://github.com/fengggli/gpu-computing-materials/
 
   Ask Feng for access.
 
+
+Current
+=======
+:Data 2019-08-23
+
 Added
 --------
-1. Adding downsampling in the beginning of stage 3,4,5, more details see https://github.com/fengggli/gpu-computing-materials/issues/51, ignoring the boundries.
-2. Residual blocks using with downsampling support and its tests.
-3. Add resnet14, made of 3 stages, each stage containing 2 residual blocks.
+
+1. model, extended resnet with 3 stages: 
+   * previous simple model: http://ethereon.github.io/netscope/#/gist/64b013d6fee840473edc1a9a444e22ca
+   * new 14-layer model: http://ethereon.github.io/netscope/#/gist/b14a68b31b3973c68b38dfc2f73d2d10
 
 Working on
 ------------
-1. Debug and evaluation resnet14.
 
 TODO List
 ----------
@@ -33,6 +34,17 @@ TODO List
 =========
 Previous
 =========
+
+0.4.9
+======
+:Data 2019-06-27
+
+Added
+--------
+1. Adding downsampling in the beginning of stage 3,4,5, more details see https://github.com/fengggli/gpu-computing-materials/issues/51, ignoring the boundries.
+2. Residual blocks using with downsampling support and its tests.
+3. Add resnet14, made of 3 stages, each stage containing 2 residual blocks.
+
 
 
 0.4.8
