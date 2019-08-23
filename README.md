@@ -8,6 +8,7 @@
 
 * For the most recent documentations, see [here](https://fengggli.github.io/gpu-computing-materials)
 * There is a changelog in the link above.
+* To test with caffe, see [my forked caffe](https://github.com/fengggli/caffe/blob/fengggli-archlinux-cpuonly/models/resnet_simple/readme.md) 
 
 ## Important: All the GPU-computing class related materials are in the [gpu-computing-submission branch](https://github.com/fengggli/gpu-computing-materials/tree/gpu-computing-submission)
 
