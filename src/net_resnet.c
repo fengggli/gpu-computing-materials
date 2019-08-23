@@ -164,7 +164,7 @@ status_t resnet_init(
   net_attach_param(model->list_layer_in, in_name, in, din);
 
   // out
-  uint pool_shape[] = {N, 16, 1, 1};
+  uint pool_shape[] = {N, C, 1, 1};
   out = tensor_make(pool_shape, 4);
   dout = tensor_make(pool_shape, 4);
   snprintf(out_name, MAX_STR_LENGTH, "pool.out");

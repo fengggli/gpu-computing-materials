@@ -71,9 +71,11 @@ TEST_F(NetResnetTest, Loss) {
     PINF("reg = 0, loss = %.3f", loss);
 
     // test with regulizer
+    /*
     model.reg = 1.0;
     resnet_loss(&model, x, labels, &loss);
     PINF("reg = 1, loss = %.3f", loss);
+     */
   }
 }
 
