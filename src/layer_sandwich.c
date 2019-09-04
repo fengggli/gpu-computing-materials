@@ -36,6 +36,7 @@ status_t conv_relu_forward(tensor_t const x, tensor_t const w, lcache_t *cache,
   AWNN_CHECK_EQ(S_OK, layer_relu_forward(tmp, cache, y));
 
   ret = S_OK;
+  // TODO: this is expensive and buggy
   tensor_destroy(&tmp);
   return ret;
 }

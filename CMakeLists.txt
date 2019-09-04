@@ -10,6 +10,7 @@ option(USE_CUDNN "Build with CUDNN" OFF)
 option(USE_NNPACK "Build with NNPACK" OFF)
 option(AWNN_USE_FLT32 "Use single precision floating point" OFF)
 option(AWNN_USE_OPENMP "Use OpenMP" OFF)
+option(USE_MEMCHECK "Use mem santilizer to check leaks" OFF)
 set (AWNN_GEMM_THREADS 1 CACHE STRING "number of openblas threads")
 
 option(USE_STRICT_CHECK "use pedantic flag" OFF)
@@ -32,10 +33,17 @@ if(USE_STRICT_CHECK)
   set(GCC_COVERAGE_COMPILE_FLAGS "-pedantic ${GCC_COVERAGE_COMPILE_FLAGS}")
 endif()
 
+if(USE_MEMCHECK)
+  set(GCC_COVERAGE_COMPILE_FLAGS "-fsanitize=address -fno-omit-frame-pointer ${GCC_COVERAGE_COMPILE_FLAGS}")
+endif()
+
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 
+add_link_options("-no-pie") # to give line number in stacktrace
+
 if(AWNN_USE_OPENMP)
+  message(FATAL_ERROR "openmp support is not complete yet")
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 		message("Use OPenMP")
@@ -137,9 +145,7 @@ add_library(awnn_utils
   utils/weight_init.cpp
   utils/debug.cpp)
 
-target_link_libraries(awnn_utils awnn_core)
-
-set(AWNN_LIBS "awnn_core" "awnn_utils")
+set(AWNN_LIBS "awnn_core" "awnn_utils" dl)
 
 if(USE_CUDA)
   cuda_add_library(awnndevicelib

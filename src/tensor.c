@@ -1,3 +1,6 @@
+
+#define CONFIG_DEBUG
+
 #include "awnn/logging.h"
 #include "awnn/memory.h"
 #include "awnn/tensor.h"
@@ -450,4 +453,20 @@ void tensor_destroy(tensor_t* t) {
     mem_free(t->data);
     t->data = NULL;
   }
+}
+
+void dump_tensor_stats(tensor_t t, const char *name) {
+  uint capacity = tensor_get_capacity(t);
+  double sum = 0;
+  for (uint i = 0; i < capacity; i++) {
+    sum += t.data[i];
+  }
+  double mean = sum / capacity;
+
+  sum = 0;
+  for (uint i = 0; i < capacity; i++) {
+    sum += (t.data[i] - mean) * (t.data[i] - mean);
+  }
+  double std = sqrt(sum / (capacity - 1));
+  PNOTICE("[Tensor(%p) %s]: mean = %.2e, std = %.2e", t.data, name, mean, std);
 }
