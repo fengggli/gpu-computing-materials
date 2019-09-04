@@ -23,6 +23,8 @@ extern "C" {
 void print_trace();
 int list_get_count(struct list_head *head);
 
+/** Set handler to print backtrace during segfault*/
+void init_helper_env();
 #ifdef __cplusplus
 }
 #endif

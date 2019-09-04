@@ -6,6 +6,7 @@
 #include "awnn/loss_softmax.h"
 #include "awnn/net_resnet.h"
 #include "utils/weight_init.h"
+#include "utils/debug.h"
 
 static conv_param_t conv3x3_param = {.stride = 1, .padding = 1};
 static conv_param_t conv3x3_with_sample_param = {.stride = 2, .padding = 1};
@@ -17,6 +18,7 @@ status_t resnet_init(
     uint nr_stages,
     uint nr_blocks[MAX_STAGES],  // how many residual blocks in each stage
     T reg, normalize_method_t normalize_method) {
+  init_helper_env();
   AWNN_NO_USE(normalize_method);
   // save this configuration
   model->input_dim = input_dim;
