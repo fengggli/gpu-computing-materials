@@ -118,8 +118,9 @@ TEST_F(NetResnetTest, BackNumerical) {
 }
 #endif
 
-TEST_F(NetResnetTest, Destroy) { resnet_finalize(&model); }
-
+TEST_F(NetResnetTest, Finalize) {
+ resnet_finalize(&model);
+}
 }  // namespace
 
 int main(int argc, char **argv) {
