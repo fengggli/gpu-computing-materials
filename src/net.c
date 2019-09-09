@@ -22,6 +22,20 @@ void lcache_free_all(lcache_t *cache) {
   cache->count = 0;
 }
 
+void lcache_dump_stat(lcache_t *cache) {
+  uint i;
+  PINF("\n-----Cache Stat ----");
+  PINF("--- count= %u -", cache->count);
+  for (i = 0; i < cache->count; i++) {
+    dim_t dim = cache->all_tensors[i].dim;
+    void *addr = cache->all_tensors[i].data;
+    int mem_type = (int)cache->all_tensors[i].mem_type;
+    PINF("--- [%u]: dim (%u,%u,%u, %u), addr %p, mem_type %d", i, dim.dims[0],
+         dim.dims[1], dim.dims[2], dim.dims[3], addr ,mem_type);
+  }
+  PINF("------   END     ----");
+}
+
 // Update the gradient of a parameter if regulizer term exists
 void update_regulizer_gradient(tensor_t x, tensor_t dx, T reg) {
   tensor_t tmp = tensor_make_copy(x);

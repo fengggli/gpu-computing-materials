@@ -23,8 +23,6 @@ extern "C" {
 void print_trace();
 int list_get_count(struct list_head *head);
 
-
-
 /* Show tensor std, variance, etc */
 void dump_tensor_stats(tensor_t, const char *name);
 

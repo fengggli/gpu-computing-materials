@@ -36,42 +36,43 @@ protected:
   // static tensor_t t;
 };
 
-TEST_F(TensorOpTest, test_tpose1230) {
+TEST_F(TensorOpTest, test_tpose1230_1) {
   uint const shape_p[] = {1, 2, 3, 3}; // 1x2x3x3
-  uint const shape_x[] = {2, 3, 4, 4}; // 2x3x4x4
-  uint const shape_w[] = {3, 3, 4, 6}; // 3x3x4x6
 
   tensor_t p = tensor_make(shape_p, dim_of_shape(shape_p));
   double p_vals[] = {1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2};
   tensor_fill_list(p, p_vals, array_size(p_vals));
-  tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
-  tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
 
   tensor_t p_tpose_1230 = tensor_make_transpose_1230(p);
-  tensor_t x_tpose_1230 = tensor_make_transpose_1230(x);
-  tensor_t w_tpose_1230 = tensor_make_transpose_1230(w);
 
   ASSERT_EQ(p_tpose_1230.dim.dims[0], p.dim.dims[1]);
   ASSERT_EQ(p_tpose_1230.dim.dims[1], p.dim.dims[2]);
   ASSERT_EQ(p_tpose_1230.dim.dims[2], p.dim.dims[3]);
   ASSERT_EQ(p_tpose_1230.dim.dims[3], p.dim.dims[0]);
 
-  ASSERT_EQ(x_tpose_1230.dim.dims[0], x.dim.dims[1]);
-  ASSERT_EQ(x_tpose_1230.dim.dims[1], x.dim.dims[2]);
-  ASSERT_EQ(x_tpose_1230.dim.dims[2], x.dim.dims[3]);
-  ASSERT_EQ(x_tpose_1230.dim.dims[3], x.dim.dims[0]);
-
-  ASSERT_EQ(w_tpose_1230.dim.dims[0], w.dim.dims[1]);
-  ASSERT_EQ(w_tpose_1230.dim.dims[1], w.dim.dims[2]);
-  ASSERT_EQ(w_tpose_1230.dim.dims[2], w.dim.dims[3]);
-  ASSERT_EQ(w_tpose_1230.dim.dims[3], w.dim.dims[0]);
-
-
   tensor_t p_ref = tensor_make(shape_p, dim_of_shape(shape_p));
   double p1230[] = {1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2};
   tensor_fill_list(p_ref, p1230, array_size(p1230));
   uint shape_tpose_p[] = {p.dim.dims[1], p.dim.dims[2], p.dim.dims[3], p.dim.dims[0]};
   tensor_reshape_(&p_ref, shape_tpose_p, dim_of_shape(shape_tpose_p));
+
+  EXPECT_LT(tensor_rel_error(p_tpose_1230, p_ref), 1e-7);
+
+  tensor_destroy(&p_tpose_1230);
+  tensor_destroy(&p_ref);
+}
+
+TEST_F(TensorOpTest, test_tpose1230_2) {
+  uint const shape_x[] = { 2, 3, 4, 4 }; // 2x3x4x4
+
+  tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
+
+  tensor_t x_tpose_1230 = tensor_make_transpose_1230(x);
+
+  ASSERT_EQ(x_tpose_1230.dim.dims[0], x.dim.dims[1]);
+  ASSERT_EQ(x_tpose_1230.dim.dims[1], x.dim.dims[2]);
+  ASSERT_EQ(x_tpose_1230.dim.dims[2], x.dim.dims[3]);
+  ASSERT_EQ(x_tpose_1230.dim.dims[3], x.dim.dims[0]);
 
   tensor_t x_ref = tensor_make(shape_x, dim_of_shape(shape_x));
   double x3012[] = {-0.1,
@@ -173,6 +174,24 @@ TEST_F(TensorOpTest, test_tpose1230) {
   tensor_fill_list(x_ref, x3012, array_size(x3012));
   uint shape_tpose_x[] = {x.dim.dims[1], x.dim.dims[2], x.dim.dims[3], x.dim.dims[0]};
   tensor_reshape_(&x_ref, shape_tpose_x, dim_of_shape(shape_tpose_x));
+
+  EXPECT_LT(tensor_rel_error(x_tpose_1230, x_ref), 1e-7);
+
+  tensor_destroy(&x_tpose_1230);
+  tensor_destroy(&x_ref);
+}
+
+TEST_F(TensorOpTest, test_tpose1230_3) {
+  uint const shape_w[] = {3, 3, 4, 6}; // 3x3x4x6
+
+  tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
+
+  tensor_t w_tpose_1230 = tensor_make_transpose_1230(w);
+
+  ASSERT_EQ(w_tpose_1230.dim.dims[0], w.dim.dims[1]);
+  ASSERT_EQ(w_tpose_1230.dim.dims[1], w.dim.dims[2]);
+  ASSERT_EQ(w_tpose_1230.dim.dims[2], w.dim.dims[3]);
+  ASSERT_EQ(w_tpose_1230.dim.dims[3], w.dim.dims[0]);
 
   tensor_t w_ref = tensor_make(shape_w, dim_of_shape(shape_w));
   double w3012[] = {-0.2,
@@ -395,38 +414,39 @@ TEST_F(TensorOpTest, test_tpose1230) {
   uint shape_tpose_w[] = {w.dim.dims[1], w.dim.dims[2], w.dim.dims[3], w.dim.dims[0]};
   tensor_reshape_(&w_ref, shape_tpose_w, dim_of_shape(shape_tpose_w));
 
-  EXPECT_LT(tensor_rel_error(p_tpose_1230, p_ref), 1e-7);
-  EXPECT_LT(tensor_rel_error(x_tpose_1230, x_ref), 1e-7);
   EXPECT_LT(tensor_rel_error(w_tpose_1230, w_ref), 1e-7);
 
-  tensor_destroy(&p_tpose_1230);
-  tensor_destroy(&p_ref);
-  tensor_destroy(&x_tpose_1230);
-  tensor_destroy(&x_ref);
   tensor_destroy(&w_tpose_1230);
   tensor_destroy(&w_ref);
 }
 
-TEST_F(TensorOpTest, test_tpose3012) {
+TEST_F(TensorOpTest, test_tpose3012_1) {
   uint const shape_p[] = {1, 2, 3, 3}; // 1x2x3x3
-  uint const shape_x[] = {2, 3, 4, 4}; // 2x3x4x4
-  uint const shape_w[] = {3, 3, 4, 6}; // 3x3x4x6
 
   tensor_t p = tensor_make(shape_p, dim_of_shape(shape_p));
   double p_vals[] = {1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2};
   tensor_fill_list(p, p_vals, array_size(p_vals));
-  tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
-  tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
 
   tensor_t p_tpose_3012 = tensor_make_transpose_3012(p);
-  tensor_t x_tpose_3012 = tensor_make_transpose_3012(x);
-  tensor_t w_tpose_3012 = tensor_make_transpose_3012(w);
 
   tensor_t p_ref = tensor_make(shape_p, dim_of_shape(shape_p));
   double p3012[] = {1, 0, 1, 2, 1, 2, 0, 1, 1, 3, 0, 1, 1, 0, 1, 2, 1, 2};
   tensor_fill_list(p_ref, p3012, array_size(p3012));
   uint shape_tpose_p[] = {p.dim.dims[3], p.dim.dims[0], p.dim.dims[1], p.dim.dims[2]};
   tensor_reshape_(&p_ref, shape_tpose_p, dim_of_shape(shape_tpose_p));
+
+  EXPECT_LT(tensor_rel_error(p_tpose_3012, p_ref), 1e-7);
+
+  tensor_destroy(&p_tpose_3012);
+  tensor_destroy(&p_ref);
+}
+
+TEST_F(TensorOpTest, test_tpose3012_2) {
+  uint const shape_x[] = {2, 3, 4, 4}; // 2x3x4x4
+
+  tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, dim_of_shape(shape_x));
+
+  tensor_t x_tpose_3012 = tensor_make_transpose_3012(x);
 
   tensor_t x_ref = tensor_make(shape_x, dim_of_shape(shape_x));
   double x3012[] = {-0.1,
@@ -528,6 +548,19 @@ TEST_F(TensorOpTest, test_tpose3012) {
   tensor_fill_list(x_ref, x3012, array_size(x3012));
   uint shape_tpose_x[] = {x.dim.dims[3], x.dim.dims[0], x.dim.dims[1], x.dim.dims[2]};
   tensor_reshape_(&x_ref, shape_tpose_x, dim_of_shape(shape_tpose_x));
+
+  EXPECT_LT(tensor_rel_error(x_tpose_3012, x_ref), 1e-7);
+
+  tensor_destroy(&x_tpose_3012);
+  tensor_destroy(&x_ref);
+}
+
+TEST_F(TensorOpTest, test_tpose3012_3) {
+  uint const shape_w[] = {3, 3, 4, 6}; // 3x3x4x6
+
+  tensor_t w = tensor_make_linspace(-0.2, 0.3, shape_w, dim_of_shape(shape_w));
+
+  tensor_t w_tpose_3012 = tensor_make_transpose_3012(w);
 
   tensor_t w_ref = tensor_make(shape_w, dim_of_shape(shape_w));
   double w3012[] = {-0.2,
@@ -750,14 +783,8 @@ TEST_F(TensorOpTest, test_tpose3012) {
   uint shape_tpose_w[] = {w.dim.dims[3], w.dim.dims[0], w.dim.dims[1], w.dim.dims[2]};
   tensor_reshape_(&w_ref, shape_tpose_w, dim_of_shape(shape_tpose_w));
 
-  EXPECT_LT(tensor_rel_error(p_tpose_3012, p_ref), 1e-7);
-  EXPECT_LT(tensor_rel_error(x_tpose_3012, x_ref), 1e-7);
   EXPECT_LT(tensor_rel_error(w_tpose_3012, w_ref), 1e-7);
 
-  tensor_destroy(&p_tpose_3012);
-  tensor_destroy(&p_ref);
-  tensor_destroy(&x_tpose_3012);
-  tensor_destroy(&x_ref);
   tensor_destroy(&w_tpose_3012);
   tensor_destroy(&w_ref);
 }
@@ -1363,6 +1390,46 @@ TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test11) {
   tensor_destroy(&in);
   tensor_destroy(&padded_in);
 }
+
+TEST_F(TensorOpTest, tensor_make_padded_square_input_unit_test12) {
+  uint const shape[] = { 5, 4, 2, 3 };
+  tensor_t in = tensor_make_patterned(shape, dim_of_shape(shape));
+
+  uint pad_size = 1;
+  float pad_val = 0;
+
+  // 1 x 1 x 3 x 2 -> 1 x 1 x 7 x 6
+  tensor_t padded_in = tensor_make_padded_square_input(in, pad_size, pad_val);
+
+//  tensor_dump(in);
+//  tensor_dump(padded_in);
+
+  ASSERT_EQ(in.dim.dims[2] + 2 * pad_size, padded_in.dim.dims[2]);
+  ASSERT_EQ(in.dim.dims[3] + 2 * pad_size, padded_in.dim.dims[3]);
+
+  uint h = padded_in.dim.dims[2];
+  uint w = padded_in.dim.dims[3];
+  for (int i = 0; i < h; ++i) {
+    for (int j = 0; j < w; ++j) {
+      uint target_idx = i * w + j;
+      if (i < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+      } else if (i >= h - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+      } else if (j < pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+      } else if (j >= w - pad_size) {
+        ASSERT_EQ(pad_val, padded_in.data[target_idx]);
+      } else {
+        uint src_idx = (i - pad_size) * (w - 2 * pad_size) + j - pad_size;
+        ASSERT_EQ(padded_in.data[target_idx], in.data[src_idx]);
+      }
+    }
+  }
+  tensor_destroy(&in);
+  tensor_destroy(&padded_in);
+}
+
 
 TEST_F(TensorOpTest, tensor_make_remove_padding_square_unit_test0) {
   uint pad_size = 1;

@@ -209,7 +209,12 @@ tensor_t tensor_make_copy(tensor_t t) {
   return ret;
 }
 
-tensor_t tensor_make_alike(tensor_t t) { return _tensor_make(t.dim); }
+// TODO : refactor to reflect host creation / mem_type, etc...
+tensor_t tensor_make_alike(tensor_t t) { 
+  AWNN_CHECK_EQ(t.mem_type, CPU_MEM);
+  return _tensor_make(t.dim); 
+}
+
 tensor_t tensor_make_zeros_alike(tensor_t t) {
   tensor_t ret = _tensor_make(t.dim);
   tensor_fill_scalar(ret, 0.0);
@@ -302,6 +307,7 @@ tensor_t tensor_make_zeros(uint const shape[], uint const ndims) {
   tensor_fill_scalar(t, 0.0);
   return t;
 }
+
 tensor_t tensor_make_ones(uint const shape[], uint const ndims) {
   tensor_t t = tensor_make(shape, ndims);
   tensor_fill_scalar(t, 1.0);
@@ -331,7 +337,7 @@ tensor_t tensor_make_padded_square_input(tensor_t t, uint p, float pad_val) {
   HH = H + 2 * p;
   WW = W + 2 * p;
 
-  uint new_shape[] = {N, C, HH, WW};
+  uint new_shape[] = { N, C, HH, WW };
   tensor_t n = tensor_make(new_shape, ARRAY_SIZE(new_shape));
 
   for (uint i = 0; i < N; i++)
@@ -355,6 +361,55 @@ tensor_t tensor_make_padded_square_input(tensor_t t, uint p, float pad_val) {
 
   return n;
 }
+
+// p is pad size
+//tensor_t tensor_make_padded_square_input(tensor_t t, uint p, float pad_val) {
+//  uint N, C, H, W, HH, WW;
+//  N = t.dim.dims[0];
+//  C = t.dim.dims[1];
+//  H = t.dim.dims[2];
+//  W = t.dim.dims[3];
+//  HH = H + 2 * p;
+//  WW = W + 2 * p;
+//
+//  uint new_shape[] = { N, C, HH, WW };
+//  tensor_t n = tensor_make(new_shape, ARRAY_SIZE(new_shape));
+//
+//  uint capacity = tensor_get_capacity(n);
+//  uint iter = 0;
+//  uint new_img_sz = n.dim.dims[1] * n.dim.dims[2] * n.dim.dims[3];
+//  uint channel_sz = n.dim.dims[2] * n.dim.dims[3];
+//
+//  for (uint i = 0; i < N; i++)
+//    for (uint j = 0; j < C; j++)
+//      for (uint k = 0; k < HH; k++)
+//        for (uint l = 0; l < WW; l++) {
+//          uint ii = iter / new_img_sz; // ii is the target image
+//          uint jj = (iter / channel_sz) % C; // jj is the channel in the image
+//          uint kk = (iter / WW) % HH; // kk is the row in the image
+//          uint ll = (iter % WW); // ll is the col in the current image
+//          assert(ii == i);
+//          assert(jj == j);
+//          assert(kk == k);
+//          assert(ll == l);
+//          uint target_idx = i * C * HH * WW + j * HH * WW + k * WW + l;
+//          if (k < p) {
+//            n.data[target_idx] = pad_val;
+//          } else if (k >= (H + p)) {
+//            n.data[target_idx] = pad_val;
+//          } else if (l < p) {
+//            n.data[target_idx] = pad_val;
+//          } else if (l >= (W + p)) {
+//            n.data[target_idx] = pad_val;
+//          } else {
+//            uint src_idx = i * C * H * W + j * H * W + (k - p) * W + (l - p);
+//            n.data[target_idx] = t.data[src_idx];
+//          }
+//          ++iter;
+//        }
+//
+//  return n;
+//}
 
 tensor_t tensor_make_remove_padding_square(tensor_t t, uint p) {
   uint N, C, H, W, HH, WW;
@@ -382,6 +437,49 @@ tensor_t tensor_make_remove_padding_square(tensor_t t, uint p) {
 
   return n;
 }
+
+
+//tensor_t tensor_make_remove_padding_square(tensor_t t, uint p) {
+//  uint N, C, H, W, HH, WW;
+//  N = t.dim.dims[0];
+//  C = t.dim.dims[1];
+//  H = t.dim.dims[2];
+//  W = t.dim.dims[3];
+//  HH = H - 2 * p;
+//  WW = W - 2 * p;
+//
+//  uint new_shape[] = {N, C, HH, WW};
+//  tensor_t n = tensor_make(new_shape, ARRAY_SIZE(new_shape));
+//
+//  uint capacity = tensor_get_capacity(n);
+//  uint iter = 0;
+//  uint new_img_sz = n.dim.dims[1] * n.dim.dims[2] * n.dim.dims[3];
+//  uint channel_sz = n.dim.dims[2] * n.dim.dims[3];
+//
+//  for (uint i = 0; i < N; ++i) {
+//    for (uint j = 0; j < C; ++j) {
+//      for (uint k = 0; k < HH; ++k) {
+//        for (uint l = 0; l < WW; ++l) {
+//          uint ii = iter / new_img_sz; // ii is the target image
+//          uint jj = (iter / channel_sz) % C; // jj is the channel in the image
+//          uint kk = (iter / WW) % HH; // kk is the row in the image
+//          uint ll = (iter % WW); // ll is the col in the current image
+//          assert(ii == i);
+//          assert(jj == j);
+//          assert(kk == k);
+//          assert(ll == l);
+//          uint target_idx = i * C * HH * WW + j * HH * WW + k * WW + l;
+//          uint src_idx = i * C * H * W + j * H * W + (k + p) * W + (l + p);
+//          n.data[target_idx] = t.data[src_idx];
+//
+//          ++iter;
+//        }
+//      }
+//    }
+//  }
+//
+//  return n;
+//}
 
 T* tensor_get_elem_ptr(tensor_t const t, dim_t const loc) {
   uint index_dim;
@@ -441,11 +539,15 @@ T tensor_rel_error(tensor_t x, tensor_t ref) {
     norm_diff += (a - r) * (a - r);
     norm_ref += (r * r);
   }
-  assert(norm_ref > 0);
+  if (norm_ref <= 0) {
+    PERR("issue detected in tensor_rel_error norm_ref <= 0")
+    return 100;
+  }
   return norm_diff / norm_ref;
 }
 
 void tensor_destroy(tensor_t* t) {
+  AWNN_CHECK_NE(t->mem_type, GPU_MEM);
   if (t->mem_type == CPU_MEM) {
     mem_free(t->data);
     t->data = NULL;

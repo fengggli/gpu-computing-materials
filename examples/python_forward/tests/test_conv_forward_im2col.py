@@ -51,6 +51,32 @@ class TestConvForwardIm2col(TestCase):
         # print(y)
         # print(cache)
 
+
+    def test_conv_forward_mod_picture(self):
+        """
+            this is the example from the picture we looked at... source is here
+            https://www.microsoft.com/en-us/research/uploads/prod/2018/05/spg-cnn-asplos17.pdf
+        """
+
+        conv_params = {
+            'stride': 1,
+            'pad': 0
+        }
+
+        nr_img = 1
+        sz_img = 3
+        nr_in_channel = 2  # input channels
+        sz_filter = 2
+        nr_filter = 2  # num output channels
+
+        x = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]).reshape(nr_img, nr_in_channel, sz_img, sz_img)
+        w = np.array([1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 2, 2]).reshape(nr_filter, nr_in_channel, sz_filter, sz_filter)
+
+        y, cache = conv_forward(x, w, conv_param=conv_params)
+        # print()
+        # print(y)
+        # print(cache)
+
     def test_tpose3012(self):
         """
         this function checks the manual transpose function that reshapes to a 3012

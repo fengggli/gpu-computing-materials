@@ -1,9 +1,12 @@
 #pragma once
+#cmakedefine IS_CI_BUILD
 #cmakedefine USE_OPENBLAS
 #cmakedefine USE_CUDA
+#cmakedefine DEBUG_GPU_FUNCTION_ENTRY_NOTIFICATIONS
+#cmakedefine USE_CUDNN
 #cmakedefine USE_NNPACK
-#cmakedefine IS_CI_BUILD
 #cmakedefine AWNN_USE_FLT32
+#cmakedefine GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
 #cmakedefine AWNN_USE_OPENMP
 #cmakedefine AWNN_GEMM_THREADS (@AWNN_GEMM_THREADS@)
 
