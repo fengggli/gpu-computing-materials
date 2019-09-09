@@ -40,7 +40,12 @@ endif()
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 
-add_link_options("-no-pie") # to give line number in stacktrace
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.13.0")
+  add_link_options("-no-pie") # to give line number in stacktrace
+else()
+  message("Debug Build stracktrace without line number(${CMAKE_VERSION} <= 3.13")
+endif()
+
 
 if(AWNN_USE_OPENMP)
   message(FATAL_ERROR "openmp support is not complete yet")
