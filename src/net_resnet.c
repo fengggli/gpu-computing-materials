@@ -52,6 +52,7 @@ status_t resnet_init(
 
   uint filter_sz = 3;
   uint nr_filter = 16;
+
   /*
    * I.  preparation
    */
@@ -334,7 +335,7 @@ status_t resnet_backward(model_t const *model, tensor_t dout, T *ptr_loss) {
     }
   }
   /* Preparation stage */
-  din = net_get_param(model->list_layer_out, "conv1.out")->diff;
+  din = net_get_param(model->list_layer_in, "conv1.in")->diff;
   tensor_t dw = net_get_param(model->list_all_params, "conv1.weight")->diff;
   tensor_t w = net_get_param(model->list_all_params, "conv1.weight")->data;
   loss += 0.5 * (model->reg) * tensor_sum_of_square(w);

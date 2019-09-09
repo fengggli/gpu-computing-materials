@@ -9,6 +9,8 @@ option(USE_CUDNN "Build with CUDNN" OFF)
 option(USE_NNPACK "Build with NNPACK" OFF)
 option(AWNN_USE_FLT32 "Use single precision floating point" OFF)
 option(GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC "Count allocations and destroy globally" OFF)
+option(AWNN_USE_OPENMP "Use OpenMP" OFF)
+set (AWNN_GEMM_THREADS 1 CACHE STRING "number of openblas threads")
 
 option(USE_CLANG "Use clang compiler set" OFF)
 option(BUILD_TEST "Build google test and all test cases" ON)
@@ -38,6 +40,13 @@ endif()
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
+
+if(AWNN_USE_OPENMP)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+		message("Use OPenMP")
+endif()
+
 project(awnn LANGUAGES C CXX)
 
 ## cuda
@@ -104,7 +113,9 @@ endif()
 list(APPEND awnn_core_SOURCES
   src/tensor.c
   src/tensor_op.c
+	src/im2col.c
   src/layer_conv.c
+  src/layer_conv_per_img.c
   src/layer_pool.c
   src/layer_fc.c
   src/layer_relu.c
@@ -178,5 +189,7 @@ add_subdirectory(extern)
 if(BUILD_TEST)
   enable_testing()
   add_subdirectory(tests)
-  add_subdirectory(bench)
+  if(NOT IS_CI_BUILD)
+    add_subdirectory(bench)
+  endif()
 endif()

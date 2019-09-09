@@ -54,6 +54,10 @@ target_link_libraries(test-layer-conv-nnpack ${AWNN_LIBS} gtest)
 add_test(test-layer-conv-nnpack test-layer-conv-nnpack)
 endif ()
 
+add_executable(test-layer-conv-perimg test_layer_conv_perimg.cpp)
+target_link_libraries(test-layer-conv-perimg ${AWNN_LIBS} gtest)
+add_test(test-layer-conv-perimg test-layer-conv-perimg)
+
 add_executable(test-layer-pool test_layer_pool.cpp)
 target_link_libraries(test-layer-pool ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} gtest)
 add_test(test-layer-pool test-layer-pool)
@@ -96,10 +100,12 @@ add_test(test-layer-sandwich test-layer-sandwich)
 
 add_executable(test-net-resnet test_net_resnet.cpp)
 target_link_libraries(test-net-resnet ${AWNN_LIBS}  gtest)
-add_test(test-net-resnet test-net-resnet)
+if(NOT IS_CI_BUILD)
+  add_test(test-net-resnet test-net-resnet)
+endif()
 
-set_target_properties(test-net-resnet
-  PROPERTIES COMPILE_DEFINITIONS "CONFIG_DEBUG")
+#set_target_properties(test-net-resnet
+  #PROPERTIES COMPILE_DEFINITIONS "CONFIG_DEBUG")
 
 add_executable(test-net-resnet-cifar test_net_resnet_cifar.cpp)
 target_link_libraries(test-net-resnet-cifar ${AWNN_LIBS} gtest)

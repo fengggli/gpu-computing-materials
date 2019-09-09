@@ -195,6 +195,14 @@ void tensor_destroy_device(tensor_t *ptr_t_device);
 /* copy the tensor back from gpu to host*/
 void tensor_copy_d2h(tensor_t t_host, tensor_t t_device);
 
+/**
+ * Blas
+ */
+status_t awnn_gemm(const int TransA,
+    const int TransB, const int M, const int N, const int K, const double alpha,
+    const T* A, const T* B, const double beta, T*C);
+
+
 #ifdef __cplusplus
 }
 #endif

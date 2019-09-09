@@ -1,0 +1,17 @@
+lifeng@asusli(:):~/Workspace/Spring19/gpu-computing-materials/cmake-build-release$./nnpack-bench-conv -ic 3 -oc 3 -is 32 32 -ks 3 3 -i 100 -t 1 -a implicit-gemm
+Batch size: 1
+Input channels: 3
+Output channels: 3
+Input: 32x32 with implicit padding 0
+Kernel: 3x3
+Subsampling: 1x1
+Algorithm: Implicit GEMM
+Threads: 1
+Iterations: 100
+Time: 0.105 ms
+Input transform: 0.081 ms (76.8%) [0.2 GB/s]
+Kernel transform: 0.007 ms (7.1%) [0.0 GB/s]
+Output transform: 0.002 ms (1.7%) [6.1 GB/s]
+Block multiplication: 0.015 ms (14.0%) [0.0 GFLOPS]
+Overhead: 0.000 ms (0.4%)
+

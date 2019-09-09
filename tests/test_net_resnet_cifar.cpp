@@ -10,6 +10,7 @@
 #include "utils/data_cifar.h"
 #include "utils/debug.h"
 #include "utils/weight_init.h"
+#include "awnn/layer_conv.h"
 
 #include "gtest/gtest.h"
 #include "test_util.h"
@@ -42,6 +43,7 @@ TEST_F(NetMLPTest, CifarTest) {
   T reg = 0;
   normalize_method_t normalize_method = NORMALIZE_NONE;  // no batchnorm now
 
+  set_conv_method(CONV_METHOD_NNPACK_AUTO);
   resnet_init(&model, input_dim, output_dim, nr_stages, nr_blocks, reg,
               normalize_method);
 

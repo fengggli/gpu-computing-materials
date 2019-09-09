@@ -28,7 +28,7 @@ status_t loss_softmax(tensor_t const x, label_t const * real_labels, T *ptr_loss
   for(uint i_img = 0 ; i_img < cnt_imgs; ++i_img){
     label_t this_label = real_labels[i_img];
     if(this_label >= cnt_classes){
-      PERR("label id should be between [0, %u]", cnt_classes);
+      PERR("label id %u is not  between [0, %u]", this_label, cnt_classes);
       goto end;
     }
     T max_score = T_MIN; // initialize to a small number
