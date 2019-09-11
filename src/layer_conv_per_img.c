@@ -97,6 +97,7 @@ status_t conv_backward_perimg(tensor_t dx, tensor_t dw, lcache_t* cache,
   tensor_fill_scalar(dw, 0);
 
 #ifdef AWNN_USE_OPENMP
+  // TODO: let all threads updating its own dw, then us all-reduce
 #pragma omp parallel
   {
 #endif
