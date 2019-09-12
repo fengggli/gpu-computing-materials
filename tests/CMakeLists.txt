@@ -107,3 +107,8 @@ target_link_libraries(test-net-resnet-mem ${AWNN_LIBS} gtest)
 #add_executable(test-loss-softmax-simple test_loss_softmax_simple.cpp)
 #target_link_libraries(test-loss-softmax-simple ${AWNN_LIBS}  gtest)
 #add_test(test-loss-softmax-simple test-loss-softmax-simple)
+
+if(USE_MKL)
+add_executable(test-numa test_numa.cpp)
+#target_compile_options(test-numa PRIVATE "-openmp")
+endif()
