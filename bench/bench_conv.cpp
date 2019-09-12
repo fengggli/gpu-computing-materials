@@ -37,6 +37,8 @@ TEST_F(LayerConvPerImgTest, Forward) {
                           sz_filter};                          // 3x3x3x3
   uint const shape_y[] = {nr_img, nr_filter, sz_out, sz_out};  // 2x3x4x4
 
+	// this take prcedence over openmp_set_num_threads
+	mkl_set_dynamic(0);// always use provided number
   mkl_set_num_threads(nr_blas_threads);
 	PMAJOR("setting mkl thread to %d", nr_blas_threads);
 

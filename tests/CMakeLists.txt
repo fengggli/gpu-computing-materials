@@ -110,5 +110,5 @@ target_link_libraries(test-net-resnet-mem ${AWNN_LIBS} gtest)
 
 if(USE_MKL)
 add_executable(test-numa test_numa.cpp)
-#target_compile_options(test-numa PRIVATE "-openmp")
+target_compile_options(test-numa PRIVATE "-qopenmp") #other wise mkl-internal threading will be used.
 endif()
