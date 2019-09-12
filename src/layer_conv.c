@@ -3,12 +3,16 @@
 #include "nnpack.h"
 #include "pthreadpool.h"
 #endif
-#ifdef USE_OPENBLAS
-#include "cblas.h"
-#endif
 
 #include <awnn/memory.h>
 #include <printf.h>
+
+#ifdef USE_OPENBLAS
+#include "cblas.h"
+#endif
+#ifdef USE_MKL
+#include "mkl.h"
+#endif
 
 conv_method_t g_conv_method = CONV_METHOD_NAIVE;
 

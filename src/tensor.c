@@ -1,4 +1,3 @@
-
 #define CONFIG_DEBUG
 
 #include "awnn/logging.h"

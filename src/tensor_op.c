@@ -5,6 +5,10 @@
 #ifdef USE_OPENBLAS
 #include "cblas.h"
 #endif
+#ifdef USE_MKL
+#include "mkl.h"
+#endif
+
 #include <assert.h>
 
 // used for forward
@@ -43,13 +47,13 @@ tensor_t tensor_make_transpose_1230(tensor_t t) {
   return tpose;
 }
 
-#ifdef USE_OPENBLAS
+#if defined(USE_OPENBLAS) || defined(USE_MKL)
 status_t awnn_gemm(const int TransA,
     const int TransB, const int M, const int N, const int K, const double alpha,
     const T* A, const T* B, const double beta, T*C){
 #ifndef IS_CI_BUILD // openblas installed by apt doesn't support those...but we can set the environment vars
-  goto_set_num_threads(AWNN_GEMM_THREADS);
-  openblas_set_num_threads(AWNN_GEMM_THREADS);
+  // goto_set_num_threads(AWNN_GEMM_THREADS);
+  // openblas_set_num_threads(AWNN_GEMM_THREADS);
 #endif
   int lda = (TransA == CblasNoTrans)? K: M;
   int ldb = (TransB == CblasNoTrans)? N: K;
@@ -98,7 +102,7 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
   int n = (int)in2.dim.dims[1];
 
   // PDBG("mnk = [%u, %u, %u]", m,n,k);
-#ifdef USE_OPENBLAS
+#if defined(USE_OPENBLAS) || defined(USE_MKL)
   // https://software.intel.com/en-us/mkl-tutorial-c-multiplying-matrices-using-dgemm
   tensor_fill_scalar(out, 0.0);
   awnn_gemm(CblasNoTrans, CblasNoTrans, m, n, k, 1.0, in1.data, in2.data, 1.0, out.data);

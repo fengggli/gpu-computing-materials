@@ -9,12 +9,19 @@
 #include <cmath>
 #include "awnn/logging.h"
 #include "utils/debug.h"
+#ifdef USE_BOOST_STACKTRACE
 #include <boost/stacktrace.hpp>
+#endif
 #include <iostream>
 #include <csignal>     // ::signal, ::raise
 
 void print_trace(void) {
+#ifdef USE_BOOST_STACKTRACE
   std::cout << boost::stacktrace::stacktrace();
+#else
+  PINF("Boost stack trace not available");
+  return;
+#endif
 }
 
 int list_get_count(struct list_head *head) {
