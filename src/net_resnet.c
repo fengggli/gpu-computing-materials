@@ -8,8 +8,7 @@
 #include "pthread.h"
 #include "utils/data_cifar.h"
 #include "utils/debug.h"
-#include "utils/weight_init.h"
-
+#include "utils/weight_init.h" 
 static conv_param_t conv3x3_param = {.stride = 1, .padding = 1};
 static conv_param_t conv3x3_with_sample_param = {.stride = 2, .padding = 1};
 
@@ -452,7 +451,8 @@ void *resnet_thread_entry(void *threadinfo) {
   normalize_method_t normalize_method = NORMALIZE_NONE;  // no batchnorm now
 
   set_conv_method(CONV_METHOD_PERIMG);
-  // set_conv_method(CONV_METHOD_NNPACK_AUTO);
+
+  /* Allocate spaces for input/output/layer cache/weight/gradient*/
   resnet_init(&(my_info->model), input_dim, output_dim, nr_stages, nr_blocks,
               reg, normalize_method);
 
@@ -478,6 +478,10 @@ void *resnet_thread_entry(void *threadinfo) {
     if (my_info->id == 0) {
       eclapsed_in_ms += get_elapsed_ms(t_start, get_clocktime());
     };
+
+    /* all-reduce gradients, protected by mutex*/
+    pthread_mutex_lock(my_info->ptr_mutex);
+    pthread_mutex_unlock(my_info->ptr_mutex);
   }
   if (my_info->id == 0) {
     PWRN("AVG forward-backward %.3fms", eclapsed_in_ms/nr_iterations);

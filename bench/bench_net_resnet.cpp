@@ -31,7 +31,6 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-
   batch_sz = atoi(argv[1]);
   int nr_worker_threads = atoi(argv[2]);
 
@@ -46,7 +45,6 @@ int main(int argc, char *argv[]) {
   resnet_thread_info_t *threads_info = (resnet_thread_info_t*)malloc(sizeof(resnet_thread_info_t)*nr_worker_threads);
   AWNN_CHECK_NE(threads_info, 0);
 
-
   status_t rc = -1;
 
   /* Initialize and set thread detached attribute */
@@ -54,11 +52,15 @@ int main(int argc, char *argv[]) {
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
+  pthread_mutex_t mutex;
+  pthread_mutex_init(&mutex, NULL);
+
   for(int t = 0;  t< nr_worker_threads; t++){
     threads_info[t].id = t;
     threads_info[t].nr_threads = nr_worker_threads;
     threads_info[t].data_loader = &loader;
     threads_info[t].batch_sz = batch_sz;
+    threads_info[t].ptr_mutex = &mutex;
     
 	  rc = pthread_create(&threads[t], &attr, resnet_thread_entry, (void *)(&threads_info[t]));
     AWNN_CHECK_EQ(0, rc);
@@ -91,6 +93,8 @@ int main(int argc, char *argv[]) {
 
   free(threads);
   free(threads_info);
+
+  pthread_mutex_destroy(&mutex);
   cifar_close(&loader);
 }
 
