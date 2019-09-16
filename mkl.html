@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Batch normalization &mdash; gpu-computing19-awnn  documentation</title>
+  <title>MKL notes &mdash; gpu-computing19-awnn  documentation</title>
   
 
   
@@ -34,7 +34,9 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Pooling Layer" href="layers/pool.html" />
+    <link rel="prev" title="CUDA Support" href="cuda.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -79,11 +81,11 @@
             
             
               <p class="caption"><span class="caption-text">Tensor</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="tensor.html">Tensor and its operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="memory.html">Memory management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cuda.html">CUDA Support</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mkl.html">MKL notes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MKL notes</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Layers:</span></p>
 <ul>
@@ -139,13 +141,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Batch normalization</li>
+      <li>MKL notes</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/batchnorm.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/mkl.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -158,13 +160,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="batch-normalization">
-<span id="awnn-batch-norm"></span><h1>Batch normalization<a class="headerlink" href="#batch-normalization" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="mkl-notes">
+<span id="tool-mkl"></span><h1>MKL notes<a class="headerlink" href="#mkl-notes" title="Permalink to this headline">¶</a></h1>
 <ol class="arabic simple">
-<li>I need two transpose function like Chris does for conv2d.
-This makes spatial bn (N, C, H, W)  -&gt; (NxHxW, C)</li>
-<li>I need some matrix, vector operations, where the vector has the size of (C,)</li>
+<li>install mkl and source the xxxvar.sh</li>
+<li>build with cmake -DUSE_MKL=on ..</li>
 </ol>
+<p>see <a class="reference external" href="https://fengggli.github.io/ResearchDocs/tools/intel-tools.html">https://fengggli.github.io/ResearchDocs/tools/intel-tools.html</a></p>
 </div>
 
 
@@ -172,6 +174,15 @@ This makes spatial bn (N, C, H, W)  -&gt; (NxHxW, C)</li>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="layers/pool.html" class="btn btn-neutral float-right" title="Pooling Layer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="cuda.html" class="btn btn-neutral float-left" title="CUDA Support" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
