@@ -480,7 +480,7 @@ void *resnet_thread_entry(void *threadinfo) {
     };
   }
   if (my_info->id == 0) {
-    PMAJOR("AVG forward-backward %.3fms", eclapsed_in_ms/nr_iterations);
+    PWRN("AVG forward-backward %.3fms", eclapsed_in_ms/nr_iterations);
   }
 
   resnet_finalize(&(my_info->model));

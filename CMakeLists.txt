@@ -3,8 +3,12 @@ cmake_minimum_required(VERSION 3.5)
 
 option(IS_CI_BUILD "Is a build for CI" OFF) # Reduce problem size if it is run in CI
 option(USE_CLANG "Use clang compiler set" OFF)
+
+# blas
 option(USE_MKL "Use intel compiler set" OFF)
 option(USE_OPENBLAS "USE openblas for blas" OFF)
+option(USE_SEQUENTIAL_BLAS "USE openblas for blas" ON)
+
 option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_CUDA "Build with CUDA" OFF)
 option(DEBUG_GPU_FUNC_ENTRY_NOTIFY "Print device function names upon function call" ON)
@@ -67,9 +71,15 @@ if(AWNN_USE_OPENMP)
   message("Use OPenMP")
 endif()
 if(USE_MKL)
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mkl")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mkl")
-  message("Use MKL")
+  if(USE_SEQUENTIAL_BLAS)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mkl=sequential")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mkl=sequential")
+    message("Use non-threaded MKL")
+  else()
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mkl=parallel")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mkl=parallel")
+    message("Use multi-threads MKL")
+  endif()
 endif()
 
 project(awnn LANGUAGES C CXX)
