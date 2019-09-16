@@ -50,3 +50,15 @@ void init_helper_env(){
   // print stacktrace during faults
   PMAJOR("Sig handler enabled");
 }
+
+
+clocktime_t get_clocktime(){
+  clocktime_t t;
+  clock_gettime(CLOCK_MONOTONIC, &t);
+  return t;
+}
+double get_elapsed_ms(clocktime_t start, clocktime_t end){
+  double elapsed = (end.tv_sec - start.tv_sec);
+  elapsed += (end.tv_nsec - start.tv_nsec)/1000000000.0;
+  return elapsed*1000;
+}

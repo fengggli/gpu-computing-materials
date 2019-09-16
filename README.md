@@ -11,70 +11,27 @@
 * There is a changelog in the link above.
 * To test with caffe, see [my forked caffe](https://github.com/fengggli/caffe/blob/fengggli-archlinux-cpuonly/models/resnet_simple/readme.md) 
 
-
-#### platform
-
-sievert.cs.iupui.edu(with ubuntu 16.04 and cuda 10.0)
-If cuda 10.0 is not detected when you login, check your login message and follow
-instructions.
-
 #### prepare
-We use openblas for cpu gemm.
-(In sievert you don't need this, since openblas is already installed)
-
-```
-sudo ./install-apt.sh
-```
-
-If you use another machine, make sure openblas library 
-and headers are in searchable paths
-
-#### start
 ```
 git submodule update --init
 mkdir build
 cd build
-cmake -DUSE_CUDA=on -DUSE_CUDNN=on -DAWNN_USE_FLT32=on -DCMAKE_BUILD_TYPE=Release .. 
-make -j 16
 ```
 
-#### run test
-1. **In the build directory**, run unit tests(check the correctness of all our gpu kernels)
-    * test cudnn convolution
-    ```
-    ./tests/test-layer-conv-cudnn
-    ```
-    
-    * test our device convolution
-    ```
-    ./tests/test-layer-conv-device
-    ```
-    
-    * test residual block using our optimized gpu kernels
-    ```
-    ./tests/test-resblock-device
+#### Build
+We use mkl for cpu gemm().
+```
+source /opt/intel/bin/compilervars.sh intel64
+source /opt/intel/mkl/bin/mklvars.sh intel64
+```
 
-    ```
+Then build with
+```
+cmake -DUSE_MKL=on -DAWNN_USE_FLT32=on ..
+```
 
-2. **In the build directory**, run benchmarks(speed test for comparison between cudnn and our device code)
-
-    * bench cudnn convolution
-    ```
-    ./bench/bench-conv-cudnn
-    ```
-    
-    * bench our optimized convolution
-    ```
-    ./bench/bench-conv-device
-    ```
-
-#### Documentation
-* [Final presentation Slides](/docs/Project%20Final%20Presentation.pdf)
-* [Final Report](/docs/gpu-computing-19/gpu_resnet_project_report.pdf)
-
-* TODO: report 
-
-* Other supporting materials are in in docs/sources
-
-* Please refer to https://fengggli.github.io/dl-docs/ for learning materials for deep learning, I highly recommend the cs231 course from Stanford
-
+When mkl is not avaible install openblas and build with -DUSE_OPENBLAS=on
+```
+sudo ./install-apt.sh
+cmake -DUSE_OPENBLAS=on -DAWNN_USE_FLT32=on ..
+```

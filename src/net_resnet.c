@@ -1,14 +1,14 @@
 /*
  * Resnet
  */
-#include "pthread.h"
 #include "awnn/layer_pool.h"
 #include "awnn/layer_sandwich.h"
 #include "awnn/loss_softmax.h"
 #include "awnn/net_resnet.h"
-#include "utils/weight_init.h"
-#include "utils/debug.h"
+#include "pthread.h"
 #include "utils/data_cifar.h"
+#include "utils/debug.h"
+#include "utils/weight_init.h"
 
 static conv_param_t conv3x3_param = {.stride = 1, .padding = 1};
 static conv_param_t conv3x3_with_sample_param = {.stride = 2, .padding = 1};
@@ -429,24 +429,22 @@ status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
   return S_OK;
 }
 
-
-void *resnet_thread_entry(void *threadinfo){
-  struct resnet_thread_info *my_info = (struct resnet_thread_info*)(threadinfo);
+void *resnet_thread_entry(void *threadinfo) {
+  struct resnet_thread_info *my_info =
+      (struct resnet_thread_info *)(threadinfo);
   tensor_t x_thread_local;
   label_t *labels_thread_local;
 
   /* Split batch data to all thread*/
-  uint cur_epoch = 0;
   uint cur_batch = 0;
-  uint cnt_read = get_train_batch_mt(my_info->data_loader, &x_thread_local, &labels_thread_local, cur_batch, my_info->batch_sz, my_info->id, my_info->nr_threads);
+  uint cnt_read = get_train_batch_mt(
+      my_info->data_loader, &x_thread_local, &labels_thread_local, cur_batch,
+      my_info->batch_sz, my_info->id, my_info->nr_threads);
 
   AWNN_CHECK_EQ(my_info->batch_sz, cnt_read * my_info->nr_threads);
 
   /* Network config*/
-  uint input_shape[] = {cnt_read, 3, 32, 32};
-  dim_t input_dim = {
-    .dims= {cnt_read, 3, 32, 32}
-  };
+  dim_t input_dim = {.dims = {cnt_read, 3, 32, 32}};
   uint output_dim = 10;
   uint nr_stages = 1;
   uint nr_blocks[MAX_STAGES] = {2};
@@ -455,26 +453,37 @@ void *resnet_thread_entry(void *threadinfo){
 
   set_conv_method(CONV_METHOD_PERIMG);
   // set_conv_method(CONV_METHOD_NNPACK_AUTO);
-  resnet_init(&(my_info->model), input_dim, output_dim, nr_stages, nr_blocks, reg,
-              normalize_method);
+  resnet_init(&(my_info->model), input_dim, output_dim, nr_stages, nr_blocks,
+              reg, normalize_method);
 
   AWNN_CHECK_EQ((void *)0, (void *)net_get_param(my_info->model.list_all_params,
-                                             "W3"));  // unexisting param
-  AWNN_CHECK_NE((void *)0,
-            (void *)net_get_param(my_info->model.list_all_params, "conv1.weight"));
+                                                 "W3"));  // unexisting param
+  AWNN_CHECK_NE((void *)0, (void *)net_get_param(my_info->model.list_all_params,
+                                                 "conv1.weight"));
 
-  T learning_rate = 0.1;
-  
   T loss = 0;
+  /*
   resnet_loss(&(my_info->model), x_thread_local, labels_thread_local, &loss);
   PINF("Initial Loss %.2f", loss);
   PINF("Using convolution method %d", get_conv_method());
+  */
+  uint nr_iterations = 10;
+  clocktime_t t_start;
+  double eclapsed_in_ms = 0;
+  for (uint iteration = 0; iteration < nr_iterations; iteration++) {
+    if (my_info->id == 0) {
+      t_start = get_clocktime();
+    };
+    resnet_loss(&(my_info->model), x_thread_local, labels_thread_local, &loss);
+    if (my_info->id == 0) {
+      eclapsed_in_ms += get_elapsed_ms(t_start, get_clocktime());
+    };
+  }
+  if (my_info->id == 0) {
+    PMAJOR("AVG forward-backward %.3fms", eclapsed_in_ms/nr_iterations);
+  }
 
   resnet_finalize(&(my_info->model));
-
-  // TODO: loop and reduce
-
   pthread_exit((void *)threadinfo);
   return NULL;
 }
-
