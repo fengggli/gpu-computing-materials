@@ -25,6 +25,9 @@ int list_get_count(struct list_head *head);
 
 /** Set handler to print backtrace during segfault*/
 void init_helper_env();
+
+/* Show tensor std, variance, etc */
+void dump_tensor_stats(tensor_t, const char *name);
 #ifdef __cplusplus
 }
 #endif

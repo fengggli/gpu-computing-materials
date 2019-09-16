@@ -2,7 +2,7 @@ from unittest import TestCase
 import numpy as np
 import pytest
 
-from python_backward.backward import convolution_backward, tpose1230
+from python_backward.backward import convolution_backward, tpose1230, col2im_inner
 from python_backward.test_backward.numerical import eval_numerical_gradient_array
 from python_forward.forward import conv_forward
 
@@ -17,6 +17,14 @@ class TestConvBackward(TestCase):
     https://github.com/fengggli/cs231n-assignments/blob/d4cbe582a794a5b33d81a1ecdb64f1fd3844eaaa/assignment2/ConvolutionalNetworks.ipynb
     """
 
+    def test_padding_example(self):
+        p = 2
+        x = np.random.randn(1, 1, 2, 2)
+        print(x.shape)
+        print(list(x.flatten()))
+        x_padded = np.pad(x, ((0, 0), (0, 0), (p, p), (p, p)), mode='constant')
+        print(x_padded.shape)
+        print(list(x_padded.flatten()))
 
     def test_bkwrd_from_jupyter_example(self):
         np.random.seed(231)
@@ -38,41 +46,41 @@ class TestConvBackward(TestCase):
 
         conv_param = {'stride': 1, 'pad': 1}
 
-        dx_num = eval_numerical_gradient_array(lambda x: conv_forward(x, w, conv_param)[0], x, dout)
-        print("dx_num")
-        print(dx_num.shape)
-        print(list(dx_num.flatten()))
+        # dx_num = eval_numerical_gradient_array(lambda x: conv_forward(x, w, conv_param)[0], x, dout)
+        # print("dx_num")
+        # print(dx_num.shape)
+        # print(list(dx_num.flatten()))
+        #
+        # dw_num = eval_numerical_gradient_array(lambda w: conv_forward(x, w, conv_param)[0], w, dout)
+        # print("dw_num")
+        # print(dw_num.shape)
+        # print(list(dw_num.flatten()))
+        #
+        # y, cache = conv_forward(x, w, conv_param)
+        # print("y")
+        # print(y.shape)
+        # print(list(y.flatten()))
+        #
+        # x_cached, w_cached, _, x_cols_cached = cache
+        # print("x_cached")
+        # print(x_cached.shape)
+        # print(list(x_cached.flatten()))
+        #
+        # print("w_cached")
+        # print(w_cached.shape)
+        # print(list(w_cached.flatten()))
+        #
+        # print("x_cols_cached")
+        # print(x_cols_cached.shape)
+        # print(list(x_cols_cached.flatten()))
 
-        dw_num = eval_numerical_gradient_array(lambda w: conv_forward(x, w, conv_param)[0], w, dout)
-        print("dw_num")
-        print(dw_num.shape)
-        print(list(dw_num.flatten()))
 
-        y, cache = conv_forward(x, w, conv_param)
-        print("y")
-        print(y.shape)
-        print(list(y.flatten()))
-
-        x_cached, w_cached, _, x_cols_cached = cache
-        print("x_cached")
-        print(x_cached.shape)
-        print(list(x_cached.flatten()))
-
-        print("w_cached")
-        print(w_cached.shape)
-        print(list(w_cached.flatten()))
-
-        print("x_cols_cached")
-        print(x_cols_cached.shape)
-        print(list(x_cols_cached.flatten()))
-
-
-        dx, dw = convolution_backward(dout, cache)
-
-        # Your errors should be around e-8 or less.
-        print('Testing conv_backward_naive function')
-        print('dx error: ', rel_error(dx, dx_num))
-        print('dw error: ', rel_error(dw, dw_num))
+        # dx, dw = convolution_backward(dout, cache)
+        #
+        # # Your errors should be around e-8 or less.
+        # print('Testing conv_backward_naive function')
+        # print('dx error: ', rel_error(dx, dx_num))
+        # print('dw error: ', rel_error(dw, dw_num))
 
 
     def test_tpose1230(self):
@@ -196,7 +204,7 @@ class TestConvBackward(TestCase):
         print('dx error: ', rel_error(dx, dx_num))
         print('dw error: ', rel_error(dw, dw_num))
 
-    @pytest.mark.skip
+
     def test_backward_from_picture(self):
 
         conv_params = {
@@ -206,64 +214,118 @@ class TestConvBackward(TestCase):
 
         nr_img = 1
         sz_img = 3
-        nr_in_channel = 2  # input channels
+        channels = 2  # input channels
         sz_filter = 2
-        nr_filter = 2  # num output channels
-
-
-        conv_params = {
-            'stride': 1,
-            'pad': 0
-        }
-
-        nr_img = 2
-        sz_img = 3
-        nr_in_channel = 2  # input channels
-        sz_filter = 4
         nr_filter = 2  # num output channels
 
         # x = np.random.randn(nr_img, nr_in_channel, sz_img, 4)
         # w = np.random.randn(nr_filter, nr_in_channel, sz_filter, sz_filter)
-        x = np.array([1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2]).reshape(nr_img, nr_in_channel, sz_img, sz_img)
-        w = np.array([1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 2, 2]).reshape(nr_filter, nr_in_channel, sz_filter, sz_filter)
-
-        dout = np.random.randn(nr_img, nr_in_channel - 1, sz_img, 4) # standin for the derivitive from next layer
+        x = np.array([1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2], dtype=float).reshape(nr_img, channels, sz_img, sz_img)
+        w = np.array([1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 2, 2], dtype=float).reshape(nr_filter, channels, sz_filter, sz_filter)
+        dout = np.array([0.7, -1.08, 1.99, -1.36, .3, -.9, 1.22, -.75]).reshape(1, 2, 2, 2) # standin for the derivative from next layer
 
         dx_num = eval_numerical_gradient_array(lambda x: conv_forward(x, w, conv_params)[0], x, dout)
         dw_num = eval_numerical_gradient_array(lambda w: conv_forward(x, w, conv_params)[0], w, dout)
 
         y, cache = conv_forward(x, w, conv_param=conv_params)
+
         dx, dw = convolution_backward(dout, cache)
+        print(list(dx.flatten()))
+        print(list(dw.flatten()))
 
         # Your errors should be around e-8 or less.
         print('Testing conv_backward_naive function')
         print('dx error: ', rel_error(dx, dx_num))
         print('dw error: ', rel_error(dw, dw_num))
 
-    def test_backward_from_picture(self):
+    def test_backward_2(self):
+
         conv_params = {
             'stride': 1,
             'pad': 0
         }
 
-        nr_img = 2
+        nr_img = 1
         sz_img = 3
-        nr_in_channel = 2  # input channels
-        sz_filter = 4
-        nr_filter = 2  # num output channels
+        channels = 2  # input channels
+        filter_rows = 3
+        filter_cols = 2  # num output channels
+        nr_filter = 2
 
-        x = np.random.randn(nr_img, nr_in_channel, sz_img, 4)
-        w = np.random.randn(nr_filter, nr_in_channel, sz_filter, sz_filter)
-        # x = np.array([1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2]).reshape(nr_img, nr_in_channel, sz_img, sz_img)
-        # w = np.array([1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 2, 2]).reshape(nr_filter, nr_in_channel, sz_filter, sz_filter)
 
-        dout = np.random.randn(nr_img, nr_in_channel - 1, sz_img, 4) # standin for the derivitive from next layer
+        x = np.array([1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2], dtype=float).reshape(nr_img, channels, sz_img, sz_img)
+        w = np.array([1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 2, 2, 1, 0, 2, 4, 3, 1, 2, 4], dtype=float).reshape(nr_filter, channels, filter_rows, filter_cols)
+        dout = np.array([0.7, -1.08, 1.99, -1.36]).reshape(1, 2, 1, 2) # standin for the derivative from next layer
 
-        # dx_num = eval_numerical_gradient_array(lambda x: conv_forward(x, w, conv_params)[0], x, dout)
-        # dw_num = eval_numerical_gradient_array(lambda w: conv_forward(x, w, conv_params)[0], w, dout)
+        dx_num = eval_numerical_gradient_array(lambda x: conv_forward(x, w, conv_params)[0], x, dout)
+        dw_num = eval_numerical_gradient_array(lambda w: conv_forward(x, w, conv_params)[0], w, dout)
 
         y, cache = conv_forward(x, w, conv_param=conv_params)
+
+        print(y.shape)
         dx, dw = convolution_backward(dout, cache)
+
+        # # Your errors should be around e-8 or less.
+        print('Testing conv_backward_naive function')
+        print('dx error: ', rel_error(dx, dx_num))
+        print('dw error: ', rel_error(dw, dw_num))
+
+
+    def test_col2im_inner_1(self):
+        conv_params = {
+            'stride': 1,
+            'pad': 0
+        }
+
+        nr_img = 1
+        sz_img = 3
+        channels = 2  # input channels
+        filter_rows = 3
+        filter_cols = 2  # num output channels
+        nr_filter = 2
+
+        N = 1
+        C = 2
+        H = 3
+        W = 3
+        HH = 1
+        WW = 2
+        field_height = 3
+        field_width = 2
+        padding = 0
+        stride = 1
+
+        dx_cols = np.array([0.7, -1.08, 0.0, 0.0, 3.98, -2.72, 4.68, -3.8000000000000003, 1.99, -1.36, 0.7, -1.08, 4.68, -3.8000000000000003, 7.96, -5.44, 6.67, -5.16, 2.69, -2.4400000000000004, 3.98, -2.72, 7.96, -5.44], dtype=float).reshape(12, 2)
+        x_padded = np.zeros((1, 2, 3, 3), dtype=float) # standin for the derivative from next layer
+
+        col2im_inner(dx_cols, x_padded, N, C, H, W, HH, WW, field_height, field_width, padding, stride)
+        print(list(x_padded.flatten()))
+
+
+    # def test_backward_from_picture(self):
+        # conv_params = {
+        #     'stride': 1,
+        #     'pad': 0
+        # }
+        #
+        # nr_img = 2
+        # sz_img = 3
+        # nr_in_channel = 2  # input channels
+        # sz_filter = 4
+        # nr_filter = 2  # num output channels
+        #
+        # x = np.random.randn(nr_img, nr_in_channel, sz_img, 4)
+        # w = np.random.randn(nr_filter, nr_in_channel, sz_filter, sz_filter)
+        # # x = np.array([1, 0, 1, 0, 1, 0, 1, 1, 1, 2, 3, 2, 1, 0, 1, 2, 1, 2]).reshape(nr_img, nr_in_channel, sz_img, sz_img)
+        # # w = np.array([1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 2, 2]).reshape(nr_filter, nr_in_channel, sz_filter, sz_filter)
+        #
+        # dout = np.random.randn(nr_img, nr_in_channel - 1, sz_img, 4) # standin for the derivitive from next layer
+        #
+        # # dx_num = eval_numerical_gradient_array(lambda x: conv_forward(x, w, conv_params)[0], x, dout)
+        # # dw_num = eval_numerical_gradient_array(lambda w: conv_forward(x, w, conv_params)[0], w, dout)
+        #
+        # y, cache = conv_forward(x, w, conv_param=conv_params)
+        # dx, dw = convolution_backward(dout, cache)
 
         # Your errors should be around e-8 or less.
         # print('Testing conv_backward_naive function')

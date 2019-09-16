@@ -35,6 +35,7 @@ void lcache_push(lcache_t *cache, tensor_t t);
 tensor_t lcache_pop(lcache_t *cache);
 void make_empty_lcache(lcache_t *cache);
 void lcache_free_all(lcache_t *cache);
+void lcache_dump_stat(lcache_t *cache);
 
 #ifdef __cplusplus
 }

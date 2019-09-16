@@ -5,28 +5,57 @@
  * e-mail: fengggli@yahoo.com
  */
 
+/*
+ * Description:
+ *
+ * Author: Feng Li
+ * e-mail: fengggli@yahoo.com
+ */
+
 #include "awnn/layer_sandwich.h"
 #include "awnn/tensor.h"
 #include "config.h"
 #include "gtest/gtest.h"
 #include "test_util.h"
-//#define TEST_MORE
+
+#include "awnndevice/layer_sandwich_device.cuh"
+#define TEST_MORE
+
 namespace {
 
 // The fixture for testing class Foo.
-class LayerSandwich : public ::testing::Test {
+class LayerResBlockDevice : public ::testing::Test {
  protected:
+  LayerResBlockDevice() {
+    // You can do set-up work for each test here.
+    stat = cublasCreate(&handle_);
+    if (stat != CUBLAS_STATUS_SUCCESS) {
+      PERR("CUBLAS initialization failed\n");
+    }
+  }
+
+  ~LayerResBlockDevice() override {
+    // You can do clean-up work that doesn't throw exceptions here.
+    cublasDestroy(handle_);
+  }
+
   // Objects declared here can be used by all tests in the test case for Foo.
+  cublasHandle_t handle_;
+  cublasStatus_t stat;
 };
 
-TEST_F(LayerSandwich, fc_relu) {}
-
-TEST_F(LayerSandwich, conv_relu) {
+TEST_F(LayerResBlockDevice, ConvRelu) {
   lcache_t cache;
 
+#ifdef TEST_MORE
   uint shape_x[] = {2, 3, 8, 8};
   uint shape_w[] = {4, 3, 3, 3};
   uint shape_y[] = {2, 4, 8, 8};
+#else
+  uint shape_x[] = {1, 1, 4, 4};
+  uint shape_w[] = {1, 1, 3, 3};
+  uint shape_y[] = {1, 1, 4, 4};
+#endif
 
   conv_param_t params;
   params.stride = 1;
@@ -38,17 +67,35 @@ TEST_F(LayerSandwich, conv_relu) {
   tensor_t y = tensor_make_zeros(shape_y, array_size(shape_y));
 
   make_empty_lcache(&cache);
+
+  tensor_t d_x = tensor_make_copy_h2d(x);
+  tensor_t d_w = tensor_make_copy_h2d(w);
+  tensor_t d_y = tensor_make_copy_h2d(y);
   // forward
-  EXPECT_EQ(S_OK, conv_relu_forward(x, w, &cache, params, y));
+  struct layer_context_device context = {
+      .d_tmp = tensor_make_alike_device(d_y),
+      .d_dtmp = tensor_make_alike_device(d_y),
+  };
+  EXPECT_EQ(S_OK, conv_relu_forward_device(handle_, d_x, d_w, &cache, params,
+                                           d_y, &context));
 
   // backward
+  PINF("Now Backward");
   tensor_t dy = tensor_make_linspace_alike(0.1, 0.5, y);  // make it radom
 
   // output for backward
   tensor_t dx = tensor_make_alike(x);
   tensor_t dw = tensor_make_alike(w);
 
-  EXPECT_EQ(S_OK, conv_relu_backward(dx, dw, &cache, params, dy));
+  tensor_t d_dy = tensor_make_copy_h2d(dy);
+  tensor_t d_dx = tensor_make_copy_h2d(dx);
+  tensor_t d_dw = tensor_make_copy_h2d(dw);
+
+  EXPECT_EQ(S_OK, conv_relu_backward_device(handle_, d_dx, d_dw, &cache, params,
+                                            d_dy, &context));
+
+  tensor_copy_d2h(dx, d_dx);
+  tensor_copy_d2h(dw, d_dw);
 
   // numerical check
   tensor_t dx_ref = tensor_make_alike(x);
@@ -60,7 +107,7 @@ TEST_F(LayerSandwich, conv_relu) {
         conv_relu_forward(in, w, NULL, params, out);
       },
       x, dy, dx_ref);
-  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-4);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-3);
   PINF("gradient check of x... is ok");
 
   // evaluate gradient of w
@@ -69,12 +116,13 @@ TEST_F(LayerSandwich, conv_relu) {
         conv_relu_forward(x, in, NULL, params, out);
       },
       w, dy, dw_ref);
-  EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-4);
+  EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-3);
   PINF("gradient check of w... is ok");
+
+  layer_context_destroy_device(&context);
 }
 
-/** Residual block with no subsampling*/
-TEST_F(LayerSandwich, ResidualBlock_noBN) {
+TEST_F(LayerResBlockDevice, ResidualBlock) {
   lcache_t cache;
 
   uint N, C, H, W, F, HH, WW;
@@ -104,7 +152,20 @@ TEST_F(LayerSandwich, ResidualBlock_noBN) {
   make_empty_lcache(&cache);
   // forward
 
-  ASSERT_EQ(S_OK, residual_basic_no_bn_forward(x, w1, w2, &cache, params, y));
+  // copy input to device
+  tensor_t d_x = tensor_make_copy_h2d(x);
+  tensor_t d_w1 = tensor_make_copy_h2d(w1);
+  tensor_t d_w2 = tensor_make_copy_h2d(w2);
+  tensor_t d_y = tensor_make_copy_h2d(y);
+
+  struct layer_context_device *context;
+  resblock_create_context_device(&context, d_y);  // 1+2 contexts
+
+  ASSERT_EQ(S_OK, resblock_forward_device(handle_, d_x, d_w1, d_w2, &cache,
+                                          params, d_y, context));
+
+  // copy output back
+  tensor_copy_d2h(y, d_y);
 
 #ifdef TEST_MORE
   double value_list[] = {
@@ -136,37 +197,36 @@ TEST_F(LayerSandwich, ResidualBlock_noBN) {
 
   tensor_fill_list(y_ref, value_list, dim_of_shape(value_list));
 
-  EXPECT_LT(tensor_rel_error(y_ref, y), 1e-7);
-  if (tensor_rel_error(y_ref, y) > 1e-7) {
+  ASSERT_LT(tensor_rel_error(y_ref, y), 1e-3);
+  if (tensor_rel_error(y_ref, y) > 1e-3) {
     tensor_dump(y);
     tensor_dump(y_ref);
+  } else {
+    PINF("forward value checked!!!!!");
   }
 #endif
 
   // backward
   tensor_t dy = tensor_make_linspace_alike(0.1, 0.5, y);  // make it radom
 
-
   // output for backward
-  tensor_t dx = tensor_make_zeros_alike(x);
-  tensor_t dw1 = tensor_make_zeros_alike(w1);
-  tensor_t dw2 = tensor_make_zeros_alike(w2);
+  tensor_t dx = tensor_make_alike(x);
+  tensor_t dw1 = tensor_make_alike(w1);
+  tensor_t dw2 = tensor_make_alike(w2);
 
-  std::cout << "cache size " << cache.count << '\n';
-  tensor_print_flat(cache.all_tensors[cache.count -1]);
-  tensor_print_flat(cache.all_tensors[cache.count -2]);
+  // copy input to device mem
+  tensor_t d_dx = tensor_make_copy_h2d(dx);
+  tensor_t d_dw1 = tensor_make_copy_h2d(dw1);
+  tensor_t d_dw2 = tensor_make_copy_h2d(dw2);
+  tensor_t d_dy = tensor_make_copy_h2d(dy);
 
-  EXPECT_EQ(S_OK,
-            residual_basic_no_bn_backward(dx, dw1, dw2, &cache, params, dy));
+  EXPECT_EQ(S_OK, resblock_backward_device(handle_, d_dx, d_dw1, d_dw2, &cache,
+                                           params, d_dy, context));
 
-//  tensor_print_flat(x);
-//  tensor_print_flat(dx);
-//
-//  tensor_print_flat(w1);
-//  tensor_print_flat(dw1);
-//
-//  tensor_print_flat(w2);
-//  tensor_print_flat(dw2);
+  // copy gradient back
+  tensor_copy_d2h(dx, d_dx);
+  tensor_copy_d2h(dw1, d_dw1);
+  tensor_copy_d2h(dw2, d_dw2);
 
   // numerical check
   tensor_t dx_ref = tensor_make_alike(x);
@@ -179,7 +239,7 @@ TEST_F(LayerSandwich, ResidualBlock_noBN) {
         residual_basic_no_bn_forward(in, w1, w2, NULL, params, out);
       },
       x, dy, dx_ref);
-  ASSERT_LT(tensor_rel_error(dx_ref, dx), 1e-4);
+  ASSERT_LT(tensor_rel_error(dx_ref, dx), 1e-3);
   PINF("gradient check of x... is ok");
 
   // evaluate gradient of w1
@@ -188,7 +248,7 @@ TEST_F(LayerSandwich, ResidualBlock_noBN) {
         residual_basic_no_bn_forward(x, in, w2, NULL, params, out);
       },
       w1, dy, dw1_ref);
-  ASSERT_LT(tensor_rel_error(dw1_ref, dw1), 1e-4);
+  ASSERT_LT(tensor_rel_error(dw1_ref, dw1), 1e-3);
   PINF("gradient check of w1... is ok");
 
   // evaluate gradient of w2
@@ -197,100 +257,18 @@ TEST_F(LayerSandwich, ResidualBlock_noBN) {
         residual_basic_no_bn_forward(x, w1, in, NULL, params, out);
       },
       w2, dy, dw2_ref);
-  ASSERT_LT(tensor_rel_error(dw2_ref, dw2), 1e-4);
+  ASSERT_LT(tensor_rel_error(dw2_ref, dw2), 1e-3);
   PINF("gradient check of w2... is ok");
-}
 
-/** Residual block with  subsampling*/
-TEST_F(LayerSandwich, ResidualBlock_subsampling_noBN) {
-  lcache_t cache;
-  set_conv_method(CONV_METHOD_PERIMG);
-
-  uint N, C, H, W, F, HH, WW, H_out, W_out;
-  N = 2, C = 3, H = 4, W = 4;
-  F = 3, HH = 3, WW = 3;
-  H_out = 2, W_out = 2;
-
-  uint shape_x[] = {N, C, H, W};
-  uint shape_w_sample[] = {F, C, 1, 1};
-  uint shape_w[] = {F, C, HH, WW};
-  uint shape_y[] = {N, F, H_out, W_out};
-
-  conv_param_t params1 = {.stride = 2, .padding = 1};
-  conv_param_t params2 = {.stride = 1, .padding = 1};
-
-  tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, array_size(shape_x));
-  tensor_t w1 = tensor_make_linspace(-0.2, 0.3, shape_w, array_size(shape_w));
-  tensor_t w2 = tensor_make_linspace(-0.2, 0.3, shape_w, array_size(shape_w));
-  tensor_t w_sample = tensor_make_linspace(-0.2, 0.3, shape_w_sample,
-                                           array_size(shape_w_sample));
-
-  tensor_t y = tensor_make_zeros(shape_y, array_size(shape_y));
-
-  make_empty_lcache(&cache);
-  // forward
-
-  ASSERT_EQ(S_OK, residual_basic_no_bn_subspl_forward(
-                      x, w_sample, w1, w2, &cache, params1, params2, y));
-  PINF("forward value checked!!!!!");
-
-  // backward
-  tensor_t dy = tensor_make_linspace_alike(0.1, 0.3, y);  // make it radom
-
-  // output for backward
-  tensor_t dx = tensor_make_alike(x);
-  tensor_t dw1 = tensor_make_alike(w1);
-  tensor_t dw2 = tensor_make_alike(w2);
-  tensor_t dw_sample = tensor_make_alike(w_sample);
-
-  EXPECT_EQ(S_OK, residual_basic_no_bn_subspl_backward(
-                      dx, dw_sample, dw1, dw2, &cache, params1, params2, dy));
-
-  // numerical check
-  tensor_t dx_ref = tensor_make_alike(x);
-  tensor_t dw1_ref = tensor_make_alike(dw1);
-  tensor_t dw2_ref = tensor_make_alike(dw2);
-  tensor_t dw_sample_ref = tensor_make_alike(dw_sample);
-
-  // evaluate gradient of x
-  eval_numerical_gradient(
-      [w_sample, w1, w2, params1, params2](tensor_t const in, tensor_t out) {
-        residual_basic_no_bn_subspl_forward(in, w_sample, w1, w2, NULL, params1,
-                                            params2, out);
-      },
-      x, dy, dx_ref);
-  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-3);
-  PINF("gradient check of x... is ok");
-
-  // evaluate gradient of w_sample
-  eval_numerical_gradient(
-      [x, w1, w2, params1, params2](tensor_t const in, tensor_t out) {
-        residual_basic_no_bn_subspl_forward(x, in, w1, w2, NULL, params1,
-                                            params2, out);
-      },
-      w_sample, dy, dw_sample_ref);
-  ASSERT_LT(tensor_rel_error(dw_sample_ref, dw_sample), 1e-4);
-  PINF("gradient check of w_sample... is ok");
-
-  // evaluate gradient of w1
-  eval_numerical_gradient(
-      [x, w_sample, w2, params1, params2](tensor_t const in, tensor_t out) {
-        residual_basic_no_bn_subspl_forward(x, w_sample, in, w2, NULL, params1,
-                                            params2, out);
-      },
-      w1, dy, dw1_ref);
-  ASSERT_LT(tensor_rel_error(dw1_ref, dw1), 1e-4);
-  PINF("gradient check of w1... is ok");
-
-  // evaluate gradient of w2
-  eval_numerical_gradient(
-      [x, w_sample, w1, params1, params2](tensor_t const in, tensor_t out) {
-        residual_basic_no_bn_subspl_forward(x, w_sample, w1, in, NULL, params1,
-                                            params2, out);
-      },
-      w2, dy, dw2_ref);
-  ASSERT_LT(tensor_rel_error(dw2_ref, dw2), 1e-4);
-  PINF("gradient check of w2... is ok");
+  tensor_destroy_device(&d_x);
+  tensor_destroy_device(&d_w1);
+  tensor_destroy_device(&d_w2);
+  tensor_destroy_device(&d_y);
+  tensor_destroy_device(&d_dx);
+  tensor_destroy_device(&d_dw1);
+  tensor_destroy_device(&d_dw2);
+  tensor_destroy_device(&d_dy);
+  resblock_destroy_context_device(context);
 }
 
 }  // namespace

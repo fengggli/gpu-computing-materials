@@ -25,6 +25,33 @@ tensor_t tensor_make_transpose_3012(tensor_t t) {
   return tpose;
 }
 
+#if 0
+/*
+ * second example of the transpose 3012 operation, this time with a
+ * more mapping based on the target index, which will help us do
+ * a translation to cuda
+ */
+tensor_t tensor_make_transpose_3012(tensor_t t) {
+  uint mod = t.dim.dims[0] * t.dim.dims[1] * t.dim.dims[2];
+  uint capacity = tensor_get_capacity(t);
+  uint stride = t.dim.dims[3];
+
+  tensor_t tpose = tensor_make_copy(t);
+
+  for (uint i = 0; i < capacity; ++i) {
+    uint src_idx = i / mod;
+    src_idx += (i % mod) * stride;
+    tpose.data[i] = t.data[src_idx];
+    printf("targetIdx=%u, src_idx=%u\n", i, src_idx);
+  }
+
+  uint const shape[] = { t.dim.dims[3], t.dim.dims[0], t.dim.dims[1], t.dim.dims[2] };
+  tensor_reshape_(&tpose, shape, ARRAY_SIZE(shape));
+  return tpose;
+}
+#endif
+
+
 // used for backward
 tensor_t tensor_make_transpose_1230(tensor_t t) {
   uint src_idx = 0, target_idx = 0;
@@ -225,14 +252,18 @@ status_t tensor_reshape_(tensor_t* ptr_t, uint const shape[], uint const ndims){
     req_dim = make_dim(0,0);
   }
 
-  for(i = 0; i< MAX_DIM; i++){
+  for(i = 0; i < MAX_DIM; i++){
     if(i < ndims){
       req_dim.dims[i] = shape[i];
     }
     else
       req_dim.dims[i] = 0;
   }
-  if(dim_get_capacity(req_dim) != dim_get_capacity(ptr_t->dim)){
+
+  uint original_capacity = dim_get_capacity(ptr_t->dim);
+  uint requested_capacity = dim_get_capacity(req_dim);
+
+  if(requested_capacity != original_capacity){
     PERR("[tensor reshape]: dimension not matched");
     PERR("Original dimension: ");
     dim_dump(ptr_t->dim);
@@ -260,6 +291,8 @@ status_t tensor_reshape_flat_(tensor_t * t) {
 
 
 void tensor_print_flat(tensor_t t) {
+  assert(t.mem_type == CPU_MEM);
+
   uint capacity = tensor_get_capacity(t);
   printf("[");
   uint i;

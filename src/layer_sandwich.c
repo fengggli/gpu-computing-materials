@@ -72,13 +72,13 @@ status_t conv_iden_relu_forward(tensor_t x, tensor_t iden, tensor_t w,
 status_t conv_iden_relu_backward(tensor_t dx, tensor_t diden, tensor_t dw,
                                  lcache_t *cache, conv_param_t params,
                                  tensor_t dy) {
-  tensor_t tmp = tensor_make_alike(dy);
+  // tensor_t tmp = tensor_make_alike(dy);
 
-  AWNN_CHECK_EQ(S_OK, layer_relu_backward(tmp, cache, dy));
-  tensor_copy(diden, tmp);
-  AWNN_CHECK_EQ(S_OK, convolution_backward(dx, dw, cache, params, tmp));
+  AWNN_CHECK_EQ(S_OK, layer_relu_backward(diden, cache, dy));
+  // tensor_copy(diden, tmp);
+  AWNN_CHECK_EQ(S_OK, convolution_backward(dx, dw, cache, params, diden));
 
-  tensor_destroy(&tmp);
+  // tensor_destroy(&tmp);
   return S_OK;
 }
 
