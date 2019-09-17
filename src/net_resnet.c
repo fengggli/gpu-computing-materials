@@ -9,6 +9,10 @@
 #include "utils/data_cifar.h"
 #include "utils/debug.h"
 #include "utils/weight_init.h" 
+#include "awnn/solver.h"
+
+// #define ENABLE_SOLVER
+
 static conv_param_t conv3x3_param = {.stride = 1, .padding = 1};
 static conv_param_t conv3x3_with_sample_param = {.stride = 2, .padding = 1};
 
@@ -535,6 +539,7 @@ void *resnet_thread_entry(void *threadinfo) {
     };
     resnet_loss(&(my_info->model), x_thread_local, labels_thread_local, &loss);
     if (my_info->id == 0) {
+      PINF("worker%d, Iter=%u, Loss %.2f", my_info->id, iteration, loss);
       forward_backward_in_ms += get_elapsed_ms(t_start, get_clocktime());
     };
 
@@ -542,6 +547,16 @@ void *resnet_thread_entry(void *threadinfo) {
       t_start = get_clocktime();
     };
     concurrent_allreduce_gradient(my_info);
+#ifdef ENABLE_SOLVER
+    param_t *p_param;
+    // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
+    list_for_each_entry(p_param, my_info->model.list_all_params, list) {
+      PDBG("updating %s...", p_param->name);
+      // sgd
+      // sgd_update(p_param, learning_rate);
+      sgd_update_momentum(p_param, 0.01, 0.9);
+    }
+#endif
 
     if (my_info->id == 0) {
       allreduce_in_ms += get_elapsed_ms(t_start, get_clocktime());

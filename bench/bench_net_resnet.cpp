@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
     threads_info[t].batch_sz = batch_sz;
     threads_info[t].ptr_mutex = &mutex;
     threads_info[t].ptr_barrier = &barrier;
-    
+
 	  rc = pthread_create(&threads[t], &attr, resnet_thread_entry, (void *)(&threads_info[t]));
     AWNN_CHECK_EQ(0, rc);
   }
