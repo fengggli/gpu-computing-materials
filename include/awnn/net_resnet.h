@@ -73,10 +73,12 @@ struct resnet_thread_info{
   int nr_threads;
   model_t model;
 
+  model_t** ptr_root_model; /** To sum up all gradients*/
   data_loader_t *data_loader;
   int batch_sz;
 
   pthread_mutex_t * ptr_mutex;
+  pthread_barrier_t * ptr_barrier;
 };
 typedef struct resnet_thread_info resnet_thread_info_t;
 

@@ -55,12 +55,17 @@ int main(int argc, char *argv[]) {
   pthread_mutex_t mutex;
   pthread_mutex_init(&mutex, NULL);
 
+  /* Used for all-reduce*/
+  pthread_barrier_t barrier;
+  pthread_barrier_init(&barrier, NULL, nr_worker_threads);
+
   for(int t = 0;  t< nr_worker_threads; t++){
     threads_info[t].id = t;
     threads_info[t].nr_threads = nr_worker_threads;
     threads_info[t].data_loader = &loader;
     threads_info[t].batch_sz = batch_sz;
     threads_info[t].ptr_mutex = &mutex;
+    threads_info[t].ptr_barrier = &barrier;
     
 	  rc = pthread_create(&threads[t], &attr, resnet_thread_entry, (void *)(&threads_info[t]));
     AWNN_CHECK_EQ(0, rc);
@@ -90,6 +95,9 @@ int main(int argc, char *argv[]) {
     rc = pthread_join(threads[t], NULL);
     AWNN_CHECK_EQ(0, rc);
 	}
+
+  PWRN("joined!");
+  pthread_barrier_destroy(&barrier);
 
   free(threads);
   free(threads_info);

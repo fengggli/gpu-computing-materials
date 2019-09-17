@@ -12,6 +12,8 @@
 static conv_param_t conv3x3_param = {.stride = 1, .padding = 1};
 static conv_param_t conv3x3_with_sample_param = {.stride = 2, .padding = 1};
 
+model_t * root_model = NULL;
+
 status_t resnet_init(
     model_t *model,   // output
     dim_t input_dim,  // NCHW
@@ -428,6 +430,58 @@ status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
   return S_OK;
 }
 
+/** Naive all-reduce between all threads*/
+void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info){
+
+  // Accumulate all gradients from worker to main
+  pthread_barrier_wait(worker_info->ptr_barrier);
+  if(worker_info->id != 0){
+    // all learnable parameters 
+    param_t *ptr_param_root;
+    param_t *ptr_param_local;
+    // similar to what i have done with solver
+    list_for_each_entry_pairwise(ptr_param_root, root_model->list_all_params,
+        ptr_param_local, worker_info->model.list_all_params, list) {
+      PDBG("Accumulate %s...", ptr_param_local->name);
+      //TODO: can be more fine grain
+      
+      pthread_mutex_lock(worker_info->ptr_mutex);
+      tensor_elemwise_op_inplace(ptr_param_root->diff, ptr_param_local->diff, TENSOR_OP_ADD);
+      pthread_mutex_unlock(worker_info->ptr_mutex);
+    }
+  }
+
+  // main thread get avg
+  pthread_barrier_wait(worker_info->ptr_barrier);
+  if(worker_info->id == 0 && worker_info->nr_threads > 1){
+    param_t *ptr_param_root;
+    // similar to what i have done with solver
+    list_for_each_entry(ptr_param_root, root_model->list_all_params, list) {
+      PDBG("Averaging gradient in root %s...", ptr_param_root->name);
+      T *pelem;
+      uint ii;
+      tensor_t dparam = ptr_param_root->diff;
+      tensor_for_each_entry(pelem, ii, dparam) { (*pelem) /= (worker_info->nr_threads); }
+    }
+  }
+
+  // each other thread get a copy
+  pthread_barrier_wait(worker_info->ptr_barrier);
+  if(worker_info->id != 0){
+    param_t *ptr_param_root;
+    param_t *ptr_param_local;
+    // similar to what i have done with solver
+    list_for_each_entry_pairwise(ptr_param_root, root_model->list_all_params,
+        ptr_param_local, worker_info->model.list_all_params, list) {
+      PDBG("Obatining gradient copy %s...", ptr_param_local->name);
+      tensor_copy(ptr_param_local->diff, ptr_param_root->diff);
+    }
+  }
+
+  pthread_barrier_wait(worker_info->ptr_barrier);
+}
+
+
 void *resnet_thread_entry(void *threadinfo) {
   struct resnet_thread_info *my_info =
       (struct resnet_thread_info *)(threadinfo);
@@ -456,6 +510,10 @@ void *resnet_thread_entry(void *threadinfo) {
   resnet_init(&(my_info->model), input_dim, output_dim, nr_stages, nr_blocks,
               reg, normalize_method);
 
+  if (my_info->id == 0) {
+    root_model = &(my_info->model);
+  };
+
   AWNN_CHECK_EQ((void *)0, (void *)net_get_param(my_info->model.list_all_params,
                                                  "W3"));  // unexisting param
   AWNN_CHECK_NE((void *)0, (void *)net_get_param(my_info->model.list_all_params,
@@ -469,22 +527,28 @@ void *resnet_thread_entry(void *threadinfo) {
   */
   uint nr_iterations = 10;
   clocktime_t t_start;
-  double eclapsed_in_ms = 0;
+  double forward_backward_in_ms = 0;
+  double allreduce_in_ms = 0;
   for (uint iteration = 0; iteration < nr_iterations; iteration++) {
     if (my_info->id == 0) {
       t_start = get_clocktime();
     };
     resnet_loss(&(my_info->model), x_thread_local, labels_thread_local, &loss);
     if (my_info->id == 0) {
-      eclapsed_in_ms += get_elapsed_ms(t_start, get_clocktime());
+      forward_backward_in_ms += get_elapsed_ms(t_start, get_clocktime());
     };
 
-    /* all-reduce gradients, protected by mutex*/
-    pthread_mutex_lock(my_info->ptr_mutex);
-    pthread_mutex_unlock(my_info->ptr_mutex);
+    if (my_info->id == 0) {
+      t_start = get_clocktime();
+    };
+    concurrent_allreduce_gradient(my_info);
+
+    if (my_info->id == 0) {
+      allreduce_in_ms += get_elapsed_ms(t_start, get_clocktime());
+    };
   }
   if (my_info->id == 0) {
-    PWRN("AVG forward-backward %.3fms", eclapsed_in_ms/nr_iterations);
+    PWRN("AVG forward-backward %.3fms, allreduce(%.3f)ms", forward_backward_in_ms/nr_iterations, allreduce_in_ms);
   }
 
   resnet_finalize(&(my_info->model));

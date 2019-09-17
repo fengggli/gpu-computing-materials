@@ -85,6 +85,13 @@ static inline int list_empty(const struct list_head *head) {
        &pos->member != (head);                               \
        pos = list_entry(pos->member.next, typeof(*pos), member))
 
+#define list_for_each_entry_pairwise(pos1, head1, pos2, head2, member) \
+  for (pos1 = list_entry((head1)->next, typeof(*pos1), member),        \
+      pos2 = list_entry((head2)->next, typeof(*pos2), member);         \
+       &pos1->member != (head1);                                       \
+       pos1 = list_entry(pos1->member.next, typeof(*pos1), member),    \
+      pos2 = list_entry(pos2->member.next, typeof(*pos2), member))
+
 #ifdef __cplusplus
 }
 #endif
