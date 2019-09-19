@@ -77,7 +77,7 @@ void layer_fc_setup(layer_t *this_layer,
   this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape);
 }
 
-layer_t *setup_layer(layer_type_t layer_type, void *layer_config,
+layer_t *layer_setup(layer_type_t layer_type, void *layer_config,
                      layer_t *bottom_layer) {
   layer_t *target_layer = new layer_t();
   switch (layer_type) {
@@ -98,7 +98,7 @@ layer_t *setup_layer(layer_type_t layer_type, void *layer_config,
   return target_layer;
 }
 
-void teardown_layer(layer_t * this_layer){
+void layer_teardown(layer_t * this_layer){
 
   delete this_layer->layer_out;
   while(!this_layer->learnables.empty()){
@@ -107,4 +107,15 @@ void teardown_layer(layer_t * this_layer){
     delete param;
   }
   delete this_layer;
+}
+
+void net_add_layer(net_t *net, layer_t *layer){
+  net->layers.push_back(layer);
+}
+
+void net_teardown(net_t *this_net){
+  while(!this_net->layers.empty()){
+    layer_teardown(this_net->layers.back());
+    this_net->layers.pop_back();
+  }
 }

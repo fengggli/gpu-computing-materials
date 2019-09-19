@@ -13,7 +13,6 @@
 #include <vector>
 #include <stack>
 typedef std::stack<tensor_t> layer_tape_t;
-typedef struct model model_t;
 
 typedef enum{
   LAYER_TYPE_DATA,
@@ -92,13 +91,19 @@ typedef struct{
 } layer_t;
 
 /** Initialize this layer*/
-layer_t* setup_layer(layer_type_t type, void * layer_config, layer_t *bottom_layer);
+layer_t* layer_setup(layer_type_t type, void * layer_config, layer_t *bottom_layer);
 
 /* Destroy this layer*/
-void teardown_layer(layer_t * this_layer);
+void layer_teardown(layer_t * this_layer);
 
-/** Register this layer*/
-void add_layer(model_t *model, layer_t *layer);
+typedef struct{
+  std::vector<layer_t *> layers;
+}net_t;
+/** Register this layer to net*/
+void net_add_layer(net_t *model, layer_t *layer);
+
+/* Free all layers from net*/
+void net_teardown(net_t *net);
 
 #ifdef __cplusplus
 extern "C" {

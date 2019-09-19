@@ -8,6 +8,7 @@ class LayerTest : public ::testing::Test {};
 }  // namespace
 
 TEST_F(LayerTest, ConvLayers) {
+  net_t net;
   /*Data layer*/
   layer_data_config_t *dataconfig = new layer_data_config_t();
   dataconfig->name = "data";
@@ -16,7 +17,8 @@ TEST_F(LayerTest, ConvLayers) {
   dataconfig->dim.dims[2] = 4;
   dataconfig->dim.dims[3] = 5;
 
-  layer_t * data_layer = setup_layer(LAYER_TYPE_DATA, dataconfig, nullptr);
+  layer_t * data_layer = layer_setup(LAYER_TYPE_DATA, dataconfig, nullptr);
+  net_add_layer(&net, data_layer);
 
 
   /*Conv layer*/
@@ -24,19 +26,17 @@ TEST_F(LayerTest, ConvLayers) {
   conv_config->name = "conv2d";
   conv_config->out_channels = 4;
   conv_config->kernel_size = 32;
-  layer_t * conv_layer = setup_layer(LAYER_TYPE_CONV2D, conv_config, data_layer);
-  EXPECT_EQ(0,0);
+  layer_t * conv_layer = layer_setup(LAYER_TYPE_CONV2D, conv_config, data_layer);
+  net_add_layer(&net, conv_layer);
 
   /*FC layer*/
   layer_fc_config_t *fc_config = new layer_fc_config_t();
   fc_config->name = "fc";
   fc_config->nr_classes = 4;
-  layer_t * fc_layer = setup_layer(LAYER_TYPE_FC, fc_config, data_layer);
-  EXPECT_EQ(0,0);
+  layer_t * fc_layer = layer_setup(LAYER_TYPE_FC, fc_config, data_layer);
+  net_add_layer(&net, fc_layer);
 
-  teardown_layer(fc_layer);
-  teardown_layer(conv_layer);
-  teardown_layer(data_layer);
+  net_teardown(&net);
 
   delete dataconfig;
   delete conv_config;
