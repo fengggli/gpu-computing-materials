@@ -61,6 +61,11 @@ struct layer_data_config_t{
   dim_t dim;
 } ;
 
+struct layer_fc_config_t{
+  std::string name;
+  uint nr_classes;
+} ;
+
 
 struct layer_conv2d_config_t{
   std::string name;
@@ -77,7 +82,7 @@ typedef struct{
   Blob *layer_in;
   Blob *layer_out;
 
-  Blob *weight;
+  std::vector<Blob *>learnables;
 
   layer_type_t tape;
   std::vector<tensor_t> worker_buffer;

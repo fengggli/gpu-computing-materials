@@ -20,18 +20,27 @@ TEST_F(LayerTest, ConvLayers) {
 
 
   /*Conv layer*/
-  layer_conv2d_config_t *config = new layer_conv2d_config_t();
-  config->name = "conv2d";
-  config->out_channels = 4;
-  config->kernel_size = 32;
-  layer_t * conv_layer = setup_layer(LAYER_TYPE_CONV2D, config, data_layer);
+  layer_conv2d_config_t *conv_config = new layer_conv2d_config_t();
+  conv_config->name = "conv2d";
+  conv_config->out_channels = 4;
+  conv_config->kernel_size = 32;
+  layer_t * conv_layer = setup_layer(LAYER_TYPE_CONV2D, conv_config, data_layer);
   EXPECT_EQ(0,0);
 
+  /*FC layer*/
+  layer_fc_config_t *fc_config = new layer_fc_config_t();
+  fc_config->name = "fc";
+  fc_config->nr_classes = 4;
+  layer_t * fc_layer = setup_layer(LAYER_TYPE_FC, fc_config, data_layer);
+  EXPECT_EQ(0,0);
+
+  teardown_layer(fc_layer);
   teardown_layer(conv_layer);
   teardown_layer(data_layer);
 
   delete dataconfig;
-  delete config;
+  delete conv_config;
+  delete fc_config;
 }
 
 int main(int argc, char **argv) {

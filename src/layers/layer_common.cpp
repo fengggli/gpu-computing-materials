@@ -20,10 +20,6 @@ void layer_data_setup(layer_t *this_layer,
   return;
 }
 
-void layer_data_teardown(layer_t *this_layer){
-  delete this_layer->layer_out;
-}
-
 void layer_conv2d_setup(layer_t *this_layer,
                         layer_conv2d_config_t *layer_config,
                         layer_t *bottom_layer) {
@@ -41,7 +37,7 @@ void layer_conv2d_setup(layer_t *this_layer,
   /* Allocate weight*/
   uint w_shape[] = {layer_config->out_channels, in_channels,
                     layer_config->kernel_size, layer_config->kernel_size};
-  this_layer->weight = new Blob(this_layer->name + ".weight", 1, w_shape);
+  this_layer->learnables.push_back(new Blob(this_layer->name + ".weight", 1, w_shape));
 
   /*Calculate output shape*/
   uint out_height =
@@ -57,11 +53,29 @@ void layer_conv2d_setup(layer_t *this_layer,
   return;
 }
 
-void layer_conv2d_teardown(layer_t *this_layer) {
-  delete this_layer->layer_out;
-  delete this_layer->weight;
-}
+void layer_fc_setup(layer_t *this_layer,
+                        layer_fc_config_t *layer_config,
+                        layer_t *bottom_layer) {
+  AWNN_CHECK_GT(layer_config->nr_classes, 0);
+  this_layer->layer_type = LAYER_TYPE_FC;
 
+  this_layer->name = layer_config->name;
+  this_layer->layer_in = bottom_layer->layer_out;
+
+  /** Alloate weight and bias*/
+  uint nr_imgs = this_layer->layer_in->data.dim.dims[0];
+  uint nr_in_flat_dim = tensor_get_capacity(this_layer->layer_in->data)/ nr_imgs;
+  uint w_shape[] = {nr_in_flat_dim, layer_config->nr_classes, 0, 0};
+  this_layer->learnables.push_back(new Blob(this_layer->name + ".weight", 1, w_shape));
+
+  uint b_shape[] = {layer_config->nr_classes, 0, 0, 0};
+  this_layer->learnables.push_back(new Blob(this_layer->name + ".bias", 1, b_shape));
+
+  /*Output setup*/
+  uint out_shape[] = {nr_imgs, layer_config->nr_classes, 0, 0};
+
+  this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape);
+}
 
 layer_t *setup_layer(layer_type_t layer_type, void *layer_config,
                      layer_t *bottom_layer) {
@@ -74,6 +88,10 @@ layer_t *setup_layer(layer_type_t layer_type, void *layer_config,
     case LAYER_TYPE_DATA:
       layer_data_setup(target_layer, (layer_data_config_t *)layer_config, bottom_layer);
       break;
+    case LAYER_TYPE_FC:
+      layer_fc_setup(target_layer, (layer_fc_config_t *)layer_config, bottom_layer);
+      break;
+
     default:
       PERR("layer type %d not support", layer_type);
   }
@@ -81,15 +99,12 @@ layer_t *setup_layer(layer_type_t layer_type, void *layer_config,
 }
 
 void teardown_layer(layer_t * this_layer){
-  switch (this_layer->layer_type) {
-    case LAYER_TYPE_CONV2D:
-      layer_conv2d_teardown(this_layer);
-      break;
-    case LAYER_TYPE_DATA:
-      layer_data_teardown(this_layer);
-      break;
-    default:
-      PERR("layer type %d not support", this_layer->layer_type);
+
+  delete this_layer->layer_out;
+  while(!this_layer->learnables.empty()){
+    Blob *param = this_layer->learnables.back();
+    this_layer->learnables.pop_back();
+    delete param;
   }
   delete this_layer;
 }
