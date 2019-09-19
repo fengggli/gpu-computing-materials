@@ -129,3 +129,5 @@ if(USE_MKL)
 add_executable(test-numa test_numa.cpp)
 target_link_options(test-numa PRIVATE "-liomp5") #other wise mkl-internal threading will be used.
 endif()
+
+add_subdirectory(layers)

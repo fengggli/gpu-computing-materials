@@ -132,7 +132,7 @@ configure_file (
   "${PROJECT_BINARY_DIR}/config.h"
 )
 
-include_directories(include ${PROJECT_BINARY_DIR})
+include_directories(include ${PROJECT_BINARY_DIR} src/)
 
 if(USE_NNPACK)
   set(NNPACK_ROOT extern/NNPACK)
@@ -220,6 +220,8 @@ if(USE_CUDA)
 
   set(AWNN_DEVICE_LIBS "awnndevicelib")
 endif(USE_CUDA)
+
+add_subdirectory(src/layers)
 
 # nnpack and gtest
 add_subdirectory(extern)

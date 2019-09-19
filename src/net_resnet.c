@@ -11,7 +11,7 @@
 #include "utils/weight_init.h" 
 #include "awnn/solver.h"
 
-// #define ENABLE_SOLVER
+#define ENABLE_SOLVER
 
 static conv_param_t conv3x3_param = {.stride = 1, .padding = 1};
 static conv_param_t conv3x3_with_sample_param = {.stride = 2, .padding = 1};
