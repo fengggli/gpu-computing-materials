@@ -12,7 +12,6 @@
 #include <string>
 #include <vector>
 #include <stack>
-typedef std::stack<tensor_t> layer_tape_t;
 
 typedef enum{
   LAYER_TYPE_DATA,
@@ -78,32 +77,44 @@ struct layer_conv2d_config_t{
 typedef struct{
   layer_type_t layer_type = LAYER_TYPE_UNDEFINED;
   std::string name;
+  void *config;
+
   Blob *layer_in;
   Blob *layer_out;
 
   std::vector<Blob *>learnables;
 
-  layer_type_t tape;
+  std::vector<tensor_t*> tape;
   std::vector<tensor_t> worker_buffer;
 
-  status_t (*forward)(tensor_t x,  layer_tape_t &tape, tensor_t y);
-  status_t (*backward)(tensor_t dx,  layer_type_t &tape, tensor_t dy);
+
+  /* all other tensers shall reference in tape (e.g. w, b, or temp)*/
+  status_t (*forward)(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config);
+  status_t (*backward)(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, void * layer_config);
 } layer_t;
 
 /** Initialize this layer*/
 layer_t* layer_setup(layer_type_t type, void * layer_config, layer_t *bottom_layer);
 
-/* Destroy this layer*/
+/** Destroy this layer*/
 void layer_teardown(layer_t * this_layer);
 
 typedef struct{
   std::vector<layer_t *> layers;
 }net_t;
+
+
 /** Register this layer to net*/
 void net_add_layer(net_t *model, layer_t *layer);
 
-/* Free all layers from net*/
+/** Free all layers from net*/
 void net_teardown(net_t *net);
+
+/** Forward*/
+void net_forward(net_t *net);
+
+/** Backward*/
+void net_backward(net_t *net);
 
 #ifdef __cplusplus
 extern "C" {
