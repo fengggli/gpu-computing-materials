@@ -40,7 +40,7 @@ void lcache_dump_stat(lcache_t *cache) {
 void update_regulizer_gradient(tensor_t x, tensor_t dx, T reg) {
   tensor_t tmp = tensor_make_copy(x);
   T *pelem;
-  uint ii;  // for iteration
+  uint ii;  // for iteration, gradient of regulizer (dx += reg*x;)
   tensor_for_each_entry(pelem, ii, tmp) { (*pelem) *= reg; }
   tensor_elemwise_op_inplace(dx, tmp, TENSOR_OP_ADD);
   tensor_destroy(&tmp);

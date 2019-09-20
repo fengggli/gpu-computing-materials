@@ -117,6 +117,9 @@ void net_backward(net_t *net);
 
 void net_update_weights(net_t *net, double learning_rate);
 
+void net_loss(net_t *net, tensor_t x, label_t const *labels,
+                  T *ptr_loss);
+
 #ifdef __cplusplus
 extern "C" {
 #endif

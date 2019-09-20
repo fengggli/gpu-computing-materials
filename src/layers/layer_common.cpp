@@ -4,6 +4,7 @@
 #include "awnn/layer_conv.h"
 #include "awnn/layer_fc.h"
 #include "awnn/solver.h"
+#include "utils/weight_init.h"
 
 /** I only need those layers:
  * 1. conv, relu, and conv_relu
@@ -58,6 +59,9 @@ void layer_conv2d_setup(layer_t *this_layer,
                     layer_config->kernel_size, layer_config->kernel_size};
   Blob *weight_blob = new Blob(this_layer->name + ".weight", 1, w_shape);
   this_layer->learnables.push_back(weight_blob);
+
+  /* Weight init*/
+  AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight_blob->data));
 
   /*Calculate output shape*/
   uint out_height =
@@ -114,6 +118,9 @@ void layer_fc_setup(layer_t *this_layer,
   uint b_shape[] = {layer_config->nr_classes, 0, 0, 0};
   Blob* bias_blob = new Blob(this_layer->name + ".bias", 1, b_shape);
   this_layer->learnables.push_back(bias_blob);
+
+  /* Weight init*/
+  AWNN_CHECK_EQ(S_OK, weight_init_fc_kaiming(weight_blob->data, bias_blob->data));
 
   /*Output setup*/
   uint out_shape[] = {nr_imgs, layer_config->nr_classes, 0, 0};
