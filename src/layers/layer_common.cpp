@@ -3,6 +3,7 @@
 #include "awnn/net_resnet.h"
 #include "awnn/layer_conv.h"
 #include "awnn/layer_fc.h"
+#include "awnn/solver.h"
 
 /** I only need those layers:
  * 1. conv, relu, and conv_relu
@@ -70,7 +71,6 @@ void layer_conv2d_setup(layer_t *this_layer,
   this_layer->tape.push_back(&(this_layer->layer_in->data)); // save x
   this_layer->tape.push_back(&(weight_blob->data)); //save w
   this_layer->tape.push_back(&(weight_blob->diff)); //save dw
-
 
   return;
 }
@@ -186,5 +186,20 @@ void net_backward(net_t *this_net){
 
     if(layer->layer_type == LAYER_TYPE_DATA) continue;
     layer->backward(layer->layer_in->data, layer->tape, layer->layer_out->data, layer->config);
+  }
+}
+
+void net_update_weights(net_t * this_net, double learning_rate){
+  for(auto iter_layer = this_net->layers.begin(); iter_layer!= this_net->layers.end(); ++iter_layer){
+    layer_t* layer = *iter_layer;
+
+    if(layer->layer_type == LAYER_TYPE_DATA) continue;
+    for(auto param = layer->learnables.begin(); param != layer->learnables.end(); ++param){
+      PDBG("updating %s...", (*param)->name.c_str());
+      AWNN_CHECK_EQ((*param)->learnable, 1);
+      // sgd
+      // sgd_update(p_param, learning_rate);
+     do_sgd_update_momentum((*param)->data, (*param)->diff, (*param)->velocity, learning_rate, 0.9);
+    }
   }
 }

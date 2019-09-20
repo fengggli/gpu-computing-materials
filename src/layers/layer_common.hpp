@@ -103,7 +103,6 @@ typedef struct{
   std::vector<layer_t *> layers;
 }net_t;
 
-
 /** Register this layer to net*/
 void net_add_layer(net_t *model, layer_t *layer);
 
@@ -115,6 +114,8 @@ void net_forward(net_t *net);
 
 /** Backward*/
 void net_backward(net_t *net);
+
+void net_update_weights(net_t *net, double learning_rate);
 
 #ifdef __cplusplus
 extern "C" {
