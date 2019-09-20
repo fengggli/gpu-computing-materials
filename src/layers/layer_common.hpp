@@ -62,6 +62,8 @@ struct layer_data_config_t{
 struct layer_fc_config_t{
   std::string name;
   uint nr_classes;
+
+  double reg = 0; //l2 regulizer
 } ;
 
 
@@ -72,6 +74,8 @@ struct layer_conv2d_config_t{
   int padding = 1;
   uint out_channels;
   uint kernel_size;
+
+  double reg = 0; //l2 regulizer
 } ;
 
 typedef struct{
@@ -87,9 +91,8 @@ typedef struct{
   std::vector<tensor_t*> tape;
   std::vector<tensor_t> worker_buffer;
 
-
   /* all other tensers shall reference in tape (e.g. w, b, or temp)*/
-  void (*forward)(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config);
+  double (*forward)(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config);
   void (*backward)(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, void * layer_config);
 } layer_t;
 
@@ -109,8 +112,9 @@ void net_add_layer(net_t *model, layer_t *layer);
 /** Free all layers from net*/
 void net_teardown(net_t *net);
 
-/** Forward*/
-void net_forward(net_t *net);
+/** Forward
+ * Return all loss from regulizer*/
+double net_forward(net_t *net);
 
 /** Backward*/
 void net_backward(net_t *net);

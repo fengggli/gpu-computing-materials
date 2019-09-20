@@ -5,6 +5,7 @@
 #include "awnn/layer_fc.h"
 #include "awnn/solver.h"
 #include "utils/weight_init.h"
+#include "awnn/loss_softmax.h"
 
 /** I only need those layers:
  * 1. conv, relu, and conv_relu
@@ -24,10 +25,14 @@ void layer_data_setup(layer_t *this_layer,
   return;
 }
 
-void layer_conv2d_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void *layer_config){
+double layer_conv2d_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void *layer_config){
+  double reg_loss = 0;
   layer_conv2d_config_t * config = (layer_conv2d_config_t *)(layer_config);
   tensor_t w = *(tape[1]);
   do_conv_forward_perimg(x, w, y, config->padding, config->stride);
+
+  reg_loss += 0.5 * (config->reg) * tensor_sum_of_square(w);
+  return reg_loss;
 }
 
 void layer_conv2d_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, void * layer_config){
@@ -36,6 +41,9 @@ void layer_conv2d_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t 
   tensor_t w = *(tape[1]);
   tensor_t dw = *(tape[2]);
   do_conv_backward_perimg(dx, dw, dy, x, w, config->padding, config->stride);
+
+  if(config->reg>0)
+    update_regulizer_gradient(w, dw, config->reg);
 }
 
 void layer_conv2d_setup(layer_t *this_layer,
@@ -79,15 +87,19 @@ void layer_conv2d_setup(layer_t *this_layer,
   return;
 }
 
-void layer_fc_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config){
-  AWNN_NO_USE(layer_config);
+double layer_fc_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config){
+  double reg_loss = 0;
+  layer_fc_config_t * config = (layer_fc_config_t *)(layer_config);
+  
   tensor_t w = *tape[1];
   tensor_t b = *tape[3];
   do_layer_fc_forward(x, w, b, y);
+  reg_loss += 0.5 * (config->reg) * tensor_sum_of_square(w);
+  return reg_loss;
 }
 
 void layer_fc_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, void * layer_config){
-  AWNN_NO_USE(layer_config);
+  layer_fc_config_t * config = (layer_fc_config_t *)(layer_config);
 
   tensor_t dw = *tape[2];
   tensor_t db = *tape[4];
@@ -95,6 +107,9 @@ void layer_fc_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, 
   tensor_t w = *tape[1];
 
   do_layer_fc_backward(dx, dw, db, dy, x, w);
+
+  if(config->reg>0)
+    update_regulizer_gradient(w, dw, config->reg);
 }
 
 void layer_fc_setup(layer_t *this_layer,
@@ -178,13 +193,16 @@ void net_teardown(net_t *this_net){
   }
 }
 
-void net_forward(net_t *this_net){
+double net_forward(net_t *this_net){
+  double reg_loss = 0;
   for(auto iter_layer = this_net->layers.begin(); iter_layer!= this_net->layers.end(); ++iter_layer){
+
     layer_t* layer = *iter_layer;
 
     if(layer->layer_type == LAYER_TYPE_DATA) continue;
-    layer->forward(layer->layer_in->data, layer->tape, layer->layer_out->data, layer->config);
+    reg_loss += layer->forward(layer->layer_in->data, layer->tape, layer->layer_out->data, layer->config);
   }
+  return reg_loss;
 }
 
 void net_backward(net_t *this_net){
@@ -209,4 +227,24 @@ void net_update_weights(net_t * this_net, double learning_rate){
      do_sgd_update_momentum((*param)->data, (*param)->diff, (*param)->velocity, learning_rate, 0.9);
     }
   }
+}
+
+void net_loss(net_t *net, tensor_t x, label_t const *labels,
+                  T *ptr_loss){
+
+    double classify_loss, reg_loss, total_loss;
+    tensor_copy(net->layers[0]->layer_out->data, x);
+
+    reg_loss = net_forward(net);
+
+    tensor_t out = net->layers.back()->layer_out->data;
+    tensor_t dout = net->layers.back()->layer_out->diff;
+    AWNN_CHECK_EQ(S_OK,
+                  loss_softmax(out, labels, &classify_loss, MODE_TRAIN, dout));
+    net_backward(net);
+
+    total_loss = reg_loss + classify_loss;
+    PMAJOR("\t: Forward complete with regulizer loss %.3f(classify %.3f +  reg %.3f", 
+        total_loss, classify_loss, reg_loss);
+    *ptr_loss = total_loss;
 }

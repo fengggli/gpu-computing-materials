@@ -2,17 +2,77 @@
 #include "awnn/tensor.h"
 #include "gtest/gtest.h"
 #include "test_util.h"
-#include "awnn/loss_softmax.h"
+#include "utils/weight_init.h"
 
 namespace {
 class LayerTest : public ::testing::Test {};
 }  // namespace
 
-TEST_F(LayerTest, ConvLayers) {
+TEST_F(LayerTest, FCNet) {
   net_t net;
+  double reg = 0;
   /*Data layer*/
+  layer_data_config_t dataconfig;;
+  dataconfig.name = "data";
+
+  dataconfig.dim.dims[0] = 3;
+  dataconfig.dim.dims[1] = 5;
+  dataconfig.dim.dims[2] = 0;
+  dataconfig.dim.dims[3] = 0;
+
+  layer_t * data_layer = layer_setup(LAYER_TYPE_DATA, &dataconfig, nullptr);
+  net_add_layer(&net, data_layer);
+  
+  /*FC layer*/
+  layer_fc_config_t fc1_config;
+  fc1_config.name = "fc1";
+  fc1_config.nr_classes = 50;
+  fc1_config.reg = reg;
+
+  layer_t * fc1_layer = layer_setup(LAYER_TYPE_FC, &fc1_config, data_layer);
+  net_add_layer(&net, fc1_layer);
+
+  /*FC layer*/
+  layer_fc_config_t fc2_config;
+  fc2_config.name = "fc2";
+  fc2_config.nr_classes = 7;
+  fc2_config.reg = reg;
+
+  layer_t * fc2_layer = layer_setup(LAYER_TYPE_FC, &fc2_config, data_layer);
+  net_add_layer(&net, fc2_layer);
+
+  /* Forge some fake input*/
+  tensor_t x = tensor_make_linspace(-5.5, 4.5, dataconfig.dim.dims, 2);
+  label_t labels[] = {0, 5, 1};
+  // fill some init values as in cs231n
+  weight_init_linspace(fc1_layer->learnables[0]->data, -0.7, 0.3); //w0
+  weight_init_linspace(fc1_layer->learnables[1]->data, -0.1, 0.9); //b0
+  weight_init_linspace(fc2_layer->learnables[0]->data, -0.3, 0.4); //w1
+  weight_init_linspace(fc2_layer->learnables[1]->data, -0.9, 0.1); //b1
+
+  double loss = 0;
+
+  net_loss(&net, x, labels, &loss);
+  EXPECT_NEAR(loss, 2.994112658, 1e-7);
+
+  /*
+  for(uint i = 0; i < 100; i++){
+    net_loss(&net, x, labels, &loss);
+
+    net_update_weights(&net, 0.001);
+  }
+  */
+
+  net_teardown(&net);
+}
+
+TEST_F(LayerTest, ConvNet) {
+  net_t net;
+
+  /*Conv layer*/
   layer_data_config_t *dataconfig = new layer_data_config_t();
   dataconfig->name = "data";
+
   dataconfig->dim.dims[0] = 6;
   dataconfig->dim.dims[1] = 3;
   dataconfig->dim.dims[2] = 32;
@@ -26,38 +86,14 @@ TEST_F(LayerTest, ConvLayers) {
   conv_config->name = "conv2d";
   conv_config->out_channels = 4;
   conv_config->kernel_size = 3;
+  conv_config->reg = 0.001;
+
   layer_t * conv_layer = layer_setup(LAYER_TYPE_CONV2D, conv_config, data_layer);
   net_add_layer(&net, conv_layer);
 
-  /*FC layer*/
-  layer_fc_config_t *fc_config = new layer_fc_config_t();
-  fc_config->name = "fc";
-  fc_config->nr_classes = 10;
-  layer_t * fc_layer = layer_setup(LAYER_TYPE_FC, fc_config, data_layer);
-  net_add_layer(&net, fc_layer);
-
-  net_forward(&net);
-  PMAJOR("Forward complete");
-
-  tensor_t out = net.layers.back()->layer_out->data;
-  tensor_t dout = net.layers.back()->layer_out->diff;
-  double loss;
-  label_t labels[] = {0, 1, 2,4, 6, 8};
-  AWNN_CHECK_EQ(S_OK,
-                loss_softmax(out, labels, &loss, MODE_TRAIN, dout));
-  PMAJOR("softmax complete");
-  net_backward(&net);
-  PMAJOR("Backward complete");
-  net_update_weights(&net, 0.01);
-
-  PMAJOR("Weight updated");
-
-  net_teardown(&net);
-
-  delete dataconfig;
   delete conv_config;
-  delete fc_config;
 }
+
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
