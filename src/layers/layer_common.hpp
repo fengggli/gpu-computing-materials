@@ -89,8 +89,8 @@ typedef struct{
 
 
   /* all other tensers shall reference in tape (e.g. w, b, or temp)*/
-  status_t (*forward)(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config);
-  status_t (*backward)(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, void * layer_config);
+  void (*forward)(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config);
+  void (*backward)(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, void * layer_config);
 } layer_t;
 
 /** Initialize this layer*/

@@ -12,10 +12,10 @@ TEST_F(LayerTest, ConvLayers) {
   /*Data layer*/
   layer_data_config_t *dataconfig = new layer_data_config_t();
   dataconfig->name = "data";
-  dataconfig->dim.dims[0] = 2;
+  dataconfig->dim.dims[0] = 16;
   dataconfig->dim.dims[1] = 3;
-  dataconfig->dim.dims[2] = 4;
-  dataconfig->dim.dims[3] = 5;
+  dataconfig->dim.dims[2] = 32;
+  dataconfig->dim.dims[3] = 32;
 
   layer_t * data_layer = layer_setup(LAYER_TYPE_DATA, dataconfig, nullptr);
   net_add_layer(&net, data_layer);
@@ -25,7 +25,7 @@ TEST_F(LayerTest, ConvLayers) {
   layer_conv2d_config_t *conv_config = new layer_conv2d_config_t();
   conv_config->name = "conv2d";
   conv_config->out_channels = 4;
-  conv_config->kernel_size = 32;
+  conv_config->kernel_size = 3;
   layer_t * conv_layer = layer_setup(LAYER_TYPE_CONV2D, conv_config, data_layer);
   net_add_layer(&net, conv_layer);
 
@@ -35,6 +35,11 @@ TEST_F(LayerTest, ConvLayers) {
   fc_config->nr_classes = 4;
   layer_t * fc_layer = layer_setup(LAYER_TYPE_FC, fc_config, data_layer);
   net_add_layer(&net, fc_layer);
+
+  net_forward(&net);
+  PMAJOR("Forward complete");
+  net_backward(&net);
+  PMAJOR("Backward complete");
 
   net_teardown(&net);
 

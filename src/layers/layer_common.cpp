@@ -2,6 +2,7 @@
 #include "awnn/common.h"
 #include "awnn/net_resnet.h"
 #include "awnn/layer_conv.h"
+#include "awnn/layer_fc.h"
 
 /** I only need those layers:
  * 1. conv, relu, and conv_relu
@@ -38,7 +39,9 @@ void layer_conv2d_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t 
 void layer_conv2d_setup(layer_t *this_layer,
                         layer_conv2d_config_t *layer_config,
                         layer_t *bottom_layer) {
-  this_layer->layer_type = LAYER_TYPE_CONV2D;
+  /* Setup Forward/backward*/
+  this_layer->forward = &layer_conv2d_forward;
+  this_layer->backward = &layer_conv2d_backward;
   AWNN_CHECK_GT(layer_config->out_channels, 0);
   AWNN_CHECK_GT(layer_config->kernel_size, 0);
 
@@ -63,24 +66,38 @@ void layer_conv2d_setup(layer_t *this_layer,
                       out_height};
   this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape);
 
-  /* Setup Forward/backward*/
+  /* Set tensor other than input/output*/
   this_layer->tape.push_back(&(this_layer->layer_in->data)); // save x
   this_layer->tape.push_back(&(weight_blob->data)); //save w
   this_layer->tape.push_back(&(weight_blob->diff)); //save dw
 
-  /* TODO: Workerspace buffer*/
+
   return;
 }
 
-status_t layer_fc_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config){
-}
-status_t layer_fc_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, void * layer_config){
+void layer_fc_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config){
+  AWNN_NO_USE(layer_config);
+  tensor_t w = *tape[1];
+  tensor_t b = *tape[3];
+  do_layer_fc_forward(x, w, b, y);
 }
 
+void layer_fc_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, void * layer_config){
+  AWNN_NO_USE(layer_config);
+
+  tensor_t dw = *tape[2];
+  tensor_t db = *tape[4];
+  tensor_t x = *tape[0];
+  tensor_t w = *tape[1];
+
+  do_layer_fc_backward(dx, dw, db, dy, x, w);
+}
 
 void layer_fc_setup(layer_t *this_layer,
                         layer_fc_config_t *layer_config,
                         layer_t *bottom_layer) {
+  this_layer->forward = &layer_fc_forward;
+  this_layer->backward = &layer_fc_backward;
   AWNN_CHECK_GT(layer_config->nr_classes, 0);
   this_layer->layer_type = LAYER_TYPE_FC;
 
@@ -102,16 +119,18 @@ void layer_fc_setup(layer_t *this_layer,
   uint out_shape[] = {nr_imgs, layer_config->nr_classes, 0, 0};
   this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape);
 
-  this_layer->tape.push_back(&(this_layer->layer_in->data)); // save x
-  this_layer->tape.push_back(&(weight_blob->data)); //save w
-  this_layer->tape.push_back(&(weight_blob->diff)); //save dw
-
+  this_layer->tape.push_back(&(this_layer->layer_in->data)); // save x->0
+  this_layer->tape.push_back(&(weight_blob->data)); //save w->1
+  this_layer->tape.push_back(&(weight_blob->diff)); //save dw->2
+  this_layer->tape.push_back(&(bias_blob->data)); //save b->3
+  this_layer->tape.push_back(&(bias_blob->diff)); //save db->4
 }
 
 layer_t *layer_setup(layer_type_t layer_type, void *layer_config,
                      layer_t *bottom_layer) {
   layer_t *target_layer = new layer_t();
   target_layer->config = layer_config;
+  target_layer->layer_type = layer_type;
   switch (layer_type) {
     case LAYER_TYPE_CONV2D:
       layer_conv2d_setup(target_layer, (layer_conv2d_config_t *)layer_config,
@@ -158,7 +177,6 @@ void net_forward(net_t *this_net){
 
     if(layer->layer_type == LAYER_TYPE_DATA) continue;
     layer->forward(layer->layer_in->data, layer->tape, layer->layer_out->data, layer->config);
-
   }
 }
 
