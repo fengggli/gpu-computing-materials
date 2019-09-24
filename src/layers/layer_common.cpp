@@ -183,6 +183,9 @@ void layer_teardown(layer_t * this_layer){
 }
 
 void net_add_layer(net_t *net, layer_t *layer){
+  if(layer->layer_type != LAYER_TYPE_DATA){
+    AWNN_CHECK_EQ(net->layers.back()->layer_out, layer->layer_in);
+  }
   net->layers.push_back(layer);
 }
 

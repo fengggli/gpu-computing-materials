@@ -88,18 +88,17 @@ TEST_F(NetMLPTest, ForwardInferOnly) {
   // values is different from  assignment in cs231n
   // In the assignment there is a transpose of X
   double value_list[] = {
-      3.11899925, 3.87793183, 4.6368644,  5.39579698, 6.15472956, 6.91366214, 7.67259472, 5.74919872, 6.14996511, 6.5507315,
-                    6.95149789, 7.35226428, 7.75303067, 8.15379705, 0.50899227,
-                    0.6837731,  0.85855392, 1.03333475, 1.20811557, 1.3828964,
-                    1.55767723};
+      3.11899925, 3.87793183, 4.6368644,  5.39579698, 6.15472956, 6.91366214, 7.67259472, 
+      5.74919872, 6.14996511, 6.5507315, 6.95149789, 7.35226428, 7.75303067, 8.15379705, 
+      0.50899227,0.6837731,  0.85855392, 1.03333475, 1.20811557, 1.3828964, 1.55767723};
 
   tensor_fill_list(score_ref, value_list, dim_of_shape(value_list));
 
   EXPECT_LT(tensor_rel_error(score_ref, score), 1e-7);
-  if (tensor_rel_error(score_ref, score) > 1e-7) {
+  // if (tensor_rel_error(score_ref, score) > 1e-7) {
     tensor_dump(score);
     tensor_dump(score_ref);
-  }
+  //}
 }
 
 /* Check both forward/backward*/

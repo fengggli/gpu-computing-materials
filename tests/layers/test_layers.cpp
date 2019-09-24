@@ -38,7 +38,7 @@ TEST_F(LayerTest, FCNet) {
   fc2_config.nr_classes = 7;
   fc2_config.reg = reg;
 
-  layer_t * fc2_layer = layer_setup(LAYER_TYPE_FC, &fc2_config, data_layer);
+  layer_t * fc2_layer = layer_setup(LAYER_TYPE_FC, &fc2_config, fc1_layer);
   net_add_layer(&net, fc2_layer);
 
   /* Forge some fake input*/
