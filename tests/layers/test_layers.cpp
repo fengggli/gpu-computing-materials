@@ -121,6 +121,32 @@ TEST_F(LayerTest, ConvNet) {
 }
 
 
+TEST_F(LayerTest, ResBlock) {
+  net_t net;
+
+  /*Conv layer*/
+  layer_data_config_t dataconfig;
+  dataconfig.name = "data";
+
+  dataconfig.dim.dims[0] = 6;
+  dataconfig.dim.dims[1] = 3;
+  dataconfig.dim.dims[2] = 32;
+  dataconfig.dim.dims[3] = 32;
+
+  layer_t * data_layer = layer_setup(LAYER_TYPE_DATA, &dataconfig, nullptr);
+  net_add_layer(&net, data_layer);
+
+  /*Conv layer*/
+  layer_resblock_config_t resblock_config;
+  resblock_config.name = "reblock";
+  resblock_config.reg = 0.001;
+
+  layer_t * resblock_layer = layer_setup(LAYER_TYPE_RESBLOCK, &resblock_config, data_layer);
+  net_add_layer(&net, resblock_layer);
+
+  net_teardown(&net);
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

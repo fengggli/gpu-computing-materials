@@ -19,7 +19,8 @@ typedef enum{
   LAYER_TYPE_RELU_INPLACE,
   LAYER_TYPE_FC,
   LAYER_TYPE_SOFTMAX,
-  LAYER_TYPE_UNDEFINED
+  LAYER_TYPE_RESBLOCK,
+  LAYER_TYPE_UNDEFINED,
 } layer_type_t;
 
 typedef enum{
@@ -90,6 +91,17 @@ struct layer_conv2d_config_t{
   double reg = 0; //l2 regulizer
 } ;
 
+struct layer_resblock_config_t{
+  std::string name;
+  int is_new_stage = 0; /** first resblock in new stage will use stride 2 and double channels in first conv layer*/
+  uint kernel_size = 3;
+
+  activation_t activation= ACTIVATION_RELU;
+
+  double reg = 0; //l2 regulizer
+} ;
+
+
 typedef struct{
   layer_type_t layer_type = LAYER_TYPE_UNDEFINED;
   std::string name;
@@ -101,7 +113,7 @@ typedef struct{
   std::vector<Blob *>learnables;
 
   std::vector<tensor_t*> tape;
-  std::vector<tensor_t> worker_buffer;
+  std::vector<Blob *> temp_blobs; /*Used for to store ouputs of a sublayer*/
 
   /* all other tensers shall reference in tape (e.g. w, b, or temp)*/
   double (*forward)(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config);

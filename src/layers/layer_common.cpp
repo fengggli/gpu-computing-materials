@@ -211,6 +211,60 @@ void layer_fc_setup(layer_t *this_layer,
   this_layer->tape.push_back(&(this_layer->layer_out->data)); //save y -> 3
 }
 
+double layer_resblock_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config){
+  double reg_loss = 0;
+
+  return reg_loss;
+}
+
+void layer_resblock_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, void * layer_config){
+}
+
+void layer_resblock_setup(layer_t *this_layer,
+                        layer_resblock_config_t *layer_config,
+                        layer_t *bottom_layer) {
+  this_layer->forward = &layer_resblock_forward;
+  this_layer->backward = &layer_resblock_backward;
+  this_layer->layer_type = LAYER_TYPE_RESBLOCK;
+
+  this_layer->name = layer_config->name;
+  this_layer->layer_in = bottom_layer->layer_out;
+
+  /*Allocate weight*/
+  uint nr_imgs = this_layer->layer_in->data.dim.dims[0];
+  uint in_channels = this_layer->layer_in->data.dim.dims[1];
+  uint in_height = this_layer->layer_in->data.dim.dims[2];
+
+  /* Allocate weight for first conv layer*/
+  uint out_channels = in_channels;
+  uint out_height = in_height;
+
+  uint w1_shape[] = {out_channels, in_channels,
+                    layer_config->kernel_size, layer_config->kernel_size};
+  Blob *weight1_blob = new Blob(this_layer->name + ".conv1.weight", 1, w1_shape);
+  this_layer->learnables.push_back(weight1_blob);
+  AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight1_blob->data));
+
+  uint conv1_out_shape[] = {nr_imgs, out_channels, out_height, out_height};
+  Blob *conv1_out_blob = new Blob(this_layer->name + ".conv1.out", 1, conv1_out_shape);
+  this_layer->temp_blobs.push_back(conv1_out_blob);
+
+  /* Allocate weight for second conv layer*/
+  uint w2_shape[] = {out_channels, out_channels,
+                    layer_config->kernel_size, layer_config->kernel_size};
+  Blob *weight2_blob = new Blob(this_layer->name + ".conv2.weight", 1, w2_shape);
+  this_layer->learnables.push_back(weight2_blob);
+  AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight2_blob->data));
+
+  uint conv2_out_shape[] = {nr_imgs, out_channels, out_height, out_height};
+  Blob *conv2_out_blob = new Blob(this_layer->name + ".conv2.out", 1, conv2_out_shape);
+  this_layer->temp_blobs.push_back(conv2_out_blob);
+
+  /* Layer out*/
+  uint out_shape[] = {nr_imgs, out_channels, out_height,
+                      out_height};
+  this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape);
+}
 
 
 layer_t *layer_setup(layer_type_t layer_type, void *layer_config,
@@ -234,6 +288,10 @@ layer_t *layer_setup(layer_type_t layer_type, void *layer_config,
       layer_relu_setup(target_layer,(layer_relu_config_t *)layer_config,  bottom_layer);
       break;
 
+    case LAYER_TYPE_RESBLOCK:
+      layer_resblock_setup(target_layer,(layer_resblock_config_t *)layer_config,  bottom_layer);
+      break;
+
 
     default:
       PERR("layer type %d not support", layer_type);
@@ -248,6 +306,11 @@ void layer_teardown(layer_t * this_layer){
       Blob *param = this_layer->learnables.back();
       this_layer->learnables.pop_back();
       delete param;
+    }
+    while(!this_layer->temp_blobs.empty()){
+      Blob *sublayer_out = this_layer->temp_blobs.back();
+      this_layer->temp_blobs.pop_back();
+      delete sublayer_out;
     }
   }
   delete this_layer;
