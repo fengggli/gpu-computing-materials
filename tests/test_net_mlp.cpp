@@ -140,6 +140,7 @@ TEST_F(NetMLPTest, Loss) {
     EXPECT_LT(tensor_rel_error(dparam_ref, dparam), 1e-7);
     tensor_destroy(&dparam_ref);
     PINF("Gradient check of %s passed", p_param->name);
+    tensor_dump(dparam);
   }
 }
 

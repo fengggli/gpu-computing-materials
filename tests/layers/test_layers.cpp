@@ -56,13 +56,36 @@ TEST_F(LayerTest, FCNet) {
   net_loss(&net, x, labels, &loss);
   EXPECT_NEAR(loss, 2.994112658, 1e-7);
 
-  /*
-  for(uint i = 0; i < 100; i++){
-    net_loss(&net, x, labels, &loss);
+  fc1_config.reg = 1.0;
+  fc2_config.reg = 1.0;
+  net_loss(&net, x, labels, &loss);
+  EXPECT_NEAR(loss, 26.11873099, 1e-7);
+  PINF("Forward passed, value checked");
 
-    net_update_weights(&net, 0.001);
+  // Check with numerical gradient
+  uint y_shape[] = {1};
+  tensor_t dy = tensor_make_ones(y_shape, dim_of_shape(y_shape));
+  dy.data[0] = 1.0;  // the y is the loss, no upper layer
+
+  // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
+  for(auto this_layer : net.layers){
+    for(auto learnable : this_layer->learnables){
+      tensor_t param = learnable->data;
+      tensor_t dparam = learnable->diff;
+      tensor_t dparam_ref = tensor_make_alike(param);
+      net_t *p_net = &net;
+      eval_numerical_gradient(
+          [p_net, x, labels](tensor_t const, tensor_t out) {
+            T *ptr_loss = &out.data[0];
+            net_loss(p_net, x, labels, ptr_loss);
+          },
+          param, dy, dparam_ref);
+
+      EXPECT_LT(tensor_rel_error(dparam_ref, dparam), 1e-7);
+      tensor_destroy(&dparam_ref);
+    }
   }
-  */
+  tensor_destroy(&dy);
 
   net_teardown(&net);
   tensor_destroy(&x);

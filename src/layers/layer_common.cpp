@@ -70,6 +70,10 @@ double layer_conv2d_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t 
   tensor_t w = *(tape[1]);
   do_conv_forward_perimg(x, w, y, config->padding, config->stride);
 
+  if(config->activation == ACTIVATION_RELU){
+    _do_inplace_relu_forward(y);
+  }
+
   reg_loss += 0.5 * (config->reg) * tensor_sum_of_square(w);
   return reg_loss;
 }
@@ -79,6 +83,12 @@ void layer_conv2d_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t 
   tensor_t x = *(tape[0]);
   tensor_t w = *(tape[1]);
   tensor_t dw = *(tape[2]);
+  tensor_t y = *(tape[3]);
+
+  if(config->activation == ACTIVATION_RELU){
+      _do_inplace_relu_backward(dy, y);
+  }
+
   do_conv_backward_perimg(dx, dw, dy, x, w, config->padding, config->stride);
 
   if(config->reg>0)
@@ -122,6 +132,7 @@ void layer_conv2d_setup(layer_t *this_layer,
   this_layer->tape.push_back(&(this_layer->layer_in->data)); // save x
   this_layer->tape.push_back(&(weight_blob->data)); //save w
   this_layer->tape.push_back(&(weight_blob->diff)); //save dw
+  this_layer->tape.push_back(&(this_layer->layer_out->data)); // save y
 
   return;
 }
@@ -139,6 +150,7 @@ double layer_fc_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, v
   }
 
   reg_loss += 0.5 * (config->reg) * tensor_sum_of_square(w);
+  // PINF("regloss %.3f", reg_loss);
   return reg_loss;
 }
 
@@ -149,15 +161,14 @@ void layer_fc_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, 
   tensor_t db = *tape[4];
   tensor_t x = *tape[0];
   tensor_t w = *tape[1];
-  tensor_t b = *tape[3];
+  tensor_t y = *tape[5];
+
+  if(config->activation == ACTIVATION_RELU){
+    _do_inplace_relu_backward(dy, y);
+  }
 
   do_layer_fc_backward(dx, dw, db, dy, x, w);
 
-  if(config->activation == ACTIVATION_RELU){
-    _do_inplace_relu_backward(dx, x);
-    _do_inplace_relu_backward(dw, w);
-    _do_inplace_relu_backward(db, b);
-  }
   if(config->reg>0)
     update_regulizer_gradient(w, dw, config->reg);
 }
@@ -194,8 +205,10 @@ void layer_fc_setup(layer_t *this_layer,
   this_layer->tape.push_back(&(this_layer->layer_in->data)); // save x->0
   this_layer->tape.push_back(&(weight_blob->data)); //save w->1
   this_layer->tape.push_back(&(weight_blob->diff)); //save dw->2
-  this_layer->tape.push_back(&(bias_blob->data)); //save b->3
+  this_layer->tape.push_back(&(bias_blob->data)); //save b -> 3
   this_layer->tape.push_back(&(bias_blob->diff)); //save db->4
+  this_layer->tape.push_back(&(this_layer->layer_out->data)); //save y -> 5
+  this_layer->tape.push_back(&(this_layer->layer_out->data)); //save y -> 3
 }
 
 
@@ -249,7 +262,7 @@ void net_add_layer(net_t *net, layer_t *layer){
 
 void net_teardown(net_t *this_net){
   while(!this_net->layers.empty()){
-    PINF("teardown %s", this_net->layers.back()->name.c_str());
+    // PDBG("teardown %s", this_net->layers.back()->name.c_str());
     layer_teardown(this_net->layers.back());
     this_net->layers.pop_back();
   }
@@ -272,7 +285,7 @@ void net_backward(net_t *this_net){
     layer_t* layer = *iter_layer;
 
     if(layer->layer_type == LAYER_TYPE_DATA) continue;
-    layer->backward(layer->layer_in->data, layer->tape, layer->layer_out->data, layer->config);
+    layer->backward(layer->layer_in->diff, layer->tape, layer->layer_out->diff, layer->config);
   }
 }
 
@@ -306,7 +319,7 @@ void net_loss(net_t *net, tensor_t x, label_t const *labels,
     net_backward(net);
 
     total_loss = reg_loss + classify_loss;
-    PMAJOR("\t: Forward complete with regulizer loss %.3f(classify %.3f +  reg %.3f", 
-        total_loss, classify_loss, reg_loss);
+    /*PMAJOR("\t: Forward complete with regulizer loss %.3f(classify %.3f +  reg %.3f", */
+        /*total_loss, classify_loss, reg_loss);*/
     *ptr_loss = total_loss;
 }

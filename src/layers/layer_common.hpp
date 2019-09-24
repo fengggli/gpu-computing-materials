@@ -85,6 +85,7 @@ struct layer_conv2d_config_t{
   int padding = 1;
   uint out_channels;
   uint kernel_size;
+  activation_t activation= ACTIVATION_NONE;
 
   double reg = 0; //l2 regulizer
 } ;
