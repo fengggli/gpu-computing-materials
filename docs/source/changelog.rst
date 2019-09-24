@@ -13,6 +13,33 @@ Changelog
 
 Current
 =======
+
+:Data 2019-08-23
+
+Added
+--------
+
+1. Add worker threads support, details are at: https://github.com/fengggli/gpu-computing-materials/issues/54
+
+Working on
+------------
+
+1. Reorganize memory allocation code.
+2. Use fine-grained lock to reduce contention.
+
+TODO List
+----------
+
+* Compare with intel-caffe.
+* Theoretical model.
+
+=========
+Previous
+=========
+
+0.4.10
+========
+
 :Data 2019-08-23
 
 Added
@@ -22,18 +49,6 @@ Added
    * previous simple model: http://ethereon.github.io/netscope/#/gist/64b013d6fee840473edc1a9a444e22ca
    * new 14-layer model: http://ethereon.github.io/netscope/#/gist/b14a68b31b3973c68b38dfc2f73d2d10
 
-Working on
-------------
-
-TODO List
-----------
-
-* Theoretical model.
-* Parallize it.
-
-=========
-Previous
-=========
 
 0.4.9
 ======
