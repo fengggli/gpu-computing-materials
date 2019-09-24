@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <map>
 
 typedef enum{
   LAYER_TYPE_DATA,
@@ -101,6 +102,7 @@ struct layer_resblock_config_t{
   double reg = 0; //l2 regulizer
 } ;
 
+using tape_t = std::map<std::string, Blob *>;
 
 typedef struct{
   layer_type_t layer_type = LAYER_TYPE_UNDEFINED;
@@ -112,12 +114,12 @@ typedef struct{
 
   std::vector<Blob *>learnables;
 
-  std::vector<tensor_t*> tape;
+  tape_t tape;
   std::vector<Blob *> temp_blobs; /*Used for to store ouputs of a sublayer*/
 
   /* all other tensers shall reference in tape (e.g. w, b, or temp)*/
-  double (*forward)(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config);
-  void (*backward)(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, void * layer_config);
+  double (*forward)(tensor_t x,  tape_t &tape, tensor_t y, void* layer_config);
+  void (*backward)(tensor_t dx,  tape_t &tape, tensor_t dy, void * layer_config);
 } layer_t;
 
 /** Initialize this layer*/

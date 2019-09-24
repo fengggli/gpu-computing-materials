@@ -40,13 +40,13 @@ static inline void _do_inplace_relu_backward(tensor_t dx, tensor_t x){
 }
 
 // Inplace layer, y and x points to same tensor
-double layer_relu_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config){
+double layer_relu_forward(tensor_t x,  tape_t &tape, tensor_t y, void* layer_config){
   _do_inplace_relu_forward(y);
   return 0;
 }
 
-void layer_relu_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, void * layer_config){
-  tensor_t x = *tape[0];
+void layer_relu_backward(tensor_t dx,  tape_t &tape, tensor_t dy, void * layer_config){
+  tensor_t x = tape["in"]->data;
   _do_inplace_relu_backward(dx, x);
 }
 
@@ -61,13 +61,13 @@ void layer_relu_setup(layer_t *this_layer,
   this_layer->layer_in = bottom_layer->layer_out;
   this_layer->layer_out = bottom_layer->layer_out;
 
-  this_layer->tape.push_back(&(this_layer->layer_in->data)); // save x->0
+  this_layer->tape.insert({ "in",this_layer->layer_in}); 
 }
 
-double layer_conv2d_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void *layer_config){
+double layer_conv2d_forward(tensor_t x,  tape_t &tape, tensor_t y, void *layer_config){
   double reg_loss = 0;
   layer_conv2d_config_t * config = (layer_conv2d_config_t *)(layer_config);
-  tensor_t w = *(tape[1]);
+  tensor_t w = tape["weight"]->data;
   do_conv_forward_perimg(x, w, y, config->padding, config->stride);
 
   if(config->activation == ACTIVATION_RELU){
@@ -78,12 +78,12 @@ double layer_conv2d_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t 
   return reg_loss;
 }
 
-void layer_conv2d_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, void * layer_config){
+void layer_conv2d_backward(tensor_t dx,  tape_t &tape, tensor_t dy, void * layer_config){
   layer_conv2d_config_t * config = (layer_conv2d_config_t *)(layer_config);
-  tensor_t x = *(tape[0]);
-  tensor_t w = *(tape[1]);
-  tensor_t dw = *(tape[2]);
-  tensor_t y = *(tape[3]);
+  tensor_t x = tape["in"]->data;
+  tensor_t w = tape["weight"]->data;
+  tensor_t dw = tape["weight"]->diff;
+  tensor_t y = tape["weight"]->data;
 
   if(config->activation == ACTIVATION_RELU){
       _do_inplace_relu_backward(dy, y);
@@ -129,20 +129,19 @@ void layer_conv2d_setup(layer_t *this_layer,
   this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape);
 
   /* Set tensor other than input/output*/
-  this_layer->tape.push_back(&(this_layer->layer_in->data)); // save x
-  this_layer->tape.push_back(&(weight_blob->data)); //save w
-  this_layer->tape.push_back(&(weight_blob->diff)); //save dw
-  this_layer->tape.push_back(&(this_layer->layer_out->data)); // save y
+  this_layer->tape.insert({ "in", this_layer->layer_in}); // save x
+  this_layer->tape.insert({"weight", weight_blob}); //save w
+  this_layer->tape.insert({"out", this_layer->layer_out}); // save y
 
   return;
 }
 
-double layer_fc_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config){
+double layer_fc_forward(tensor_t x,  tape_t &tape, tensor_t y, void* layer_config){
   double reg_loss = 0;
   layer_fc_config_t * config = (layer_fc_config_t *)(layer_config);
   
-  tensor_t w = *tape[1];
-  tensor_t b = *tape[3];
+  tensor_t w = tape["weight"]->data;
+  tensor_t b = tape["bias"]->data;
   do_layer_fc_forward(x, w, b, y);
 
   if(config->activation == ACTIVATION_RELU){
@@ -154,14 +153,14 @@ double layer_fc_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, v
   return reg_loss;
 }
 
-void layer_fc_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, void * layer_config){
+void layer_fc_backward(tensor_t dx,  tape_t &tape, tensor_t dy, void * layer_config){
   layer_fc_config_t * config = (layer_fc_config_t *)(layer_config);
 
-  tensor_t dw = *tape[2];
-  tensor_t db = *tape[4];
-  tensor_t x = *tape[0];
-  tensor_t w = *tape[1];
-  tensor_t y = *tape[5];
+  tensor_t dw = tape["weight"]->diff;
+  tensor_t db = tape["bias"]->diff;
+  tensor_t x = tape["in"]->data;
+  tensor_t w = tape["weight"]->data;
+  tensor_t y = tape["out"]->data;
 
   if(config->activation == ACTIVATION_RELU){
     _do_inplace_relu_backward(dy, y);
@@ -202,22 +201,28 @@ void layer_fc_setup(layer_t *this_layer,
   uint out_shape[] = {nr_imgs, layer_config->nr_classes, 0, 0};
   this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape);
 
-  this_layer->tape.push_back(&(this_layer->layer_in->data)); // save x->0
-  this_layer->tape.push_back(&(weight_blob->data)); //save w->1
-  this_layer->tape.push_back(&(weight_blob->diff)); //save dw->2
-  this_layer->tape.push_back(&(bias_blob->data)); //save b -> 3
-  this_layer->tape.push_back(&(bias_blob->diff)); //save db->4
-  this_layer->tape.push_back(&(this_layer->layer_out->data)); //save y -> 5
-  this_layer->tape.push_back(&(this_layer->layer_out->data)); //save y -> 3
+  this_layer->tape.insert({ "in", this_layer->layer_in}); // save x->0
+  this_layer->tape.insert({"weight", weight_blob}); //save w->1
+  this_layer->tape.insert({"bias", bias_blob}); //save b -> 3
+  this_layer->tape.insert({"out", this_layer->layer_out}); //save y -> 5
 }
 
-double layer_resblock_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config){
+double layer_resblock_forward(tensor_t x,  tape_t &tape, tensor_t y, void* layer_config){
   double reg_loss = 0;
+  layer_conv2d_config_t * config = (layer_conv2d_config_t *)(layer_config);
+  tensor_t w = tape["weight"]->data;
+  do_conv_forward_perimg(x, w, y, config->padding, config->stride);
 
+  if(config->activation == ACTIVATION_RELU){
+    _do_inplace_relu_forward(y);
+  }
+
+  reg_loss += 0.5 * (config->reg) * tensor_sum_of_square(w);
   return reg_loss;
+
 }
 
-void layer_resblock_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, void * layer_config){
+void layer_resblock_backward(tensor_t dx,  tape_t &tape, tensor_t dy, void * layer_config){
 }
 
 void layer_resblock_setup(layer_t *this_layer,
@@ -264,6 +269,17 @@ void layer_resblock_setup(layer_t *this_layer,
   uint out_shape[] = {nr_imgs, out_channels, out_height,
                       out_height};
   this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape);
+
+  /* Set tensor other than input/output*/
+  this_layer->tape.insert({"in", this_layer->layer_in}); // save x -> 0
+
+  this_layer->tape.insert({ "conv1.weight", weight1_blob}); //save w1 -> 1
+  this_layer->tape.insert({"conv1.out", conv1_out_blob}); //save conv1_out ->3
+
+  this_layer->tape.insert({ "conv2.weight", weight2_blob}); //save w1 -> 1
+  this_layer->tape.insert({"conv2.out", conv2_out_blob}); //save conv1_out ->3
+
+  this_layer->tape.insert({"out", this_layer->layer_out}); // save out 9
 }
 
 
