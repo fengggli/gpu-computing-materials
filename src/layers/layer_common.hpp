@@ -16,11 +16,17 @@
 typedef enum{
   LAYER_TYPE_DATA,
   LAYER_TYPE_CONV2D,
-  LAYER_TYPE_RELU,
+  LAYER_TYPE_RELU_INPLACE,
   LAYER_TYPE_FC,
   LAYER_TYPE_SOFTMAX,
   LAYER_TYPE_UNDEFINED
 } layer_type_t;
+
+typedef enum{
+  ACTIVATION_NONE = -1,
+  ACTIVATION_RELU,
+} activation_t;
+
 
 struct Blob{
   // uint id_param;
@@ -59,9 +65,14 @@ struct layer_data_config_t{
   dim_t dim;
 } ;
 
+struct layer_relu_config_t{
+  std::string name;
+} ;
+
 struct layer_fc_config_t{
   std::string name;
   uint nr_classes;
+  activation_t activation= ACTIVATION_NONE;
 
   double reg = 0; //l2 regulizer
 } ;
@@ -103,7 +114,7 @@ layer_t* layer_setup(layer_type_t type, void * layer_config, layer_t *bottom_lay
 void layer_teardown(layer_t * this_layer);
 
 typedef struct{
-  std::vector<layer_t *> layers;
+  std::vector<layer_t *> layers; // data layer is first layer
 }net_t;
 
 /** Register this layer to net*/

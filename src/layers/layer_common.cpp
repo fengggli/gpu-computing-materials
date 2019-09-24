@@ -25,6 +25,45 @@ void layer_data_setup(layer_t *this_layer,
   return;
 }
 
+static inline void _do_inplace_relu_forward(tensor_t y){
+  for(uint i = 0 ; i < tensor_get_capacity(y); i++){
+    T *elem = y.data;
+    elem[i] = elem[i]>0? elem[i]: 0;
+  }
+}
+
+static inline void _do_inplace_relu_backward(tensor_t dx, tensor_t x){
+  for(uint i = 0 ; i < tensor_get_capacity(dx); i++){
+    T *elem = dx.data;
+    elem[i] = x.data[i]>0? elem[i]: 0;
+  }
+}
+
+// Inplace layer, y and x points to same tensor
+double layer_relu_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void* layer_config){
+  _do_inplace_relu_forward(y);
+  return 0;
+}
+
+void layer_relu_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, void * layer_config){
+  tensor_t x = *tape[0];
+  _do_inplace_relu_backward(dx, x);
+}
+
+void layer_relu_setup(layer_t *this_layer,
+                        layer_relu_config_t *layer_config,
+                        layer_t *bottom_layer){
+  this_layer->forward = &layer_relu_forward;
+  this_layer->backward = &layer_relu_backward;
+  this_layer->layer_type = LAYER_TYPE_RELU_INPLACE;
+
+  this_layer->name = layer_config->name;
+  this_layer->layer_in = bottom_layer->layer_out;
+  this_layer->layer_out = bottom_layer->layer_out;
+
+  this_layer->tape.push_back(&(this_layer->layer_in->data)); // save x->0
+}
+
 double layer_conv2d_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, void *layer_config){
   double reg_loss = 0;
   layer_conv2d_config_t * config = (layer_conv2d_config_t *)(layer_config);
@@ -94,6 +133,11 @@ double layer_fc_forward(tensor_t x,  std::vector<tensor_t*> &tape, tensor_t y, v
   tensor_t w = *tape[1];
   tensor_t b = *tape[3];
   do_layer_fc_forward(x, w, b, y);
+
+  if(config->activation == ACTIVATION_RELU){
+    _do_inplace_relu_forward(y);
+  }
+
   reg_loss += 0.5 * (config->reg) * tensor_sum_of_square(w);
   return reg_loss;
 }
@@ -105,9 +149,15 @@ void layer_fc_backward(tensor_t dx,  std::vector<tensor_t*> &tape, tensor_t dy, 
   tensor_t db = *tape[4];
   tensor_t x = *tape[0];
   tensor_t w = *tape[1];
+  tensor_t b = *tape[3];
 
   do_layer_fc_backward(dx, dw, db, dy, x, w);
 
+  if(config->activation == ACTIVATION_RELU){
+    _do_inplace_relu_backward(dx, x);
+    _do_inplace_relu_backward(dw, w);
+    _do_inplace_relu_backward(db, b);
+  }
   if(config->reg>0)
     update_regulizer_gradient(w, dw, config->reg);
 }
@@ -148,6 +198,8 @@ void layer_fc_setup(layer_t *this_layer,
   this_layer->tape.push_back(&(bias_blob->diff)); //save db->4
 }
 
+
+
 layer_t *layer_setup(layer_type_t layer_type, void *layer_config,
                      layer_t *bottom_layer) {
   layer_t *target_layer = new layer_t();
@@ -165,6 +217,11 @@ layer_t *layer_setup(layer_type_t layer_type, void *layer_config,
       layer_fc_setup(target_layer, (layer_fc_config_t *)layer_config, bottom_layer);
       break;
 
+    case LAYER_TYPE_RELU_INPLACE:
+      layer_relu_setup(target_layer,(layer_relu_config_t *)layer_config,  bottom_layer);
+      break;
+
+
     default:
       PERR("layer type %d not support", layer_type);
   }
@@ -172,12 +229,13 @@ layer_t *layer_setup(layer_type_t layer_type, void *layer_config,
 }
 
 void layer_teardown(layer_t * this_layer){
-
-  delete this_layer->layer_out;
-  while(!this_layer->learnables.empty()){
-    Blob *param = this_layer->learnables.back();
-    this_layer->learnables.pop_back();
-    delete param;
+  if(this_layer->layer_type != LAYER_TYPE_RELU_INPLACE){
+    delete this_layer->layer_out;
+    while(!this_layer->learnables.empty()){
+      Blob *param = this_layer->learnables.back();
+      this_layer->learnables.pop_back();
+      delete param;
+    }
   }
   delete this_layer;
 }
@@ -191,6 +249,7 @@ void net_add_layer(net_t *net, layer_t *layer){
 
 void net_teardown(net_t *this_net){
   while(!this_net->layers.empty()){
+    PINF("teardown %s", this_net->layers.back()->name.c_str());
     layer_teardown(this_net->layers.back());
     this_net->layers.pop_back();
   }

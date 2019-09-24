@@ -28,6 +28,7 @@ TEST_F(LayerTest, FCNet) {
   fc1_config.name = "fc1";
   fc1_config.nr_classes = 50;
   fc1_config.reg = reg;
+  fc1_config.activation = ACTIVATION_RELU;
 
   layer_t * fc1_layer = layer_setup(LAYER_TYPE_FC, &fc1_config, data_layer);
   net_add_layer(&net, fc1_layer);
@@ -64,34 +65,36 @@ TEST_F(LayerTest, FCNet) {
   */
 
   net_teardown(&net);
+  tensor_destroy(&x);
 }
 
 TEST_F(LayerTest, ConvNet) {
   net_t net;
 
   /*Conv layer*/
-  layer_data_config_t *dataconfig = new layer_data_config_t();
-  dataconfig->name = "data";
+  layer_data_config_t dataconfig;
+  dataconfig.name = "data";
 
-  dataconfig->dim.dims[0] = 6;
-  dataconfig->dim.dims[1] = 3;
-  dataconfig->dim.dims[2] = 32;
-  dataconfig->dim.dims[3] = 32;
+  dataconfig.dim.dims[0] = 6;
+  dataconfig.dim.dims[1] = 3;
+  dataconfig.dim.dims[2] = 32;
+  dataconfig.dim.dims[3] = 32;
 
-  layer_t * data_layer = layer_setup(LAYER_TYPE_DATA, dataconfig, nullptr);
+  layer_t * data_layer = layer_setup(LAYER_TYPE_DATA, &dataconfig, nullptr);
   net_add_layer(&net, data_layer);
 
   /*Conv layer*/
-  layer_conv2d_config_t *conv_config = new layer_conv2d_config_t();
-  conv_config->name = "conv2d";
-  conv_config->out_channels = 4;
-  conv_config->kernel_size = 3;
-  conv_config->reg = 0.001;
+  layer_conv2d_config_t conv_config;
+  conv_config.name = "conv2d";
+  conv_config.out_channels = 4;
+  conv_config.kernel_size = 3;
+  conv_config.reg = 0.001;
 
-  layer_t * conv_layer = layer_setup(LAYER_TYPE_CONV2D, conv_config, data_layer);
+  layer_t * conv_layer = layer_setup(LAYER_TYPE_CONV2D, &conv_config, data_layer);
   net_add_layer(&net, conv_layer);
 
-  delete conv_config;
+
+  net_teardown(&net);
 }
 
 
