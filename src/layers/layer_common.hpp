@@ -156,6 +156,11 @@ void net_update_weights(net_t *net, double learning_rate);
 void net_loss(net_t *net, tensor_t x, label_t const *labels,
                   T *ptr_loss, int verbose = 0);
 
+/* Resnet related*/
+void resnet_setup(net_t *net, uint input_shape[], double reg);
+
+void resnet_teardown(net_t *net);
+
 #ifdef __cplusplus
 extern "C" {
 #endif
