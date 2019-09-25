@@ -10,7 +10,7 @@
 #include "config.h"
 #include "gtest/gtest.h"
 #include "test_util.h"
-//#define TEST_MORE
+#define TEST_MORE
 namespace {
 
 // The fixture for testing class Foo.

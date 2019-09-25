@@ -21,6 +21,7 @@ typedef enum{
   LAYER_TYPE_FC,
   LAYER_TYPE_SOFTMAX,
   LAYER_TYPE_RESBLOCK,
+  LAYER_TYPE_POOL,
   LAYER_TYPE_UNDEFINED,
 } layer_type_t;
 
@@ -70,6 +71,11 @@ struct layer_data_config_t{
 struct layer_relu_config_t{
   std::string name;
 } ;
+
+struct layer_pool_config_t{
+  std::string name;
+} ;
+
 
 struct layer_fc_config_t{
   std::string name;
@@ -148,7 +154,7 @@ void net_backward(net_t *net);
 void net_update_weights(net_t *net, double learning_rate);
 
 void net_loss(net_t *net, tensor_t x, label_t const *labels,
-                  T *ptr_loss);
+                  T *ptr_loss, int verbose = 0);
 
 #ifdef __cplusplus
 extern "C" {

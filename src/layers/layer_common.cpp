@@ -64,6 +64,25 @@ void layer_relu_setup(layer_t *this_layer,
   this_layer->tape.insert({ "in",this_layer->layer_in}); 
 }
 
+// global averge pool layer 
+double layer_pool_forward(tensor_t x,  tape_t &tape, tensor_t y, void* layer_config){
+  return 0;
+}
+
+void layer_pool_backward(tensor_t dx,  tape_t &tape, tensor_t dy, void * layer_config){
+}
+
+void layer_pool_setup(layer_t *this_layer,
+                        layer_pool_config_t *layer_config,
+                        layer_t *bottom_layer){
+  this_layer->forward = &layer_pool_forward;
+  this_layer->backward = &layer_pool_backward;
+  this_layer->layer_type = LAYER_TYPE_POOL;
+
+  this_layer->name = layer_config->name;
+  this_layer->layer_in = bottom_layer->layer_out;
+}
+
 double layer_conv2d_forward(tensor_t x,  tape_t &tape, tensor_t y, void *layer_config){
   double reg_loss = 0;
   layer_conv2d_config_t * config = (layer_conv2d_config_t *)(layer_config);
@@ -83,7 +102,7 @@ void layer_conv2d_backward(tensor_t dx,  tape_t &tape, tensor_t dy, void * layer
   tensor_t x = tape["in"]->data;
   tensor_t w = tape["weight"]->data;
   tensor_t dw = tape["weight"]->diff;
-  tensor_t y = tape["weight"]->data;
+  tensor_t y = tape["out"]->data;
 
   if(config->activation == ACTIVATION_RELU){
       _do_inplace_relu_backward(dy, y);
@@ -209,20 +228,67 @@ void layer_fc_setup(layer_t *this_layer,
 
 double layer_resblock_forward(tensor_t x,  tape_t &tape, tensor_t y, void* layer_config){
   double reg_loss = 0;
-  layer_conv2d_config_t * config = (layer_conv2d_config_t *)(layer_config);
-  tensor_t w = tape["weight"]->data;
-  do_conv_forward_perimg(x, w, y, config->padding, config->stride);
+  layer_resblock_config_t * config = (layer_resblock_config_t *)(layer_config);
+  int padding = 1;
+  int stride = 1;
+
+  tensor_t conv1_w = tape["conv1.weight"]->data;
+  tensor_t conv1_out = tape["conv1.out"]->data;
+  do_conv_forward_perimg(x, conv1_w, conv1_out, padding, stride);
+  if(config->activation == ACTIVATION_RELU){
+    _do_inplace_relu_forward(y);
+  }
+
+  tensor_t conv2_w = tape["conv2.weight"]->data;
+  do_conv_forward_perimg(conv1_out, conv2_w, y, padding, stride);
+
+  tensor_elemwise_op_inplace(y, x, TENSOR_OP_ADD);
 
   if(config->activation == ACTIVATION_RELU){
     _do_inplace_relu_forward(y);
   }
 
-  reg_loss += 0.5 * (config->reg) * tensor_sum_of_square(w);
+  reg_loss += 0.5 * (config->reg) * tensor_sum_of_square(conv1_w);
+  reg_loss += 0.5 * (config->reg) * tensor_sum_of_square(conv2_w);
   return reg_loss;
-
 }
 
 void layer_resblock_backward(tensor_t dx,  tape_t &tape, tensor_t dy, void * layer_config){
+  layer_resblock_config_t * config = (layer_resblock_config_t *)(layer_config);
+  int padding  = 1, stride = 1;
+  tensor_t x = tape["in"]->data;
+  tensor_t dx_iden = tensor_make_alike(x);
+
+  tensor_t conv1_w = tape["conv1.weight"]->data;
+  tensor_t conv1_dw = tape["conv1.weight"]->diff;
+  tensor_t conv1_out = tape["conv1.out"]->data;
+  tensor_t conv1_dout = tape["conv1.out"]->diff;
+
+  tensor_t conv2_w = tape["conv2.weight"]->data;
+  tensor_t conv2_dw = tape["conv2.weight"]->diff;
+  tensor_t y = tape["out"]->data;
+
+  if(config->activation == ACTIVATION_RELU){
+      _do_inplace_relu_backward(dy, y);
+  }
+  tensor_copy(dx_iden, dy);
+
+  do_conv_backward_perimg(conv1_dout, conv2_dw, dy, conv1_out, conv2_w, padding, stride);
+
+  if(config->activation == ACTIVATION_RELU){
+      _do_inplace_relu_backward(conv1_dout, conv1_out);
+  }
+
+  do_conv_backward_perimg(dx, conv1_dw, conv1_dout, x, conv1_w, padding, stride);
+
+  tensor_elemwise_op_inplace(dx, dx_iden, TENSOR_OP_ADD);
+
+  if(config->reg>0){
+    update_regulizer_gradient(conv1_w, conv1_dw, config->reg);
+    update_regulizer_gradient(conv2_w, conv2_dw, config->reg);
+  }
+
+  tensor_destroy(&dx_iden);
 }
 
 void layer_resblock_setup(layer_t *this_layer,
@@ -261,10 +327,6 @@ void layer_resblock_setup(layer_t *this_layer,
   this_layer->learnables.push_back(weight2_blob);
   AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight2_blob->data));
 
-  uint conv2_out_shape[] = {nr_imgs, out_channels, out_height, out_height};
-  Blob *conv2_out_blob = new Blob(this_layer->name + ".conv2.out", 1, conv2_out_shape);
-  this_layer->temp_blobs.push_back(conv2_out_blob);
-
   /* Layer out*/
   uint out_shape[] = {nr_imgs, out_channels, out_height,
                       out_height};
@@ -277,7 +339,6 @@ void layer_resblock_setup(layer_t *this_layer,
   this_layer->tape.insert({"conv1.out", conv1_out_blob}); //save conv1_out ->3
 
   this_layer->tape.insert({ "conv2.weight", weight2_blob}); //save w1 -> 1
-  this_layer->tape.insert({"conv2.out", conv2_out_blob}); //save conv1_out ->3
 
   this_layer->tape.insert({"out", this_layer->layer_out}); // save out 9
 }
@@ -384,7 +445,7 @@ void net_update_weights(net_t * this_net, double learning_rate){
 }
 
 void net_loss(net_t *net, tensor_t x, label_t const *labels,
-                  T *ptr_loss){
+                  T *ptr_loss, int verbose){
 
     double classify_loss, reg_loss, total_loss;
     tensor_copy(net->layers[0]->layer_out->data, x);
@@ -398,7 +459,9 @@ void net_loss(net_t *net, tensor_t x, label_t const *labels,
     net_backward(net);
 
     total_loss = reg_loss + classify_loss;
-    /*PMAJOR("\t: Forward complete with regulizer loss %.3f(classify %.3f +  reg %.3f", */
-        /*total_loss, classify_loss, reg_loss);*/
+    if(verbose){
+      PMAJOR("\t: Forward complete with regulizer loss %.3f(classify %.3f +  reg %.3f", 
+        total_loss, classify_loss, reg_loss);
+    }
     *ptr_loss = total_loss;
 }

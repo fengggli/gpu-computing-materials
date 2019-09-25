@@ -123,12 +123,13 @@ TEST_F(LayerTest, ConvNet) {
 
 TEST_F(LayerTest, ResBlock) {
   net_t net;
+  double reg = 0;
 
   /*Conv layer*/
   layer_data_config_t dataconfig;
   dataconfig.name = "data";
 
-  dataconfig.dim.dims[0] = 6;
+  dataconfig.dim.dims[0] = 3;
   dataconfig.dim.dims[1] = 3;
   dataconfig.dim.dims[2] = 32;
   dataconfig.dim.dims[3] = 32;
@@ -137,14 +138,50 @@ TEST_F(LayerTest, ResBlock) {
   net_add_layer(&net, data_layer);
 
   /*Conv layer*/
-  layer_resblock_config_t resblock_config;
-  resblock_config.name = "reblock";
-  resblock_config.reg = 0.001;
+  layer_conv2d_config_t conv_config;
+  conv_config.name = "conv2d";
+  conv_config.out_channels = 16;
+  conv_config.kernel_size = 3;
+  conv_config.reg = reg;
 
-  layer_t * resblock_layer = layer_setup(LAYER_TYPE_RESBLOCK, &resblock_config, data_layer);
+  layer_t * conv_layer = layer_setup(LAYER_TYPE_CONV2D, &conv_config, data_layer);
+  net_add_layer(&net, conv_layer);
+
+  /*First residual block*/
+  layer_resblock_config_t resblock_config;
+  resblock_config.name = "resblock";
+  resblock_config.reg = reg;
+
+  layer_t * resblock_layer = layer_setup(LAYER_TYPE_RESBLOCK, &resblock_config, conv_layer);
   net_add_layer(&net, resblock_layer);
 
+  /*FC layer*/
+  layer_fc_config_t fc_config;
+  fc_config.name = "fc";
+  fc_config.nr_classes = 10;
+  fc_config.reg = reg;
+  fc_config.activation = ACTIVATION_NONE;
+
+  layer_t * fc_layer = layer_setup(LAYER_TYPE_FC, &fc_config, resblock_layer);
+  net_add_layer(&net, fc_layer);
+
+  /* Forge some fake input*/
+  tensor_t x = tensor_make_linspace(-0.2, 0.3, dataconfig.dim.dims, 4);
+  label_t labels[] = {0, 5, 1};
+  // fill some init values as in cs231n
+  weight_init_linspace(conv_layer->learnables[0]->data, -0.7, 0.3); //w0
+  weight_init_linspace(resblock_layer->learnables[0]->data, -0.7, 0.3); //conv1.weight
+  weight_init_linspace(resblock_layer->learnables[1]->data, -0.7, 0.3); //conv2.weight
+  weight_init_linspace(fc_layer->learnables[0]->data, -0.7, 0.3); //w1
+
+  double loss = 0;
+
+  net_loss(&net, x, labels, &loss, 1);
+  EXPECT_NEAR(loss, 14.975702563, 1e-3);
+
+
   net_teardown(&net);
+  tensor_destroy(&x);
 }
 
 int main(int argc, char **argv) {
