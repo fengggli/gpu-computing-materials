@@ -247,7 +247,7 @@ double layer_resblock_forward(tensor_t x,  tape_t &tape, tensor_t y, void* layer
   tensor_t conv1_out = tape["conv1.out"]->data;
   do_conv_forward_perimg(x, conv1_w, conv1_out, padding, stride);
   if(config->activation == ACTIVATION_RELU){
-    _do_inplace_relu_forward(y);
+    _do_inplace_relu_forward(conv1_out);
   }
 
   tensor_t conv2_w = tape["conv2.weight"]->data;

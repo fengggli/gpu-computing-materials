@@ -123,7 +123,7 @@ TEST_F(LayerTest, ConvNet) {
 
 TEST_F(LayerTest, ResBlock) {
   net_t net;
-  double reg = 0;
+  double reg = 1.0;
 
   /*Conv layer*/
   layer_data_config_t dataconfig;
@@ -143,6 +143,7 @@ TEST_F(LayerTest, ResBlock) {
   conv_config.out_channels = 16;
   conv_config.kernel_size = 3;
   conv_config.reg = reg;
+  conv_config.activation = ACTIVATION_RELU;
 
   layer_t * conv_layer = layer_setup(LAYER_TYPE_CONV2D, &conv_config, data_layer);
   net_add_layer(&net, conv_layer);
@@ -180,12 +181,15 @@ TEST_F(LayerTest, ResBlock) {
   weight_init_linspace(resblock_layer->learnables[0]->data, -0.7, 0.3); //conv1.weight
   weight_init_linspace(resblock_layer->learnables[1]->data, -0.7, 0.3); //conv2.weight
   weight_init_linspace(fc_layer->learnables[0]->data, -0.7, 0.3); //w1
+  weight_init_linspace(fc_layer->learnables[1]->data, -0.7, 0.3); //w1
 
   double loss = 0;
 
   net_loss(&net, x, labels, &loss, 1);
-  EXPECT_NEAR(loss, 14.975702563, 1e-3);
-
+  if(reg < 1e-7) 
+    EXPECT_NEAR(loss, 14.975702563, 1e-3);
+  else // reg == 1
+    EXPECT_NEAR(loss, 335.9764923, 1e-3);
 
   net_teardown(&net);
   tensor_destroy(&x);
