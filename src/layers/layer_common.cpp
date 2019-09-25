@@ -463,7 +463,8 @@ void net_update_weights(net_t * this_net, double learning_rate){
 void net_loss(net_t *net, tensor_t x, label_t const *labels,
                   T *ptr_loss, int verbose){
 
-    double classify_loss, reg_loss, total_loss;
+    T classify_loss;
+    T reg_loss, total_loss;
     tensor_copy(net->layers[0]->layer_out->data, x);
 
     reg_loss = net_forward(net);

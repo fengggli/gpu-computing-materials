@@ -51,17 +51,18 @@ TEST_F(LayerTest, FCNet) {
   weight_init_linspace(fc2_layer->learnables[0]->data, -0.3, 0.4); //w1
   weight_init_linspace(fc2_layer->learnables[1]->data, -0.9, 0.1); //b1
 
-  double loss = 0;
+  T loss = 0;
 
   net_loss(&net, x, labels, &loss);
-  EXPECT_NEAR(loss, 2.994112658, 1e-7);
+  EXPECT_NEAR(loss, 2.994112658, 1e-5);
 
   fc1_config.reg = 1.0;
   fc2_config.reg = 1.0;
   net_loss(&net, x, labels, &loss);
-  EXPECT_NEAR(loss, 26.11873099, 1e-7);
+  EXPECT_NEAR(loss, 26.11873099, 1e-5);
   PINF("Forward passed, value checked");
 
+#ifndef AWNN_USE_FLT32
   // Check with numerical gradient
   uint y_shape[] = {1};
   tensor_t dy = tensor_make_ones(y_shape, dim_of_shape(y_shape));
@@ -86,6 +87,8 @@ TEST_F(LayerTest, FCNet) {
     }
   }
   tensor_destroy(&dy);
+#endif
+
 
   net_teardown(&net);
   tensor_destroy(&x);
@@ -183,13 +186,43 @@ TEST_F(LayerTest, ResBlock) {
   weight_init_linspace(fc_layer->learnables[0]->data, -0.7, 0.3); //w1
   weight_init_linspace(fc_layer->learnables[1]->data, -0.7, 0.3); //w1
 
-  double loss = 0;
+  T loss = 0;
 
   net_loss(&net, x, labels, &loss, 1);
   if(reg < 1e-7) 
     EXPECT_NEAR(loss, 14.975702563, 1e-3);
   else // reg == 1
     EXPECT_NEAR(loss, 335.9764923, 1e-3);
+
+  // Check with numerical gradient
+#ifndef AWNN_USE_FLT32
+  // Check with numerical gradient
+  uint y_shape[] = {1};
+  tensor_t dy = tensor_make_ones(y_shape, dim_of_shape(y_shape));
+  dy.data[0] = 1.0;  // the y is the loss, no upper layer
+
+  // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
+  for(auto this_layer : net.layers){
+    for(auto learnable : this_layer->learnables){
+      tensor_t param = learnable->data;
+      tensor_t dparam = learnable->diff;
+      tensor_t dparam_ref = tensor_make_alike(param);
+      PINF("checking gradient of %s", learnable->name.c_str());
+
+      net_t *p_net = &net;
+      eval_numerical_gradient(
+          [p_net, x, labels](tensor_t const, tensor_t out) {
+            T *ptr_loss = &out.data[0];
+            net_loss(p_net, x, labels, ptr_loss);
+          },
+          param, dy, dparam_ref);
+
+      EXPECT_LT(tensor_rel_error(dparam_ref, dparam), 1e-3);
+      tensor_destroy(&dparam_ref);
+    }
+  }
+  tensor_destroy(&dy);
+#endif
 
   net_teardown(&net);
   tensor_destroy(&x);
