@@ -6,6 +6,7 @@
 #include "awnn/solver.h"
 #include "utils/weight_init.h"
 #include "awnn/loss_softmax.h"
+#include "awnn/layer_pool.h"
 
 /** I only need those layers:
  * 1. conv, relu, and conv_relu
@@ -66,10 +67,12 @@ void layer_relu_setup(layer_t *this_layer,
 
 // global averge pool layer 
 double layer_pool_forward(tensor_t x,  tape_t &tape, tensor_t y, void* layer_config){
+  do_global_pool_forward(x, y);
   return 0;
 }
 
 void layer_pool_backward(tensor_t dx,  tape_t &tape, tensor_t dy, void * layer_config){
+  do_global_pool_backward(dx, dy);
 }
 
 void layer_pool_setup(layer_t *this_layer,
@@ -81,6 +84,14 @@ void layer_pool_setup(layer_t *this_layer,
 
   this_layer->name = layer_config->name;
   this_layer->layer_in = bottom_layer->layer_out;
+
+
+  uint nr_imgs = this_layer->layer_in->data.dim.dims[0];
+  uint in_channels = this_layer->layer_in->data.dim.dims[1];
+
+/*Calculate output shape*/
+  uint out_shape[] = {nr_imgs, in_channels, 1, 1};
+  this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape);
 }
 
 double layer_conv2d_forward(tensor_t x,  tape_t &tape, tensor_t y, void *layer_config){
@@ -368,6 +379,11 @@ layer_t *layer_setup(layer_type_t layer_type, void *layer_config,
     case LAYER_TYPE_RESBLOCK:
       layer_resblock_setup(target_layer,(layer_resblock_config_t *)layer_config,  bottom_layer);
       break;
+
+    case LAYER_TYPE_POOL:
+      layer_pool_setup(target_layer,(layer_pool_config_t *)layer_config,  bottom_layer);
+      break;
+
 
 
     default:

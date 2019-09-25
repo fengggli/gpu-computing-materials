@@ -155,6 +155,13 @@ TEST_F(LayerTest, ResBlock) {
   layer_t * resblock_layer = layer_setup(LAYER_TYPE_RESBLOCK, &resblock_config, conv_layer);
   net_add_layer(&net, resblock_layer);
 
+  /*pool layer*/
+  layer_pool_config_t pool_config;
+  pool_config.name = "pool";
+
+  layer_t * pool_layer = layer_setup(LAYER_TYPE_POOL, &pool_config, resblock_layer);
+  net_add_layer(&net, pool_layer);
+
   /*FC layer*/
   layer_fc_config_t fc_config;
   fc_config.name = "fc";
@@ -162,7 +169,7 @@ TEST_F(LayerTest, ResBlock) {
   fc_config.reg = reg;
   fc_config.activation = ACTIVATION_NONE;
 
-  layer_t * fc_layer = layer_setup(LAYER_TYPE_FC, &fc_config, resblock_layer);
+  layer_t * fc_layer = layer_setup(LAYER_TYPE_FC, &fc_config, pool_layer);
   net_add_layer(&net, fc_layer);
 
   /* Forge some fake input*/
