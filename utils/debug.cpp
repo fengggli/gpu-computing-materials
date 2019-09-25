@@ -4,25 +4,24 @@
  * Author: Feng Li
  * e-mail: fengggli@yahoo.com
  */
+#define BOOST_STACKTRACE_USE_ADDR2LINE
+
 #include <cmath>
 #include "awnn/logging.h"
 #include "utils/debug.h"
+#ifdef USE_BOOST_STACKTRACE
+#include <boost/stacktrace.hpp>
+#endif
+#include <iostream>
+#include <csignal>     // ::signal, ::raise
 
-// To get linenumber: addr2line -e tests/test-net-resnet 0x46d7d3
 void print_trace(void) {
-  void *array[10];
-  int size;
-  char **strings;
-  int i;
-
-  size = backtrace(array, 10);
-  strings = backtrace_symbols(array, size);
-
-  printf("Obtained %d stack frames.\n", size);
-
-  for (i = 0; i < size; i++) printf("%s\n", strings[i]);
-
-  free(strings);
+#ifdef USE_BOOST_STACKTRACE
+  std::cout << boost::stacktrace::stacktrace();
+#else
+  PINF("Boost stack trace not available");
+  return;
+#endif
 }
 
 int list_get_count(struct list_head *head) {
@@ -36,18 +35,30 @@ int list_get_count(struct list_head *head) {
   return count;
 }
 
-void dump_tensor_stats(tensor_t t, const char *name) {
-  uint capacity = tensor_get_capacity(t);
-  double sum = 0;
-  for (uint i = 0; i < capacity; i++) {
-    sum += t.data[i];
-  }
-  double mean = sum / capacity;
+void my_signal_handler(int signum) {
+    ::signal(signum, SIG_DFL);
+    PWRN("Segfault:"); 
+    print_trace();
+    PWRN("now exiting...");
+    exit(-1);
+}
 
-  sum = 0;
-  for (uint i = 0; i < capacity; i++) {
-    sum += (t.data[i] - mean) * (t.data[i] - mean);
-  }
-  double std = sqrt(sum / (capacity - 1));
-  PNOTICE("[Tensor(%p) %s]: mean = %.2e, std = %.2e", t.data, name, mean, std);
+void init_helper_env(){
+	::signal(SIGSEGV, &my_signal_handler);
+	::signal(SIGABRT, &my_signal_handler);
+
+  // print stacktrace during faults
+  PMAJOR("Sig handler enabled");
+}
+
+
+clocktime_t get_clocktime(){
+  clocktime_t t;
+  clock_gettime(CLOCK_MONOTONIC, &t);
+  return t;
+}
+double get_elapsed_ms(clocktime_t start, clocktime_t end){
+  double elapsed = (end.tv_sec - start.tv_sec);
+  elapsed += (end.tv_nsec - start.tv_nsec)/1000000000.0;
+  return elapsed*1000;
 }

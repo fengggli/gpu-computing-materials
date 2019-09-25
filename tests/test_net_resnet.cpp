@@ -103,6 +103,8 @@ TEST_F(NetResnetTest, ForwardInferOnly) {
   }
   tensor_destroy(&x);
 }
+
+/**Test resnet with different conv implementation*/
 TEST_F(NetResnetTest, Loss) {
   T loss = 0;
 

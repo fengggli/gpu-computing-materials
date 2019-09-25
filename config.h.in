@@ -1,6 +1,7 @@
 #pragma once
 #cmakedefine IS_CI_BUILD
 #cmakedefine USE_OPENBLAS
+#cmakedefine USE_MKL
 #cmakedefine USE_CUDA
 #cmakedefine DEBUG_GPU_FUNCTION_ENTRY_NOTIFICATIONS
 #cmakedefine USE_CUDNN
@@ -8,6 +9,7 @@
 #cmakedefine AWNN_USE_FLT32
 #cmakedefine GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
 #cmakedefine AWNN_USE_OPENMP
-#cmakedefine AWNN_GEMM_THREADS (@AWNN_GEMM_THREADS@)
+// #cmakedefine AWNN_GEMM_THREADS (@AWNN_GEMM_THREADS@)
+#cmakedefine USE_BOOST_STACKTRACE
 
 #define CIFAR_PATH ("@CMAKE_SOURCE_DIR@/data/cifar10")

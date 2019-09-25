@@ -65,6 +65,7 @@ void print_trace();
 #define AWNN_CHECK_NE(a, b)                \
   if ((a) == (b)) {                        \
     PERR("Expect unequal value, but not"); \
+    print_trace();                                                  \
     exit(-1);                              \
   }
 

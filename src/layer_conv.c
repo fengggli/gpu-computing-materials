@@ -3,12 +3,16 @@
 #include "nnpack.h"
 #include "pthreadpool.h"
 #endif
-#ifdef USE_OPENBLAS
-#include "cblas.h"
-#endif
 
 #include <awnn/memory.h>
 #include <printf.h>
+
+#ifdef USE_OPENBLAS
+#include "cblas.h"
+#endif
+#ifdef USE_MKL
+#include "mkl.h"
+#endif
 
 conv_method_t g_conv_method = CONV_METHOD_NAIVE;
 
@@ -152,7 +156,6 @@ tensor_t im2col(tensor_t const x, tensor_t const w, conv_param_t const params) {
   stride = params.stride;
   pad = params.padding;
 
-  // Check dimensions
   assert((W + 2 * pad - filter_width) % stride == 0);
   assert((H + 2 * pad - filter_height) % stride == 0);
 

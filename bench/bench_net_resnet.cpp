@@ -17,61 +17,64 @@
 #include <numeric>
 #undef PRINT_STAT
 
+/** work thead entry*/
+
 int main(int argc, char *argv[]) {
   static model_t model;
   // overfit small data;
   uint train_sz = 4000;
   // uint train_sz = 4000;
   uint batch_sz = 128;
-  uint nr_iterations = 50;
 
-  if(argc == 2){
-    batch_sz = atoi(argv[1]);
+  if(argc != 3){
+    PERR("format: cmd batch_size nr_worker_threads");
+    return -1;
   }
 
-  uint input_shape[] = {batch_sz, 3, 32, 32};
-  dim_t input_dim = make_dim_from_arr(array_size(input_shape), input_shape);
-  uint output_dim = 10;
-  uint nr_stages = 1;
-  uint nr_blocks[MAX_STAGES] = {2};
-  T reg = 1;
-  normalize_method_t normalize_method = NORMALIZE_NONE;  // no batchnorm now
+  batch_sz = atoi(argv[1]);
+  int nr_worker_threads = atoi(argv[2]);
 
-  // set_conv_method(CONV_METHOD_PERIMG);
-  set_conv_method(CONV_METHOD_NNPACK_AUTO);
-  resnet_init(&model, input_dim, output_dim, nr_stages, nr_blocks, reg,
-              normalize_method);
-
-  EXPECT_EQ((void *)0, (void *)net_get_param(model.list_all_params,
-                                             "W3"));  // unexisting param
-  EXPECT_NE((void *)0,
-            (void *)net_get_param(model.list_all_params, "conv1.weight"));
-
+  /* Data loader*/
   data_loader_t loader;
   status_t ret = cifar_open(&loader, CIFAR_PATH);
-  EXPECT_EQ(S_OK, ret);
-
   uint val_sz = 1000;
-  T learning_rate = 0.1;
-
+  EXPECT_EQ(S_OK, ret);
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
-  tensor_t x;
-  label_t *labels;
+  pthread_t *threads  = (pthread_t*)malloc(sizeof(pthread_t)*nr_worker_threads);
+  resnet_thread_info_t *threads_info = (resnet_thread_info_t*)malloc(sizeof(resnet_thread_info_t)*nr_worker_threads);
+  AWNN_CHECK_NE(threads_info, 0);
 
-  // Read one batch of data
-  uint cur_epoch = 0;
-  uint cur_batch = 0;
-  uint cnt_read = get_train_batch(&loader, &x, &labels, cur_batch, batch_sz);
+  status_t rc = -1;
 
-  EXPECT_EQ(batch_sz, cnt_read);
+  /* Initialize and set thread detached attribute */
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-  T loss = 0;
-  resnet_loss(&model, x, labels, &loss);
-  PINF("Initial Loss %.2f", loss);
-  PINF("Using convolution method %d", get_conv_method());
+  pthread_mutex_t mutex;
+  pthread_mutex_init(&mutex, NULL);
+
+  /* Used for all-reduce*/
+  pthread_barrier_t barrier;
+  pthread_barrier_init(&barrier, NULL, nr_worker_threads);
+
+  for(int t = 0;  t< nr_worker_threads; t++){
+    threads_info[t].id = t;
+    threads_info[t].nr_threads = nr_worker_threads;
+    threads_info[t].data_loader = &loader;
+    threads_info[t].batch_sz = batch_sz;
+    threads_info[t].ptr_mutex = &mutex;
+    threads_info[t].ptr_barrier = &barrier;
+    
+	  rc = pthread_create(&threads[t], &attr, resnet_thread_entry, (void *)(&threads_info[t]));
+    AWNN_CHECK_EQ(0, rc);
+  }
+  
+  /*
   time_point_t start, end;
   std::vector<double> eclapsed_times;
+  uint nr_iterations = 50;
   for (uint iteration = 0; iteration < nr_iterations; iteration++) {
     start = get_timepoint();
     resnet_loss(&model, x, labels, &loss);
@@ -86,7 +89,20 @@ int main(int argc, char *argv[]) {
 
   PINF("AVG forward-backward %.3fms", avg_ms);
 
+  */
+
+	for(int t=0; t<nr_worker_threads; t++) {
+    rc = pthread_join(threads[t], NULL);
+    AWNN_CHECK_EQ(0, rc);
+	}
+
+  PWRN("joined!");
+  pthread_barrier_destroy(&barrier);
+
+  free(threads);
+  free(threads_info);
+
+  pthread_mutex_destroy(&mutex);
   cifar_close(&loader);
-  resnet_finalize(&model);
 }
 

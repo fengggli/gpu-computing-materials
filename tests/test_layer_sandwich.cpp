@@ -69,10 +69,11 @@ TEST_F(LayerSandwich, conv_relu) {
         conv_relu_forward(x, in, NULL, params, out);
       },
       w, dy, dw_ref);
-  EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-5);
+  EXPECT_LT(tensor_rel_error(dw_ref, dw), 1e-4);
   PINF("gradient check of w... is ok");
 }
 
+/** Residual block with no subsampling*/
 TEST_F(LayerSandwich, ResidualBlock_noBN) {
   lcache_t cache;
 
@@ -187,13 +188,105 @@ TEST_F(LayerSandwich, ResidualBlock_noBN) {
         residual_basic_no_bn_forward(x, in, w2, NULL, params, out);
       },
       w1, dy, dw1_ref);
-  ASSERT_LT(tensor_rel_error(dw1_ref, dw1), 1e-3);
+  ASSERT_LT(tensor_rel_error(dw1_ref, dw1), 1e-4);
   PINF("gradient check of w1... is ok");
 
   // evaluate gradient of w2
   eval_numerical_gradient(
       [x, w1, params](tensor_t const in, tensor_t out) {
         residual_basic_no_bn_forward(x, w1, in, NULL, params, out);
+      },
+      w2, dy, dw2_ref);
+  ASSERT_LT(tensor_rel_error(dw2_ref, dw2), 1e-4);
+  PINF("gradient check of w2... is ok");
+}
+
+/** Residual block with  subsampling*/
+TEST_F(LayerSandwich, ResidualBlock_subsampling_noBN) {
+  lcache_t cache;
+  set_conv_method(CONV_METHOD_PERIMG);
+
+  uint N, C, H, W, F, HH, WW, H_out, W_out;
+  N = 2, C = 3, H = 4, W = 4;
+  F = 3, HH = 3, WW = 3;
+  H_out = 2, W_out = 2;
+
+  uint shape_x[] = {N, C, H, W};
+  uint shape_w_sample[] = {F, C, 1, 1};
+  uint shape_w[] = {F, C, HH, WW};
+  uint shape_y[] = {N, F, H_out, W_out};
+
+  conv_param_t params1 = {.stride = 2, .padding = 1};
+  conv_param_t params2 = {.stride = 1, .padding = 1};
+
+  tensor_t x = tensor_make_linspace(-0.1, 0.5, shape_x, array_size(shape_x));
+  tensor_t w1 = tensor_make_linspace(-0.2, 0.3, shape_w, array_size(shape_w));
+  tensor_t w2 = tensor_make_linspace(-0.2, 0.3, shape_w, array_size(shape_w));
+  tensor_t w_sample = tensor_make_linspace(-0.2, 0.3, shape_w_sample,
+                                           array_size(shape_w_sample));
+
+  tensor_t y = tensor_make_zeros(shape_y, array_size(shape_y));
+
+  make_empty_lcache(&cache);
+  // forward
+
+  ASSERT_EQ(S_OK, residual_basic_no_bn_subspl_forward(
+                      x, w_sample, w1, w2, &cache, params1, params2, y));
+  PINF("forward value checked!!!!!");
+
+  // backward
+  tensor_t dy = tensor_make_linspace_alike(0.1, 0.3, y);  // make it radom
+
+  // output for backward
+  tensor_t dx = tensor_make_alike(x);
+  tensor_t dw1 = tensor_make_alike(w1);
+  tensor_t dw2 = tensor_make_alike(w2);
+  tensor_t dw_sample = tensor_make_alike(w_sample);
+
+  EXPECT_EQ(S_OK, residual_basic_no_bn_subspl_backward(
+                      dx, dw_sample, dw1, dw2, &cache, params1, params2, dy));
+
+  // numerical check
+  tensor_t dx_ref = tensor_make_alike(x);
+  tensor_t dw1_ref = tensor_make_alike(dw1);
+  tensor_t dw2_ref = tensor_make_alike(dw2);
+  tensor_t dw_sample_ref = tensor_make_alike(dw_sample);
+
+  // evaluate gradient of x
+  eval_numerical_gradient(
+      [w_sample, w1, w2, params1, params2](tensor_t const in, tensor_t out) {
+        residual_basic_no_bn_subspl_forward(in, w_sample, w1, w2, NULL, params1,
+                                            params2, out);
+      },
+      x, dy, dx_ref);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 1e-3);
+  PINF("gradient check of x... is ok");
+
+  // evaluate gradient of w_sample
+  eval_numerical_gradient(
+      [x, w1, w2, params1, params2](tensor_t const in, tensor_t out) {
+        residual_basic_no_bn_subspl_forward(x, in, w1, w2, NULL, params1,
+                                            params2, out);
+      },
+      w_sample, dy, dw_sample_ref);
+  ASSERT_LT(tensor_rel_error(dw_sample_ref, dw_sample), 1e-4);
+  PINF("gradient check of w_sample... is ok");
+
+  // evaluate gradient of w1
+  eval_numerical_gradient(
+      [x, w_sample, w2, params1, params2](tensor_t const in, tensor_t out) {
+        residual_basic_no_bn_subspl_forward(x, w_sample, in, w2, NULL, params1,
+                                            params2, out);
+      },
+      w1, dy, dw1_ref);
+  ASSERT_LT(tensor_rel_error(dw1_ref, dw1), 1e-4);
+  PINF("gradient check of w1... is ok");
+
+  // evaluate gradient of w2
+  eval_numerical_gradient(
+      [x, w_sample, w1, params1, params2](tensor_t const in, tensor_t out) {
+        residual_basic_no_bn_subspl_forward(x, w_sample, w1, in, NULL, params1,
+                                            params2, out);
       },
       w2, dy, dw2_ref);
   ASSERT_LT(tensor_rel_error(dw2_ref, dw2), 1e-4);

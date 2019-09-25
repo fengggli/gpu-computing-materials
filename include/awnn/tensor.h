@@ -203,6 +203,9 @@ status_t awnn_gemm(const int TransA,
     const T* A, const T* B, const double beta, T*C);
 
 
+/* Show tensor std, variance, etc */
+void dump_tensor_stats(tensor_t, const char *name);
+
 #ifdef __cplusplus
 }
 #endif

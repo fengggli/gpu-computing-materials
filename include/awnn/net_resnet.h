@@ -13,6 +13,7 @@
 #include "awnn/common.h"
 #include "awnn/tensor.h"
 #include "utils/list.h"
+#include "awnn/data_utils.h"
 
 #define MAX_STAGES (5)
 
@@ -61,6 +62,28 @@ tensor_t resnet_forward(model_t const *model, tensor_t x);
  * gradients*/
 status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
                      T *ptr_loss);
+
+
+/**
+ * Multi-thread support.
+ * Each read will do model_init
+ **/
+struct resnet_thread_info{
+  int id;
+  int nr_threads;
+  model_t model;
+
+  model_t** ptr_root_model; /** To sum up all gradients*/
+  data_loader_t *data_loader;
+  int batch_sz;
+
+  pthread_mutex_t * ptr_mutex;
+  pthread_barrier_t * ptr_barrier;
+};
+typedef struct resnet_thread_info resnet_thread_info_t;
+
+void *resnet_thread_entry(void *threadinfo);
+
 
 #ifdef __cplusplus
 }

@@ -152,6 +152,22 @@ uint get_train_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
   return nr_imgs;
 }
 
+uint get_train_batch_mt(data_loader_t const *loader, tensor_t *x, label_t **label,
+                     uint batch_id, uint batch_sz, int thread_id, int nr_threads) {
+  uint i_start = batch_id * batch_sz;
+  uint i_end = i_start + batch_sz;
+
+  if (i_end > loader->train_split) i_end = loader->train_split;
+  AWNN_CHECK_EQ(0 , (i_end - i_start)% nr_threads);
+  uint nr_imgs = (i_end - i_start)/nr_threads;
+
+  uint shape_batch[] = {nr_imgs, C, H, W};
+  x->dim = make_dim_from_arr(4, shape_batch);
+  x->data = loader->data_train + (i_start + thread_id*nr_imgs) * (C * H * W);
+  *label = loader->label_train + (i_start + thread_id*nr_imgs);
+  return nr_imgs;
+}
+
 // Finer get
 uint get_validation_batch(data_loader_t const *loader, tensor_t *x,
                           label_t **label, uint batch_id, uint batch_sz) {

@@ -48,20 +48,20 @@ static inline void net_attach_param(struct list_head *l_params, char *name,
 /* Deallocated tensor from net, and free all of them*/
 static inline void net_free_params(struct list_head *l_params) {
   struct list_head *p_node, *tmp;
-  PINF("Freeing all net params: \n{");
+  PMAJOR("Freeing all net params(weights): \n{");
   list_for_each_safe(p_node, tmp, l_params) {
     list_del(p_node);
     param_t *p_param = list_entry(p_node, param_t, list);
     if (p_param->data.data != NULL) {
       // if(p_param->data.mem_type != EMPTY_MEM){
-      PINF("-- freeing %s at %p", p_param->name, p_param->data.data);
+      PINF("-- freeing %s ", p_param->name);
       tensor_destroy(&p_param->data);
       tensor_destroy(&p_param->diff);
       tensor_destroy(&p_param->velocity);
     }
     mem_free(p_param);
   }
-  PINF("}/");
+  PMAJOR("All weight freed");
 }
 
 /* print current param names*/
@@ -96,7 +96,7 @@ static inline void net_attach_cache(struct list_head *l_cache, char *name) {
 
 static inline void net_free_cache(struct list_head *l_cache) {
   struct list_head *p_node, *tmp;
-  PINF("Freeing all caches: \n{");
+  PMAJOR("Freeing all caches: \n{");
   list_for_each_safe(p_node, tmp, l_cache) {
     list_del(p_node);
     lcache_t *p_cache = list_entry(p_node, typeof(*p_cache), list);
@@ -104,15 +104,15 @@ static inline void net_free_cache(struct list_head *l_cache) {
     PINF("-- freeing cache: %s", p_cache->name);
     mem_free(p_cache);
   }
-  PINF("}/");
+  PMAJOR("All cache freed");
 }
 
-/* Get the entry of a specific cache*/
+/** Get the entry of a specific cache*/
 static inline lcache_t *net_get_cache(struct list_head const *l_cache,
                                       char const *name) {
   int cache_found = 0;
   lcache_t *p_cache;
-  PDBG("\n\n-----Searching %s from cache-------------", name);
+  PDBG("##-----Searching %s from cache-------------", name);
   list_for_each_entry(p_cache, l_cache, list) {
     PDBG("-------now %s", p_cache->name);
     if (strcmp(name, p_cache->name) == 0) {

@@ -20,7 +20,7 @@ before_script:
   - sudo ./install-apt.sh
   - mkdir build
   - cd build
-  - cmake .. -DIS_CI_BUILD=on
+  - cmake .. -DIS_CI_BUILD=on -DUSE_OPENBLAS=on
 
 install: "pip install --user sphinx sphinx_rtd_theme sphinxcontrib-bibtex"
 

@@ -20,6 +20,9 @@ add_executable(test-layer-conv test_layer_conv.cpp)
 target_link_libraries(test-layer-conv ${AWNN_LIBS} gtest)
 add_test(test-layer-conv test-layer-conv)
 
+add_executable(test-layer-conv-uneven test_layer_conv_uneven.cpp)
+target_link_libraries(test-layer-conv-uneven ${AWNN_LIBS} gtest)
+add_test(test-layer-conv-uneven test-layer-conv-uneven)
 if(USE_CUDA)
     add_executable(test-layer-conv-device test_layer_conv_device.cpp)
     target_link_libraries(test-layer-conv-device ${AWNN_LIBS} ${AWNN_DEVICE_LIBS} gtest)
@@ -100,6 +103,9 @@ add_test(test-layer-sandwich test-layer-sandwich)
 
 add_executable(test-net-resnet test_net_resnet.cpp)
 target_link_libraries(test-net-resnet ${AWNN_LIBS}  gtest)
+
+add_executable(test-net-resnet14 test_net_resnet14.cpp)
+target_link_libraries(test-net-resnet14 ${AWNN_LIBS} gtest)
 if(NOT IS_CI_BUILD)
   add_test(test-net-resnet test-net-resnet)
 endif()
@@ -118,3 +124,9 @@ target_link_libraries(test-net-resnet-mem ${AWNN_LIBS} gtest)
 #add_executable(test-loss-softmax-simple test_loss_softmax_simple.cpp)
 #target_link_libraries(test-loss-softmax-simple ${AWNN_LIBS}  gtest)
 #add_test(test-loss-softmax-simple test-loss-softmax-simple)
+
+if(USE_MKL)
+add_executable(test-numa test_numa.cpp)
+target_compile_options(test-numa PRIVATE "-qopenmp") #other wise mkl-internal threading will be used.
+target_link_options(test-numa PRIVATE "-qopenmp") #other wise mkl-internal threading will be used.
+endif()

@@ -31,6 +31,12 @@ status_t cifar_split_train(data_loader_t *loader, uint train_sz, uint val_sz);
  */
 uint get_train_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
                      uint batch_id, uint batch_sz);
+
+/** feed batch of train data to multiple threads. 
+ * @return nr images per worker thread*/
+uint get_train_batch_mt(data_loader_t const *loader, tensor_t *x, label_t **label,
+                     uint batch_id, uint batch_sz, int thread_id, int nr_threads);
+
 /*
  * Get a val data
  *

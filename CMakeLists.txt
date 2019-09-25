@@ -2,7 +2,14 @@ cmake_minimum_required(VERSION 3.5)
 #set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 option(IS_CI_BUILD "Is a build for CI" OFF) # Reduce problem size if it is run in CI
-option(USE_OPENBLAS "USE openblas for blas" ON)
+option(USE_CLANG "Use clang compiler set" OFF)
+
+# blas
+option(USE_MKL "Use intel compiler set" OFF)
+option(USE_OPENBLAS "USE openblas for blas" OFF)
+option(USE_SEQUENTIAL_BLAS "USE openblas for blas" ON)
+
+option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_CUDA "Build with CUDA" OFF)
 option(DEBUG_GPU_FUNC_ENTRY_NOTIFY "Print device function names upon function call" ON)
 option(USE_CUDNN "Build with CUDNN" OFF)
@@ -10,7 +17,9 @@ option(USE_NNPACK "Build with NNPACK" OFF)
 option(AWNN_USE_FLT32 "Use single precision floating point" OFF)
 option(GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC "Count allocations and destroy globally" OFF)
 option(AWNN_USE_OPENMP "Use OpenMP" OFF)
-set (AWNN_GEMM_THREADS 1 CACHE STRING "number of openblas threads")
+option(USE_MEMCHECK "Use mem santilizer to check leaks" OFF)
+option(USE_BOOST_STACKTRACE "Use booststack trace" OFF)
+#set (AWNN_GEMM_THREADS 1 CACHE STRING "number of openblas threads")
 
 option(USE_CLANG "Use clang compiler set" OFF)
 option(BUILD_TEST "Build google test and all test cases" ON)
@@ -26,6 +35,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 if(USE_CLANG)
   set(CMAKE_C_COMPILER "clang")
   set(CMAKE_CXX_COMPILER "clang++")
+elseif(USE_MKL)
+  set(CMAKE_C_COMPILER "icc")
+  set(CMAKE_CXX_COMPILER "icpc")
 else()
   set(CMAKE_C_COMPILER "gcc")
   set(CMAKE_CXX_COMPILER "g++")
@@ -38,13 +50,36 @@ if(USE_STRICT_CHECK)
   set(GCC_COVERAGE_COMPILE_FLAGS "-pedantic ${GCC_COVERAGE_COMPILE_FLAGS}")
 endif()
 
+if(USE_MEMCHECK)
+  set(GCC_COVERAGE_COMPILE_FLAGS "-fsanitize=address -fno-omit-frame-pointer ${GCC_COVERAGE_COMPILE_FLAGS}")
+endif()
+
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.13.0")
+  add_link_options("-no-pie") # to give line number in stacktrace
+else()
+  message("Debug Build stracktrace without line number(${CMAKE_VERSION} <= 3.13")
+endif()
+
+
 if(AWNN_USE_OPENMP)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
-		message("Use OPenMP")
+  message(FATAL_ERROR "openmp support is not complete yet")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+  message("Use OPenMP")
+endif()
+if(USE_MKL)
+  if(USE_SEQUENTIAL_BLAS)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mkl=sequential")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mkl=sequential")
+    message("Use non-threaded MKL")
+  else()
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mkl=parallel")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mkl=parallel")
+    message("Use multi-threads MKL")
+  endif()
 endif()
 
 project(awnn LANGUAGES C CXX)
@@ -144,9 +179,7 @@ add_library(awnn_utils
   utils/weight_init.cpp
   utils/debug.cpp)
 
-target_link_libraries(awnn_utils awnn_core)
-
-set(AWNN_LIBS "awnn_core" "awnn_utils")
+set(AWNN_LIBS "awnn_core" "awnn_utils" dl)
 
 if(USE_CUDA)
   list(APPEND awnndevicelib_SOURCES

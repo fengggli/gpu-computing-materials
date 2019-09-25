@@ -34,6 +34,15 @@ status_t residual_basic_no_bn_forward(tensor_t x, tensor_t w1, tensor_t w2,
 status_t residual_basic_no_bn_backward(tensor_t dx, tensor_t dw1, tensor_t dw2,
                                        lcache_t *cache,
                                        conv_param_t const params, tensor_t dy);
+status_t residual_basic_no_bn_subspl_forward(
+    tensor_t x, tensor_t w_sample, tensor_t w1, tensor_t w2, lcache_t *cache,
+    conv_param_t const conv_param1, conv_param_t const conv_param2, tensor_t y);
+status_t residual_basic_no_bn_subspl_backward(tensor_t dx, tensor_t dw_sample,
+                                              tensor_t dw1, tensor_t dw2,
+                                              lcache_t *cache,
+                                              conv_param_t const conv_param1,
+                                              conv_param_t const conv_param2,
+                                              tensor_t dy);
 
 // TODO conv_bn_relu forward/backward
 #ifdef __cplusplus
