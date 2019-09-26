@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
   pthread_t *threads  = (pthread_t*)malloc(sizeof(pthread_t)*nr_worker_threads);
-  resnet_thread_info_t *threads_info = (resnet_thread_info_t*)malloc(sizeof(resnet_thread_info_t)*nr_worker_threads);
+  resnet_thread_info_t *threads_info = new resnet_thread_info_t[nr_worker_threads];
   AWNN_CHECK_NE(threads_info, 0);
 
   status_t rc = -1;
@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
   pthread_barrier_destroy(&barrier);
 
   free(threads);
-  free(threads_info);
+  delete [] threads_info;
 
   pthread_mutex_destroy(&mutex);
   cifar_close(&loader);

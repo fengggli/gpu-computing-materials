@@ -55,7 +55,7 @@ struct Blob{
   }
 
   ~Blob(){
-    PINF("now destroy tensor %s, at %p", name.c_str(), data.data);
+    PDBG("now destroy tensor %s, at %p", name.c_str(), data.data);
     tensor_destroy(&data);
     tensor_destroy(&diff);
     if(learnable){
@@ -171,7 +171,6 @@ struct resnet_thread_info{
   int nr_threads;
   net_t model;
 
-  net_t** ptr_root_model; /** To sum up all gradients*/
   data_loader_t *data_loader;
   uint batch_sz;
 
@@ -179,7 +178,7 @@ struct resnet_thread_info{
   pthread_barrier_t * ptr_barrier;
 };
 
-using resnet_thread_info_t = struct resnet_thread_info;
+typedef struct resnet_thread_info resnet_thread_info_t;
 
 void *resnet_thread_entry(void *threadinfo);
 
