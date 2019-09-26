@@ -16,6 +16,8 @@
 static conv_param_t conv3x3_param = {.stride = 1, .padding = 1};
 static conv_param_t conv3x3_with_sample_param = {.stride = 2, .padding = 1};
 
+typedef struct resnet_thread_info_v1 resnet_thread_info_t;
+
 model_t * root_model = NULL;
 
 status_t resnet_init(
@@ -434,6 +436,7 @@ status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
   return S_OK;
 }
 
+#if 0
 /** Naive all-reduce between all threads*/
 void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info){
 
@@ -486,8 +489,8 @@ void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info){
 }
 
 
-void *resnet_thread_entry(void *threadinfo) {
-  struct resnet_thread_info *my_info =
+void *resnet_thread_entry_v1(void *threadinfo) {
+  resnet_thread_info_t *my_info =
       (struct resnet_thread_info *)(threadinfo);
   tensor_t x_thread_local;
   label_t *labels_thread_local;
@@ -570,3 +573,4 @@ void *resnet_thread_entry(void *threadinfo) {
   pthread_exit((void *)threadinfo);
   return NULL;
 }
+#endif

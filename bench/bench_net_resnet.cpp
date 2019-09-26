@@ -11,6 +11,7 @@
 #include "utils/data_cifar.h"
 #include "utils/debug.h"
 #include "utils/weight_init.h"
+#include "layers/layer_common.hpp"
 
 #include "gtest/gtest.h"
 #include "test_util.h"
@@ -20,7 +21,6 @@
 /** work thead entry*/
 
 int main(int argc, char *argv[]) {
-  static model_t model;
   // overfit small data;
   uint train_sz = 4000;
   // uint train_sz = 4000;

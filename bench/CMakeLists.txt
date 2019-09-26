@@ -9,7 +9,7 @@ if(USE_CUDA)
   endif(USE_CUDNN)
 endif(USE_CUDA)
 add_executable(bench-net-resnet bench_net_resnet.cpp)
-target_link_libraries(bench-net-resnet ${AWNN_LIBS} gtest)
+target_link_libraries(bench-net-resnet awnn_layers ${AWNN_LIBS} gtest )
 add_test(bench-net-resnet bench-net-resnet)
 
 if(USE_MKL)

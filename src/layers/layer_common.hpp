@@ -9,6 +9,7 @@
 #define LAYER_COMMON_HPP_
 
 #include "awnn/tensor.h"
+#include "utils/data_cifar.h"
 #include <string>
 #include <vector>
 #include <stack>
@@ -160,6 +161,28 @@ void net_loss(net_t *net, tensor_t x, label_t const *labels,
 void resnet_setup(net_t *net, uint input_shape[], double reg);
 
 void resnet_teardown(net_t *net);
+
+/**
+ * Multi-thread support.
+ * Each read will do model_init
+ **/
+struct resnet_thread_info{
+  int id;
+  int nr_threads;
+  net_t model;
+
+  net_t** ptr_root_model; /** To sum up all gradients*/
+  data_loader_t *data_loader;
+  uint batch_sz;
+
+  pthread_mutex_t * ptr_mutex;
+  pthread_barrier_t * ptr_barrier;
+};
+
+using resnet_thread_info_t = struct resnet_thread_info;
+
+void *resnet_thread_entry(void *threadinfo);
+
 
 #ifdef __cplusplus
 extern "C" {
