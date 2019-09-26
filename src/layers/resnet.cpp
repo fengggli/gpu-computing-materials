@@ -188,7 +188,7 @@ void *resnet_thread_entry(void *threadinfo) {
       t_start = get_clocktime();
     };
 
-    net_update_weights(&(my_info->model), 0.001);
+    net_update_weights(&(my_info->model), 0.01);
 
     if (my_info->id == 0) {
       gradientupdate_in_ms += get_elapsed_ms(t_start, get_clocktime());
