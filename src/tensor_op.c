@@ -177,6 +177,7 @@ status_t tensor_elemwise_op_inplace(tensor_t to, tensor_t from, tensor_op_t op){
   }
   else{
     PERR("[tensor plus inplace]: wrong dims ");
+    print_trace();
     return S_BAD_DIM;
   }
 }
@@ -199,7 +200,8 @@ status_t tensor_copy(tensor_t out, tensor_t in){
     return S_OK;
   }
   else{
-    PERR("[tensor plus inplace]: wrong dims ");
+    PERR("[tensor copy]: wrong dims ");
+    print_trace();
     return S_BAD_DIM;
   }
 }

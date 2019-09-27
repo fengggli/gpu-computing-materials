@@ -7,6 +7,10 @@
 
 #pragma once
 
+#ifndef typeof
+#define typeof __typeof__
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -8,7 +8,6 @@
 // TODO: i had use global varaibles otherwise dimension info will be lost
 
 net_t * root_model = NULL;
-layer_data_config_t dataconfig;
 layer_conv2d_config_t conv_config;
 layer_resblock_config_t resblock_config;
 layer_pool_config_t pool_config;
@@ -19,14 +18,14 @@ void resnet_setup(net_t *net, uint input_shape[], double reg){
 
 
   /*Conv layer*/
-  dataconfig.name = "data";
+  net->dataconfig.name = "data";
 
-  dataconfig.dim.dims[0] = input_shape[0];
-  dataconfig.dim.dims[1] = input_shape[1];
-  dataconfig.dim.dims[2] = input_shape[2];
-  dataconfig.dim.dims[3] = input_shape[3];
+  net->dataconfig.dim.dims[0] = input_shape[0];
+  net->dataconfig.dim.dims[1] = input_shape[1];
+  net->dataconfig.dim.dims[2] = input_shape[2];
+  net->dataconfig.dim.dims[3] = input_shape[3];
 
-  layer_t * data_layer = layer_setup(LAYER_TYPE_DATA, &dataconfig, nullptr);
+  layer_t * data_layer = layer_setup(LAYER_TYPE_DATA, &(net->dataconfig), nullptr);
   net_add_layer(net, data_layer);
 
   /*Conv layer*/
@@ -137,12 +136,11 @@ void *resnet_thread_entry(void *threadinfo) {
   uint cur_batch = 0;
   uint cnt_read = get_train_batch_mt(
       my_info->data_loader, &x_thread_local, &labels_thread_local, cur_batch,
-      my_info->batch_sz, my_info->id, my_info->nr_threads);
-
-  AWNN_CHECK_EQ(my_info->batch_sz, cnt_read * my_info->nr_threads);
+      my_info->batch_sz, (uint)my_info->id, (uint)my_info->nr_threads);
 
   /* Network config*/
   uint in_shape[] = {cnt_read, 3, 32, 32};
+  PINF("thread[%d], split sizse: %u", my_info->id, cnt_read);
   T reg = 0.001;
 
   resnet_setup(&(my_info->model), in_shape, reg);

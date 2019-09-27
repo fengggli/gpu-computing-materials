@@ -156,7 +156,7 @@ tensor_t tensor_make_placeholder(uint const shape[], uint const ndims){
   dim_t dim;
 
   if (ndims == 0) {
-    PINF("make zero");
+    PINF("placeholder: make zero");
     dim = make_dim(0, 0);
   }
 
@@ -178,7 +178,7 @@ tensor_t tensor_make(uint const shape[], uint const ndims) {
   dim_t dim;
 
   if (ndims == 0) {
-    PINF("make zero");
+    PINF("make zero, ndims = 0!");
     dim = make_dim(0, 0);
   }
 

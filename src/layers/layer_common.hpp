@@ -137,6 +137,7 @@ void layer_teardown(layer_t * this_layer);
 
 typedef struct{
   std::vector<layer_t *> layers; // data layer is first layer
+  layer_data_config_t dataconfig; // each replica might have different nr_imgs
 }net_t;
 
 /** Register this layer to net*/
