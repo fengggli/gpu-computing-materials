@@ -41,7 +41,7 @@ inline void update_regulizer_gradient(tensor_t x, tensor_t dx, T reg) {
   size_t capacity = tensor_get_capacity(x);
   AWNN_CHECK_EQ(capacity, tensor_get_capacity(dx));
 
-  for(size_t i = 0; i< capacity; i++){
-    dx.data[i]  += reg*(x.data[i]);
+  for (size_t i = 0; i < capacity; i++) {
+    dx.data[i] += reg * (x.data[i]);
   }
 }

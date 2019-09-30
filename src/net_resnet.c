@@ -1,15 +1,15 @@
 /*
  * Resnet
  */
+#include "awnn/net_resnet.h"
 #include "awnn/layer_pool.h"
 #include "awnn/layer_sandwich.h"
 #include "awnn/loss_softmax.h"
-#include "awnn/net_resnet.h"
+#include "awnn/solver.h"
 #include "pthread.h"
 #include "utils/data_cifar.h"
 #include "utils/debug.h"
-#include "utils/weight_init.h" 
-#include "awnn/solver.h"
+#include "utils/weight_init.h"
 
 #define ENABLE_SOLVER
 

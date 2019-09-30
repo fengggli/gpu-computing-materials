@@ -18,7 +18,8 @@ void sgd_update(param_t *p_param, T learning_rate) {
   PDBG("updating %s complete.", p_param->name);
 }
 
-void do_sgd_update_momentum(tensor_t param, tensor_t dparam, tensor_t velocity, T learning_rate, T momentum) {
+void do_sgd_update_momentum(tensor_t param, tensor_t dparam, tensor_t velocity,
+                            T learning_rate, T momentum) {
   T *pelem;
   uint ii;
   AWNN_CHECK_GT(learning_rate, 0);

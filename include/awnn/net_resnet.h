@@ -63,7 +63,6 @@ tensor_t resnet_forward(model_t const *model, tensor_t x);
 status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
                      T *ptr_loss);
 
-
 #if 0
 /**
  * Multi-thread support.
@@ -84,7 +83,6 @@ struct resnet_thread_info_v1{
 
 void *resnet_thread_entry_v1(void *threadinfo);
 #endif
-
 
 #ifdef __cplusplus
 }

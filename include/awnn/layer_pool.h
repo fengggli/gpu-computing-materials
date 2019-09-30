@@ -14,7 +14,6 @@
 extern "C" {
 #endif
 
-
 /*
  * @brief forwarding for global_avg_pool
  *

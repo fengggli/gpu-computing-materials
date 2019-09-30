@@ -1,22 +1,18 @@
-#include "layers/layer_common.hpp"
 #include "awnn/tensor.h"
-#include "utils/weight_init.h"
 #include "layers/layer_common.hpp"
 #include "utils/debug.h"
+#include "utils/weight_init.h"
 #define ENABLE_SOLVER
 
 // TODO: i had use global varaibles otherwise dimension info will be lost
 
-net_t * root_model = NULL;
+net_t *root_model = NULL;
 layer_conv2d_config_t conv_config;
 layer_resblock_config_t resblock_config;
 layer_pool_config_t pool_config;
 layer_fc_config_t fc_config;
 
-
-void resnet_setup(net_t *net, uint input_shape[], double reg){
-
-
+void resnet_setup(net_t *net, uint input_shape[], double reg) {
   /*Conv layer*/
   net->dataconfig.name = "data";
 
@@ -25,7 +21,8 @@ void resnet_setup(net_t *net, uint input_shape[], double reg){
   net->dataconfig.dim.dims[2] = input_shape[2];
   net->dataconfig.dim.dims[3] = input_shape[3];
 
-  layer_t * data_layer = layer_setup(LAYER_TYPE_DATA, &(net->dataconfig), nullptr);
+  layer_t *data_layer =
+      layer_setup(LAYER_TYPE_DATA, &(net->dataconfig), nullptr);
   net_add_layer(net, data_layer);
 
   /*Conv layer*/
@@ -35,20 +32,23 @@ void resnet_setup(net_t *net, uint input_shape[], double reg){
   conv_config.reg = reg;
   conv_config.activation = ACTIVATION_RELU;
 
-  layer_t * conv_layer = layer_setup(LAYER_TYPE_CONV2D, &conv_config, data_layer);
+  layer_t *conv_layer =
+      layer_setup(LAYER_TYPE_CONV2D, &conv_config, data_layer);
   net_add_layer(net, conv_layer);
 
   /*First residual block*/
   resblock_config.name = "resblock";
   resblock_config.reg = reg;
 
-  layer_t * resblock_layer = layer_setup(LAYER_TYPE_RESBLOCK, &resblock_config, conv_layer);
+  layer_t *resblock_layer =
+      layer_setup(LAYER_TYPE_RESBLOCK, &resblock_config, conv_layer);
   net_add_layer(net, resblock_layer);
 
   /*pool layer*/
   pool_config.name = "pool";
 
-  layer_t * pool_layer = layer_setup(LAYER_TYPE_POOL, &pool_config, resblock_layer);
+  layer_t *pool_layer =
+      layer_setup(LAYER_TYPE_POOL, &pool_config, resblock_layer);
   net_add_layer(net, pool_layer);
 
   /*FC layer*/
@@ -57,69 +57,82 @@ void resnet_setup(net_t *net, uint input_shape[], double reg){
   fc_config.reg = reg;
   fc_config.activation = ACTIVATION_NONE;
 
-  layer_t * fc_layer = layer_setup(LAYER_TYPE_FC, &fc_config, pool_layer);
+  layer_t *fc_layer = layer_setup(LAYER_TYPE_FC, &fc_config, pool_layer);
   net_add_layer(net, fc_layer);
 }
 
-void resnet_teardown(net_t *net){
-  net_teardown(net);
-}
+void resnet_teardown(net_t *net) { net_teardown(net); }
 
 /** Naive all-reduce between all threads*/
-void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info){
-
+void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info) {
   // Accumulate all gradients from worker to main
   pthread_barrier_wait(worker_info->ptr_barrier);
   net_t *local_model = &(worker_info->model);
   net_t *global_model = root_model;
-  if(worker_info->id != 0){
-    for(size_t idx_layer = 0;  idx_layer < local_model->layers.size(); idx_layer ++){
-        size_t nr_learnables_this_layer = local_model->layers[idx_layer]->learnables.size();
-        for(size_t idx_param = 0; idx_param < nr_learnables_this_layer; idx_param ++){ 
-          Blob * param_local = local_model->layers[idx_layer]->learnables[idx_param];
-          Blob * param_global = global_model->layers[idx_layer]->learnables[idx_param];
-          PDBG("updating %s...", param_local->name.c_str());
-          AWNN_CHECK_EQ(param_local->learnable, 1);
-          // sgd
-          // sgd_update(p_param, learning_rate);
-          pthread_mutex_lock(worker_info->ptr_mutex);
-          tensor_elemwise_op_inplace((param_global)->diff, (param_local)->diff, TENSOR_OP_ADD);
-          pthread_mutex_unlock(worker_info->ptr_mutex);
-        }
+  if (worker_info->id != 0) {
+    for (size_t idx_layer = 0; idx_layer < local_model->layers.size();
+         idx_layer++) {
+      size_t nr_learnables_this_layer =
+          local_model->layers[idx_layer]->learnables.size();
+      for (size_t idx_param = 0; idx_param < nr_learnables_this_layer;
+           idx_param++) {
+        Blob *param_local =
+            local_model->layers[idx_layer]->learnables[idx_param];
+        Blob *param_global =
+            global_model->layers[idx_layer]->learnables[idx_param];
+        PDBG("updating %s...", param_local->name.c_str());
+        AWNN_CHECK_EQ(param_local->learnable, 1);
+        // sgd
+        // sgd_update(p_param, learning_rate);
+        pthread_mutex_lock(worker_info->ptr_mutex);
+        tensor_elemwise_op_inplace((param_global)->diff, (param_local)->diff,
+                                   TENSOR_OP_ADD);
+        pthread_mutex_unlock(worker_info->ptr_mutex);
+      }
     }
   }
 
   // main thread get avg
   pthread_barrier_wait(worker_info->ptr_barrier);
-  if(worker_info->id == 0 && worker_info->nr_threads > 1){
+  if (worker_info->id == 0 && worker_info->nr_threads > 1) {
+    for (size_t idx_layer = 0; idx_layer < local_model->layers.size();
+         idx_layer++) {
+      size_t nr_learnables_this_layer =
+          local_model->layers[idx_layer]->learnables.size();
+      for (size_t idx_param = 0; idx_param < nr_learnables_this_layer;
+           idx_param++) {
+        Blob *param_local =
+            local_model->layers[idx_layer]->learnables[idx_param];
+        PDBG("averaging %s...", (param_local)->name.c_str());
 
-    for(size_t idx_layer = 0;  idx_layer < local_model->layers.size(); idx_layer ++){
-        size_t nr_learnables_this_layer = local_model->layers[idx_layer]->learnables.size();
-        for(size_t idx_param = 0; idx_param < nr_learnables_this_layer; idx_param ++){ 
-            Blob * param_local = local_model->layers[idx_layer]->learnables[idx_param];
-            PDBG("averaging %s...", (param_local)->name.c_str());
-
-            T *pelem;
-            uint ii;
-            tensor_t dparam = (param_local)->diff;
-            tensor_for_each_entry(pelem, ii, dparam) { (*pelem) /= (worker_info->nr_threads); }
+        T *pelem;
+        uint ii;
+        tensor_t dparam = (param_local)->diff;
+        tensor_for_each_entry(pelem, ii, dparam) {
+          (*pelem) /= (worker_info->nr_threads);
         }
       }
+    }
   }
 
   // each other thread get a copy
   pthread_barrier_wait(worker_info->ptr_barrier);
-  if(worker_info->id != 0){
-    for(size_t idx_layer = 0;  idx_layer < local_model->layers.size(); idx_layer ++){
-        size_t nr_learnables_this_layer = local_model->layers[idx_layer]->learnables.size();
-        for(size_t idx_param = 0; idx_param < nr_learnables_this_layer; idx_param ++){ 
-          Blob * param_local = local_model->layers[idx_layer]->learnables[idx_param];
-          Blob * param_global = global_model->layers[idx_layer]->learnables[idx_param];
+  if (worker_info->id != 0) {
+    for (size_t idx_layer = 0; idx_layer < local_model->layers.size();
+         idx_layer++) {
+      size_t nr_learnables_this_layer =
+          local_model->layers[idx_layer]->learnables.size();
+      for (size_t idx_param = 0; idx_param < nr_learnables_this_layer;
+           idx_param++) {
+        Blob *param_local =
+            local_model->layers[idx_layer]->learnables[idx_param];
+        Blob *param_global =
+            global_model->layers[idx_layer]->learnables[idx_param];
 
-          PDBG("Duplicating %s...", (param_local)->name.c_str());
-          AWNN_CHECK_EQ((param_local)->learnable, 1);
-          tensor_copy((param_local)->diff, (param_global)->diff);
-        }
+        PDBG("Duplicating %s...", (param_local)->name.c_str());
+        AWNN_CHECK_EQ((param_local)->learnable, 1);
+        tensor_copy((param_local)->diff, (param_global)->diff);
+      }
     }
   }
 
@@ -180,7 +193,7 @@ void *resnet_thread_entry(void *threadinfo) {
       allreduce_in_ms += get_elapsed_ms(t_start, get_clocktime());
     };
 
-    /** Update gradient*/
+      /** Update gradient*/
 #ifdef ENABLE_SOLVER
     if (my_info->id == 0) {
       t_start = get_clocktime();
@@ -195,8 +208,14 @@ void *resnet_thread_entry(void *threadinfo) {
 #endif
   }
   if (my_info->id == 0) {
-    double time_per_iter = forward_backward_in_ms/nr_iterations + allreduce_in_ms/nr_iterations + gradientupdate_in_ms/nr_iterations;
-    PWRN("[thread 0]: time-per-iteration (%.3f ms), forward-backward (%.3f ms), allreduce (%.3f ms), gradientupdate (%.3f ms)", time_per_iter, forward_backward_in_ms/nr_iterations, allreduce_in_ms/nr_iterations, gradientupdate_in_ms/nr_iterations);
+    double time_per_iter = forward_backward_in_ms / nr_iterations +
+                           allreduce_in_ms / nr_iterations +
+                           gradientupdate_in_ms / nr_iterations;
+    PWRN(
+        "[thread 0]: time-per-iteration (%.3f ms), forward-backward (%.3f ms), "
+        "allreduce (%.3f ms), gradientupdate (%.3f ms)",
+        time_per_iter, forward_backward_in_ms / nr_iterations,
+        allreduce_in_ms / nr_iterations, gradientupdate_in_ms / nr_iterations);
   }
 
   resnet_teardown(&(my_info->model));

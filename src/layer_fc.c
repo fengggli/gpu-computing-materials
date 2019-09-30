@@ -4,7 +4,8 @@
 /* y = x*W+b */
 /* https://github.com/fengggli/cs231n-assignments/blob/d4cbe582a794a5b33d81a1ecdb64f1fd3844eaaa/assignment2/FullyConnectedNets.ipynb
  */
-void do_layer_fc_forward(tensor_t const x, tensor_t const w, tensor_t const b, tensor_t y){
+void do_layer_fc_forward(tensor_t const x, tensor_t const w, tensor_t const b,
+                         tensor_t y) {
   // flatten x to from N-d to 2-d
   uint N = x.dim.dims[0];
   uint const flat_shape[] = {N, tensor_get_capacity(x) / N};
@@ -29,7 +30,7 @@ status_t layer_fc_forward(tensor_t const x, tensor_t const w, tensor_t const b,
 }
 
 void do_layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db,
-                           tensor_t const dy, tensor_t x, tensor_t w) {
+                          tensor_t const dy, tensor_t x, tensor_t w) {
   // y = x*w+b  dy/dx = w
   // dy ~ dL/dy
   // * dL/dx
@@ -60,10 +61,11 @@ void do_layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db,
   tensor_destroy(&sum);
 }
 
-status_t layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db, lcache_t *cache, tensor_t const dy){
+status_t layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db,
+                           lcache_t *cache, tensor_t const dy) {
   tensor_t x, w;
-  w =  lcache_pop(cache);
-  x =  lcache_pop(cache);
+  w = lcache_pop(cache);
+  x = lcache_pop(cache);
   do_layer_fc_backward(dx, dw, db, dy, x, w);
   return S_OK;
 }

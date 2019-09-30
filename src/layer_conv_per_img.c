@@ -5,8 +5,8 @@
 #include <omp.h>
 #endif
 
-void do_conv_forward_perimg(tensor_t const x, tensor_t const w,
-                             tensor_t y, int pad, int stride) {
+void do_conv_forward_perimg(tensor_t const x, tensor_t const w, tensor_t y,
+                            int pad, int stride) {
   uint N, C, H, W; /** input dims */
   uint F, HH, WW;  /** filter spatial*/
   uint Hout, Wout; /** output spatial dimension*/
@@ -61,11 +61,8 @@ status_t conv_forward_perimg(tensor_t const x, tensor_t const w,
   return S_OK;
 }
 
-
-
-status_t do_conv_backward_perimg(tensor_t dx, tensor_t dw,
-                               tensor_t const dy, tensor_t x, tensor_t w, int pad, int stride) {
-
+status_t do_conv_backward_perimg(tensor_t dx, tensor_t dw, tensor_t const dy,
+                                 tensor_t x, tensor_t w, int pad, int stride) {
   uint N, C, H, W; /** input dims */
   uint F, HH, WW;  /** filter spatial*/
   uint Hout, Wout; /** output spatial dimension*/

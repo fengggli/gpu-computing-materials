@@ -1,7 +1,7 @@
 #include "awnn/channel.h"
 #include "awnn/layer_pool.h"
 
-void do_global_pool_forward(tensor_t x, tensor_t y){
+void do_global_pool_forward(tensor_t x, tensor_t y) {
   uint num_images = x.dim.dims[0];
   uint num_channels = x.dim.dims[1];
 
@@ -14,7 +14,7 @@ void do_global_pool_forward(tensor_t x, tensor_t y){
     }
 }
 
-void do_global_pool_backward(tensor_t dx, tensor_t dy){
+void do_global_pool_backward(tensor_t dx, tensor_t dy) {
   uint N = dx.dim.dims[0];
   uint C = dx.dim.dims[1];
   uint H = dx.dim.dims[2];

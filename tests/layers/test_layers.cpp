@@ -1,6 +1,6 @@
-#include "layers/layer_common.hpp"
 #include "awnn/tensor.h"
 #include "gtest/gtest.h"
+#include "layers/layer_common.hpp"
 #include "test_util.h"
 #include "utils/weight_init.h"
 
@@ -12,7 +12,8 @@ TEST_F(LayerTest, FCNet) {
   net_t net;
   double reg = 0;
   /*Data layer*/
-  layer_data_config_t dataconfig;;
+  layer_data_config_t dataconfig;
+  ;
   dataconfig.name = "data";
 
   dataconfig.dim.dims[0] = 3;
@@ -20,9 +21,9 @@ TEST_F(LayerTest, FCNet) {
   dataconfig.dim.dims[2] = 0;
   dataconfig.dim.dims[3] = 0;
 
-  layer_t * data_layer = layer_setup(LAYER_TYPE_DATA, &dataconfig, nullptr);
+  layer_t *data_layer = layer_setup(LAYER_TYPE_DATA, &dataconfig, nullptr);
   net_add_layer(&net, data_layer);
-  
+
   /*FC layer*/
   layer_fc_config_t fc1_config;
   fc1_config.name = "fc1";
@@ -30,7 +31,7 @@ TEST_F(LayerTest, FCNet) {
   fc1_config.reg = reg;
   fc1_config.activation = ACTIVATION_RELU;
 
-  layer_t * fc1_layer = layer_setup(LAYER_TYPE_FC, &fc1_config, data_layer);
+  layer_t *fc1_layer = layer_setup(LAYER_TYPE_FC, &fc1_config, data_layer);
   net_add_layer(&net, fc1_layer);
 
   /*FC layer*/
@@ -39,17 +40,17 @@ TEST_F(LayerTest, FCNet) {
   fc2_config.nr_classes = 7;
   fc2_config.reg = reg;
 
-  layer_t * fc2_layer = layer_setup(LAYER_TYPE_FC, &fc2_config, fc1_layer);
+  layer_t *fc2_layer = layer_setup(LAYER_TYPE_FC, &fc2_config, fc1_layer);
   net_add_layer(&net, fc2_layer);
 
   /* Forge some fake input*/
   tensor_t x = tensor_make_linspace(-5.5, 4.5, dataconfig.dim.dims, 2);
   label_t labels[] = {0, 5, 1};
   // fill some init values as in cs231n
-  weight_init_linspace(fc1_layer->learnables[0]->data, -0.7, 0.3); //w0
-  weight_init_linspace(fc1_layer->learnables[1]->data, -0.1, 0.9); //b0
-  weight_init_linspace(fc2_layer->learnables[0]->data, -0.3, 0.4); //w1
-  weight_init_linspace(fc2_layer->learnables[1]->data, -0.9, 0.1); //b1
+  weight_init_linspace(fc1_layer->learnables[0]->data, -0.7, 0.3);  // w0
+  weight_init_linspace(fc1_layer->learnables[1]->data, -0.1, 0.9);  // b0
+  weight_init_linspace(fc2_layer->learnables[0]->data, -0.3, 0.4);  // w1
+  weight_init_linspace(fc2_layer->learnables[1]->data, -0.9, 0.1);  // b1
 
   T loss = 0;
 
@@ -69,8 +70,8 @@ TEST_F(LayerTest, FCNet) {
   dy.data[0] = 1.0;  // the y is the loss, no upper layer
 
   // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
-  for(auto this_layer : net.layers){
-    for(auto learnable : this_layer->learnables){
+  for (auto this_layer : net.layers) {
+    for (auto learnable : this_layer->learnables) {
       tensor_t param = learnable->data;
       tensor_t dparam = learnable->diff;
       tensor_t dparam_ref = tensor_make_alike(param);
@@ -89,7 +90,6 @@ TEST_F(LayerTest, FCNet) {
   tensor_destroy(&dy);
 #endif
 
-
   net_teardown(&net);
   tensor_destroy(&x);
 }
@@ -106,7 +106,7 @@ TEST_F(LayerTest, ConvNet) {
   dataconfig.dim.dims[2] = 32;
   dataconfig.dim.dims[3] = 32;
 
-  layer_t * data_layer = layer_setup(LAYER_TYPE_DATA, &dataconfig, nullptr);
+  layer_t *data_layer = layer_setup(LAYER_TYPE_DATA, &dataconfig, nullptr);
   net_add_layer(&net, data_layer);
 
   /*Conv layer*/
@@ -116,13 +116,12 @@ TEST_F(LayerTest, ConvNet) {
   conv_config.kernel_size = 3;
   conv_config.reg = 0.001;
 
-  layer_t * conv_layer = layer_setup(LAYER_TYPE_CONV2D, &conv_config, data_layer);
+  layer_t *conv_layer =
+      layer_setup(LAYER_TYPE_CONV2D, &conv_config, data_layer);
   net_add_layer(&net, conv_layer);
-
 
   net_teardown(&net);
 }
-
 
 TEST_F(LayerTest, ResBlock) {
   net_t net;
@@ -135,24 +134,26 @@ TEST_F(LayerTest, ResBlock) {
   tensor_t x = tensor_make_linspace(-0.2, 0.3, input_shape, 4);
   label_t labels[] = {0, 5, 1};
   // fill some init values as in cs231n
-  layer_t * conv_layer = net.layers[1];
-  layer_t * resblock_layer = net.layers[2];
-  layer_t * fc_layer = net.layers[4];
-  weight_init_linspace(conv_layer->learnables[0]->data, -0.7, 0.3); //w0
-  weight_init_linspace(resblock_layer->learnables[0]->data, -0.7, 0.3); //conv1.weight
-  weight_init_linspace(resblock_layer->learnables[1]->data, -0.7, 0.3); //conv2.weight
-  weight_init_linspace(fc_layer->learnables[0]->data, -0.7, 0.3); //w1
-  weight_init_linspace(fc_layer->learnables[1]->data, -0.7, 0.3); //w1
+  layer_t *conv_layer = net.layers[1];
+  layer_t *resblock_layer = net.layers[2];
+  layer_t *fc_layer = net.layers[4];
+  weight_init_linspace(conv_layer->learnables[0]->data, -0.7, 0.3);  // w0
+  weight_init_linspace(resblock_layer->learnables[0]->data, -0.7,
+                       0.3);  // conv1.weight
+  weight_init_linspace(resblock_layer->learnables[1]->data, -0.7,
+                       0.3);  // conv2.weight
+  weight_init_linspace(fc_layer->learnables[0]->data, -0.7, 0.3);  // w1
+  weight_init_linspace(fc_layer->learnables[1]->data, -0.7, 0.3);  // w1
 
   T loss = 0;
 
   net_loss(&net, x, labels, &loss, 1);
-  if(reg < 1e-7) 
+  if (reg < 1e-7)
     EXPECT_NEAR(loss, 14.975702563, 1e-3);
-  else // reg == 1
+  else  // reg == 1
     EXPECT_NEAR(loss, 335.9764923, 1e-3);
 
-  // Check with numerical gradient
+    // Check with numerical gradient
 #ifndef AWNN_USE_FLT32
   // Check with numerical gradient
   uint y_shape[] = {1};
@@ -160,8 +161,8 @@ TEST_F(LayerTest, ResBlock) {
   dy.data[0] = 1.0;  // the y is the loss, no upper layer
 
   // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
-  for(auto this_layer : net.layers){
-    for(auto learnable : this_layer->learnables){
+  for (auto this_layer : net.layers) {
+    for (auto learnable : this_layer->learnables) {
       tensor_t param = learnable->data;
       tensor_t dparam = learnable->diff;
       tensor_t dparam_ref = tensor_make_alike(param);
