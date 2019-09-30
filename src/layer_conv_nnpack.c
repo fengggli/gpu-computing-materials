@@ -17,9 +17,9 @@ status_t convolution_forward_nnpack(conv_method_t algo, tensor_t const x,
 #else
 
   enum nnp_status status;
-  uint batch_size = x.dim.dims[0];
-  uint input_channel = x.dim.dims[1];
-  uint output_channel = w.dim.dims[0];
+  int batch_size = x.dim.dims[0];
+  int input_channel = x.dim.dims[1];
+  int output_channel = w.dim.dims[0];
   struct nnp_size input_size, kernel_size;
   input_size.height = x.dim.dims[2];
   input_size.width = x.dim.dims[3];
@@ -39,7 +39,7 @@ status_t convolution_forward_nnpack(conv_method_t algo, tensor_t const x,
 
   const float *input = x.data;
   const float *kernel = w.data;
-  uint bias_shape[] = {output_channel};
+  int bias_shape[] = {output_channel};
   tensor_t t_bias = tensor_make_zeros(bias_shape, 1);
   const float *bias = t_bias.data;
   float *output = y.data;
@@ -118,9 +118,9 @@ status_t convolution_backward_nnpack(conv_method_t algo, tensor_t dx,
   x = lcache_pop(cache);
 
   enum nnp_status status;
-  uint batch_size = x.dim.dims[0];
-  uint input_channel = x.dim.dims[1];
-  uint output_channel = w.dim.dims[0];
+  int batch_size = x.dim.dims[0];
+  int input_channel = x.dim.dims[1];
+  int output_channel = w.dim.dims[0];
   struct nnp_size input_size, kernel_size;
   input_size.height = x.dim.dims[2];
   input_size.width = x.dim.dims[3];

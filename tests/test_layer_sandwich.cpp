@@ -24,9 +24,9 @@ TEST_F(LayerSandwich, fc_relu) {}
 TEST_F(LayerSandwich, conv_relu) {
   lcache_t cache;
 
-  uint shape_x[] = {2, 3, 8, 8};
-  uint shape_w[] = {4, 3, 3, 3};
-  uint shape_y[] = {2, 4, 8, 8};
+  int shape_x[] = {2, 3, 8, 8};
+  int shape_w[] = {4, 3, 3, 3};
+  int shape_y[] = {2, 4, 8, 8};
 
   conv_param_t params;
   params.stride = 1;
@@ -76,7 +76,7 @@ TEST_F(LayerSandwich, conv_relu) {
 TEST_F(LayerSandwich, ResidualBlock_noBN) {
   lcache_t cache;
 
-  uint N, C, H, W, F, HH, WW;
+  int N, C, H, W, F, HH, WW;
 #ifdef TEST_MORE
   N = 2, C = 3, H = 5, W = 5;
   F = 3, HH = 3, WW = 3;
@@ -85,9 +85,9 @@ TEST_F(LayerSandwich, ResidualBlock_noBN) {
   F = 1, HH = 3, WW = 3;
 #endif
 
-  uint shape_x[] = {N, C, H, W};
-  uint shape_w[] = {F, C, HH, WW};
-  uint shape_y[] = {N, F, H, W};  // stride=1 padding=1 won't change feature H/W
+  int shape_x[] = {N, C, H, W};
+  int shape_w[] = {F, C, HH, WW};
+  int shape_y[] = {N, F, H, W};  // stride=1 padding=1 won't change feature H/W
 
   conv_param_t params;
   params.stride = 1;

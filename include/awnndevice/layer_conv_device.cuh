@@ -44,10 +44,10 @@ status_t convolution_forward_device_host_harness(cublasHandle_t handle,
 tensor_t im2col_device(tensor_t const d_x, tensor_t const d_w, conv_param_t const params);
 
 status_t im2col_inner_device(tensor_t cols, tensor_t x_padded,
-                             uint N,  uint C,  uint H,  uint W,  uint HH, uint WW,
-                             uint filter_height, uint filter_width, uint padding, uint stride);
+                             int N,  int C,  int H,  int W,  int HH, int WW,
+                             int filter_height, int filter_width, int padding, int stride);
 
-tensor_t tensor_make_padded_square_input_device(tensor_t h_t, uint p, T val);
+tensor_t tensor_make_padded_square_input_device(tensor_t h_t, int p, T val);
 
 tensor_t tensor_make_transpose_3012_device(tensor_t t);
 
@@ -58,15 +58,15 @@ status_t convolution_backward_device_host_harness(cublasHandle_t handle,
 
 
 tensor_t col2im_device(tensor_t cols,
-                       uint N, uint C, uint H, uint W,
-                       uint field_height, uint field_width, uint pad_sz, uint stride);
+                       int N, int C, int H, int W,
+                       int field_height, int field_width, int pad_sz, int stride);
 
 
 void col2im_inner_device(tensor_t cols, tensor_t x_padded,
-                         uint N, uint C, uint H, uint W, uint HH, uint WW,
-                         uint field_height, uint field_width, uint padding, uint stride);
+                         int N, int C, int H, int W, int HH, int WW,
+                         int field_height, int field_width, int padding, int stride);
 
-tensor_t tensor_make_remove_padding_square_device(tensor_t t, uint p);
+tensor_t tensor_make_remove_padding_square_device(tensor_t t, int p);
 
 tensor_t tensor_make_transpose_1230_device(tensor_t t);
 

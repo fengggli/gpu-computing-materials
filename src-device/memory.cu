@@ -23,7 +23,7 @@ int GET_TOTAL_TENSOR_DEALLOC_DEVICE() {
   return TOTAL_TENSOR_DEALLOC_DEVICE;
 }
 
-void print_memory_alloc_dealloc_totals() {
+void print_memory_alloc_dealloc_totals_device() {
   printf("total device allocations = %d, total device de-allocations = %d\n",
          TOTAL_TENSOR_ALLOC_DEVICE, TOTAL_TENSOR_DEALLOC_DEVICE);
 }
@@ -36,7 +36,7 @@ int reset_TOTAL_TENSOR_DEALLOC_DEVICE() {
   TOTAL_TENSOR_DEALLOC_DEVICE = 0;
   return TOTAL_TENSOR_DEALLOC_DEVICE;
 }
-void reset_all_tensor_device_alloc_dealloc_stats() {
+void reset_all_tensor_device_alloc_dealloc_stats_device() {
   TOTAL_TENSOR_ALLOC_DEVICE = 0;
   TOTAL_TENSOR_DEALLOC_DEVICE = 0;
 }
@@ -63,11 +63,16 @@ int mem_alloc_device(tensor_t *d_t) {
 int mem_free_device(tensor_t *d_t) {
   if (d_t->data) {
     cudaError_t stat = cudaFree(d_t->data);
-    AWNN_CHECK_EQ(stat, cudaSuccess);
+//    AWNN_CHECK_EQ(stat, cudaSuccess);
     d_t->data = NULL;
 #ifdef GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC
     INC_TOTAL_TENSOR_DEALLOC_DEVICE();
-    printf("deallocated device tensor %d\n", d_t->allocation_tag);
+    if (stat != cudaSuccess) {
+      printf("deallocated device tensor FAILURE %d\n", d_t->allocation_tag);
+    } else {
+      printf("deallocated device tensor %d\n", d_t->allocation_tag);
+
+    }
 #endif
     return S_OK;
   }

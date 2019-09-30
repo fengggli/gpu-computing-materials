@@ -22,11 +22,11 @@ class NetMLPTest : public ::testing::Test {};
 
 TEST_F(NetMLPTest, CifarTest) {
   static model_t model;
-  uint batch_sz = 100;
-  uint input_dim = 3 * 32 * 32;
-  uint output_dim = 10;
-  uint nr_hidden_layers = 4;
-  uint hidden_dims[] = {100, 100, 100, 100};
+  int batch_sz = 100;
+  int input_dim = 3 * 32 * 32;
+  int output_dim = 10;
+  int nr_hidden_layers = 4;
+  int hidden_dims[] = {100, 100, 100, 100};
   T reg = 0;
 
   mlp_init(&model, batch_sz, input_dim, output_dim, nr_hidden_layers,
@@ -43,34 +43,34 @@ TEST_F(NetMLPTest, CifarTest) {
 
   // overfit small data;
 #ifdef IS_CI_BUILD // make check faster
-  uint train_sz = 1000;
-  uint nr_epoches = 1;
+  int train_sz = 1000;
+  int nr_epoches = 1;
 #else
-  uint train_sz = 4000;
-  uint nr_epoches = 5;
+  int train_sz = 4000;
+  int nr_epoches = 5;
 #endif
 
-  uint val_sz = 1000;
+  int val_sz = 1000;
   T learning_rate = 0.1;
 
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
 
-  uint iterations_per_epoch = train_sz / batch_sz;
+  int iterations_per_epoch = train_sz / batch_sz;
   if (iterations_per_epoch == 0) iterations_per_epoch = 1;
-  uint nr_iterations = nr_epoches * iterations_per_epoch;
+  int nr_iterations = nr_epoches * iterations_per_epoch;
 
   tensor_t x;
   label_t *labels;
   T loss = 0;
 
-  for (uint iteration = 0; iteration < nr_iterations; iteration++) {
-    uint cur_epoch = iteration / iterations_per_epoch;
-    uint cur_batch = iteration % iterations_per_epoch;
+  for (int iteration = 0; iteration < nr_iterations; iteration++) {
+    int cur_epoch = iteration / iterations_per_epoch;
+    int cur_batch = iteration % iterations_per_epoch;
 
     PINF("[Epoch %d, Iteration %u/%u]", cur_epoch, cur_batch,
          iterations_per_epoch);
-    uint cnt_read = get_train_batch(&loader, &x, &labels, cur_batch, batch_sz);
+    int cnt_read = get_train_batch(&loader, &x, &labels, cur_batch, batch_sz);
 
     EXPECT_EQ(batch_sz, cnt_read);
     param_t *p_param;

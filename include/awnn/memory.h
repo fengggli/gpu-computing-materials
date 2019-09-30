@@ -23,10 +23,10 @@ int INC_TOTAL_TENSOR_DEALLOC_HOST();
 int GET_TOTAL_TENSOR_ALLOC_HOST();
 int GET_TOTAL_TENSOR_DEALLOC_HOST();
 
-void print_memory_alloc_dealloc_totals();
+void print_memory_alloc_dealloc_totals_host();
 int reset_TOTAL_TENSOR_ALLOC_HOST();
 int reset_TOTAL_TENSOR_DEALLOC_HOST();
-void reset_all_tensor_device_alloc_dealloc_stats();
+void reset_all_tensor_device_alloc_dealloc_stats_host();
 #endif
 
 

@@ -35,12 +35,12 @@ std::vector<conv_method_t> all_methods = {
     CONV_METHOD_NNPACK_REF, CONV_METHOD_NAIVE};
 
 TEST_F(NetResnetTest, Construct) {
-  uint batch_sz = 3;
-  uint input_shape[] = {batch_sz, 3, 32, 32};
+  int batch_sz = 3;
+  int input_shape[] = {batch_sz, 3, 32, 32};
   dim_t input_dim = make_dim_from_arr(array_size(input_shape), input_shape);
-  uint output_dim = 10;
-  uint nr_stages = 1;
-  uint nr_blocks[MAX_STAGES] = {1};
+  int output_dim = 10;
+  int nr_stages = 1;
+  int nr_blocks[MAX_STAGES] = {1};
   T reg = 0;
   normalize_method_t normalize_method = NORMALIZE_NONE;  // no batchnorm now
 
@@ -133,7 +133,7 @@ TEST_F(NetResnetTest, DISABLED_BackNumerical) {
 
   // Check with numerical gradient
   model_t *ptr_model = &model;
-  uint y_shape[] = {1};
+  int y_shape[] = {1};
   tensor_t dy = tensor_make_ones(y_shape, dim_of_shape(y_shape));
   dy.data[0] = 1.0;  // the y is the loss, no upper layer
 
@@ -164,7 +164,7 @@ TEST_F(NetResnetTest, Measure_auto) {
     PINF("Method:  %d", *conv_method);
     set_conv_method(*conv_method);
 
-    for (uint i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++) {
       T loss = 0;
 
       tensor_t x = tensor_make_linspace(-5.5, 4.5, model.input_dim.dims, 4);
@@ -172,8 +172,8 @@ TEST_F(NetResnetTest, Measure_auto) {
 
       time_point_t t_begin, t_end;
       get_cur_time(t_begin);
-      uint nr_iterations = 100;
-      for (uint i = 0; i < nr_iterations; i++) {
+      int nr_iterations = 100;
+      for (int i = 0; i < nr_iterations; i++) {
         resnet_loss(&model, x, labels, &loss);
         // PINF("Loss without regulizer: %.3f", loss);
       }

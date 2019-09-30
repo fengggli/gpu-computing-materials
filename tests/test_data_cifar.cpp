@@ -23,12 +23,12 @@ TEST_F(DataCifarTest, TestOpen) {
 TEST_F(DataCifarTest, TestBatch) {
   tensor_t x;
   label_t *labels;
-  uint batch_sz = 50;  // this can be 50 000/50 = 1000 batches
-  uint batch_id = 0;
+  int batch_sz = 50;  // this can be 50 000/50 = 1000 batches
+  int batch_id = 0;
 
-  uint nr_train_img = 50000;
+  int nr_train_img = 50000;
 
-  for (uint i = 0; i < nr_train_img / batch_sz; i++) {
+  for (int i = 0; i < nr_train_img / batch_sz; i++) {
     EXPECT_EQ(batch_sz,
               get_train_batch(&loader, &x, &labels, batch_id, batch_sz));
   }
@@ -37,8 +37,8 @@ TEST_F(DataCifarTest, TestBatch) {
 TEST_F(DataCifarTest, TestStat) {
   tensor_t x;
   label_t *labels;
-  uint batch_sz = 49000;  // this can be 50 000/50 = 1000 batches
-  uint batch_id = 0;
+  int batch_sz = 49000;  // this can be 50 000/50 = 1000 batches
+  int batch_id = 0;
 
   EXPECT_EQ(batch_sz,
             get_train_batch(&loader, &x, &labels, batch_id, batch_sz));

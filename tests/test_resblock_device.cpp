@@ -13,8 +13,7 @@
  */
 
 #include "awnn/layer_sandwich.h"
-#include "awnn/tensor.h"
-#include "config.h"
+#include "awnndevice/tensor.cuh"
 #include "gtest/gtest.h"
 #include "test_util.h"
 

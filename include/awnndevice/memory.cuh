@@ -21,8 +21,8 @@ int GET_TOTAL_TENSOR_ALLOC_DEVICE();
 int GET_TOTAL_TENSOR_DEALLOC_DEVICE();
 
 
-void print_memory_alloc_dealloc_totals();
+void print_memory_alloc_dealloc_totals_device();
 int reset_TOTAL_TENSOR_ALLOC_DEVICE();
 int reset_TOTAL_TENSOR_DEALLOC_DEVICE();
-void reset_all_tensor_device_alloc_dealloc_stats();
+void reset_all_tensor_device_alloc_dealloc_stats_device();
 #endif

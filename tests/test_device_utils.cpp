@@ -2,9 +2,7 @@
 // Created by Christopher Goebel on 2019-05-02.
 //
 
-#include "awnn/layer_conv.h"
-#include "awnn/layer_pool.h"
-#include "awnn/tensor.h"
+#include "awnndevice/tensor.cuh"
 #include "awnndevice/device_utils_harness.cuh"
 #include "test_util.h"
 
@@ -15,7 +13,6 @@
 #endif
 
 #include <gtest/gtest.h>
-#include <numeric>
 #include <cstdio>
 
 namespace {

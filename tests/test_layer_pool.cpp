@@ -5,8 +5,10 @@
  * e-mail: fengggli@yahoo.com
  */
 
+#include <awnn/layer.h>
 #include "awnn/channel.h"
 #include "awnn/layer_pool.h"
+#include "awnndevice/layer_pool.cuh"
 #include "awnn/tensor.h"
 #include "config.h"
 #include "gtest/gtest.h"

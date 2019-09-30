@@ -15,12 +15,12 @@
 #undef PRINT_STAT
 void test_loss() {
   model_t model;
-  uint batch_sz = 3;
-  uint input_shape[] = {batch_sz, 3, 32, 32};
+  int batch_sz = 3;
+  int input_shape[] = {batch_sz, 3, 32, 32};
   dim_t input_dim = make_dim_from_arr(array_size(input_shape), input_shape);
-  uint output_dim = 10;
-  uint nr_stages = 1;
-  uint nr_blocks[MAX_STAGES] = {1};
+  int output_dim = 10;
+  int nr_stages = 1;
+  int nr_blocks[MAX_STAGES] = {1};
   T reg = 0;
   normalize_method_t normalize_method = NORMALIZE_NONE;  // no batchnorm now
 
@@ -31,8 +31,8 @@ void test_loss() {
   tensor_t x = tensor_make_linspace(-5.5, 4.5, model.input_dim.dims, 4);
   label_t labels[] = {0, 5, 1};
 
-  uint nr_iterations = 2;
-  for (uint i = 0; i < nr_iterations; i++) {
+  int nr_iterations = 2;
+  for (int i = 0; i < nr_iterations; i++) {
     resnet_loss(&model, x, labels, &loss);
     PINF("Loss without regulizer: %.3f", loss);
   }
@@ -42,14 +42,14 @@ void test_loss() {
 }
 void test_cifar() {
   static model_t model;
-  uint train_sz = 64;
-  uint batch_sz = 16;
+  int train_sz = 64;
+  int batch_sz = 16;
 
-  uint input_shape[] = {batch_sz, 3, 32, 32};
+  int input_shape[] = {batch_sz, 3, 32, 32};
   dim_t input_dim = make_dim_from_arr(array_size(input_shape), input_shape);
-  uint output_dim = 10;
-  uint nr_stages = 1;
-  uint nr_blocks[MAX_STAGES] = {2};
+  int output_dim = 10;
+  int nr_stages = 1;
+  int nr_blocks[MAX_STAGES] = {2};
   T reg = 0;
   normalize_method_t normalize_method = NORMALIZE_NONE;  // no batchnorm now
 
@@ -66,28 +66,28 @@ void test_cifar() {
   AWNN_CHECK_EQ(S_OK, ret);
 
   // overfit small data;
-  uint nr_epoches = 1;
+  int nr_epoches = 1;
 
-  uint val_sz = 2;
+  int val_sz = 2;
   T learning_rate = 0.01;
 
   AWNN_CHECK_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
-  uint iterations_per_epoch = train_sz / batch_sz;
+  int iterations_per_epoch = train_sz / batch_sz;
   if (iterations_per_epoch == 0) iterations_per_epoch = 1;
-  uint nr_iterations = nr_epoches * iterations_per_epoch;
+  int nr_iterations = nr_epoches * iterations_per_epoch;
 
   tensor_t x;
   label_t *labels;
   T loss = 0;
 
-  for (uint iteration = 0; iteration < nr_iterations; iteration++) {
-    uint cur_epoch = iteration / iterations_per_epoch;
-    uint cur_batch = iteration % iterations_per_epoch;
+  for (int iteration = 0; iteration < nr_iterations; iteration++) {
+    int cur_epoch = iteration / iterations_per_epoch;
+    int cur_batch = iteration % iterations_per_epoch;
 
     PINF("[Epoch %d, Iteration %u/%u]", cur_epoch, cur_batch,
          iterations_per_epoch);
-    uint cnt_read = get_train_batch(&loader, &x, &labels, cur_batch, batch_sz);
+    int cnt_read = get_train_batch(&loader, &x, &labels, cur_batch, batch_sz);
 
     AWNN_CHECK_EQ(batch_sz, cnt_read);
     param_t *p_param;

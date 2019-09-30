@@ -6,7 +6,7 @@
  */
 
 #include "awnn/layer_relu.h"
-#include "awnn/tensor.h"
+#include "awnndevice/tensor.cuh"
 #include "gtest/gtest.h"
 #include "test_util.h"
 

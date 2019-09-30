@@ -6,7 +6,7 @@
  */
 #include <vector>
 #include "awnn/layer_conv.h"
-#include "awnn/tensor.h"
+#include "awnndevice/tensor.cuh"
 #include "gtest/gtest.h"
 #include "test_util.h"
 
