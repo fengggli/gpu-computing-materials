@@ -63,12 +63,12 @@ tensor_t resnet_forward(model_t const *model, tensor_t x);
 status_t resnet_loss(model_t const *model, tensor_t x, label_t const labels[],
                      T *ptr_loss);
 
-
+#if 0
 /**
  * Multi-thread support.
  * Each read will do model_init
  **/
-struct resnet_thread_info{
+struct resnet_thread_info_v1{
   int id;
   int nr_threads;
   model_t model;
@@ -80,10 +80,9 @@ struct resnet_thread_info{
   pthread_mutex_t * ptr_mutex;
   pthread_barrier_t * ptr_barrier;
 };
-typedef struct resnet_thread_info resnet_thread_info_t;
 
-void *resnet_thread_entry(void *threadinfo);
-
+void *resnet_thread_entry_v1(void *threadinfo);
+#endif
 
 #ifdef __cplusplus
 }

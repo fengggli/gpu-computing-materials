@@ -89,9 +89,7 @@ status_t conv_iden_relu_backward(tensor_t dx, tensor_t diden, tensor_t dw,
  * @param w1
  * @param w2
  * @param cache
- * @param conv_param1 the dimension will be checked to handle the sub-sampling
- * in the first block of the stage 2,3,4
- * @param conv_param2
+ * @param conv_param1
  * @param y
  * @return
  */
@@ -108,7 +106,6 @@ status_t residual_basic_no_bn_forward(tensor_t x, tensor_t w1, tensor_t w2,
 
   // TODO: destroyed here
   tensor_destroy(&tmp);
-
   return S_OK;
 }
 

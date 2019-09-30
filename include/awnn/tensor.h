@@ -144,6 +144,9 @@ status_t tensor_add_sameshape(tensor_t in1, tensor_t in2, tensor_t out);
 status_t tensor_add_vector_inplace(tensor_t t, tensor_t v);
 status_t tensor_matmul(tensor_t in1, tensor_t in2,
                        tensor_t out);              // mm for 2d matrix
+status_t tensor_matmul_full(tensor_t in1, int transposeA, tensor_t in2,
+                            int transposeB, tensor_t out);
+
 status_t tensor_copy(tensor_t to, tensor_t from);  // copy, only with same dim
 
 void tensor_print_flat(tensor_t t);

@@ -4,69 +4,68 @@
 /* y = x*W+b */
 /* https://github.com/fengggli/cs231n-assignments/blob/d4cbe582a794a5b33d81a1ecdb64f1fd3844eaaa/assignment2/FullyConnectedNets.ipynb
  */
-status_t layer_fc_forward(tensor_t const x, tensor_t const w, tensor_t const b,
-                          lcache_t *cache, tensor_t y) {
+void do_layer_fc_forward(tensor_t const x, tensor_t const w, tensor_t const b,
+                         tensor_t y) {
   // flatten x to from N-d to 2-d
-  tensor_t x_reshaped = tensor_make_copy(x);
   uint N = x.dim.dims[0];
   uint const flat_shape[] = {N, tensor_get_capacity(x) / N};
-  tensor_reshape_(&x_reshaped, flat_shape, 2);
+
+  // shadow copy
+  tensor_t x_reshaped = tensor_make_placeholder(flat_shape, 2);
+  x_reshaped.data = x.data;
 
   // forwarding
   tensor_matmul(x_reshaped, w, y);  // y = x*w
   tensor_add_vector_inplace(y, b);
+}
 
-  // create cache for backprog
+status_t layer_fc_forward(tensor_t const x, tensor_t const w, tensor_t const b,
+                          lcache_t *cache, tensor_t y) {
+  do_layer_fc_forward(x, w, b, y);
   if (cache) {
-    tensor_t cached_x_T =
-        tensor_make_transpose(x_reshaped);  // saves transpose of flattened x
-    lcache_push(cache, cached_x_T);
-    tensor_t cached_w_T = tensor_make_transpose(w);  // saves transpose of W
-    lcache_push(cache, cached_w_T);
+    lcache_push(cache, x);
+    lcache_push(cache, w);
   }
-
-  // free temprary tensors
-  tensor_destroy(&x_reshaped);
   return S_OK;
 }
 
-status_t layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db,
-                           lcache_t *cache, tensor_t const dy) {
-  status_t ret = S_ERR;
-
+void do_layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db,
+                          tensor_t const dy, tensor_t x, tensor_t w) {
   // y = x*w+b  dy/dx = w
   // dy ~ dL/dy
   // * dL/dx
   // * dL/dw
 
-  // get the cache contents
-  tensor_t w_T = lcache_pop(cache);
-  tensor_t x_reshaped_T = lcache_pop(cache);
-
   // calculate gradient: dx = dy*w^T
   uint N = dx.dim.dims[0];
   uint const flat_shape[] = {N, tensor_get_capacity(dx) / N};
   dim_t old_dim = dx.dim;  // save to recover later
-  if (S_OK != tensor_reshape_(&dx, flat_shape, 2)) goto end;
-  tensor_matmul(dy, w_T, dx);
+  AWNN_CHECK_EQ(S_OK, tensor_reshape_(&dx, flat_shape, 2));
+  tensor_matmul_full(dy, CblasNoTrans, w, CblasTrans, dx);
   dx.dim = old_dim;  // reshape to N-d!
 
+  // shadow copy
+  tensor_t x_reshaped = tensor_make_placeholder(flat_shape, 2);
+  x_reshaped.data = x.data;
+
   // calculate gradient dw = x^T * dy
-  tensor_matmul(x_reshaped_T, dy, dw);
+  tensor_matmul_full(x_reshaped, CblasTrans, dy, CblasNoTrans, dw);
 
   // gradient db = sum(dy, axis =1)
   // this make [N, M] sum to [1,M];
   uint axis_id = 0;
   tensor_t sum = tensor_make_sum(dy, axis_id);
   uint const tmp_shape[] = {tensor_get_capacity(db)};
-  if (S_OK != tensor_reshape_(&sum, tmp_shape, 1)) goto end;  // reshape to 2d
+  AWNN_CHECK_EQ(S_OK, tensor_reshape_(&sum, tmp_shape, 1));  // reshape to 2d
   tensor_copy(db, sum);
   tensor_destroy(&sum);
-  ret = S_OK;
+}
 
-end:
-  // free layer cache
-  tensor_destroy(&w_T);
-  tensor_destroy(&x_reshaped_T);
-  return ret;
+status_t layer_fc_backward(tensor_t dx, tensor_t dw, tensor_t db,
+                           lcache_t *cache, tensor_t const dy) {
+  tensor_t x, w;
+  w = lcache_pop(cache);
+  x = lcache_pop(cache);
+  do_layer_fc_backward(dx, dw, db, dy, x, w);
+  return S_OK;
 }

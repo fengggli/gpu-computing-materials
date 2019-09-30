@@ -21,10 +21,10 @@ status_t weight_init_fc_kaiming(tensor_t weight, tensor_t bias) {
   double std = gain / sqrt(fan_in);
   double bound =
       sqrt(3.0) * std;  // Calculate uniform bounds from standard deviation
-  PINF("-----weight init with uniform (-%f,%f)", bound, bound);
+  PDBG("-----weight init with uniform (-%f,%f)", bound, bound);
 
   tensor_fill_random_uniform(weight, -1 * bound, bound, seed);
-  PINF("-----bias init with uniform (-%f,%f)", bound, bound);
+  PDBG("-----bias init with uniform (-%f,%f)", bound, bound);
 
   bound = 1 / sqrt(fan_in);
   tensor_fill_random_uniform(bias, -1 * bound, bound, seed);
@@ -58,7 +58,7 @@ status_t weight_init_kaiming(tensor_t weight) {
 
   T weight_scale = sqrt(2.0 / fan_out);
   std::normal_distribution<double> distribution(0, weight_scale);
-  PINF("-----weight init with norm (0, %.3f^2)", weight_scale);
+  PDBG("-----weight init with norm (0, %.3f^2)", weight_scale);
 
   uint capacity = tensor_get_capacity(weight);
 

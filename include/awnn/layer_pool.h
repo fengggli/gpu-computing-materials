@@ -46,6 +46,8 @@ status_t global_avg_pool_forward_device(tensor_t const x, lcache_t *cache, tenso
 status_t global_avg_pool_backward(tensor_t dx, lcache_t *cache, tensor_t const dy);
 status_t global_avg_pool_backward_device(tensor_t dx, lcache_t *cache, tensor_t const dy);
 
+void do_global_pool_forward(tensor_t x, tensor_t y);
+void do_global_pool_backward(tensor_t dx, tensor_t dy);
 
 #ifdef __cplusplus
 }

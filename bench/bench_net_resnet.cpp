@@ -8,6 +8,7 @@
 #include "awnn/layer_conv.h"
 #include "awnn/net_resnet.h"
 #include "awnn/solver.h"
+#include "layers/layer_common.hpp"
 #include "utils/data_cifar.h"
 #include "utils/debug.h"
 #include "utils/weight_init.h"
@@ -20,7 +21,6 @@
 /** work thead entry*/
 
 int main(int argc, char *argv[]) {
-  static model_t model;
   // overfit small data;
   uint train_sz = 4000;
   // uint train_sz = 4000;
@@ -42,7 +42,8 @@ int main(int argc, char *argv[]) {
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
   pthread_t *threads  = (pthread_t*)malloc(sizeof(pthread_t)*nr_worker_threads);
-  resnet_thread_info_t *threads_info = (resnet_thread_info_t*)malloc(sizeof(resnet_thread_info_t)*nr_worker_threads);
+  resnet_thread_info_t *threads_info =
+      new resnet_thread_info_t[nr_worker_threads];
   AWNN_CHECK_NE(threads_info, 0);
 
   status_t rc = -1;
@@ -66,8 +67,8 @@ int main(int argc, char *argv[]) {
     threads_info[t].batch_sz = batch_sz;
     threads_info[t].ptr_mutex = &mutex;
     threads_info[t].ptr_barrier = &barrier;
-    
-	  rc = pthread_create(&threads[t], &attr, resnet_thread_entry, (void *)(&threads_info[t]));
+
+          rc = pthread_create(&threads[t], &attr, resnet_thread_entry, (void *)(&threads_info[t]));
     AWNN_CHECK_EQ(0, rc);
   }
   
@@ -100,7 +101,7 @@ int main(int argc, char *argv[]) {
   pthread_barrier_destroy(&barrier);
 
   free(threads);
-  free(threads_info);
+  delete[] threads_info;
 
   pthread_mutex_destroy(&mutex);
   cifar_close(&loader);

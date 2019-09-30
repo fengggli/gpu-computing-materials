@@ -100,19 +100,24 @@ status_t awnn_gemm(const int TransA,
 #endif
 
 // TODO:  results not correct
-status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
+status_t tensor_matmul_full(tensor_t in1, int transposeA, tensor_t in2,
+                            int transposeB, tensor_t out) {
   status_t ret = S_ERR;
   if(dim_get_ndims(in1.dim) != 2 || dim_get_ndims(in2.dim)!=2){
     PERR("Dot only accepts 2d tensor as input");
     goto end;
   }
-  if (in1.dim.dims[1] != in2.dim.dims[0]){
-    PERR("Input dimensions not match:");
+  int indexA = transposeA == CblasTrans ? 0 : 1;  // the common index
+  int indexB = transposeB == CblasTrans ? 1 : 0;
+  if (in1.dim.dims[indexA] != in2.dim.dims[indexB]) {
+    PERR("Input dimensions not match:(transA=%d, transB=%d)",
+         transposeA == CblasTrans, transposeB == CblasTrans);
     dim_dump(in1.dim);
     dim_dump(in2.dim);
     goto end;
   }
-  if (out.dim.dims[0] != in1.dim.dims[0] || out.dim.dims[1] != in2.dim.dims[1]){
+  if (out.dim.dims[0] != in1.dim.dims[1 - indexA] ||
+      out.dim.dims[1] != in2.dim.dims[1 - indexB]) {
     PERR("Out dimensions not match in1, in2, out dims are:");
     dim_dump(in1.dim);
     dim_dump(in2.dim);
@@ -120,15 +125,16 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
     print_trace();
     goto end;
   }
-  int m = (int)in1.dim.dims[0];
-  int k = (int)in1.dim.dims[1];
-  int n = (int)in2.dim.dims[1];
+  int m = (int)in1.dim.dims[1 - indexA];
+  int k = (int)in1.dim.dims[indexA];
+  int n = (int)in2.dim.dims[1 - indexB];
 
   // PDBG("mnk = [%u, %u, %u]", m,n,k);
 #if defined(USE_OPENBLAS) || defined(USE_MKL)
   // https://software.intel.com/en-us/mkl-tutorial-c-multiplying-matrices-using-dgemm
   tensor_fill_scalar(out, 0.0);
-  awnn_gemm(CblasNoTrans, CblasNoTrans, m, n, k, 1.0, in1.data, in2.data, 1.0, out.data);
+  awnn_gemm(transposeA, transposeB, m, n, k, 1.0, in1.data, in2.data, 1.0,
+            out.data);
 #else
   uint ii, jj, kk; // A[i.j] with B[j,k]
   for(ii = 0; ii < m; ii++){
@@ -146,6 +152,10 @@ status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out){
 
 end:
   return ret;
+}
+
+status_t tensor_matmul(tensor_t in1, tensor_t in2, tensor_t out) {
+  return tensor_matmul_full(in1, CblasNoTrans, in2, CblasNoTrans, out);
 }
 
 status_t tensor_elemwise_op_inplace(tensor_t to, tensor_t from, tensor_op_t op){
@@ -171,6 +181,7 @@ status_t tensor_elemwise_op_inplace(tensor_t to, tensor_t from, tensor_op_t op){
   }
   else{
     PERR("[tensor plus inplace]: wrong dims ");
+    print_trace();
     return S_BAD_DIM;
   }
 }
@@ -193,7 +204,8 @@ status_t tensor_copy(tensor_t out, tensor_t in){
     return S_OK;
   }
   else{
-    PERR("[tensor plus inplace]: wrong dims ");
+    PERR("[tensor copy]: wrong dims ");
+    print_trace();
     return S_BAD_DIM;
   }
 }

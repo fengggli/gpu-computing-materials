@@ -18,15 +18,8 @@ void sgd_update(param_t *p_param, T learning_rate) {
   PDBG("updating %s complete.", p_param->name);
 }
 
-void sgd_update_momentum(param_t *p_param, T learning_rate, T momentum) {
-  tensor_t param = p_param->data;
-  tensor_t dparam = p_param->diff;
-  tensor_t *ptr_velocity = &(p_param->velocity);
-  if (p_param->velocity.mem_type == EMPTY_MEM) {
-    *ptr_velocity = tensor_make_zeros_alike(param);
-  }
-  tensor_t velocity = *ptr_velocity;
-
+void do_sgd_update_momentum(tensor_t param, tensor_t dparam, tensor_t velocity,
+                            T learning_rate, T momentum) {
   T *pelem;
   uint ii;
   AWNN_CHECK_GT(learning_rate, 0);
@@ -37,6 +30,18 @@ void sgd_update_momentum(param_t *p_param, T learning_rate, T momentum) {
 
   tensor_elemwise_op_inplace(param, velocity, TENSOR_OP_ADD);
   PDBG("updating %s complete.", p_param->name);
+}
+
+/* support old version*/
+void sgd_update_momentum(param_t *p_param, T learning_rate, T momentum) {
+  tensor_t param = p_param->data;
+  tensor_t dparam = p_param->diff;
+  tensor_t *ptr_velocity = &(p_param->velocity);
+  if (p_param->velocity.mem_type == EMPTY_MEM) {
+    *ptr_velocity = tensor_make_zeros_alike(param);
+  }
+  tensor_t velocity = *ptr_velocity;
+  do_sgd_update_momentum(param, dparam, velocity, learning_rate, momentum);
 }
 
 static uint _get_correct_count(tensor_t const x, label_t const *labels,

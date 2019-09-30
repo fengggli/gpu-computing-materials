@@ -74,37 +74,9 @@ TEST_F(NetMLPTest, CifarTest) {
 
     EXPECT_EQ(batch_sz, cnt_read);
     param_t *p_param;
-#ifdef PRINT_STAT
-    PINF("Before");
-    // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
-    list_for_each_entry(p_param, model.list_all_params, list) {
-      tensor_t param = p_param->data;
-      tensor_t dparam = p_param->diff;
-      dump_tensor_stats(param, p_param->name);
-
-      char diff_name[MAX_STR_LENGTH] = "";
-      snprintf(diff_name, MAX_STR_LENGTH, "%s-diff", p_param->name);
-      dump_tensor_stats(dparam, diff_name);
-    }
-
-#endif
 
     mlp_loss(&model, x, labels, &loss);
 
-#ifdef PRINT_STAT
-    PINF("After");
-    // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
-    list_for_each_entry(p_param, model.list_all_params, list) {
-      tensor_t param = p_param->data;
-      tensor_t dparam = p_param->diff;
-      dump_tensor_stats(param, p_param->name);
-
-      char diff_name[MAX_STR_LENGTH] = "";
-      snprintf(diff_name, MAX_STR_LENGTH, "%s-diff", p_param->name);
-      dump_tensor_stats(dparam, diff_name);
-    }
-
-#endif
     PINF("Loss %.2f", loss);
 
     // output the first/laster iteration, also in the end of each epoch

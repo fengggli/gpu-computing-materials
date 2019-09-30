@@ -35,9 +35,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 if(USE_CLANG)
   set(CMAKE_C_COMPILER "clang")
   set(CMAKE_CXX_COMPILER "clang++")
-elseif(USE_MKL)
-  set(CMAKE_C_COMPILER "icc")
-  set(CMAKE_CXX_COMPILER "icpc")
 else()
   set(CMAKE_C_COMPILER "gcc")
   set(CMAKE_CXX_COMPILER "g++")
@@ -49,6 +46,7 @@ set(GCC_COVERAGE_COMPILE_FLAGS "-Wall -Wextra -Wconversion -rdynamic")
 if(USE_STRICT_CHECK)
   set(GCC_COVERAGE_COMPILE_FLAGS "-pedantic ${GCC_COVERAGE_COMPILE_FLAGS}")
 endif()
+
 
 if(USE_MEMCHECK)
   set(GCC_COVERAGE_COMPILE_FLAGS "-fsanitize=address -fno-omit-frame-pointer ${GCC_COVERAGE_COMPILE_FLAGS}")
@@ -71,14 +69,21 @@ if(AWNN_USE_OPENMP)
   message("Use OPenMP")
 endif()
 if(USE_MKL)
+  set(MKL_ROOT "/opt/intel/mkl/")
+  set(MKL_LIB_PATH "${MKL_ROOT}/lib/intel64")
+  set(MKL_SEQUENTIAL_LINK_OPTIONS "-L${MKL_LIB_PATH} -Wl,-rpath,${MKL_LIB_PATH},--no-as-needed -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl")
+  set(MKL_IOMP_LINK_OPTIONS " -L${MKLROOT}/lib/intel64 -Wl,-rpath,${MKL_LIB_PATH},--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl")
+  set(MKL_COMPILE_OPTIONS "-m64 -I${MKL_ROOT}/include")
+
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MKL_COMPILE_OPTIONS}")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MKL_COMPILE_OPTIONS}")
+
   if(USE_SEQUENTIAL_BLAS)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mkl=sequential")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mkl=sequential")
+    set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MKL_SEQUENTIAL_LINK_OPTIONS}")
     message("Use non-threaded MKL")
   else()
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mkl=parallel")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mkl=parallel")
-    message("Use multi-threads MKL")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MKL_IOMP_LINK_OPTIONS}")
+    message("Use multi-threads(Intel OpenMP) MKL")
   endif()
 endif()
 
@@ -127,7 +132,7 @@ configure_file (
   "${PROJECT_BINARY_DIR}/config.h"
 )
 
-include_directories(include ${PROJECT_BINARY_DIR})
+include_directories(include ${PROJECT_BINARY_DIR} src/)
 
 if(USE_NNPACK)
   set(NNPACK_ROOT extern/NNPACK)
@@ -215,6 +220,8 @@ if(USE_CUDA)
 
   set(AWNN_DEVICE_LIBS "awnndevicelib")
 endif(USE_CUDA)
+
+add_subdirectory(src/layers)
 
 # nnpack and gtest
 add_subdirectory(extern)

@@ -5,13 +5,11 @@
 #include <omp.h>
 #endif
 
-status_t conv_forward_perimg(tensor_t const x, tensor_t const w,
-                             lcache_t* cache, conv_param_t const params,
-                             tensor_t y) {
+void do_conv_forward_perimg(tensor_t const x, tensor_t const w, tensor_t y,
+                            int pad, int stride) {
   uint N, C, H, W; /** input dims */
   uint F, HH, WW;  /** filter spatial*/
   uint Hout, Wout; /** output spatial dimension*/
-  uint pad, stride;
 
   N = x.dim.dims[0];
   C = x.dim.dims[1];
@@ -23,8 +21,6 @@ status_t conv_forward_perimg(tensor_t const x, tensor_t const w,
   HH = w.dim.dims[2];
   WW = w.dim.dims[3];
 
-  pad = params.padding;
-  stride = params.stride;
 
   // Hout = (H + 2 * pad - HH) / stride + 1; // total strides needed over rows
   Hout = y.dim.dims[2];  // total strides needed over rows
@@ -52,7 +48,12 @@ status_t conv_forward_perimg(tensor_t const x, tensor_t const w,
 #ifdef AWNN_USE_OPENMP
   }
 #endif
+}
 
+status_t conv_forward_perimg(tensor_t const x, tensor_t const w,
+                             lcache_t* cache, conv_param_t const params,
+                             tensor_t y) {
+  do_conv_forward_perimg(x, w, y, params.padding, params.stride);
   if (cache) {
     lcache_push(cache, x);
     lcache_push(cache, w);
@@ -60,16 +61,11 @@ status_t conv_forward_perimg(tensor_t const x, tensor_t const w,
   return S_OK;
 }
 
-status_t conv_backward_perimg(tensor_t dx, tensor_t dw, lcache_t* cache,
-                              conv_param_t const params, tensor_t const dy) {
-  tensor_t w, x;
-  w = lcache_pop(cache);
-  x = lcache_pop(cache);
-
+status_t do_conv_backward_perimg(tensor_t dx, tensor_t dw, tensor_t const dy,
+                                 tensor_t x, tensor_t w, int pad, int stride) {
   uint N, C, H, W; /** input dims */
   uint F, HH, WW;  /** filter spatial*/
   uint Hout, Wout; /** output spatial dimension*/
-  uint pad, stride;
 
   N = dx.dim.dims[0];
   C = dx.dim.dims[1];
@@ -81,8 +77,6 @@ status_t conv_backward_perimg(tensor_t dx, tensor_t dw, lcache_t* cache,
   HH = dw.dim.dims[2];
   WW = dw.dim.dims[3];
 
-  pad = params.padding;
-  stride = params.stride;
 
   // Hout = (H + 2 * pad - HH) / stride + 1; // total strides needed over rows
   Hout = dy.dim.dims[2];  // total strides needed over rows
@@ -123,4 +117,14 @@ status_t conv_backward_perimg(tensor_t dx, tensor_t dw, lcache_t* cache,
   }
 #endif
   return S_OK;
+}
+
+status_t conv_backward_perimg(tensor_t dx, tensor_t dw, lcache_t* cache,
+                              conv_param_t const params, tensor_t const dy) {
+  tensor_t w = lcache_pop(cache);
+  tensor_t x = lcache_pop(cache);
+
+  int pad = params.padding;
+  int stride = params.stride;
+  return do_conv_backward_perimg(dx, dw, dy, x, w, pad, stride);
 }

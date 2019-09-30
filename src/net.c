@@ -37,11 +37,11 @@ void lcache_dump_stat(lcache_t *cache) {
 }
 
 // Update the gradient of a parameter if regulizer term exists
-void update_regulizer_gradient(tensor_t x, tensor_t dx, T reg) {
-  tensor_t tmp = tensor_make_copy(x);
-  T *pelem;
-  uint ii;  // for iteration
-  tensor_for_each_entry(pelem, ii, tmp) { (*pelem) *= reg; }
-  tensor_elemwise_op_inplace(dx, tmp, TENSOR_OP_ADD);
-  tensor_destroy(&tmp);
+inline void update_regulizer_gradient(tensor_t x, tensor_t dx, T reg) {
+  size_t capacity = tensor_get_capacity(x);
+  AWNN_CHECK_EQ(capacity, tensor_get_capacity(dx));
+
+  for (size_t i = 0; i < capacity; i++) {
+    dx.data[i] += reg * (x.data[i]);
+  }
 }
