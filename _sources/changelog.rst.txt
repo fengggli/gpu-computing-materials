@@ -14,12 +14,18 @@ Changelog
 Current
 =======
 
-:Data 2019-09-24
+:Data 2019-09-26
 
 Added
 --------
 
 1. Add worker threads support, details are at: https://github.com/fengggli/gpu-computing-materials/issues/54
+2. reorganize code-structure, so that:
+
+   * each type of layer is now associated with a "layer_setup" function, which can infer the size of output tensor and working memory based on the layer below it.
+   * all working memory and middle-layer output memory are preallocated during the "set_up" phase, instead allocated/free during forward/backward
+   * improved implementations of layers like fc/relu/pool to reduce extra memory copies.
+   * x1.77 speedup, using float32.
 
 Working on
 ------------
