@@ -23,7 +23,7 @@
 #----------------------------------------------------
 
 #SBATCH -J bench_net_skx           # Job name
-#SBATCH -o results/%j-awnn.log     # Name of stdout output file
+#SBATCH -o results/%j-awnn-icc.log     # Name of stdout output file
 #SBATCH -p skx-dev  # skx-normal      # Queue (partition) name
 #SBATCH -N 1               # Total # of nodes (must be 1 for serial)
 #SBATCH -n 1               # Total # of mpi tasks (should be 1 for serial)
@@ -42,7 +42,8 @@ pwd
 date
 
 # Launch serial code...
-BUILDDIR=build_release/
+#BUILDDIR=build_release/
+BUILDDIR=build_icc_release/
 BINARY=$BUILDDIR/bench/bench-net-resnet
 
 batch_sz=256
