@@ -14,7 +14,6 @@ add_test(bench-net-resnet bench-net-resnet)
 
 if(USE_MKL)
 add_executable(bench-conv bench_conv.cpp)
-target_link_options(bench-conv PRIVATE "-liomp5") #other wise mkl-internal threading will be used.
-target_link_libraries(bench-conv ${AWNN_LIBS} gtest)
+target_link_libraries(bench-conv ${AWNN_LIBS} gtest iomp5)
 add_test(bench-conv bench-conv)
 endif()

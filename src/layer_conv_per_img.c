@@ -1,6 +1,13 @@
 #include "awnn/im2col.h"
 #include "awnn/layer_conv.h"
+
+#ifdef USE_OPENBLAS
 #include "cblas.h"
+#endif
+#ifdef USE_MKL
+#include "mkl.h"
+#endif
+
 #ifdef AWNN_USE_OPENMP
 #include <omp.h>
 #endif

@@ -1,0 +1,35 @@
+#!/bin/bash
+#SBATCH -J Caffe-1nodes         # job name
+#SBATCH -o results/%j-Caffe-1nodes.log  # output and error file name (%j expands to jobID)
+#SBATCH -N 1                    # total number of nodes
+#SBATCH -n 1                    # 1 task per node
+#SBATCH -p skx-dev          # queue (partition) -- normal, development, etc.
+#SBATCH -t 00:30:00              # run time (hh:mm:ss) - 1 hour
+#SBATCH --mail-user=lifen@iu.edu
+#SBATCH --mail-type=begin   # Send email at begin and end of job
+
+
+# see https://portal.tacc.utexas.edu/software/caffe#setup 
+# Set up the Caffe environment
+module load hdf5 caffe
+
+# used batch size 256, see the protxt file
+PROTOFILE=$PWD/scripts/stampede2_resnet8_cifar.prototxt
+CAFFEDIR="$SCRATCH/mycaffedir"
+cd $CAFFEDIR
+
+cp -r examples/cifar10/cifar10_*_lmdb  examples/cifar10/mean.binaryproto /dev/shm/
+
+for nr_threads in 1 2 4 6 8 12 16 24 32 48
+do
+  export OMP_NUM_THREADS=$nr_threads
+	echo "RUNNING INTELCAFFE using $nr_threads omp threads, using protofile at $PROTOFILE"
+
+  # Copy the dataset to the local RAM disk
+	ibrun -np 1 caffe.bin  -engine "MKL2017" time -model $PROTOFILE -iterations 10
+	#caffe time -model $PROTOFILE -iterations 10
+  # caffe.bin train -engine "MKL2017" --solver=examples/cifar10/cifar10_full_solver.prototx
+
+  # Train using Intel's MKL2017 engine.
+  #ibrun -np 1 caffe.bin train -engine "MKL2017" --solver=examples/cifar10/cifar10_full_solver.prototx
+done

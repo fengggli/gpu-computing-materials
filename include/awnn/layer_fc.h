@@ -9,7 +9,6 @@
 
 #include "awnn/layer.h"
 #include "awnn/tensor.h"
-#include "cblas.h"
 
 #ifdef __cplusplus
 extern "C" {
