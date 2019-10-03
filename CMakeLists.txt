@@ -19,12 +19,14 @@ option(GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC "Count allocations and destroy globally
 option(AWNN_USE_OPENMP "Use OpenMP" OFF)
 option(USE_MEMCHECK "Use mem santilizer to check leaks" OFF)
 option(USE_BOOST_STACKTRACE "Use booststack trace" OFF)
+
+option(USE_ICC "Use intel compiler(icc, icpc)" OFF)
+option(USE_AVX512 "use avx512, avail in stampede SKX and KNL" OFF)
 #set (AWNN_GEMM_THREADS 1 CACHE STRING "number of openblas threads")
 
 option(USE_CLANG "Use clang compiler set" OFF)
 option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_STRICT_CHECK "use pedantic flag" OFF)
-
 
 if (NOT AWNN_USE_FLT32 AND USE_NNPACK)
   message(FATAL_ERROR 'nnpack only support float32')
@@ -49,7 +51,6 @@ set(GCC_COVERAGE_COMPILE_FLAGS "-Wall -Wextra -Wconversion -rdynamic")
 if(USE_STRICT_CHECK)
   set(GCC_COVERAGE_COMPILE_FLAGS "-pedantic ${GCC_COVERAGE_COMPILE_FLAGS}")
 endif()
-
 
 if(USE_MEMCHECK)
   set(GCC_COVERAGE_COMPILE_FLAGS "-fsanitize=address -fno-omit-frame-pointer ${GCC_COVERAGE_COMPILE_FLAGS}")
@@ -80,7 +81,11 @@ if(USE_MKL)
 		set(MKL_COMPILE_OPTIONS "-m64 -I${MKL_ROOT}/include")
 		set(MKL_IOMP_LINK_OPTIONS " -L${MKLROOT}/lib/intel64 -Wl,-rpath,${MKL_LIB_PATH},--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl")
 	else()
-		set(MKL_COMPILE_OPTIONS "-mkl=sequential")
+    set(MKL_SEQUENTIAL_LINK_OPTIONS "-mkl=sequential")
+    if(USE_AVX512)
+      set(MKL_COMPILE_OPTIONS "-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512")
+    endif()
+
 	endif()
 endif()
 

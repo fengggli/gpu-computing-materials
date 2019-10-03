@@ -41,18 +41,30 @@ module list
 pwd
 date
 
+RESULTDIR=results/${SLURM_JOBID}
+mkdir -pv $RESULTDIR
+
+#OPTION_PROFILE=on
 # Launch serial code...
 #BUILDDIR=build_release/
-BUILDDIR=build_icc_release/
-BINARY=$BUILDDIR/bench/bench-net-resnet
+if [ x"$OPTION_PROFILE" == x"on" ]; then
+  module load vtune
+  BUILDDIR=icc_release_debuginfo/
+  BINARY="amplxe-cl -collect hotspots -r $RESULTDIR/r@@@{at} -- $BUILDDIR/bench/bench-net-resnet"
+else
+  BUILDDIR=build_icc_release/
+  BINARY=$BUILDDIR/bench/bench-net-resnet
+fi
 
 batch_sz=256
+nr_iterations=10
 for nr_threads in 1 2 4 6 8 12 16 24 32 48
 do
   for exp in 1 2 3
   do
-    echo "Running resnet with batch size=$batch_sz and nr_threads=$nr_threads"
-    $BINARY $batch_sz $nr_threads        # Do not use ibrun or any other MPI launcher
+    echo "Running resnet with batch size=$batch_sz and nr_threads=$nr_threads, nr_iterations=$nr_iterations"
+    echo "cmd is $BINARY"
+    $BINARY $batch_sz $nr_threads  $nr_iterations      # Do not use ibrun or any other MPI launcher
   done
 done
 
