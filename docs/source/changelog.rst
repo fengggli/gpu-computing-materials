@@ -10,8 +10,31 @@ Changelog
 
   Ask Feng for access.
 
-
 Current
+=======
+
+:Date: 2019-10-07
+
+Working on
+-----------
+
+* Performance comparision with Intel-caffe in skx and knl nodes and corresponding analysis.
+
+  - Performance of intel-caffe is x3.9 faster than awnn in stampede skx(https://github.com/fengggli/gpu-computing-materials/issues/54#issuecomment-537741399), not consistent with the sievert results.
+  - Now I am able to build caffe using preloaded dependencies in stampede2. Need to profile to understand the inconsistent performance in stampedede2.
+  - Also need to do same set of experiments in gibson.
+
+TODO List
+----------
+
+* Use fine-grained lock to reduce contention.
+* Theoretical model.
+
+=========
+Previous
+=========
+
+0.4.11
 =======
 
 :Data 2019-09-26
@@ -25,23 +48,8 @@ Added
    * each type of layer is now associated with a "layer_setup" function, which can infer the size of output tensor and working memory based on the layer below it.
    * all working memory and middle-layer output memory are preallocated during the "set_up" phase, instead allocated/free during forward/backward
    * improved implementations of layers like fc/relu/pool to reduce extra memory copies.
-   * x1.77 speedup, using float32.
+   * x1.77 speedup, using float32(in sievert).
 
-Working on
-------------
-
-1. Reorganize memory allocation code.
-2. Use fine-grained lock to reduce contention.
-
-TODO List
-----------
-
-* Compare with intel-caffe.
-* Theoretical model.
-
-=========
-Previous
-=========
 
 0.4.10
 ========
