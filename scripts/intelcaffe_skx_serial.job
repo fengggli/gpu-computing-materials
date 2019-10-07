@@ -11,7 +11,9 @@
 
 # see https://portal.tacc.utexas.edu/software/caffe#setup 
 # Set up the Caffe environment
-module load hdf5 caffe
+
+export MODULEPATH=$HOME/configurations/modulefiles/:$MODULEPATH
+module load caffe_deps 
 
 # used batch size 256, see the protxt file
 PROTOFILE=$PWD/scripts/stampede2_resnet8_cifar.prototxt
