@@ -27,14 +27,16 @@ void layer_data_setup(layer_t *this_layer, layer_data_config_t *layer_config,
 }
 
 static inline void _do_inplace_relu_forward(tensor_t y) {
-  for (uint i = 0; i < tensor_get_capacity(y); i++) {
+  uint capacity = tensor_get_capacity(y);
+  for (uint i = 0; i < capacity; i++) {
     T *elem = y.data;
     elem[i] = elem[i] > 0 ? elem[i] : 0;
   }
 }
 
 static inline void _do_inplace_relu_backward(tensor_t dx, tensor_t x) {
-  for (uint i = 0; i < tensor_get_capacity(dx); i++) {
+  uint capacity = tensor_get_capacity(dx);
+  for (uint i = 0; i < capacity; i++) {
     T *elem = dx.data;
     elem[i] = x.data[i] > 0 ? elem[i] : 0;
   }
