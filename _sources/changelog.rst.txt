@@ -13,20 +13,28 @@ Changelog
 Current
 =======
 
-:Date: 2019-10-22
+:Date: 2019-11-04
 
 Added
 -------
-1. Explained why AWNN is slower than Intel-Caffe in Stampede2 SKX node Gibson (also SKX with avx512)
 
-   - performance analysis results using intel vtune see (https://github.com/fengggli/gpu-computing-materials/issues/57)
-   - AWNN still has worse single-threaded performance, most of the elapsed time is spent on im2col and col2im, since they are not currently vectorized.
-   - intel-caffe uses mkldnn  JIT avx code generation to accelerate operations like convolution/pooling.
-   - A SC18 paper describes some of the optimizations used in MKL-DNN(e.g. vectorization, cache/register blocking, loop reordering, kernel streaming, software prefetching, layer fusion, etc:  https://dl.acm.org/citation.cfm?id=3291744)
+* Reviews of works on hybrid parallelism(https://fengggli.github.io/ResearchDocs/topics/hybridparal/index.html#hybrid-parallelism)
 
-2. Followed several suggestions from intel performance guide, improved single-thread forward/backward time from 540 to 380ms(https://github.com/fengggli/gpu-computing-materials/issues/57#issuecomment-540705655).
-3. We can add those optimization implemented in MKLDNN, (e.g. vectorization of im2col/col2im). But such optimizations are not urgent.
-4. Some literature on pipeline parallelism (https://fengggli.github.io/ResearchDocs/topics/pipeline/pipeline.html#pipeline), it's a form of model parallelism.
+  - One weird trick: data parallelism for convolution layer, model parallelism for dense layer, transformation in between. (because conv/dense layer have different computation/communication requirement.)
+  - How to decide process layerout for a given batch size and a network architecture.
+
+* Amazon neocpu(https://fengggli.github.io/ResearchDocs/journal/Fall19/Week9.html#neocpu)
+
+  - end-to-end optimization for cpu-based inference.
+
+* pipedream is part of microsoft fiddle project: https://www.microsoft.com/en-us/research/project/fiddle/, fiddle is targeting serveral problems:
+
+  - How to train efficiently in a single gpu
+  - How to train with multiple gpu
+  - How to train with multi-tenant Clusters
+
+* Different types of optimizations(coarse-grained, fine-grained, layer-wise, end-to-end) are discussed here (https://fengggli.github.io/ResearchDocs/journal/Fall19/Week10.html#coarse-grain-fine-grain-and-layer-wise)
+
 
 Working on
 -----------
@@ -45,6 +53,24 @@ TODO List
 =========
 Previous
 =========
+
+0.4.13
+========
+
+:Date: 2019-10-22
+
+Added
+-------
+1. Explained why AWNN is slower than Intel-Caffe in Stampede2 SKX node Gibson (also SKX with avx512)
+
+   - performance analysis results using intel vtune see (https://github.com/fengggli/gpu-computing-materials/issues/57)
+   - AWNN still has worse single-threaded performance, most of the elapsed time is spent on im2col and col2im, since they are not currently vectorized.
+   - intel-caffe uses mkldnn  JIT avx code generation to accelerate operations like convolution/pooling.
+   - A SC18 paper describes some of the optimizations used in MKL-DNN(e.g. vectorization, cache/register blocking, loop reordering, kernel streaming, software prefetching, layer fusion, etc:  https://dl.acm.org/citation.cfm?id=3291744)
+
+2. Followed several suggestions from intel performance guide, improved single-thread forward/backward time from 540 to 380ms(https://github.com/fengggli/gpu-computing-materials/issues/57#issuecomment-540705655).
+3. We can add those optimization implemented in MKLDNN, (e.g. vectorization of im2col/col2im). But such optimizations are not urgent.
+4. Some literature on pipeline parallelism (https://fengggli.github.io/ResearchDocs/topics/pipeline/pipeline.html#pipeline), it's a form of model parallelism.
 
 0.4.12
 ========

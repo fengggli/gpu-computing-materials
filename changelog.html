@@ -103,47 +103,51 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#previous">Previous</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id2">0.4.12</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">0.4.13</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id3">Added</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id4">0.4.11</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id4">0.4.12</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id5">Added</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id6">0.4.10</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id6">0.4.11</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id7">Added</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id8">0.4.9</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id8">0.4.10</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id9">Added</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id10">0.4.8</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id11">0.4.7</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id12">0.4.6</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id13">Added</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id10">0.4.9</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id11">Added</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id14">0.4.5</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id12">0.4.8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id13">0.4.7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id14">0.4.6</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id15">Added</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id16">0.4.4</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id16">0.4.5</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id17">Added</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id18">0.4.3</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id18">0.4.4</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id19">Added</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id20">0.4.3</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id21">Added</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#others">others</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id20">0.4.2</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id21">Added</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id22">0.4.2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id23">Added</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id22">&lt; 0.4.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id24">&lt; 0.4.1</a></li>
 </ul>
 </li>
 </ul>
@@ -223,24 +227,30 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Date:</th><td class="field-body">2019-10-22</td>
+<tr class="field-odd field"><th class="field-name">Date:</th><td class="field-body">2019-11-04</td>
 </tr>
 </tbody>
 </table>
 <div class="section" id="added">
 <h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
-<ol class="arabic simple">
-<li>Explained why AWNN is slower than Intel-Caffe in Stampede2 SKX node Gibson (also SKX with avx512)<ul>
-<li>performance analysis results using intel vtune see (<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/issues/57">https://github.com/fengggli/gpu-computing-materials/issues/57</a>)</li>
-<li>AWNN still has worse single-threaded performance, most of the elapsed time is spent on im2col and col2im, since they are not currently vectorized.</li>
-<li>intel-caffe uses mkldnn  JIT avx code generation to accelerate operations like convolution/pooling.</li>
-<li>A SC18 paper describes some of the optimizations used in MKL-DNN(e.g. vectorization, cache/register blocking, loop reordering, kernel streaming, software prefetching, layer fusion, etc:  <a class="reference external" href="https://dl.acm.org/citation.cfm?id=3291744">https://dl.acm.org/citation.cfm?id=3291744</a>)</li>
+<ul class="simple">
+<li>Reviews of works on hybrid parallelism(<a class="reference external" href="https://fengggli.github.io/ResearchDocs/topics/hybridparal/index.html#hybrid-parallelism">https://fengggli.github.io/ResearchDocs/topics/hybridparal/index.html#hybrid-parallelism</a>)<ul>
+<li>One weird trick: data parallelism for convolution layer, model parallelism for dense layer, transformation in between. (because conv/dense layer have different computation/communication requirement.)</li>
+<li>How to decide process layerout for a given batch size and a network architecture.</li>
 </ul>
 </li>
-<li>Followed several suggestions from intel performance guide, improved single-thread forward/backward time from 540 to 380ms(<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/issues/57#issuecomment-540705655">https://github.com/fengggli/gpu-computing-materials/issues/57#issuecomment-540705655</a>).</li>
-<li>We can add those optimization implemented in MKLDNN, (e.g. vectorization of im2col/col2im). But such optimizations are not urgent.</li>
-<li>Some literature on pipeline parallelism (<a class="reference external" href="https://fengggli.github.io/ResearchDocs/topics/pipeline/pipeline.html#pipeline">https://fengggli.github.io/ResearchDocs/topics/pipeline/pipeline.html#pipeline</a>), it’s a form of model parallelism.</li>
-</ol>
+<li>Amazon neocpu(<a class="reference external" href="https://fengggli.github.io/ResearchDocs/journal/Fall19/Week9.html#neocpu">https://fengggli.github.io/ResearchDocs/journal/Fall19/Week9.html#neocpu</a>)<ul>
+<li>end-to-end optimization for cpu-based inference.</li>
+</ul>
+</li>
+<li>pipedream is part of microsoft fiddle project: <a class="reference external" href="https://www.microsoft.com/en-us/research/project/fiddle/">https://www.microsoft.com/en-us/research/project/fiddle/</a>, fiddle is targeting serveral problems:<ul>
+<li>How to train efficiently in a single gpu</li>
+<li>How to train with multiple gpu</li>
+<li>How to train with multi-tenant Clusters</li>
+</ul>
+</li>
+<li>Different types of optimizations(coarse-grained, fine-grained, layer-wise, end-to-end) are discussed here (<a class="reference external" href="https://fengggli.github.io/ResearchDocs/journal/Fall19/Week10.html#coarse-grain-fine-grain-and-layer-wise">https://fengggli.github.io/ResearchDocs/journal/Fall19/Week10.html#coarse-grain-fine-grain-and-layer-wise</a>)</li>
+</ul>
 </div>
 <div class="section" id="working-on">
 <h3>Working on<a class="headerlink" href="#working-on" title="Permalink to this headline">¶</a></h3>
@@ -262,7 +272,33 @@
 <div class="section" id="previous">
 <h1>Previous<a class="headerlink" href="#previous" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id2">
-<h2>0.4.12<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<h2>0.4.13<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Date:</th><td class="field-body">2019-10-22</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="id3">
+<h3>Added<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>Explained why AWNN is slower than Intel-Caffe in Stampede2 SKX node Gibson (also SKX with avx512)<ul>
+<li>performance analysis results using intel vtune see (<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/issues/57">https://github.com/fengggli/gpu-computing-materials/issues/57</a>)</li>
+<li>AWNN still has worse single-threaded performance, most of the elapsed time is spent on im2col and col2im, since they are not currently vectorized.</li>
+<li>intel-caffe uses mkldnn  JIT avx code generation to accelerate operations like convolution/pooling.</li>
+<li>A SC18 paper describes some of the optimizations used in MKL-DNN(e.g. vectorization, cache/register blocking, loop reordering, kernel streaming, software prefetching, layer fusion, etc:  <a class="reference external" href="https://dl.acm.org/citation.cfm?id=3291744">https://dl.acm.org/citation.cfm?id=3291744</a>)</li>
+</ul>
+</li>
+<li>Followed several suggestions from intel performance guide, improved single-thread forward/backward time from 540 to 380ms(<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/issues/57#issuecomment-540705655">https://github.com/fengggli/gpu-computing-materials/issues/57#issuecomment-540705655</a>).</li>
+<li>We can add those optimization implemented in MKLDNN, (e.g. vectorization of im2col/col2im). But such optimizations are not urgent.</li>
+<li>Some literature on pipeline parallelism (<a class="reference external" href="https://fengggli.github.io/ResearchDocs/topics/pipeline/pipeline.html#pipeline">https://fengggli.github.io/ResearchDocs/topics/pipeline/pipeline.html#pipeline</a>), it’s a form of model parallelism.</li>
+</ol>
+</div>
+</div>
+<div class="section" id="id4">
+<h2>0.4.12<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -271,8 +307,8 @@
 </tr>
 </tbody>
 </table>
-<div class="section" id="id3">
-<h3>Added<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id5">
+<h3>Added<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Performance comparision with Intel-caffe in skx and knl nodes and corresponding analysis.<ul>
 <li>Performance of intel-caffe is x3.9 faster than awnn in stampede skx(<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/issues/54#issuecomment-537741399">https://github.com/fengggli/gpu-computing-materials/issues/54#issuecomment-537741399</a>), not consistent with the sievert results.</li>
@@ -283,11 +319,11 @@
 </ul>
 </div>
 </div>
-<div class="section" id="id4">
-<h2>0.4.11<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id6">
+<h2>0.4.11<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
 <p>:Data 2019-09-26</p>
-<div class="section" id="id5">
-<h3>Added<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id7">
+<h3>Added<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Add worker threads support, details are at: <a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/issues/54">https://github.com/fengggli/gpu-computing-materials/issues/54</a></li>
 <li>reorganize code-structure, so that:<ul>
@@ -300,11 +336,11 @@
 </ol>
 </div>
 </div>
-<div class="section" id="id6">
-<h2>0.4.10<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id8">
+<h2>0.4.10<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
 <p>:Data 2019-08-23</p>
-<div class="section" id="id7">
-<h3>Added<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id9">
+<h3>Added<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>model, extended resnet with 3 stages:
 * previous simple model: <a class="reference external" href="http://ethereon.github.io/netscope/#/gist/64b013d6fee840473edc1a9a444e22ca">http://ethereon.github.io/netscope/#/gist/64b013d6fee840473edc1a9a444e22ca</a>
@@ -312,11 +348,11 @@
 </ol>
 </div>
 </div>
-<div class="section" id="id8">
-<h2>0.4.9<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id10">
+<h2>0.4.9<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h2>
 <p>:Data 2019-06-27</p>
-<div class="section" id="id9">
-<h3>Added<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id11">
+<h3>Added<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Adding downsampling in the beginning of stage 3,4,5, more details see <a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/issues/51">https://github.com/fengggli/gpu-computing-materials/issues/51</a>, ignoring the boundries.</li>
 <li>Residual blocks using with downsampling support and its tests.</li>
@@ -324,8 +360,8 @@
 </ol>
 </div>
 </div>
-<div class="section" id="id10">
-<h2>0.4.8<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id12">
+<h2>0.4.8<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
 <p>:Data 2019-05-12</p>
 <ul class="simple">
 <li>Add nnpack support, resnet can use nnpack backend for the convolution operations(<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/pull/41">https://github.com/fengggli/gpu-computing-materials/pull/41</a>)</li>
@@ -334,8 +370,8 @@
 <li>There is also a comparision of AWNN vs caffe in the case of (1)NNPACK or (2)per-img im2col+openblas gemm when different batch sizes are used (<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/pull/49#issuecomment-490657411">https://github.com/fengggli/gpu-computing-materials/pull/49#issuecomment-490657411</a>): Our implementation is slightly faster than Caffe when using openblas gemm; nnpack in caffe patch doesn’t provide backward implementation, I can add it though.</li>
 </ul>
 </div>
-<div class="section" id="id11">
-<h2>0.4.7<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id13">
+<h2>0.4.7<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
 <p>:Data 2019-04-22</p>
 <ul class="simple">
 <li>Simplified resnet(<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/pull/38">https://github.com/fengggli/gpu-computing-materials/pull/38</a>)</li>
@@ -343,21 +379,21 @@
 <li>Initializer (kaiming initialization)</li>
 </ul>
 </div>
-<div class="section" id="id12">
-<h2>0.4.6<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id14">
+<h2>0.4.6<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h2>
 <p>:Data 2019-04-15</p>
-<div class="section" id="id13">
-<h3>Added<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id15">
+<h3>Added<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>residual block and simple resnet. See <a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/pull/37">https://github.com/fengggli/gpu-computing-materials/pull/37</a>.</li>
 </ul>
 </div>
 </div>
-<div class="section" id="id14">
-<h2>0.4.5<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id16">
+<h2>0.4.5<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h2>
 <p>:Date 2019-04-10</p>
-<div class="section" id="id15">
-<h3>Added<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id17">
+<h3>Added<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>utils for debug use (tensor mean/std, etc)</li>
 <li>fixed several bugs</li>
@@ -366,11 +402,11 @@
 </ul>
 </div>
 </div>
-<div class="section" id="id16">
-<h2>0.4.4<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id18">
+<h2>0.4.4<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h2>
 <p>:Date 2019-04-08</p>
-<div class="section" id="id17">
-<h3>Added<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id19">
+<h3>Added<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>cifar Data loader:</li>
 </ol>
@@ -416,12 +452,12 @@
 </div></blockquote>
 </div>
 </div>
-<div class="section" id="id18">
-<h2>0.4.3<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id20">
+<h2>0.4.3<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h2>
 <p>:Date 2019-04-01</p>
 <p>See (<a class="reference external" href="https://github.com/fengggli/gpu-computing-materials/pull/19">https://github.com/fengggli/gpu-computing-materials/pull/19</a>)</p>
-<div class="section" id="id19">
-<h3>Added<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id21">
+<h3>Added<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>a fc_relu sandwich layer</li>
 <li>weight initialization (currently only linspace is used)</li>
@@ -449,11 +485,11 @@
 </ul>
 </div>
 </div>
-<div class="section" id="id20">
-<h2>0.4.2<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id22">
+<h2>0.4.2<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h2>
 <p>:Date 2019-03-30</p>
-<div class="section" id="id21">
-<h3>Added<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id23">
+<h3>Added<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Layers:</li>
 </ol>
@@ -476,8 +512,8 @@
 </div></blockquote>
 </div>
 </div>
-<div class="section" id="id22">
-<h2>&lt; 0.4.1<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id24">
+<h2>&lt; 0.4.1<a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h2>
 <p>see dl-docs for changelog prior to 0.4.1</p>
 </div>
 </div>
