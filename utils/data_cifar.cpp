@@ -97,7 +97,7 @@ status_t cifar_open(data_loader_t *loader, const char *input_folder) {
 
   data_file = fopen(inFileName, "rb");
   if (data_file == NULL) {
-    PERR("file %s not found", inFileName);
+    PERR("file %s not found \n check data/cifar10/get_cifar10.sh", inFileName);
     exit(-1);
   }
 

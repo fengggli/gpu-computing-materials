@@ -26,13 +26,14 @@ int main(int argc, char *argv[]) {
   // uint train_sz = 4000;
   uint batch_sz = 128;
 
-  if(argc != 3){
-    PERR("format: cmd batch_size nr_worker_threads");
+  if(argc != 4){
+    PERR("format: cmd batch_size nr_worker_threads nr_iterations");
     return -1;
   }
 
   batch_sz = atoi(argv[1]);
   int nr_worker_threads = atoi(argv[2]);
+  int nr_iterations = atoi(argv[3]);
 
   /* Data loader*/
   data_loader_t loader;
@@ -67,6 +68,7 @@ int main(int argc, char *argv[]) {
     threads_info[t].batch_sz = batch_sz;
     threads_info[t].ptr_mutex = &mutex;
     threads_info[t].ptr_barrier = &barrier;
+    threads_info[t].nr_iterations = nr_iterations;
 
           rc = pthread_create(&threads[t], &attr, resnet_thread_entry, (void *)(&threads_info[t]));
     AWNN_CHECK_EQ(0, rc);

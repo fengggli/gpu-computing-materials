@@ -1,6 +1,13 @@
 #include "awnn/im2col.h"
 #include "awnn/layer_conv.h"
+
+#ifdef USE_OPENBLAS
 #include "cblas.h"
+#endif
+#ifdef USE_MKL
+#include "mkl.h"
+#endif
+
 #ifdef AWNN_USE_OPENMP
 #include <omp.h>
 #endif
@@ -29,13 +36,7 @@ void do_conv_forward_perimg(tensor_t const x, tensor_t const w, tensor_t y,
   uint bottom_dim = C * H * W;
   uint top_dim = F * Hout * Wout;
 
-#ifdef AWNN_USE_OPENMP
-	// PINF("Convolution using thread =  %d", omp_get_num_threads());
-#pragma omp parallel
-  {
-#endif
   T* col_buff = alloc_col_buffer(C, HH, WW, Hout, Wout);
-  #pragma omp for
   for (uint n = 0; n < N; n++) {  // for each img
     im2col_cpu(x.data + n * (bottom_dim), C, H, W, HH, WW, pad, stride,
                col_buff);  //((C*HH*WW)*(Hout*Wout)
@@ -45,9 +46,6 @@ void do_conv_forward_perimg(tensor_t const x, tensor_t const w, tensor_t y,
               w.data, col_buff, 0.0, y.data + n * (top_dim));
   }
   free_col_buffer(col_buff);
-#ifdef AWNN_USE_OPENMP
-  }
-#endif
 }
 
 status_t conv_forward_perimg(tensor_t const x, tensor_t const w,
@@ -90,14 +88,8 @@ status_t do_conv_backward_perimg(tensor_t dx, tensor_t dw, tensor_t const dy,
   // clear dw
   tensor_fill_scalar(dw, 0);
 
-#ifdef AWNN_USE_OPENMP
-  // TODO: let all threads updating its own dw, then us all-reduce
-#pragma omp parallel
-  {
-#endif
   T* col_buff = alloc_col_buffer(C, HH, WW, Hout, Wout);
 
-  #pragma omp for
   for (uint n = 0; n < N; n++) {  // for each img
     im2col_cpu(x.data + n * (bottom_dim), C, H, W, HH, WW, pad, stride,
                col_buff);  //((C*HH*WW)*(Hout*Wout)
@@ -113,9 +105,6 @@ status_t do_conv_backward_perimg(tensor_t dx, tensor_t dw, tensor_t const dy,
   }
 
   free_col_buffer(col_buff);
-#ifdef AWNN_USE_OPENMP
-  }
-#endif
   return S_OK;
 }
 

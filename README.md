@@ -30,6 +30,13 @@ Then build with
 cmake -DUSE_MKL=on -DAWNN_USE_FLT32=on ..
 ```
 
+* BUILD in stampede2
+
+in the builddir, run 
+```
+../scripts/build_stampede2.sh
+```
+
 When mkl is not avaible install openblas and build with -DUSE_OPENBLAS=on
 ```
 sudo ./install-apt.sh

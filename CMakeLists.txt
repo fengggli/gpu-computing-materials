@@ -19,12 +19,16 @@ option(GLOBAL_COUNT_TENSOR_ALLOC_DEALLOC "Count allocations and destroy globally
 option(AWNN_USE_OPENMP "Use OpenMP" OFF)
 option(USE_MEMCHECK "Use mem santilizer to check leaks" OFF)
 option(USE_BOOST_STACKTRACE "Use booststack trace" OFF)
+
+option(USE_ICC "Use intel compiler(icc, icpc)" OFF)
+option(USE_AVX512 "use avx512, avail in stampede SKX and KNL" OFF)
 #set (AWNN_GEMM_THREADS 1 CACHE STRING "number of openblas threads")
 
 option(USE_CLANG "Use clang compiler set" OFF)
 option(BUILD_TEST "Build google test and all test cases" ON)
 option(USE_STRICT_CHECK "use pedantic flag" OFF)
 
+set(MKL_ROOT "/opt/intel/mkl/" CACHE PATH "where to find mkl")
 
 if (NOT AWNN_USE_FLT32 AND USE_NNPACK)
   message(FATAL_ERROR 'nnpack only support float32')
@@ -35,18 +39,21 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 if(USE_CLANG)
   set(CMAKE_C_COMPILER "clang")
   set(CMAKE_CXX_COMPILER "clang++")
+elseif(USE_ICC)
+  set(CMAKE_C_COMPILER "icc")
+  set(CMAKE_CXX_COMPILER "icpc")
 else()
   set(CMAKE_C_COMPILER "gcc")
   set(CMAKE_CXX_COMPILER "g++")
 endif()
 
+set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
 
 set(GCC_COVERAGE_COMPILE_FLAGS "-Wall -Wextra -Wconversion -rdynamic")
 if(USE_STRICT_CHECK)
   set(GCC_COVERAGE_COMPILE_FLAGS "-pedantic ${GCC_COVERAGE_COMPILE_FLAGS}")
 endif()
-
 
 if(USE_MEMCHECK)
   set(GCC_COVERAGE_COMPILE_FLAGS "-fsanitize=address -fno-omit-frame-pointer ${GCC_COVERAGE_COMPILE_FLAGS}")
@@ -56,7 +63,7 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.13.0")
-  add_link_options("-no-pie") # to give line number in stacktrace
+  # add_link_options("-no-pie") # to give line number in stacktrace
 else()
   message("Debug Build stracktrace without line number(${CMAKE_VERSION} <= 3.13")
 endif()
@@ -68,24 +75,49 @@ if(AWNN_USE_OPENMP)
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
   message("Use OPenMP")
 endif()
+
 if(USE_MKL)
-  set(MKL_ROOT "/opt/intel/mkl/")
-  set(MKL_LIB_PATH "${MKL_ROOT}/lib/intel64")
-  set(MKL_SEQUENTIAL_LINK_OPTIONS "-L${MKL_LIB_PATH} -Wl,-rpath,${MKL_LIB_PATH},--no-as-needed -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl")
-  set(MKL_IOMP_LINK_OPTIONS " -L${MKLROOT}/lib/intel64 -Wl,-rpath,${MKL_LIB_PATH},--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl")
-  set(MKL_COMPILE_OPTIONS "-m64 -I${MKL_ROOT}/include")
+  if(USE_ICC)
+    set(MKL_SEQUENTIAL_LINK_OPTIONS "-mkl=sequential")
+    if(USE_AVX512)
+      set(MKL_COMPILE_OPTIONS "-xCORE-AVX512")
+    endif()
 
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MKL_COMPILE_OPTIONS}")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MKL_COMPILE_OPTIONS}")
-
-  if(USE_SEQUENTIAL_BLAS)
-    set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MKL_SEQUENTIAL_LINK_OPTIONS}")
-    message("Use non-threaded MKL")
+    #elseif("${MKL_ROOT}" STREQUAL "/opt/intel/mkl/")
   else()
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MKL_IOMP_LINK_OPTIONS}")
-    message("Use multi-threads(Intel OpenMP) MKL")
-  endif()
+    set(MKL_LIB_PATH "${MKL_ROOT}/lib/intel64")
+
+    set(MKL_SEQUENTIAL_LINK_OPTIONS "-L${MKL_LIB_PATH} -Wl,-rpath,${MKL_LIB_PATH},--no-as-needed -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl")
+    set(MKL_COMPILE_OPTIONS "-m64  -I${MKL_ROOT}/include")
+    if(USE_AVX512)
+      set(MKL_COMPILE_OPTIONS "-march=skylake-avx512 ${MKL_COMPILE_OPTIONS}")
+    endif()
+
+    set(MKL_IOMP_LINK_OPTIONS " -L${MKL_LIB_PATH} -Wl,-rpath,${MKL_LIB_PATH},--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl")
+
+#  else() # use caffe's builtin mkl
+    #message("MKL_ROOT is ${MKL_ROOT}")
+    #set(MKL_LIB_PATH "${MKL_ROOT}/lib/")
+    ## sequential version not bounded
+    #set(MKL_SEQUENTIAL_LINK_OPTIONS " -L${MKL_LIB_PATH} -Wl,-rpath,${MKL_LIB_PATH},--no-as-needed -lmklml_intel -liomp5 -lm -ldl")
+    ##set(MKL_SEQUENTIAL_LINK_OPTIONS "-L${MKL_LIB_PATH} -Wl,-rpath,${MKL_LIB_PATH},--no-as-needed -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl")
+    #set(MKL_COMPILE_OPTIONS "-m64 -I${MKL_ROOT}/include")
+    #set(MKL_IOMP_LINK_OPTIONS " -L${MKL_LIB_PATH} -Wl,-rpath,${MKL_LIB_PATH},--no-as-needed -lmklml_intel -liomp5 -lm -ldl")
+   endif()
 endif()
+
+
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MKL_COMPILE_OPTIONS}")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MKL_COMPILE_OPTIONS}")
+
+if(USE_SEQUENTIAL_BLAS)
+	set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MKL_SEQUENTIAL_LINK_OPTIONS}")
+	message("Use non-threaded MKL")
+else()
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MKL_IOMP_LINK_OPTIONS}")
+	message("Use multi-threads(Intel OpenMP) MKL")
+endif()
+
 
 project(awnn LANGUAGES C CXX)
 

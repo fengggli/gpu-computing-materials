@@ -167,7 +167,7 @@ void *resnet_thread_entry(void *threadinfo) {
   resnet_loss(&(my_info->model), x_thread_local, labels_thread_local, &loss);
   PINF("Using convolution method %d", get_conv_method());
   */
-  uint nr_iterations = 10;
+  uint nr_iterations = my_info->nr_iterations;
   clocktime_t t_start;
   double forward_backward_in_ms = 0;
   double allreduce_in_ms = 0;

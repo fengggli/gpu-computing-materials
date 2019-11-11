@@ -169,6 +169,7 @@ void resnet_teardown(net_t *net);
 struct resnet_thread_info {
   int id;
   int nr_threads;
+  int nr_iterations;
   net_t model;
 
   data_loader_t *data_loader;

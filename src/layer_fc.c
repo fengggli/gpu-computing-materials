@@ -1,6 +1,14 @@
 #include "awnn/layer_fc.h"
 #include "awnn/logging.h"
 
+#ifdef USE_OPENBLAS
+#include "cblas.h"
+#endif
+#ifdef USE_MKL
+#include "mkl.h"
+#endif
+
+
 /* y = x*W+b */
 /* https://github.com/fengggli/cs231n-assignments/blob/d4cbe582a794a5b33d81a1ecdb64f1fd3844eaaa/assignment2/FullyConnectedNets.ipynb
  */

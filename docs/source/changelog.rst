@@ -10,8 +10,84 @@ Changelog
 
   Ask Feng for access.
 
-
 Current
+=======
+
+:Date: 2019-11-04
+
+Added
+-------
+
+* Reviews of works on hybrid parallelism(https://fengggli.github.io/ResearchDocs/topics/hybridparal/index.html#hybrid-parallelism)
+
+  - One weird trick: data parallelism for convolution layer, model parallelism for dense layer, transformation in between. (because conv/dense layer have different computation/communication requirement.)
+  - How to decide process layerout for a given batch size and a network architecture.
+
+* Amazon neocpu(https://fengggli.github.io/ResearchDocs/journal/Fall19/Week9.html#neocpu)
+
+  - end-to-end optimization for cpu-based inference.
+
+* pipedream is part of microsoft fiddle project: https://www.microsoft.com/en-us/research/project/fiddle/, fiddle is targeting serveral problems:
+
+  - How to train efficiently in a single gpu
+  - How to train with multiple gpu
+  - How to train with multi-tenant Clusters
+
+* Different types of optimizations(coarse-grained, fine-grained, layer-wise, end-to-end) are discussed here (https://fengggli.github.io/ResearchDocs/journal/Fall19/Week10.html#coarse-grain-fine-grain-and-layer-wise)
+
+
+Working on
+-----------
+
+1. Original communication optimal algorithm only considers forward pass of a direct convolution operation. It gives guidelines how to decide on best blocking size/ loop orders in a direction convolution, for different input settings(e.g. input image size, filter sizes, stride size, etc).
+2. How to extend it to other components in a neural-net?
+3. How to decide the balance of data/model parallelism.
+
+
+TODO List
+----------
+
+* Use fine-grained lock to reduce contention.
+* Theoretical model.
+
+=========
+Previous
+=========
+
+0.4.13
+========
+
+:Date: 2019-10-22
+
+Added
+-------
+1. Explained why AWNN is slower than Intel-Caffe in Stampede2 SKX node Gibson (also SKX with avx512)
+
+   - performance analysis results using intel vtune see (https://github.com/fengggli/gpu-computing-materials/issues/57)
+   - AWNN still has worse single-threaded performance, most of the elapsed time is spent on im2col and col2im, since they are not currently vectorized.
+   - intel-caffe uses mkldnn  JIT avx code generation to accelerate operations like convolution/pooling.
+   - A SC18 paper describes some of the optimizations used in MKL-DNN(e.g. vectorization, cache/register blocking, loop reordering, kernel streaming, software prefetching, layer fusion, etc:  https://dl.acm.org/citation.cfm?id=3291744)
+
+2. Followed several suggestions from intel performance guide, improved single-thread forward/backward time from 540 to 380ms(https://github.com/fengggli/gpu-computing-materials/issues/57#issuecomment-540705655).
+3. We can add those optimization implemented in MKLDNN, (e.g. vectorization of im2col/col2im). But such optimizations are not urgent.
+4. Some literature on pipeline parallelism (https://fengggli.github.io/ResearchDocs/topics/pipeline/pipeline.html#pipeline), it's a form of model parallelism.
+
+0.4.12
+========
+
+:Date: 2019-10-07
+
+Added
+------
+
+* Performance comparision with Intel-caffe in skx and knl nodes and corresponding analysis.
+
+  - Performance of intel-caffe is x3.9 faster than awnn in stampede skx(https://github.com/fengggli/gpu-computing-materials/issues/54#issuecomment-537741399), not consistent with the sievert results.
+  - Now I am able to build caffe using preloaded dependencies in stampede2. Need to profile to understand the inconsistent performance in stampedede2.
+  - Also need to do same set of experiments in gibson.
+
+
+0.4.11
 =======
 
 :Data 2019-09-26
@@ -25,23 +101,8 @@ Added
    * each type of layer is now associated with a "layer_setup" function, which can infer the size of output tensor and working memory based on the layer below it.
    * all working memory and middle-layer output memory are preallocated during the "set_up" phase, instead allocated/free during forward/backward
    * improved implementations of layers like fc/relu/pool to reduce extra memory copies.
-   * x1.77 speedup, using float32.
+   * x1.77 speedup, using float32(in sievert).
 
-Working on
-------------
-
-1. Reorganize memory allocation code.
-2. Use fine-grained lock to reduce contention.
-
-TODO List
-----------
-
-* Compare with intel-caffe.
-* Theoretical model.
-
-=========
-Previous
-=========
 
 0.4.10
 ========
