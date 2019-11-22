@@ -216,6 +216,9 @@ add_library(awnn_utils
   utils/weight_init.cpp
   utils/debug.cpp)
 
+add_subdirectory(extern/pthreadpool)
+include_directories(extern/pthreadpool/include)
+
 set(AWNN_LIBS "awnn_core" "awnn_utils" dl)
 
 if(USE_CUDA)

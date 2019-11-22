@@ -1,3 +1,8 @@
+## [19-11-20]
+#### Plan
+1. thread model so that each layer could have different parallelsim.
+2. vggnet b.
+
 ## [19-09-04]
 #### Added
 - stacktrace support and handler for segfault.
