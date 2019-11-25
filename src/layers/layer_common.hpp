@@ -186,9 +186,10 @@ typedef struct {
   tape_t tape;
   std::vector<Blob *> temp_blobs; /*Used for to store ouputs of a sublayer*/
 
-  /* all other tensers shall reference in tape (e.g. w, b, or temp)*/
-  double (*forward)(tensor_t x, tape_t &tape, tensor_t y, void *layer_config);
-  void (*backward)(tensor_t dx, tape_t &tape, tensor_t dy, void *layer_config);
+  /* I need id to index in "cache")*/
+  double (*forward)(tensor_t x, tape_t &tape, tensor_t y, void *layer_config, int id);
+  void (*backward)(tensor_t dx, tape_t &tape, tensor_t dy, void *layer_config, int id);
+
 } layer_t;
 
 /** Initialize this layer*/
@@ -215,10 +216,10 @@ void net_teardown(net_t *net);
 
 /** Forward
  * Return all loss from regulizer*/
-double net_forward(net_t *net);
+double net_forward(net_t *net, topo_config_t * topo = NULL);
 
 /** Backward*/
-void net_backward(net_t *net);
+void net_backward(net_t *net, topo_config_t * topo = NULL);
 
 void net_update_weights(net_t *net, double learning_rate);
 

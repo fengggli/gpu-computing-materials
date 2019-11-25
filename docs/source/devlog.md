@@ -10,6 +10,7 @@
      * between layer?
 4. Notes:
   weight init after add hybrid
+  also need to check all index data[0]
 
 ## [19-09-04]
 #### Added

@@ -50,14 +50,14 @@ static inline void _do_inplace_relu_backward(tensor_t dx, tensor_t x) {
 
 // Inplace layer, y and x points to same tensor
 double layer_relu_forward(tensor_t x, tape_t &tape, tensor_t y,
-                          void *layer_config) {
+                          void *layer_config, int id) {
   _do_inplace_relu_forward(y);
   return 0;
 }
 
 void layer_relu_backward(tensor_t dx, tape_t &tape, tensor_t dy,
-                         void *layer_config) {
-  tensor_t x = tape["in"]->data[0];
+                         void *layer_config, int id) {
+  tensor_t x = tape["in"]->data[id];
   _do_inplace_relu_backward(dx, x);
 }
 
@@ -83,13 +83,13 @@ void layer_relu_setup(layer_t *this_layer, layer_relu_config_t *layer_config,
 
 // global averge pool layer
 double layer_pool_forward(tensor_t x, tape_t &tape, tensor_t y,
-                          void *layer_config) {
+                          void *layer_config, int id) {
   do_global_pool_forward(x, y);
   return 0;
 }
 
 void layer_pool_backward(tensor_t dx, tape_t &tape, tensor_t dy,
-                         void *layer_config) {
+                         void *layer_config, int id) {
   do_global_pool_backward(dx, dy);
 }
 
@@ -118,10 +118,10 @@ void layer_pool_setup(layer_t *this_layer, layer_pool_config_t *layer_config,
 }
 
 double layer_conv2d_forward(tensor_t x, tape_t &tape, tensor_t y,
-                            void *layer_config) {
+                            void *layer_config, int id) {
   double reg_loss = 0;
   layer_conv2d_config_t *config = (layer_conv2d_config_t *)(layer_config);
-  tensor_t w = tape["weight"]->data[0];
+  tensor_t w = tape["weight"]->data[id];
   do_conv_forward_perimg(x, w, y, config->padding, config->stride);
 
   if (config->activation == ACTIVATION_RELU) {
@@ -133,12 +133,12 @@ double layer_conv2d_forward(tensor_t x, tape_t &tape, tensor_t y,
 }
 
 void layer_conv2d_backward(tensor_t dx, tape_t &tape, tensor_t dy,
-                           void *layer_config) {
+                           void *layer_config, int id) {
   layer_conv2d_config_t *config = (layer_conv2d_config_t *)(layer_config);
-  tensor_t x = tape["in"]->data[0];
-  tensor_t w = tape["weight"]->data[0];
-  tensor_t dw = tape["weight"]->diff[0];
-  tensor_t y = tape["out"]->data[0];
+  tensor_t x = tape["in"]->data[id];
+  tensor_t w = tape["weight"]->data[id];
+  tensor_t dw = tape["weight"]->diff[id];
+  tensor_t y = tape["out"]->data[id];
 
   if (config->activation == ACTIVATION_RELU) {
     _do_inplace_relu_backward(dy, y);
@@ -199,12 +199,12 @@ void layer_conv2d_setup(layer_t *this_layer,
 }
 
 double layer_fc_forward(tensor_t x, tape_t &tape, tensor_t y,
-                        void *layer_config) {
+                        void *layer_config, int id) {
   double reg_loss = 0;
   layer_fc_config_t *config = (layer_fc_config_t *)(layer_config);
 
-  tensor_t w = tape["weight"]->data[0];
-  tensor_t b = tape["bias"]->data[0];
+  tensor_t w = tape["weight"]->data[id];
+  tensor_t b = tape["bias"]->data[id];
   do_layer_fc_forward(x, w, b, y);
 
   if (config->activation == ACTIVATION_RELU) {
@@ -217,14 +217,14 @@ double layer_fc_forward(tensor_t x, tape_t &tape, tensor_t y,
 }
 
 void layer_fc_backward(tensor_t dx, tape_t &tape, tensor_t dy,
-                       void *layer_config) {
+                       void *layer_config, int id) {
   layer_fc_config_t *config = (layer_fc_config_t *)(layer_config);
 
-  tensor_t dw = tape["weight"]->diff[0];
-  tensor_t db = tape["bias"]->diff[0];
-  tensor_t x = tape["in"]->data[0];
-  tensor_t w = tape["weight"]->data[0];
-  tensor_t y = tape["out"]->data[0];
+  tensor_t dw = tape["weight"]->diff[id];
+  tensor_t db = tape["bias"]->diff[id];
+  tensor_t x = tape["in"]->data[id];
+  tensor_t w = tape["weight"]->data[id];
+  tensor_t y = tape["out"]->data[id];
 
   if (config->activation == ACTIVATION_RELU) {
     _do_inplace_relu_backward(dy, y);
@@ -279,20 +279,20 @@ void layer_fc_setup(layer_t *this_layer, layer_fc_config_t *layer_config,
 }
 
 double layer_resblock_forward(tensor_t x, tape_t &tape, tensor_t y,
-                              void *layer_config) {
+                              void *layer_config, int id) {
   double reg_loss = 0;
   layer_resblock_config_t *config = (layer_resblock_config_t *)(layer_config);
   int padding = 1;
   int stride = 1;
 
-  tensor_t conv1_w = tape["conv1.weight"]->data[0];
-  tensor_t conv1_out = tape["conv1.out"]->data[0];
+  tensor_t conv1_w = tape["conv1.weight"]->data[id];
+  tensor_t conv1_out = tape["conv1.out"]->data[id];
   do_conv_forward_perimg(x, conv1_w, conv1_out, padding, stride);
   if (config->activation == ACTIVATION_RELU) {
     _do_inplace_relu_forward(conv1_out);
   }
 
-  tensor_t conv2_w = tape["conv2.weight"]->data[0];
+  tensor_t conv2_w = tape["conv2.weight"]->data[id];
   do_conv_forward_perimg(conv1_out, conv2_w, y, padding, stride);
 
   tensor_elemwise_op_inplace(y, x, TENSOR_OP_ADD);
@@ -307,20 +307,20 @@ double layer_resblock_forward(tensor_t x, tape_t &tape, tensor_t y,
 }
 
 void layer_resblock_backward(tensor_t dx, tape_t &tape, tensor_t dy,
-                             void *layer_config) {
+                             void *layer_config, int id) {
   layer_resblock_config_t *config = (layer_resblock_config_t *)(layer_config);
   int padding = 1, stride = 1;
-  tensor_t x = tape["in"]->data[0];
+  tensor_t x = tape["in"]->data[id];
   tensor_t dx_iden = tensor_make_alike(x);
 
-  tensor_t conv1_w = tape["conv1.weight"]->data[0];
-  tensor_t conv1_dw = tape["conv1.weight"]->diff[0];
-  tensor_t conv1_out = tape["conv1.out"]->data[0];
-  tensor_t conv1_dout = tape["conv1.out"]->diff[0];
+  tensor_t conv1_w = tape["conv1.weight"]->data[id];
+  tensor_t conv1_dw = tape["conv1.weight"]->diff[id];
+  tensor_t conv1_out = tape["conv1.out"]->data[id];
+  tensor_t conv1_dout = tape["conv1.out"]->diff[id];
 
-  tensor_t conv2_w = tape["conv2.weight"]->data[0];
-  tensor_t conv2_dw = tape["conv2.weight"]->diff[0];
-  tensor_t y = tape["out"]->data[0];
+  tensor_t conv2_w = tape["conv2.weight"]->data[id];
+  tensor_t conv2_dw = tape["conv2.weight"]->diff[id];
+  tensor_t y = tape["out"]->data[id];
 
   if (config->activation == ACTIVATION_RELU) {
     _do_inplace_relu_backward(dy, y);
@@ -496,27 +496,71 @@ void net_teardown(net_t *this_net) {
   }
 }
 
-double net_forward(net_t *this_net) {
+struct net_forward_context {
+    double *augend;
+    double *addend;
+    double *sum;
+};
+
+static void _do_layer_forward(layer_t *layer, size_t i){
+  layer->forward(layer->layer_in->data[i], layer->tape,
+                               layer->layer_out->data[i], layer->config, i);
+}
+
+double net_forward(net_t *this_net, topo_config_t *topo) {
   double reg_loss = 0;
   for (auto iter_layer = this_net->layers.begin();
        iter_layer != this_net->layers.end(); ++iter_layer) {
     layer_t *layer = *iter_layer;
 
     if (layer->layer_type == LAYER_TYPE_DATA) continue;
-    reg_loss += layer->forward(layer->layer_in->data[0], layer->tape,
-                               layer->layer_out->data[0], layer->config);
+    if (layer->paral_config && *(layer->paral_config) != PARAL_TYPE_DATA){
+      PERR("Bad paral config");
+      exit(-1);
+    }
+
+    int nr_parts = topo ? topo->nr_threads : 1;
+    if(nr_parts == 1){
+      reg_loss += layer->forward(layer->layer_in->data[0], layer->tape,
+                               layer->layer_out->data[0], layer->config, 0);
+    }
+    else{
+      pthreadpool_parallelize_1d(topo->threadpool,
+          (pthreadpool_task_1d_t) _do_layer_forward,
+          layer,
+          nr_parts,
+          PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
+    }
   }
   return reg_loss;
 }
 
-void net_backward(net_t *this_net) {
+static void _do_layer_backward(layer_t *layer, size_t i){
+   layer->backward(layer->layer_in->diff[i], layer->tape, layer->layer_out->diff[i], layer->config, i);
+}
+
+void net_backward(net_t *this_net, topo_config_t *topo) {
   for (auto iter_layer = this_net->layers.rbegin();
        iter_layer != this_net->layers.rend(); ++iter_layer) {
     layer_t *layer = *iter_layer;
 
     if (layer->layer_type == LAYER_TYPE_DATA) continue;
-    layer->backward(layer->layer_in->diff[0], layer->tape, layer->layer_out->diff[0],
-                    layer->config);
+    if (layer->paral_config && *(layer->paral_config) != PARAL_TYPE_DATA){
+      PERR("Bad paral config");
+      exit(-1);
+    }
+
+    int nr_parts = topo ? topo->nr_threads : 1;
+    if(nr_parts == 1){
+      layer->backward(layer->layer_in->diff[0], layer->tape, layer->layer_out->diff[0], layer->config, 0);
+    }
+    else{
+      pthreadpool_parallelize_1d(topo->threadpool,
+          (pthreadpool_task_1d_t) _do_layer_backward,
+          layer,
+          nr_parts,
+          PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
+    }
   }
 }
 
