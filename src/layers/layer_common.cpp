@@ -21,9 +21,15 @@ void layer_data_setup(layer_t *this_layer, layer_data_config_t *layer_config,
   this_layer->layer_in = nullptr;
 
   /*Calculate output shape*/
-  this_layer->layer_out =
-      new Blob(this_layer->name + ".out", 0, layer_config->dim.dims);
-  return;
+  if(this_layer->paral_config && *(this_layer->paral_config) != PARAL_TYPE_DATA){
+    PERR("paral type %d not supported in FC layer", *(this_layer->paral_config));
+    exit(-1);
+  }
+  else{
+    this_layer->layer_out =
+        new Blob(this_layer->name + ".out", 0, layer_config->dim.dims, DATA_PARTITIONED_N, this_layer->topo);
+    return;
+  }
 }
 
 static inline void _do_inplace_relu_forward(tensor_t y) {
@@ -62,10 +68,17 @@ void layer_relu_setup(layer_t *this_layer, layer_relu_config_t *layer_config,
   this_layer->layer_type = LAYER_TYPE_RELU_INPLACE;
 
   this_layer->name = layer_config->name;
-  this_layer->layer_in = bottom_layer->layer_out;
-  this_layer->layer_out = bottom_layer->layer_out;
 
-  this_layer->tape.insert({"in", this_layer->layer_in});
+  if(this_layer->paral_config && *(this_layer->paral_config) != PARAL_TYPE_DATA){
+    PERR("paral type %d not supported in FC layer", *(this_layer->paral_config));
+    exit(-1);
+  }
+  else{
+    this_layer->layer_in = bottom_layer->layer_out;
+    this_layer->layer_out = bottom_layer->layer_out;
+
+    this_layer->tape.insert({"in", this_layer->layer_in});
+  }
 }
 
 // global averge pool layer
@@ -87,14 +100,21 @@ void layer_pool_setup(layer_t *this_layer, layer_pool_config_t *layer_config,
   this_layer->layer_type = LAYER_TYPE_POOL;
 
   this_layer->name = layer_config->name;
-  this_layer->layer_in = bottom_layer->layer_out;
 
-  uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
-  uint in_channels = this_layer->layer_in->data[0].dim.dims[1];
+  if(this_layer->paral_config && *(this_layer->paral_config) != PARAL_TYPE_DATA){
+    PERR("paral type %d not supported in FC layer", *(this_layer->paral_config));
+    exit(-1);
+  }
+  else{
+    this_layer->layer_in = bottom_layer->layer_out;
 
-  /*Calculate output shape*/
-  uint out_shape[] = {nr_imgs, in_channels, 1, 1};
-  this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape);
+    uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
+    uint in_channels = this_layer->layer_in->data[0].dim.dims[1];
+
+    /*Calculate output shape*/
+    uint out_shape[] = {nr_imgs, in_channels, 1, 1};
+    this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape, DATA_PARTITIONED_N, this_layer->topo);
+  }
 }
 
 double layer_conv2d_forward(tensor_t x, tape_t &tape, tensor_t y,
@@ -139,35 +159,43 @@ void layer_conv2d_setup(layer_t *this_layer,
   AWNN_CHECK_GT(layer_config->kernel_size, 0);
 
   this_layer->name = layer_config->name;
-  this_layer->layer_in = bottom_layer->layer_out;
 
-  uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
-  uint in_channels = this_layer->layer_in->data[0].dim.dims[1];
-  uint in_height = this_layer->layer_in->data[0].dim.dims[2];
+  if(this_layer->paral_config && *(this_layer->paral_config) != PARAL_TYPE_DATA){
+    PERR("paral type %d not supported in FC layer", *(this_layer->paral_config));
+    exit(-1);
+  }
+  else{
 
-  /* Allocate weight*/
-  uint w_shape[] = {layer_config->out_channels, in_channels,
-                    layer_config->kernel_size, layer_config->kernel_size};
-  Blob *weight_blob = new Blob(this_layer->name + ".weight", 1, w_shape);
-  this_layer->learnables.push_back(weight_blob);
+    this_layer->layer_in = bottom_layer->layer_out;
 
-  /* Weight init*/
-  AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight_blob->data[0]));
+    uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
+    uint in_channels = this_layer->layer_in->data[0].dim.dims[1];
+    uint in_height = this_layer->layer_in->data[0].dim.dims[2];
 
-  /*Calculate output shape*/
-  uint out_height =
-      1 + (in_height + 2 * layer_config->padding - layer_config->kernel_size) /
-              layer_config->stride;
-  uint out_shape[] = {nr_imgs, layer_config->out_channels, out_height,
-                      out_height};
-  this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape);
+    /* Allocate weight*/
+    uint w_shape[] = {layer_config->out_channels, in_channels,
+                      layer_config->kernel_size, layer_config->kernel_size};
+    Blob *weight_blob = new Blob(this_layer->name + ".weight", 1, w_shape, DATA_REPLICATED, this_layer->topo);
+    this_layer->learnables.push_back(weight_blob);
 
-  /* Set tensor other than input/output*/
-  this_layer->tape.insert({"in", this_layer->layer_in});    // save x
-  this_layer->tape.insert({"weight", weight_blob});         // save w
-  this_layer->tape.insert({"out", this_layer->layer_out});  // save y
+    /* Weight init*/
+    AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight_blob->data[0]));
 
-  return;
+    /*Calculate output shape*/
+    uint out_height =
+        1 + (in_height + 2 * layer_config->padding - layer_config->kernel_size) /
+                layer_config->stride;
+    uint out_shape[] = {nr_imgs, layer_config->out_channels, out_height,
+                        out_height};
+    this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape, DATA_PARTITIONED_N, this_layer->topo);
+
+    /* Set tensor other than input/output*/
+    this_layer->tape.insert({"in", this_layer->layer_in});    // save x
+    this_layer->tape.insert({"weight", weight_blob});         // save w
+    this_layer->tape.insert({"out", this_layer->layer_out});  // save y
+
+    return;
+  }
 }
 
 double layer_fc_forward(tensor_t x, tape_t &tape, tensor_t y,
@@ -217,30 +245,37 @@ void layer_fc_setup(layer_t *this_layer, layer_fc_config_t *layer_config,
   this_layer->name = layer_config->name;
   this_layer->layer_in = bottom_layer->layer_out;
 
-  /** Alloate weight and bias*/
-  uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
-  uint nr_in_flat_dim =
-      tensor_get_capacity(this_layer->layer_in->data[0]) / nr_imgs;
-  uint w_shape[] = {nr_in_flat_dim, layer_config->nr_classes, 0, 0};
-  Blob *weight_blob = new Blob(this_layer->name + ".weight", 1, w_shape);
-  this_layer->learnables.push_back(weight_blob);
+  if(this_layer->paral_config && *(this_layer->paral_config) != PARAL_TYPE_DATA){
+    PERR("paral type %d not supported in FC layer", *(this_layer->paral_config));
+    exit(-1);
+  }
+  else{
+    /** Alloate weight and bias*/
+    uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
+    uint nr_in_flat_dim =
+        tensor_get_capacity(this_layer->layer_in->data[0]) / nr_imgs;
+    uint w_shape[] = {nr_in_flat_dim, layer_config->nr_classes, 0, 0};
+    Blob *weight_blob = new Blob(this_layer->name + ".weight", 1, w_shape, DATA_REPLICATED, this_layer->topo);
+    this_layer->learnables.push_back(weight_blob);
 
-  uint b_shape[] = {layer_config->nr_classes, 0, 0, 0};
-  Blob *bias_blob = new Blob(this_layer->name + ".bias", 1, b_shape);
-  this_layer->learnables.push_back(bias_blob);
+    uint b_shape[] = {layer_config->nr_classes, 0, 0, 0};
+    Blob *bias_blob = new Blob(this_layer->name + ".bias", 1, b_shape, DATA_REPLICATED, this_layer->topo);
+    this_layer->learnables.push_back(bias_blob);
 
-  /* Weight init*/
-  AWNN_CHECK_EQ(S_OK,
-                weight_init_fc_kaiming(weight_blob->data[0], bias_blob->data[0]));
+    /* Weight init, TODO: need to copy to other others*/
+    AWNN_CHECK_EQ(S_OK,
+                  weight_init_fc_kaiming(weight_blob->data[0], bias_blob->data[0]));
 
-  /*Output setup*/
-  uint out_shape[] = {nr_imgs, layer_config->nr_classes, 0, 0};
-  this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape);
+    /*Output setup*/
+    uint out_shape[] = {nr_imgs, layer_config->nr_classes, 0, 0};
+    this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape, DATA_PARTITIONED_N, this_layer->topo);
 
-  this_layer->tape.insert({"in", this_layer->layer_in});    // save x->0
-  this_layer->tape.insert({"weight", weight_blob});         // save w->1
-  this_layer->tape.insert({"bias", bias_blob});             // save b -> 3
-  this_layer->tape.insert({"out", this_layer->layer_out});  // save y -> 5
+    this_layer->tape.insert({"in", this_layer->layer_in});    // save x->0
+    this_layer->tape.insert({"weight", weight_blob});         // save w->1
+    this_layer->tape.insert({"bias", bias_blob});             // save b -> 3
+    this_layer->tape.insert({"out", this_layer->layer_out});  // save y -> 5
+  }
+  
 }
 
 double layer_resblock_forward(tensor_t x, tape_t &tape, tensor_t y,
@@ -320,50 +355,58 @@ void layer_resblock_setup(layer_t *this_layer,
   this_layer->layer_type = LAYER_TYPE_RESBLOCK;
 
   this_layer->name = layer_config->name;
-  this_layer->layer_in = bottom_layer->layer_out;
 
-  /*Allocate weight*/
-  uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
-  uint in_channels = this_layer->layer_in->data[0].dim.dims[1];
-  uint in_height = this_layer->layer_in->data[0].dim.dims[2];
+  if(this_layer->paral_config && *(this_layer->paral_config) != PARAL_TYPE_DATA){
+    PERR("paral type %d not supported in FC layer", *(this_layer->paral_config));
+    exit(-1);
+  }
+  else{
 
-  /* Allocate weight for first conv layer*/
-  uint out_channels = in_channels;
-  uint out_height = in_height;
+    this_layer->layer_in = bottom_layer->layer_out;
 
-  uint w1_shape[] = {out_channels, in_channels, layer_config->kernel_size,
-                     layer_config->kernel_size};
-  Blob *weight1_blob =
-      new Blob(this_layer->name + ".conv1.weight", 1, w1_shape);
-  this_layer->learnables.push_back(weight1_blob);
-  AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight1_blob->data[0]));
+    /*Allocate weight*/
+    uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
+    uint in_channels = this_layer->layer_in->data[0].dim.dims[1];
+    uint in_height = this_layer->layer_in->data[0].dim.dims[2];
 
-  uint conv1_out_shape[] = {nr_imgs, out_channels, out_height, out_height};
-  Blob *conv1_out_blob =
-      new Blob(this_layer->name + ".conv1.out", 1, conv1_out_shape);
-  this_layer->temp_blobs.push_back(conv1_out_blob);
+    /* Allocate weight for first conv layer*/
+    uint out_channels = in_channels;
+    uint out_height = in_height;
 
-  /* Allocate weight for second conv layer*/
-  uint w2_shape[] = {out_channels, out_channels, layer_config->kernel_size,
-                     layer_config->kernel_size};
-  Blob *weight2_blob =
-      new Blob(this_layer->name + ".conv2.weight", 1, w2_shape);
-  this_layer->learnables.push_back(weight2_blob);
-  AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight2_blob->data[0]));
+    uint w1_shape[] = {out_channels, in_channels, layer_config->kernel_size,
+                       layer_config->kernel_size};
+    Blob *weight1_blob =
+        new Blob(this_layer->name + ".conv1.weight", 1, w1_shape, DATA_REPLICATED, this_layer->topo);
+    this_layer->learnables.push_back(weight1_blob);
+    AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight1_blob->data[0]));
 
-  /* Layer out*/
-  uint out_shape[] = {nr_imgs, out_channels, out_height, out_height};
-  this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape);
+    uint conv1_out_shape[] = {nr_imgs, out_channels, out_height, out_height};
+    Blob *conv1_out_blob =
+        new Blob(this_layer->name + ".conv1.out", 1, conv1_out_shape, DATA_REPLICATED, this_layer->topo);
+    this_layer->temp_blobs.push_back(conv1_out_blob);
 
-  /* Set tensor other than input/output*/
-  this_layer->tape.insert({"in", this_layer->layer_in});  // save x -> 0
+    /* Allocate weight for second conv layer*/
+    uint w2_shape[] = {out_channels, out_channels, layer_config->kernel_size,
+                       layer_config->kernel_size};
+    Blob *weight2_blob =
+        new Blob(this_layer->name + ".conv2.weight", 1, w2_shape, DATA_REPLICATED, this_layer->topo);
+    this_layer->learnables.push_back(weight2_blob);
+    AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight2_blob->data[0]));
 
-  this_layer->tape.insert({"conv1.weight", weight1_blob});  // save w1 -> 1
-  this_layer->tape.insert({"conv1.out", conv1_out_blob});  // save conv1_out ->3
+    /* Layer out*/
+    uint out_shape[] = {nr_imgs, out_channels, out_height, out_height};
+    this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape, DATA_PARTITIONED_N, this_layer->topo);
 
-  this_layer->tape.insert({"conv2.weight", weight2_blob});  // save w1 -> 1
+    /* Set tensor other than input/output*/
+    this_layer->tape.insert({"in", this_layer->layer_in});  // save x -> 0
 
-  this_layer->tape.insert({"out", this_layer->layer_out});  // save out 9
+    this_layer->tape.insert({"conv1.weight", weight1_blob});  // save w1 -> 1
+    this_layer->tape.insert({"conv1.out", conv1_out_blob});  // save conv1_out ->3
+
+    this_layer->tape.insert({"conv2.weight", weight2_blob});  // save w1 -> 1
+
+    this_layer->tape.insert({"out", this_layer->layer_out});  // save out 9
+  }
 }
 
 static void _do_layer_setup(layer_t *target_layer, void * layer_config, layer_t *bottom_layer){
@@ -403,13 +446,7 @@ static void _do_layer_setup(layer_t *target_layer, void * layer_config, layer_t 
 
 layer_t *layer_setup(layer_type_t layer_type, void *layer_config,
                      layer_t *bottom_layer) {
-  layer_t *target_layer = new layer_t();
-  target_layer->config = layer_config;
-  target_layer->layer_type = layer_type;
-
-  _do_layer_setup(target_layer, layer_config,bottom_layer);
-  
-  return target_layer;
+  return layer_setup_hybrid(layer_type, layer_config, bottom_layer, NULL, NULL);
 }
 
 

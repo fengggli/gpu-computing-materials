@@ -34,14 +34,14 @@ typedef enum {
 
 typedef enum {
   DATA_REPLICATED = 1,
-  DATA_PARTITIIONED_N = 2, // partition in N in NCHW dimension
+  DATA_PARTITIONED_N = 2, // partition in N in NCHW dimension
 } data_layout_t;
 
 struct Blob {
   // uint id_param;
   std::string name;
 
-  int nr_parts = 1;
+  topo_config_t *topo;
   tensor_t *data;
   tensor_t *diff;
 
@@ -50,6 +50,7 @@ struct Blob {
   tensor_t *velocity;  // For momemtum sgd
 
   /** Naive version*/
+  /*
   Blob(std::string blobname, int learnable, uint shape[4])
       : learnable(learnable) {
     data = new tensor_t;
@@ -65,12 +66,14 @@ struct Blob {
       *velocity = tensor_make_placeholder(data->dim.dims, tensor_get_ndims(*data));
     }
   }
+  */
 
 
   /** Blob with data layout*/
-  Blob(std::string blobname, int learnable, uint shape[4], data_layout_t layout ,int nr_parts =1)
-      :  nr_parts(nr_parts), learnable(learnable){
+  Blob(std::string blobname, int learnable, uint shape[4], data_layout_t layout = DATA_REPLICATED , topo_config_t *topo = NULL)
+      : topo(topo), learnable(learnable){
     name = blobname;
+    int nr_parts = topo ? topo->nr_threads : 1;
     if(layout == DATA_REPLICATED){
       data = new tensor_t[nr_parts];
       diff = new tensor_t[nr_parts];
@@ -87,8 +90,8 @@ struct Blob {
       }
     }
 
-    if(layout == DATA_PARTITIIONED_N){
-      uint part_shape[4] = {shape[0]/ nr_parts, shape[1], shape[2], shape[3]};
+    if(layout == DATA_PARTITIONED_N){
+      uint part_shape[4] = {shape[0]/ (nr_parts), shape[1], shape[2], shape[3]};
       data = new tensor_t[nr_parts];
       diff = new tensor_t[nr_parts];
       velocity = new tensor_t[nr_parts];
@@ -106,6 +109,7 @@ struct Blob {
   }
 
   ~Blob() {
+    int nr_parts = topo ? topo->nr_threads : 1;
     PDBG("now destroy tensor %s, at %p", name.c_str(), data.data);
     for(int i =0; i < nr_parts; i++){
       tensor_destroy(&data[i]);
@@ -114,16 +118,9 @@ struct Blob {
         tensor_destroy(&velocity[i]);
       }
     }
-    if(nr_parts >1){
-      delete []data;
-      delete []diff;
-      delete []velocity;
-    }
-    else{
-      delete data;
-      delete diff;
-      delete velocity;
-    }
+    delete []data;
+    delete []diff;
+    delete []velocity;
   }
 };
 

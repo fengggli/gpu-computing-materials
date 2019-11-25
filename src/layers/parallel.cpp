@@ -1,1 +1,11 @@
 #include "parallel.hpp"
+#include "layer_common.hpp"
+#include "awnn/common.h"
+#include "awnn/layer_conv.h"
+#include "awnn/layer_fc.h"
+#include "awnn/layer_pool.h"
+#include "awnn/loss_softmax.h"
+#include "awnn/net_resnet.h"
+#include "awnn/solver.h"
+#include "utils/weight_init.h"
+

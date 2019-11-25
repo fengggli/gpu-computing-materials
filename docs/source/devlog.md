@@ -8,6 +8,8 @@
      * for example of dp, input/output will be partiioned, weight/bias blob will be duplicated
      * for example of mp, input/output will be duplicated, weight/bias will be partitioned.
      * between layer?
+4. Notes:
+  weight init after add hybrid
 
 ## [19-09-04]
 #### Added
