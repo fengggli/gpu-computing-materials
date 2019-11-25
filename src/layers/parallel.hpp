@@ -25,7 +25,6 @@ typedef enum {
   PARAL_TYPE_MODEL_CONV
 } paral_config_t;
 
-
 /** Initialize this layer with machine topology and parallel policy*/
 layer_t *layer_setup_hybrid(layer_type_t type, void *layer_config,
                      layer_t *bottom_layer, topo_config_t *topo,  paral_config_t *paral_config){}

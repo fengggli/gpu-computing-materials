@@ -85,7 +85,7 @@ void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info) {
         // sgd
         // sgd_update(p_param, learning_rate);
         pthread_mutex_lock(worker_info->ptr_mutex);
-        tensor_elemwise_op_inplace((param_global)->diff, (param_local)->diff,
+        tensor_elemwise_op_inplace((param_global)->diff[0], (param_local)->diff[0],
                                    TENSOR_OP_ADD);
         pthread_mutex_unlock(worker_info->ptr_mutex);
       }
@@ -107,7 +107,7 @@ void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info) {
 
         T *pelem;
         uint ii;
-        tensor_t dparam = (param_local)->diff;
+        tensor_t dparam = (param_local)->diff[0];
         tensor_for_each_entry(pelem, ii, dparam) {
           (*pelem) /= (worker_info->nr_threads);
         }
@@ -131,7 +131,7 @@ void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info) {
 
         PDBG("Duplicating %s...", (param_local)->name.c_str());
         AWNN_CHECK_EQ((param_local)->learnable, 1);
-        tensor_copy((param_local)->diff, (param_global)->diff);
+        tensor_copy((param_local)->diff[0], (param_global)->diff[0]);
       }
     }
   }

@@ -31,34 +31,97 @@ typedef enum {
   ACTIVATION_RELU,
 } activation_t;
 
+typedef enum {
+  DATA_REPLICATED = 1,
+  DATA_PARTITIIONED_N = 2, // partition in N in NCHW dimension
+} data_layout_t;
+
 struct Blob {
   // uint id_param;
   std::string name;
-  tensor_t data;
-  tensor_t diff;
+
+  int nr_parts = 1;
+  tensor_t *data;
+  tensor_t *diff;
 
   // TODO: This can be saved in disk actually.
   int learnable;
-  tensor_t velocity;  // For momemtum sgd
+  tensor_t *velocity;  // For momemtum sgd
 
+  /** Naive version*/
   Blob(std::string blobname, int learnable, uint shape[4])
       : learnable(learnable) {
+    data = new tensor_t;
+    diff = new tensor_t;
+    velocity = new tensor_t;
+
     name = blobname;
-    data = tensor_make(shape, 4);
-    diff = tensor_make_alike(data);
+    *data = tensor_make(shape, 4);
+    *diff = tensor_make_alike(*data);
     if (learnable) {
-      velocity = tensor_make_alike(data);
+      *velocity = tensor_make_alike(*data);
     } else {
-      velocity = tensor_make_placeholder(data.dim.dims, tensor_get_ndims(data));
+      *velocity = tensor_make_placeholder(data->dim.dims, tensor_get_ndims(*data));
+    }
+  }
+
+
+  /** Blob with data layout*/
+  Blob(std::string blobname, int learnable, uint shape[4], data_layout_t layout ,int nr_parts =1)
+      :  nr_parts(nr_parts), learnable(learnable){
+    name = blobname;
+    if(layout == DATA_REPLICATED){
+      data = new tensor_t[nr_parts];
+      diff = new tensor_t[nr_parts];
+      velocity = new tensor_t[nr_parts];
+
+      for(int i = 0 ; i < nr_parts; i++){
+        data[i] = tensor_make(shape, 4);
+        diff[i] = tensor_make_alike(*data);
+        if (learnable) {
+          velocity[i] = tensor_make_alike(*data);
+        } else {
+          velocity[i] = tensor_make_placeholder(data->dim.dims, tensor_get_ndims(*data));
+        }
+      }
+    }
+
+    if(layout == DATA_PARTITIIONED_N){
+      uint part_shape[4] = {shape[0]/ nr_parts, shape[1], shape[2], shape[3]};
+      data = new tensor_t[nr_parts];
+      diff = new tensor_t[nr_parts];
+      velocity = new tensor_t[nr_parts];
+
+      for(int i = 0 ; i < nr_parts; i++){
+        data[i] = tensor_make(part_shape, 4);
+        diff[i] = tensor_make_alike(*data);
+        if (learnable) {
+          velocity[i] = tensor_make_alike(*data);
+        } else {
+          velocity[i] = tensor_make_placeholder(data->dim.dims, tensor_get_ndims(*data));
+        }
+      }
     }
   }
 
   ~Blob() {
     PDBG("now destroy tensor %s, at %p", name.c_str(), data.data);
-    tensor_destroy(&data);
-    tensor_destroy(&diff);
-    if (learnable) {
-      tensor_destroy(&velocity);
+    for(int i =0; i < nr_parts; i++){
+      tensor_destroy(&data[i]);
+      tensor_destroy(&diff[i]);
+      if (learnable) {
+        tensor_destroy(&velocity[i]);
+      }
+    }
+    if(nr_parts >1){
+      delete []data;
+      delete []diff;
+      delete []velocity;
+    }
+    else{
+      delete data;
+      delete diff;
+      delete velocity;
     }
   }
 };

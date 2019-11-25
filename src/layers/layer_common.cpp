@@ -51,7 +51,7 @@ double layer_relu_forward(tensor_t x, tape_t &tape, tensor_t y,
 
 void layer_relu_backward(tensor_t dx, tape_t &tape, tensor_t dy,
                          void *layer_config) {
-  tensor_t x = tape["in"]->data;
+  tensor_t x = tape["in"]->data[0];
   _do_inplace_relu_backward(dx, x);
 }
 
@@ -89,8 +89,8 @@ void layer_pool_setup(layer_t *this_layer, layer_pool_config_t *layer_config,
   this_layer->name = layer_config->name;
   this_layer->layer_in = bottom_layer->layer_out;
 
-  uint nr_imgs = this_layer->layer_in->data.dim.dims[0];
-  uint in_channels = this_layer->layer_in->data.dim.dims[1];
+  uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
+  uint in_channels = this_layer->layer_in->data[0].dim.dims[1];
 
   /*Calculate output shape*/
   uint out_shape[] = {nr_imgs, in_channels, 1, 1};
@@ -101,7 +101,7 @@ double layer_conv2d_forward(tensor_t x, tape_t &tape, tensor_t y,
                             void *layer_config) {
   double reg_loss = 0;
   layer_conv2d_config_t *config = (layer_conv2d_config_t *)(layer_config);
-  tensor_t w = tape["weight"]->data;
+  tensor_t w = tape["weight"]->data[0];
   do_conv_forward_perimg(x, w, y, config->padding, config->stride);
 
   if (config->activation == ACTIVATION_RELU) {
@@ -115,10 +115,10 @@ double layer_conv2d_forward(tensor_t x, tape_t &tape, tensor_t y,
 void layer_conv2d_backward(tensor_t dx, tape_t &tape, tensor_t dy,
                            void *layer_config) {
   layer_conv2d_config_t *config = (layer_conv2d_config_t *)(layer_config);
-  tensor_t x = tape["in"]->data;
-  tensor_t w = tape["weight"]->data;
-  tensor_t dw = tape["weight"]->diff;
-  tensor_t y = tape["out"]->data;
+  tensor_t x = tape["in"]->data[0];
+  tensor_t w = tape["weight"]->data[0];
+  tensor_t dw = tape["weight"]->diff[0];
+  tensor_t y = tape["out"]->data[0];
 
   if (config->activation == ACTIVATION_RELU) {
     _do_inplace_relu_backward(dy, y);
@@ -141,9 +141,9 @@ void layer_conv2d_setup(layer_t *this_layer,
   this_layer->name = layer_config->name;
   this_layer->layer_in = bottom_layer->layer_out;
 
-  uint nr_imgs = this_layer->layer_in->data.dim.dims[0];
-  uint in_channels = this_layer->layer_in->data.dim.dims[1];
-  uint in_height = this_layer->layer_in->data.dim.dims[2];
+  uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
+  uint in_channels = this_layer->layer_in->data[0].dim.dims[1];
+  uint in_height = this_layer->layer_in->data[0].dim.dims[2];
 
   /* Allocate weight*/
   uint w_shape[] = {layer_config->out_channels, in_channels,
@@ -152,7 +152,7 @@ void layer_conv2d_setup(layer_t *this_layer,
   this_layer->learnables.push_back(weight_blob);
 
   /* Weight init*/
-  AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight_blob->data));
+  AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight_blob->data[0]));
 
   /*Calculate output shape*/
   uint out_height =
@@ -175,8 +175,8 @@ double layer_fc_forward(tensor_t x, tape_t &tape, tensor_t y,
   double reg_loss = 0;
   layer_fc_config_t *config = (layer_fc_config_t *)(layer_config);
 
-  tensor_t w = tape["weight"]->data;
-  tensor_t b = tape["bias"]->data;
+  tensor_t w = tape["weight"]->data[0];
+  tensor_t b = tape["bias"]->data[0];
   do_layer_fc_forward(x, w, b, y);
 
   if (config->activation == ACTIVATION_RELU) {
@@ -192,11 +192,11 @@ void layer_fc_backward(tensor_t dx, tape_t &tape, tensor_t dy,
                        void *layer_config) {
   layer_fc_config_t *config = (layer_fc_config_t *)(layer_config);
 
-  tensor_t dw = tape["weight"]->diff;
-  tensor_t db = tape["bias"]->diff;
-  tensor_t x = tape["in"]->data;
-  tensor_t w = tape["weight"]->data;
-  tensor_t y = tape["out"]->data;
+  tensor_t dw = tape["weight"]->diff[0];
+  tensor_t db = tape["bias"]->diff[0];
+  tensor_t x = tape["in"]->data[0];
+  tensor_t w = tape["weight"]->data[0];
+  tensor_t y = tape["out"]->data[0];
 
   if (config->activation == ACTIVATION_RELU) {
     _do_inplace_relu_backward(dy, y);
@@ -218,9 +218,9 @@ void layer_fc_setup(layer_t *this_layer, layer_fc_config_t *layer_config,
   this_layer->layer_in = bottom_layer->layer_out;
 
   /** Alloate weight and bias*/
-  uint nr_imgs = this_layer->layer_in->data.dim.dims[0];
+  uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
   uint nr_in_flat_dim =
-      tensor_get_capacity(this_layer->layer_in->data) / nr_imgs;
+      tensor_get_capacity(this_layer->layer_in->data[0]) / nr_imgs;
   uint w_shape[] = {nr_in_flat_dim, layer_config->nr_classes, 0, 0};
   Blob *weight_blob = new Blob(this_layer->name + ".weight", 1, w_shape);
   this_layer->learnables.push_back(weight_blob);
@@ -231,7 +231,7 @@ void layer_fc_setup(layer_t *this_layer, layer_fc_config_t *layer_config,
 
   /* Weight init*/
   AWNN_CHECK_EQ(S_OK,
-                weight_init_fc_kaiming(weight_blob->data, bias_blob->data));
+                weight_init_fc_kaiming(weight_blob->data[0], bias_blob->data[0]));
 
   /*Output setup*/
   uint out_shape[] = {nr_imgs, layer_config->nr_classes, 0, 0};
@@ -250,14 +250,14 @@ double layer_resblock_forward(tensor_t x, tape_t &tape, tensor_t y,
   int padding = 1;
   int stride = 1;
 
-  tensor_t conv1_w = tape["conv1.weight"]->data;
-  tensor_t conv1_out = tape["conv1.out"]->data;
+  tensor_t conv1_w = tape["conv1.weight"]->data[0];
+  tensor_t conv1_out = tape["conv1.out"]->data[0];
   do_conv_forward_perimg(x, conv1_w, conv1_out, padding, stride);
   if (config->activation == ACTIVATION_RELU) {
     _do_inplace_relu_forward(conv1_out);
   }
 
-  tensor_t conv2_w = tape["conv2.weight"]->data;
+  tensor_t conv2_w = tape["conv2.weight"]->data[0];
   do_conv_forward_perimg(conv1_out, conv2_w, y, padding, stride);
 
   tensor_elemwise_op_inplace(y, x, TENSOR_OP_ADD);
@@ -275,17 +275,17 @@ void layer_resblock_backward(tensor_t dx, tape_t &tape, tensor_t dy,
                              void *layer_config) {
   layer_resblock_config_t *config = (layer_resblock_config_t *)(layer_config);
   int padding = 1, stride = 1;
-  tensor_t x = tape["in"]->data;
+  tensor_t x = tape["in"]->data[0];
   tensor_t dx_iden = tensor_make_alike(x);
 
-  tensor_t conv1_w = tape["conv1.weight"]->data;
-  tensor_t conv1_dw = tape["conv1.weight"]->diff;
-  tensor_t conv1_out = tape["conv1.out"]->data;
-  tensor_t conv1_dout = tape["conv1.out"]->diff;
+  tensor_t conv1_w = tape["conv1.weight"]->data[0];
+  tensor_t conv1_dw = tape["conv1.weight"]->diff[0];
+  tensor_t conv1_out = tape["conv1.out"]->data[0];
+  tensor_t conv1_dout = tape["conv1.out"]->diff[0];
 
-  tensor_t conv2_w = tape["conv2.weight"]->data;
-  tensor_t conv2_dw = tape["conv2.weight"]->diff;
-  tensor_t y = tape["out"]->data;
+  tensor_t conv2_w = tape["conv2.weight"]->data[0];
+  tensor_t conv2_dw = tape["conv2.weight"]->diff[0];
+  tensor_t y = tape["out"]->data[0];
 
   if (config->activation == ACTIVATION_RELU) {
     _do_inplace_relu_backward(dy, y);
@@ -323,9 +323,9 @@ void layer_resblock_setup(layer_t *this_layer,
   this_layer->layer_in = bottom_layer->layer_out;
 
   /*Allocate weight*/
-  uint nr_imgs = this_layer->layer_in->data.dim.dims[0];
-  uint in_channels = this_layer->layer_in->data.dim.dims[1];
-  uint in_height = this_layer->layer_in->data.dim.dims[2];
+  uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
+  uint in_channels = this_layer->layer_in->data[0].dim.dims[1];
+  uint in_height = this_layer->layer_in->data[0].dim.dims[2];
 
   /* Allocate weight for first conv layer*/
   uint out_channels = in_channels;
@@ -336,7 +336,7 @@ void layer_resblock_setup(layer_t *this_layer,
   Blob *weight1_blob =
       new Blob(this_layer->name + ".conv1.weight", 1, w1_shape);
   this_layer->learnables.push_back(weight1_blob);
-  AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight1_blob->data));
+  AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight1_blob->data[0]));
 
   uint conv1_out_shape[] = {nr_imgs, out_channels, out_height, out_height};
   Blob *conv1_out_blob =
@@ -349,7 +349,7 @@ void layer_resblock_setup(layer_t *this_layer,
   Blob *weight2_blob =
       new Blob(this_layer->name + ".conv2.weight", 1, w2_shape);
   this_layer->learnables.push_back(weight2_blob);
-  AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight2_blob->data));
+  AWNN_CHECK_EQ(S_OK, weight_init_kaiming(weight2_blob->data[0]));
 
   /* Layer out*/
   uint out_shape[] = {nr_imgs, out_channels, out_height, out_height};
@@ -445,8 +445,8 @@ double net_forward(net_t *this_net) {
     layer_t *layer = *iter_layer;
 
     if (layer->layer_type == LAYER_TYPE_DATA) continue;
-    reg_loss += layer->forward(layer->layer_in->data, layer->tape,
-                               layer->layer_out->data, layer->config);
+    reg_loss += layer->forward(layer->layer_in->data[0], layer->tape,
+                               layer->layer_out->data[0], layer->config);
   }
   return reg_loss;
 }
@@ -457,7 +457,7 @@ void net_backward(net_t *this_net) {
     layer_t *layer = *iter_layer;
 
     if (layer->layer_type == LAYER_TYPE_DATA) continue;
-    layer->backward(layer->layer_in->diff, layer->tape, layer->layer_out->diff,
+    layer->backward(layer->layer_in->diff[0], layer->tape, layer->layer_out->diff[0],
                     layer->config);
   }
 }
@@ -474,7 +474,7 @@ void net_update_weights(net_t *this_net, double learning_rate) {
       AWNN_CHECK_EQ((*param)->learnable, 1);
       // sgd
       // sgd_update(p_param, learning_rate);
-      do_sgd_update_momentum((*param)->data, (*param)->diff, (*param)->velocity,
+      do_sgd_update_momentum((*param)->data[0], (*param)->diff[0], (*param)->velocity[0],
                              learning_rate, 0.9);
     }
   }
@@ -484,12 +484,12 @@ void net_loss(net_t *net, tensor_t x, label_t const *labels, T *ptr_loss,
               int verbose) {
   T classify_loss;
   T reg_loss, total_loss;
-  tensor_copy(net->layers[0]->layer_out->data, x);
+  tensor_copy(net->layers[0]->layer_out->data[0], x);
 
   reg_loss = net_forward(net);
 
-  tensor_t out = net->layers.back()->layer_out->data;
-  tensor_t dout = net->layers.back()->layer_out->diff;
+  tensor_t out = net->layers.back()->layer_out->data[0];
+  tensor_t dout = net->layers.back()->layer_out->diff[0];
   AWNN_CHECK_EQ(S_OK,
                 loss_softmax(out, labels, &classify_loss, MODE_TRAIN, dout));
   net_backward(net);

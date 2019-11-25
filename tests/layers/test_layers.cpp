@@ -47,10 +47,10 @@ TEST_F(LayerTest, FCNet) {
   tensor_t x = tensor_make_linspace(-5.5, 4.5, dataconfig.dim.dims, 2);
   label_t labels[] = {0, 5, 1};
   // fill some init values as in cs231n
-  weight_init_linspace(fc1_layer->learnables[0]->data, -0.7, 0.3);  // w0
-  weight_init_linspace(fc1_layer->learnables[1]->data, -0.1, 0.9);  // b0
-  weight_init_linspace(fc2_layer->learnables[0]->data, -0.3, 0.4);  // w1
-  weight_init_linspace(fc2_layer->learnables[1]->data, -0.9, 0.1);  // b1
+  weight_init_linspace(fc1_layer->learnables[0]->data[0], -0.7, 0.3);  // w0
+  weight_init_linspace(fc1_layer->learnables[1]->data[0], -0.1, 0.9);  // b0
+  weight_init_linspace(fc2_layer->learnables[0]->data[0], -0.3, 0.4);  // w1
+  weight_init_linspace(fc2_layer->learnables[1]->data[0], -0.9, 0.1);  // b1
 
   T loss = 0;
 
@@ -137,13 +137,13 @@ TEST_F(LayerTest, ResBlock) {
   layer_t *conv_layer = net.layers[1];
   layer_t *resblock_layer = net.layers[2];
   layer_t *fc_layer = net.layers[4];
-  weight_init_linspace(conv_layer->learnables[0]->data, -0.7, 0.3);  // w0
-  weight_init_linspace(resblock_layer->learnables[0]->data, -0.7,
+  weight_init_linspace(conv_layer->learnables[0]->data[0], -0.7, 0.3);  // w0
+  weight_init_linspace(resblock_layer->learnables[0]->data[0], -0.7,
                        0.3);  // conv1.weight
-  weight_init_linspace(resblock_layer->learnables[1]->data, -0.7,
+  weight_init_linspace(resblock_layer->learnables[1]->data[0], -0.7,
                        0.3);  // conv2.weight
-  weight_init_linspace(fc_layer->learnables[0]->data, -0.7, 0.3);  // w1
-  weight_init_linspace(fc_layer->learnables[1]->data, -0.7, 0.3);  // w1
+  weight_init_linspace(fc_layer->learnables[0]->data[0], -0.7, 0.3);  // w1
+  weight_init_linspace(fc_layer->learnables[1]->data[0], -0.7, 0.3);  // w1
 
   T loss = 0;
 
