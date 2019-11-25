@@ -13,6 +13,33 @@ Changelog
 Current
 =======
 
+:Date: 2019-11-25
+
+Added
+-------
+
+1. Flexflow paper(https://fengggli.github.io/ResearchDocs/topics/hybridparal/index.html#beyond-data-and-model-parallelism-for-deep-neural-networks) from  Alex Aiken's group(whose previous work includes Sequoia and Legion), architecture topology is considered for GPU clusters.
+2. Channel and Filter parallelism (https://fengggli.github.io/ResearchDocs/journal/Fall19/Week13.html#channel-and-filter-parallelism)
+
+Working on
+-----------
+
+1. Reorganize code thread model, so that different layers could have different parallelism.
+2. Performance evaluation on different model/data paralellism setup.
+
+TODO List
+----------
+
+* Use fine-grained lock to reduce contention.
+* Theoretical model.
+
+=========
+Previous
+=========
+
+0.4.14
+========
+
 :Date: 2019-11-04
 
 Added
@@ -35,24 +62,6 @@ Added
 
 * Different types of optimizations(coarse-grained, fine-grained, layer-wise, end-to-end) are discussed here (https://fengggli.github.io/ResearchDocs/journal/Fall19/Week10.html#coarse-grain-fine-grain-and-layer-wise)
 
-
-Working on
------------
-
-1. Original communication optimal algorithm only considers forward pass of a direct convolution operation. It gives guidelines how to decide on best blocking size/ loop orders in a direction convolution, for different input settings(e.g. input image size, filter sizes, stride size, etc).
-2. How to extend it to other components in a neural-net?
-3. How to decide the balance of data/model parallelism.
-
-
-TODO List
-----------
-
-* Use fine-grained lock to reduce contention.
-* Theoretical model.
-
-=========
-Previous
-=========
 
 0.4.13
 ========
