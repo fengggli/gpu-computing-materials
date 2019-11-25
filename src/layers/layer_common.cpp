@@ -366,12 +366,8 @@ void layer_resblock_setup(layer_t *this_layer,
   this_layer->tape.insert({"out", this_layer->layer_out});  // save out 9
 }
 
-layer_t *layer_setup(layer_type_t layer_type, void *layer_config,
-                     layer_t *bottom_layer) {
-  layer_t *target_layer = new layer_t();
-  target_layer->config = layer_config;
-  target_layer->layer_type = layer_type;
-  switch (layer_type) {
+static void _do_layer_setup(layer_t *target_layer, void * layer_config, layer_t *bottom_layer){
+  switch (target_layer->layer_type) {
     case LAYER_TYPE_CONV2D:
       layer_conv2d_setup(target_layer, (layer_conv2d_config_t *)layer_config,
                          bottom_layer);
@@ -401,8 +397,33 @@ layer_t *layer_setup(layer_type_t layer_type, void *layer_config,
       break;
 
     default:
-      PERR("layer type %d not support", layer_type);
+      PERR("layer type %d not support", target_layer->layer_type);
   }
+}
+
+layer_t *layer_setup(layer_type_t layer_type, void *layer_config,
+                     layer_t *bottom_layer) {
+  layer_t *target_layer = new layer_t();
+  target_layer->config = layer_config;
+  target_layer->layer_type = layer_type;
+
+  _do_layer_setup(target_layer, layer_config,bottom_layer);
+  
+  return target_layer;
+}
+
+
+/** Initialize this layer with machine topology and parallel policy*/
+layer_t *layer_setup_hybrid(layer_type_t layer_type, void *layer_config,
+                     layer_t *bottom_layer, topo_config_t *topo,  paral_config_t *paral_config){
+  layer_t *target_layer = new layer_t();
+  target_layer->paral_config = paral_config;
+  target_layer->topo = topo;
+  target_layer->config = layer_config;
+  target_layer->layer_type = layer_type;
+
+  _do_layer_setup(target_layer, layer_config, bottom_layer);
+  
   return target_layer;
 }
 

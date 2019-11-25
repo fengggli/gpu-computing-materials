@@ -8,7 +8,7 @@ namespace {
 class LayerTest : public ::testing::Test {};
 }  // namespace
 
-TEST_F(LayerTest, FCNet) {
+TEST_F(LayerTest, FCNetWithCheck) {
   net_t net;
   double reg = 0;
   /*Data layer*/

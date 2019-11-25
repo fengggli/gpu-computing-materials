@@ -14,6 +14,7 @@
 #include <vector>
 #include "awnn/tensor.h"
 #include "utils/data_cifar.h"
+#include "parallel.hpp"
 
 typedef enum {
   LAYER_TYPE_DATA,
@@ -175,7 +176,10 @@ using tape_t = std::map<std::string, Blob *>;
 typedef struct {
   layer_type_t layer_type = LAYER_TYPE_UNDEFINED;
   std::string name;
-  void *config;
+
+  paral_config_t *paral_config = NULL; // parallel policy
+  topo_config_t *topo; // parallel policy
+  void *config; // layer-specific
 
   Blob *layer_in;
   Blob *layer_out;
@@ -193,6 +197,10 @@ typedef struct {
 /** Initialize this layer*/
 layer_t *layer_setup(layer_type_t type, void *layer_config,
                      layer_t *bottom_layer);
+
+/** Initialize this layer with machine topology and parallel policy*/
+layer_t *layer_setup_hybrid(layer_type_t type, void *layer_config,
+                     layer_t *bottom_layer, topo_config_t *topo,  paral_config_t *paral_config);
 
 /** Destroy this layer*/
 void layer_teardown(layer_t *this_layer);

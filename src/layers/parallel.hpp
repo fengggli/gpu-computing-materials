@@ -1,4 +1,6 @@
-#include "layers/layer_common.hpp"
+#ifndef LAYER_PARAL_HPP_
+#define LAYER_PARAL_HPP_
+
 #include "awnn/logging.h"
 #include "pthreadpool.h"
 
@@ -22,12 +24,7 @@ typedef struct Topology topo_config_t;
 typedef enum {
   PARAL_TYPE_BATCH,
   PARAL_TYPE_MODEL_FC,
-  PARAL_TYPE_MODEL_CONV
+  PARAL_TYPE_MODEL_CONV // not supported yet
 } paral_config_t;
 
-/** Initialize this layer with machine topology and parallel policy*/
-layer_t *layer_setup_hybrid(layer_type_t type, void *layer_config,
-                     layer_t *bottom_layer, topo_config_t *topo,  paral_config_t *paral_config){}
-
-/** Destroy this layer*/
-void layer_teardown(layer_t *this_layer){}
+#endif
