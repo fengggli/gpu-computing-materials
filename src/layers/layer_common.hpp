@@ -212,10 +212,18 @@ void net_teardown(net_t *net);
 
 /** Forward
  * Return all loss from regulizer*/
-double net_forward(net_t *net, topo_config_t * topo = NULL);
+double net_forward(net_t *net);
 
 /** Backward*/
-void net_backward(net_t *net, topo_config_t * topo = NULL);
+void net_backward(net_t *net);
+
+/* info shared by all wokers*/
+struct concurrent_context{
+  data_loader_t *loader;
+  net_t *net;
+  double * reg_losses;
+  double * classify_losses;
+};
 
 void net_update_weights(net_t *net, double learning_rate);
 

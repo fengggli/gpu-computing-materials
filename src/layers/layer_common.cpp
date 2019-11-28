@@ -491,19 +491,8 @@ void net_teardown(net_t *this_net) {
   }
 }
 
-struct net_forward_context {
-    double *augend;
-    double *addend;
-    double *sum;
-};
-
-static void _do_layer_forward(layer_t *layer, size_t i){
-  layer->forward(layer->layer_in->data[i], layer->tape,
-                               layer->layer_out->data[i], layer->config, i);
-}
-
-double net_forward(net_t *this_net, topo_config_t *topo) {
-  double reg_loss = 0;
+static void _do_concurrent_forward(concurrent_context *context, size_t i){
+  net_t *this_net = context->net;
   for (auto iter_layer = this_net->layers.begin();
        iter_layer != this_net->layers.end(); ++iter_layer) {
     layer_t *layer = *iter_layer;
@@ -513,28 +502,27 @@ double net_forward(net_t *this_net, topo_config_t *topo) {
       PERR("Bad paral config");
       exit(-1);
     }
+    context->reg_losses[i] = layer->forward(layer->layer_in->data[i], layer->tape,
+                               layer->layer_out->data[i], layer->config, i);
 
-    int nr_parts = topo ? topo->nr_threads : 1;
-    if(nr_parts == 1){
-      reg_loss += layer->forward(layer->layer_in->data[0], layer->tape,
-                               layer->layer_out->data[0], layer->config, 0);
-    }
-    else{
-      pthreadpool_parallelize_1d(topo->threadpool,
-          (pthreadpool_task_1d_t) _do_layer_forward,
-          layer,
-          nr_parts,
-          PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
-    }
   }
+}
+
+double net_forward(net_t *this_net) {
+  PDBG("This is the legacy net forward");
+  double reg_loss = 0;
+  struct concurrent_context context;
+  context.net = this_net;
+  context.reg_losses = &reg_loss; 
+
+  _do_concurrent_forward(&context, 0);
+
   return reg_loss;
 }
 
-static void _do_layer_backward(layer_t *layer, size_t i){
-   layer->backward(layer->layer_in->diff[i], layer->tape, layer->layer_out->diff[i], layer->config, i);
-}
 
-void net_backward(net_t *this_net, topo_config_t *topo) {
+static void _do_concurrent_backward(concurrent_context *context, size_t i){
+  net_t *this_net = context->net;
   for (auto iter_layer = this_net->layers.rbegin();
        iter_layer != this_net->layers.rend(); ++iter_layer) {
     layer_t *layer = *iter_layer;
@@ -544,19 +532,15 @@ void net_backward(net_t *this_net, topo_config_t *topo) {
       PERR("Bad paral config");
       exit(-1);
     }
-
-    int nr_parts = topo ? topo->nr_threads : 1;
-    if(nr_parts == 1){
-      layer->backward(layer->layer_in->diff[0], layer->tape, layer->layer_out->diff[0], layer->config, 0);
-    }
-    else{
-      pthreadpool_parallelize_1d(topo->threadpool,
-          (pthreadpool_task_1d_t) _do_layer_backward,
-          layer,
-          nr_parts,
-          PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
-    }
+    layer->backward(layer->layer_in->diff[i], layer->tape, layer->layer_out->diff[i], layer->config, i);
   }
+}
+
+void net_backward(net_t *this_net) {
+  PDBG("This is the legacy net backward");
+  struct concurrent_context context;
+  context.net = this_net;
+  _do_concurrent_backward(&context, 0);
 }
 
 void net_update_weights(net_t *this_net, double learning_rate) {
@@ -601,20 +585,15 @@ void net_loss(net_t *net, tensor_t x, label_t const *labels, T *ptr_loss,
   *ptr_loss = total_loss;
 }
 
-/* info shared by all wokers*/
-struct concurrent_read_context{
-  data_loader_t *loader;
-  net_t *net;
-};
 
-static void _do_concurrent_read(concurrent_read_context *context,size_t i){
+static void _do_concurrent_read(concurrent_context *context,size_t i){
   uint cnt_read = get_train_batch_mt(context->loader, i);
 
   reader_local_info *reader_info = context->loader->readers_info + i;
   tensor_copy(context->net->layers[0]->layer_out->data[i], reader_info->cur_x);
 }
 
-static void _do_concurrent_softmax(concurrent_read_context *context,size_t i){
+static void _do_concurrent_softmax(concurrent_context *context,size_t i){
   reader_local_info *reader_info = context->loader->readers_info + i;
   T local_classify_loss = 0;
   label_t const *labels = reader_info->cur_label;
@@ -624,45 +603,59 @@ static void _do_concurrent_softmax(concurrent_read_context *context,size_t i){
   tensor_t dout = net->layers.back()->layer_out->diff[i];
   AWNN_CHECK_EQ(S_OK,
                 loss_softmax(out, labels, &local_classify_loss, MODE_TRAIN, dout));
-  net_backward(net);
+  context->classify_losses[i] = local_classify_loss;
 }
 
-// TODO: 1. also keeps all the labels in each thread
-// 2. separate softmax 
 void net_loss_hybrid(net_t *net,  T *ptr_loss, data_loader_t *data_loader,
               topo_config_t *topo, int verbose) {
   tensor_t x;
 
-  T classify_loss;
-  T reg_loss, total_loss;
+  double classify_loss;
+  double reg_loss, total_loss;
 
   int nr_parts = topo ? topo->nr_threads : 1;
 
-  struct concurrent_read_context context;
+  struct concurrent_context context;
   context.loader = data_loader;
   context.net = net;
+  context.reg_losses = (double*) mem_zalloc(sizeof(double)*nr_parts);
+  context.classify_losses = (double*) mem_zalloc(sizeof(double)*nr_parts);
 
+  // readdata
   pthreadpool_parallelize_1d(topo->threadpool,
       (pthreadpool_task_1d_t) _do_concurrent_read,
       &context,
       nr_parts,
       PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
 
-  reg_loss = net_forward(net, topo);
+  // forward
+  pthreadpool_parallelize_1d(topo->threadpool,
+      (pthreadpool_task_1d_t) _do_concurrent_forward,
+      &context,
+      nr_parts,
+      PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
 
+  // softmax
   pthreadpool_parallelize_1d(topo->threadpool,
       (pthreadpool_task_1d_t) _do_concurrent_softmax,
       &context,
       nr_parts,
       PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
 
-  net_backward(net);
+  // backward 
+  pthreadpool_parallelize_1d(topo->threadpool,
+      (pthreadpool_task_1d_t) _do_concurrent_backward,
+      &context,
+      nr_parts,
+      PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
 
   // TODO: Accumulate loss
+  reg_loss = context.reg_losses[0];
+  classify_loss =  context.classify_losses[0];
   total_loss = reg_loss + classify_loss;
   if (verbose) {
     PMAJOR(
-        "\t: Forward complete with regulizer loss %.3f(classify %.3f +  reg "
+        "\t: Forward complete with regulizer loss %.3f(classify %.3f +  reg(need to average classify loss) "
         "%.3f",
         total_loss, classify_loss, reg_loss);
   }
