@@ -142,14 +142,14 @@ void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info) {
 void *resnet_thread_entry(void *threadinfo) {
   struct resnet_thread_info *my_info =
       (struct resnet_thread_info *)(threadinfo);
-  tensor_t x_thread_local;
-  label_t *labels_thread_local;
+  struct reader_local_info * reader_info = my_info->data_loader->readers_info + my_info->id;
+  tensor_t *x_thread_local  = &(reader_info->cur_x);
+  label_t **labels_thread_local = &(reader_info->cur_label);
 
   /* Split batch data to all thread*/
   uint cur_batch = 0;
   uint cnt_read = get_train_batch_mt(
-      my_info->data_loader, &x_thread_local, &labels_thread_local, cur_batch,
-      my_info->batch_sz, (uint)my_info->id, (uint)my_info->nr_threads);
+      my_info->data_loader, (uint)my_info->id);
 
   /* Network config*/
   uint in_shape[] = {cnt_read, 3, 32, 32};
@@ -178,7 +178,7 @@ void *resnet_thread_entry(void *threadinfo) {
     };
 
     /** Forward/backward*/
-    net_loss(&(my_info->model), x_thread_local, labels_thread_local, &loss, 0);
+    net_loss(&(my_info->model), *x_thread_local, *labels_thread_local, &loss, 0);
     if (my_info->id == 0) {
       PINF("worker%d, Iter=%u, Loss %.2f", my_info->id, iteration, loss);
       forward_backward_in_ms += get_elapsed_ms(t_start, get_clocktime());

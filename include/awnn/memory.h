@@ -9,6 +9,7 @@
 
 #include "awnn/common.h"
 #include "awnn/logging.h"
+#include <string.h>
 
 #include <stdlib.h>
 
@@ -39,6 +40,13 @@ static inline void* mem_alloc(size_t size) {
   }
   return ret;
 }
+
+static inline void* mem_zalloc(size_t size) {
+  void * ret = mem_alloc(size);
+  memset(ret, 0, size);
+  return ret;
+}
+
 static inline void mem_free(void* data) {
   if (data) {
     free(data);

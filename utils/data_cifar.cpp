@@ -50,11 +50,16 @@ inline void preprocess_data(char *buffer_str, T *buffer_float, size_t nr_elem) {
   }
 }
 
-status_t cifar_open(data_loader_t *loader, const char *input_folder, int batch_sz) {
+status_t cifar_open_batched(data_loader_t *loader, const char *input_folder, int batch_sz, int nr_readers) {
   label_t label;
   uint bytes_per_img = C * H * W;
   char *buffer_str = (char *)mem_alloc(bytes_per_img);
   char inFileName[MAX_STR_LENGTH];
+
+
+  AWNN_CHECK_GT(nr_readers, 0);
+  loader->nr_readers = nr_readers;
+  loader->readers_info = (struct reader_local_info *)mem_zalloc(sizeof(reader_local_info)*nr_readers);
 
   /*
    * Training set
@@ -116,13 +121,17 @@ status_t cifar_open(data_loader_t *loader, const char *input_folder, int batch_s
 
   if(batch_sz > 0 ){
     loader->batch_sz = uint(batch_sz);
-    loader->cur_train_batch = 0;
     PINF("Cifar data loader batch size %d", batch_sz);
   }
   else{
     PWRN("Cifar data loader without batch size is deprecated[19-11-28]");
   }
+
   return S_OK;
+}
+
+status_t cifar_open(data_loader_t *loader, const char *input_folder) {
+  return cifar_open_batched(loader, input_folder, 0, 1);
 }
 
 status_t cifar_split_train(data_loader_t *loader, uint train_sz,
@@ -161,14 +170,18 @@ uint get_train_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
   return nr_imgs;
 }
 
-uint get_train_batch_mt(data_loader_t const *loader,
-                        uint thread_id, uint nr_threads) {
+uint get_train_batch_mt(data_loader_t *loader,
+                        uint thread_id) {
+  uint nr_threads = loader->nr_readers;
 
   AWNN_CHECK_GT(loader->batch_sz, 0);
-  tensor_t *x = &(loader->cur_x);
-  label_t **label = &(loader->cur_label);
 
-  uint batch_id = loader->cur_train_batch;
+  // thread local info
+  struct reader_local_info *reader_info = loader->readers_info + thread_id;
+  tensor_t *x = &(reader_info->cur_x);
+  label_t **label = &(reader_info->cur_label);
+
+  uint batch_id = reader_info->cur_train_batch;
   uint batch_sz = loader->batch_sz;
 
   uint i_start = batch_id * batch_sz;

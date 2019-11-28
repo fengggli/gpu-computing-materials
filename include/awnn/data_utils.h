@@ -10,11 +10,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 typedef struct {
   uint nr_imgs;
   T *data;
   label_t *label;
 } dataset_t;
+
+struct reader_local_info{
+  uint cur_train_batch;
+  // int cur_test_batch;
+  tensor_t cur_x;
+  label_t * cur_label;
+};
 
 typedef struct {
   uint batch_sz;
@@ -29,6 +37,8 @@ typedef struct {
   uint train_split; // [0, train_split) wll be train set
   uint val_split; // [val_split, 50000) will be val set
 
+  uint nr_readers;
+  struct reader_local_info *readers_info;
 } data_loader_t;
 
 #ifdef __cplusplus
