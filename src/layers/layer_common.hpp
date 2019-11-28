@@ -231,7 +231,7 @@ void net_update_weights(net_t *net, double learning_rate);
 void net_loss(net_t *net, tensor_t x, label_t const *labels, T *ptr_loss, int verbose=0);
 
 /** S*/
-void net_loss_hybrid(net_t *net, data_loader_t* data_loader, T *ptr_loss,
+void net_loss_hybrid(net_t *net, data_loader_t* data_loader, double *ptr_loss,
               topo_config_t *topo = NULL, int verbose = 0);
 
 
@@ -259,7 +259,12 @@ struct resnet_thread_info {
 
 typedef struct resnet_thread_info resnet_thread_info_t;
 
+/** Totally seprated threads*/
 void *resnet_thread_entry(void *threadinfo);
+
+/** Version 2*/
+void *resnet_main(int batch_size, int nr_thrreads, int nr_iterations);
+
 
 #ifdef __cplusplus
 extern "C" {

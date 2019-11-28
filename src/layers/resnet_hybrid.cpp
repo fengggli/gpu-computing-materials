@@ -6,11 +6,10 @@
 
 // TODO: i had use global varaibles otherwise dimension info will be lost
 
-net_t *root_model = NULL;
-layer_conv2d_config_t conv_config;
-layer_resblock_config_t resblock_config;
-layer_pool_config_t pool_config;
-layer_fc_config_t fc_config;
+extern layer_conv2d_config_t conv_config;
+extern layer_resblock_config_t resblock_config;
+extern layer_pool_config_t pool_config;
+extern layer_fc_config_t fc_config;
 
 void resnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config_t *topo) {
   paral_config_t paral_config = PARAL_TYPE_DATA; // all layers using data parallelism
@@ -62,89 +61,7 @@ void resnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config
   net_add_layer(net, fc_layer);
 }
 
-void resnet_teardown_hybrid(net_t *net) { net_teardown(net); }
-
-/** Naive all-reduce between all threads*/
-void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info) {
-  // Accumulate all gradients from worker to main
-  pthread_barrier_wait(worker_info->ptr_barrier);
-  net_t *local_model = &(worker_info->model);
-  net_t *global_model = root_model;
-  if (worker_info->id != 0) {
-    for (size_t idx_layer = 0; idx_layer < local_model->layers.size();
-         idx_layer++) {
-      size_t nr_learnables_this_layer =
-          local_model->layers[idx_layer]->learnables.size();
-      for (size_t idx_param = 0; idx_param < nr_learnables_this_layer;
-           idx_param++) {
-        Blob *param_local =
-            local_model->layers[idx_layer]->learnables[idx_param];
-        Blob *param_global =
-            global_model->layers[idx_layer]->learnables[idx_param];
-        PDBG("updating %s...", param_local->name.c_str());
-        AWNN_CHECK_EQ(param_local->learnable, 1);
-        // sgd
-        // sgd_update(p_param, learning_rate);
-        pthread_mutex_lock(worker_info->ptr_mutex);
-        tensor_elemwise_op_inplace((param_global)->diff[0], (param_local)->diff[0],
-                                   TENSOR_OP_ADD);
-        pthread_mutex_unlock(worker_info->ptr_mutex);
-      }
-    }
-  }
-
-  // main thread get avg
-  pthread_barrier_wait(worker_info->ptr_barrier);
-  if (worker_info->id == 0 && worker_info->nr_threads > 1) {
-    for (size_t idx_layer = 0; idx_layer < local_model->layers.size();
-         idx_layer++) {
-      size_t nr_learnables_this_layer =
-          local_model->layers[idx_layer]->learnables.size();
-      for (size_t idx_param = 0; idx_param < nr_learnables_this_layer;
-           idx_param++) {
-        Blob *param_local =
-            local_model->layers[idx_layer]->learnables[idx_param];
-        PDBG("averaging %s...", (param_local)->name.c_str());
-
-        T *pelem;
-        uint ii;
-        tensor_t dparam = (param_local)->diff[0];
-        tensor_for_each_entry(pelem, ii, dparam) {
-          (*pelem) /= (worker_info->nr_threads);
-        }
-      }
-    }
-  }
-
-  // each other thread get a copy
-  pthread_barrier_wait(worker_info->ptr_barrier);
-  if (worker_info->id != 0) {
-    for (size_t idx_layer = 0; idx_layer < local_model->layers.size();
-         idx_layer++) {
-      size_t nr_learnables_this_layer =
-          local_model->layers[idx_layer]->learnables.size();
-      for (size_t idx_param = 0; idx_param < nr_learnables_this_layer;
-           idx_param++) {
-        Blob *param_local =
-            local_model->layers[idx_layer]->learnables[idx_param];
-        Blob *param_global =
-            global_model->layers[idx_layer]->learnables[idx_param];
-
-        PDBG("Duplicating %s...", (param_local)->name.c_str());
-        AWNN_CHECK_EQ((param_local)->learnable, 1);
-        tensor_copy((param_local)->diff[0], (param_global)->diff[0]);
-      }
-    }
-  }
-
-  pthread_barrier_wait(worker_info->ptr_barrier);
-}
-
-void *resnet_main_hybrid() {
-
-  int nr_threads = 4;
-  uint nr_iterations = 10;
-  uint batch_size = 128;
+void *resnet_main(int batch_size, int nr_threads, int nr_iterations) {
 
   net_t model;
 
@@ -160,20 +77,20 @@ void *resnet_main_hybrid() {
 #endif
 
   /* Network config*/
-  uint in_shape[] = {batch_size, 3, 32, 32};
+  uint in_shape[] = {(uint)batch_size, 3, 32, 32};
   T reg = 0.001;
 
   resnet_setup_hybrid(&(model), in_shape, reg, &topology);
 
   /* Data loader*/
   data_loader_t loader;
-  status_t ret = cifar_open(&loader, CIFAR_PATH);
+  status_t ret = cifar_open_batched(&loader, CIFAR_PATH, batch_size, nr_threads);
   uint train_sz = 4000;
   uint val_sz = 1000;
   AWNN_CHECK_EQ(S_OK, ret);
   AWNN_CHECK_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
-  T loss = 0;
+  double loss = 0;
   /*
   resnet_loss(&(my_info->model), x_thread_local, labels_thread_local, &loss);
   PINF("Using convolution method %d", get_conv_method());
@@ -218,6 +135,8 @@ void *resnet_main_hybrid() {
       allreduce_in_ms / nr_iterations, gradientupdate_in_ms / nr_iterations);
 
   resnet_teardown(&model);
+
+  cifar_close(&loader);
   return NULL;
 }
 

@@ -606,8 +606,8 @@ static void _do_concurrent_softmax(concurrent_context *context,size_t i){
   context->classify_losses[i] = local_classify_loss;
 }
 
-void net_loss_hybrid(net_t *net,  T *ptr_loss, data_loader_t *data_loader,
-              topo_config_t *topo, int verbose) {
+void net_loss_hybrid(net_t *net,  data_loader_t *data_loader,
+              double *ptr_loss, topo_config_t *topo, int verbose) {
   tensor_t x;
 
   double classify_loss;
