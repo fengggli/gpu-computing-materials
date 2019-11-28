@@ -151,6 +151,8 @@ status_t cifar_close(data_loader_t *loader) {
 
   mem_free(loader->data_test);
   mem_free(loader->label_test);
+  mem_free(loader->readers_info);
+
   return S_OK;
 }
 

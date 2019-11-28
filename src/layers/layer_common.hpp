@@ -174,7 +174,7 @@ typedef struct {
   layer_type_t layer_type = LAYER_TYPE_UNDEFINED;
   std::string name;
 
-  paral_config_t *paral_config = NULL; // parallel policy
+  paral_config_t paral_config; // parallel policy
   topo_config_t *topo; // parallel policy
   void *config; // layer-specific
 
@@ -192,13 +192,9 @@ typedef struct {
 
 } layer_t;
 
-/** Initialize this layer*/
-layer_t *layer_setup(layer_type_t type, void *layer_config,
-                     layer_t *bottom_layer);
-
 /** Initialize this layer with machine topology and parallel policy*/
-layer_t *layer_setup_hybrid(layer_type_t type, void *layer_config,
-                     layer_t *bottom_layer, topo_config_t *topo,  paral_config_t *paral_config);
+layer_t *layer_setup(layer_type_t type, void *layer_config,
+                     layer_t *bottom_layer, topo_config_t *topo = NULL,  paral_config_t paral_config = PARAL_TYPE_DATA);
 
 /** Destroy this layer*/
 void layer_teardown(layer_t *this_layer);
@@ -223,8 +219,13 @@ void net_backward(net_t *net, topo_config_t * topo = NULL);
 
 void net_update_weights(net_t *net, double learning_rate);
 
-void net_loss(net_t *net, tensor_t x, label_t const *labels, T *ptr_loss,
-              int verbose = 0);
+/** Single-thread network (legacy)*/
+void net_loss(net_t *net, tensor_t x, label_t const *labels, T *ptr_loss, int verbose=0);
+
+/** S*/
+void net_loss_hybrid(net_t *net, data_loader_t* data_loader, T *ptr_loss,
+              topo_config_t *topo = NULL, int verbose = 0);
+
 
 /* Resnet related*/
 void resnet_setup(net_t *net, uint input_shape[], double reg);

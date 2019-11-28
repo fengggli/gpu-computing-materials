@@ -21,8 +21,8 @@ void layer_data_setup(layer_t *this_layer, layer_data_config_t *layer_config,
   this_layer->layer_in = nullptr;
 
   /*Calculate output shape*/
-  if(this_layer->paral_config && *(this_layer->paral_config) != PARAL_TYPE_DATA){
-    PERR("paral type %d not supported in FC layer", *(this_layer->paral_config));
+  if(this_layer->paral_config != PARAL_TYPE_DATA){
+    PERR("paral type %d not supported in FC layer", this_layer->paral_config);
     exit(-1);
   }
   else{
@@ -69,8 +69,8 @@ void layer_relu_setup(layer_t *this_layer, layer_relu_config_t *layer_config,
 
   this_layer->name = layer_config->name;
 
-  if(this_layer->paral_config && *(this_layer->paral_config) != PARAL_TYPE_DATA){
-    PERR("paral type %d not supported in FC layer", *(this_layer->paral_config));
+  if(this_layer->paral_config != PARAL_TYPE_DATA){
+    PERR("paral type %d not supported in FC layer", this_layer->paral_config);
     exit(-1);
   }
   else{
@@ -101,8 +101,8 @@ void layer_pool_setup(layer_t *this_layer, layer_pool_config_t *layer_config,
 
   this_layer->name = layer_config->name;
 
-  if(this_layer->paral_config && *(this_layer->paral_config) != PARAL_TYPE_DATA){
-    PERR("paral type %d not supported in FC layer", *(this_layer->paral_config));
+  if(this_layer->paral_config != PARAL_TYPE_DATA){
+    PERR("paral type %d not supported in FC layer", this_layer->paral_config);
     exit(-1);
   }
   else{
@@ -160,8 +160,8 @@ void layer_conv2d_setup(layer_t *this_layer,
 
   this_layer->name = layer_config->name;
 
-  if(this_layer->paral_config && *(this_layer->paral_config) != PARAL_TYPE_DATA){
-    PERR("paral type %d not supported in FC layer", *(this_layer->paral_config));
+  if(this_layer->paral_config != PARAL_TYPE_DATA){
+    PERR("paral type %d not supported in FC layer", this_layer->paral_config);
     exit(-1);
   }
   else{
@@ -245,8 +245,8 @@ void layer_fc_setup(layer_t *this_layer, layer_fc_config_t *layer_config,
   this_layer->name = layer_config->name;
   this_layer->layer_in = bottom_layer->layer_out;
 
-  if(this_layer->paral_config && *(this_layer->paral_config) != PARAL_TYPE_DATA){
-    PERR("paral type %d not supported in FC layer", *(this_layer->paral_config));
+  if(this_layer->paral_config != PARAL_TYPE_DATA){
+    PERR("paral type %d not supported in FC layer", this_layer->paral_config);
     exit(-1);
   }
   else{
@@ -356,8 +356,8 @@ void layer_resblock_setup(layer_t *this_layer,
 
   this_layer->name = layer_config->name;
 
-  if(this_layer->paral_config && *(this_layer->paral_config) != PARAL_TYPE_DATA){
-    PERR("paral type %d not supported in FC layer", *(this_layer->paral_config));
+  if(this_layer->paral_config != PARAL_TYPE_DATA){
+    PERR("paral type %d not supported in FC layer", this_layer->paral_config);
     exit(-1);
   }
   else{
@@ -444,15 +444,10 @@ static void _do_layer_setup(layer_t *target_layer, void * layer_config, layer_t 
   }
 }
 
-layer_t *layer_setup(layer_type_t layer_type, void *layer_config,
-                     layer_t *bottom_layer) {
-  return layer_setup_hybrid(layer_type, layer_config, bottom_layer, NULL, NULL);
-}
-
 
 /** Initialize this layer with machine topology and parallel policy*/
-layer_t *layer_setup_hybrid(layer_type_t layer_type, void *layer_config,
-                     layer_t *bottom_layer, topo_config_t *topo,  paral_config_t *paral_config){
+layer_t *layer_setup(layer_type_t layer_type, void *layer_config,
+                     layer_t *bottom_layer, topo_config_t *topo,  paral_config_t paral_config){
   layer_t *target_layer = new layer_t();
   target_layer->paral_config = paral_config;
   target_layer->topo = topo;
@@ -514,7 +509,7 @@ double net_forward(net_t *this_net, topo_config_t *topo) {
     layer_t *layer = *iter_layer;
 
     if (layer->layer_type == LAYER_TYPE_DATA) continue;
-    if (layer->paral_config && *(layer->paral_config) != PARAL_TYPE_DATA){
+    if (layer->paral_config && layer->paral_config != PARAL_TYPE_DATA){
       PERR("Bad paral config");
       exit(-1);
     }
@@ -545,7 +540,7 @@ void net_backward(net_t *this_net, topo_config_t *topo) {
     layer_t *layer = *iter_layer;
 
     if (layer->layer_type == LAYER_TYPE_DATA) continue;
-    if (layer->paral_config && *(layer->paral_config) != PARAL_TYPE_DATA){
+    if (layer->paral_config && layer->paral_config != PARAL_TYPE_DATA){
       PERR("Bad paral config");
       exit(-1);
     }
@@ -596,6 +591,74 @@ void net_loss(net_t *net, tensor_t x, label_t const *labels, T *ptr_loss,
                 loss_softmax(out, labels, &classify_loss, MODE_TRAIN, dout));
   net_backward(net);
 
+  total_loss = reg_loss + classify_loss;
+  if (verbose) {
+    PMAJOR(
+        "\t: Forward complete with regulizer loss %.3f(classify %.3f +  reg "
+        "%.3f",
+        total_loss, classify_loss, reg_loss);
+  }
+  *ptr_loss = total_loss;
+}
+
+/* info shared by all wokers*/
+struct concurrent_read_context{
+  data_loader_t *loader;
+  net_t *net;
+};
+
+static void _do_concurrent_read(concurrent_read_context *context,size_t i){
+  uint cnt_read = get_train_batch_mt(context->loader, i);
+
+  reader_local_info *reader_info = context->loader->readers_info + i;
+  tensor_copy(context->net->layers[0]->layer_out->data[i], reader_info->cur_x);
+}
+
+static void _do_concurrent_softmax(concurrent_read_context *context,size_t i){
+  reader_local_info *reader_info = context->loader->readers_info + i;
+  T local_classify_loss = 0;
+  label_t const *labels = reader_info->cur_label;
+
+  net_t *net = context->net;
+  tensor_t out = net->layers.back()->layer_out->data[i];
+  tensor_t dout = net->layers.back()->layer_out->diff[i];
+  AWNN_CHECK_EQ(S_OK,
+                loss_softmax(out, labels, &local_classify_loss, MODE_TRAIN, dout));
+  net_backward(net);
+}
+
+// TODO: 1. also keeps all the labels in each thread
+// 2. separate softmax 
+void net_loss_hybrid(net_t *net,  T *ptr_loss, data_loader_t *data_loader,
+              topo_config_t *topo, int verbose) {
+  tensor_t x;
+
+  T classify_loss;
+  T reg_loss, total_loss;
+
+  int nr_parts = topo ? topo->nr_threads : 1;
+
+  struct concurrent_read_context context;
+  context.loader = data_loader;
+  context.net = net;
+
+  pthreadpool_parallelize_1d(topo->threadpool,
+      (pthreadpool_task_1d_t) _do_concurrent_read,
+      &context,
+      nr_parts,
+      PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
+
+  reg_loss = net_forward(net, topo);
+
+  pthreadpool_parallelize_1d(topo->threadpool,
+      (pthreadpool_task_1d_t) _do_concurrent_softmax,
+      &context,
+      nr_parts,
+      PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
+
+  net_backward(net);
+
+  // TODO: Accumulate loss
   total_loss = reg_loss + classify_loss;
   if (verbose) {
     PMAJOR(
