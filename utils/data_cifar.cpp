@@ -174,7 +174,7 @@ uint get_train_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
 
 uint get_train_batch_mt(data_loader_t *loader,
                         uint thread_id) {
-  uint nr_threads = loader->nr_readers;
+  int nr_threads = loader->nr_readers;
 
   AWNN_CHECK_GT(loader->batch_sz, 0);
 

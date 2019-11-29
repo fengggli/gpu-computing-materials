@@ -221,6 +221,7 @@ void net_backward(net_t *net);
 struct concurrent_context{
   data_loader_t *loader;
   net_t *net;
+  topo_config_t *topo;
   double * reg_losses;
   double * classify_losses;
 };
@@ -230,9 +231,12 @@ void net_update_weights(net_t *net, double learning_rate);
 /** Single-thread network (legacy)*/
 void net_loss(net_t *net, tensor_t x, label_t const *labels, T *ptr_loss, int verbose=0);
 
-/** S*/
-void net_loss_hybrid(net_t *net, data_loader_t* data_loader, double *ptr_loss,
+/*void net_loss_hybrid(net_t *net, data_loader_t* data_loader, double *ptr_loss,
               topo_config_t *topo = NULL, int verbose = 0);
+              */
+
+void net_loss_hybrid(concurrent_context *context, double *ptr_loss,
+              int verbose = 0);
 
 
 /* Resnet related*/

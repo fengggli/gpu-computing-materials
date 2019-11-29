@@ -606,52 +606,50 @@ static void _do_concurrent_softmax(concurrent_context *context,size_t i){
   context->classify_losses[i] = local_classify_loss;
 }
 
-void net_loss_hybrid(net_t *net,  data_loader_t *data_loader,
-              double *ptr_loss, topo_config_t *topo, int verbose) {
+void net_loss_hybrid( concurrent_context *context,
+              double *ptr_loss,  int verbose) {
   tensor_t x;
+  net_t *net = context->net;
+  data_loader_t *data_loader = context->loader;
+  topo_config_t *topo = context->topo;
 
   double classify_loss;
   double reg_loss, total_loss;
 
   int nr_parts = topo ? topo->nr_threads : 1;
 
-  struct concurrent_context context;
-  context.loader = data_loader;
-  context.net = net;
-  context.reg_losses = (double*) mem_zalloc(sizeof(double)*nr_parts);
-  context.classify_losses = (double*) mem_zalloc(sizeof(double)*nr_parts);
 
   // readdata
   pthreadpool_parallelize_1d(topo->threadpool,
       (pthreadpool_task_1d_t) _do_concurrent_read,
-      &context,
+      context,
       nr_parts,
       PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
 
   // forward
   pthreadpool_parallelize_1d(topo->threadpool,
       (pthreadpool_task_1d_t) _do_concurrent_forward,
-      &context,
+      context,
       nr_parts,
       PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
 
   // softmax
   pthreadpool_parallelize_1d(topo->threadpool,
       (pthreadpool_task_1d_t) _do_concurrent_softmax,
-      &context,
+      context,
       nr_parts,
       PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
 
   // backward 
   pthreadpool_parallelize_1d(topo->threadpool,
       (pthreadpool_task_1d_t) _do_concurrent_backward,
-      &context,
+      context,
       nr_parts,
       PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
 
   // TODO: Accumulate loss
-  reg_loss = context.reg_losses[0];
-  classify_loss =  context.classify_losses[0];
+  reg_loss = context->reg_losses[0];
+  classify_loss =  context->classify_losses[0];
   total_loss = reg_loss + classify_loss;
   if (verbose) {
     PMAJOR(

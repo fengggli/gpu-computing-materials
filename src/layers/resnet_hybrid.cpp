@@ -2,6 +2,7 @@
 #include "layers/layer_common.hpp"
 #include "utils/debug.h"
 #include "utils/weight_init.h"
+#include "awnn/memory.h"
 // #define ENABLE_SOLVER
 
 // TODO: i had use global varaibles otherwise dimension info will be lost
@@ -66,8 +67,6 @@ void *resnet_main(int batch_size, int nr_threads, int nr_iterations) {
   net_t model;
 
   topo_config_t topology(nr_threads);
-
-
 #if 0
   /* Split batch data to all thread TODO: split reading to multiple instances*/
   uint cur_batch = 0;
@@ -90,6 +89,13 @@ void *resnet_main(int batch_size, int nr_threads, int nr_iterations) {
   AWNN_CHECK_EQ(S_OK, ret);
   AWNN_CHECK_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
+  struct concurrent_context *context = (struct concurrent_context *)mem_zalloc(sizeof(struct concurrent_context));
+  context->loader = &loader;
+  context->net = &model;
+  context->reg_losses = (double*) mem_zalloc(sizeof(double)*nr_threads);
+  context->classify_losses = (double*) mem_zalloc(sizeof(double)*nr_threads);
+  context->topo = &topology;
+
   double loss = 0;
   /*
   resnet_loss(&(my_info->model), x_thread_local, labels_thread_local, &loss);
@@ -103,7 +109,7 @@ void *resnet_main(int batch_size, int nr_threads, int nr_iterations) {
     t_start = get_clocktime();
 
     /** Forward/backward*/
-    net_loss_hybrid(&(model), &loader, &loss, &topology, 0);
+    net_loss_hybrid(context, &loss, 0);
 
     PINF("Iter=%u, Loss %.2f", iteration, loss);
     forward_backward_in_ms += get_elapsed_ms(t_start, get_clocktime());
@@ -137,6 +143,11 @@ void *resnet_main(int batch_size, int nr_threads, int nr_iterations) {
   resnet_teardown(&model);
 
   cifar_close(&loader);
+
+  mem_free(context->reg_losses);
+  mem_free(context->classify_losses);
+  mem_free(context);
+
   return NULL;
 }
 

@@ -37,7 +37,7 @@ typedef struct {
   uint train_split; // [0, train_split) wll be train set
   uint val_split; // [val_split, 50000) will be val set
 
-  uint nr_readers;
+  int nr_readers;
   struct reader_local_info *readers_info;
 } data_loader_t;
 
