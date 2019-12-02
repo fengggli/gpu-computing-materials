@@ -239,6 +239,9 @@ struct concurrent_context{
   pthread_barrier_t *ptr_barrier;
 };
 
+
+void allreduce_hybrid( concurrent_context *context);
+
 void net_update_weights(net_t *net, double learning_rate);
 
 void net_update_weights_hybrid( concurrent_context *context);

@@ -7,6 +7,8 @@
 #include "awnn/net_resnet.h"
 #include "awnn/solver.h"
 #include "utils/weight_init.h"
+#define DO_AVERAGE
+
 
 /** I only need those layers:
  * 1. conv, relu, and conv_relu
@@ -540,6 +542,98 @@ void net_backward(net_t *this_net) {
   struct concurrent_context context;
   context.net = this_net;
   _do_concurrent_backward(&context, 0);
+}
+
+/** Naive all-reduce between all threads*/
+static void _do_allreduce(concurrent_context *context, size_t id) {
+  // Accumulate all gradients from worker to main
+  net_t *local_model = context->net;
+  if (id != 0) {
+    for (size_t idx_layer = 0; idx_layer < local_model->layers.size();
+         idx_layer++) {
+      size_t nr_learnables_this_layer =
+          local_model->layers[idx_layer]->learnables.size();
+      for (size_t idx_param = 0; idx_param < nr_learnables_this_layer;
+           idx_param++) {
+        Blob *param_local =
+            local_model->layers[idx_layer]->learnables[idx_param];
+
+        PDBG("updating %s...", param_local->name.c_str());
+        AWNN_CHECK_EQ(param_local->learnable, 1);
+        // sgd
+        // sgd_update(p_param, learning_rate);
+        pthread_mutex_lock(context->ptr_mutex);
+        tensor_elemwise_op_inplace((param_local)->diff[0], (param_local)->diff[id],
+                                   TENSOR_OP_ADD);
+        pthread_mutex_unlock(context->ptr_mutex);
+      }
+    }
+  }
+
+  // main thread get avg
+#ifdef DO_AVERAGE
+  pthread_barrier_wait(context->ptr_barrier);
+
+  topo_config_t *topo = context->topo;
+
+  int nr_parts = topo ? topo->nr_threads : 1;
+  if (id == 0 && nr_parts > 1) {
+    for (size_t idx_layer = 0; idx_layer < local_model->layers.size();
+         idx_layer++) {
+      size_t nr_learnables_this_layer =
+          local_model->layers[idx_layer]->learnables.size();
+      for (size_t idx_param = 0; idx_param < nr_learnables_this_layer;
+           idx_param++) {
+        Blob *param_local =
+            local_model->layers[idx_layer]->learnables[idx_param];
+        PDBG("averaging %s...", (param_local)->name.c_str());
+
+        T *pelem;
+        uint ii;
+        tensor_t dparam = (param_local)->diff[0];
+        tensor_for_each_entry(pelem, ii, dparam) {
+          (*pelem) /= (nr_parts);
+        }
+      }
+    }
+  }
+#endif
+
+  // each other thread get a copy
+  pthread_barrier_wait(context->ptr_barrier);
+  if (id != 0) {
+    for (size_t idx_layer = 0; idx_layer < local_model->layers.size();
+         idx_layer++) {
+      size_t nr_learnables_this_layer =
+          local_model->layers[idx_layer]->learnables.size();
+      for (size_t idx_param = 0; idx_param < nr_learnables_this_layer;
+           idx_param++) {
+        Blob *param_local =
+            local_model->layers[idx_layer]->learnables[idx_param];
+      
+        PDBG("Duplicating %s...", (param_local)->name.c_str());
+        AWNN_CHECK_EQ((param_local)->learnable, 1);
+        tensor_copy((param_local)->diff[id], (param_local)->diff[0]);
+      }
+    }
+  }
+
+  pthread_barrier_wait(context->ptr_barrier);
+}
+
+void allreduce_hybrid( concurrent_context *context) {
+  tensor_t x;
+  net_t *this_net = context->net;
+  topo_config_t *topo = context->topo;
+
+  int nr_parts = topo ? topo->nr_threads : 1;
+
+  // readdata
+  pthreadpool_parallelize_1d(topo->threadpool,
+      (pthreadpool_task_1d_t) _do_allreduce,
+      context,
+      nr_parts,
+      PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
 }
 
 /**Legacy sgd for single-thread*/

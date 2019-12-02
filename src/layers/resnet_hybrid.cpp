@@ -3,7 +3,7 @@
 #include "utils/debug.h"
 #include "utils/weight_init.h"
 #include "awnn/memory.h"
-// #define ENABLE_SOLVER
+#define ENABLE_SOLVER
 
 // TODO: i had use global varaibles otherwise dimension info will be lost
 
@@ -11,6 +11,10 @@ extern layer_conv2d_config_t conv_config;
 extern layer_resblock_config_t resblock_config;
 extern layer_pool_config_t pool_config;
 extern layer_fc_config_t fc_config;
+
+
+
+
 
 void resnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config_t *topo) {
   paral_config_t paral_config = PARAL_TYPE_DATA; // all layers using data parallelism
@@ -121,13 +125,14 @@ void *resnet_main(int batch_size, int nr_threads, int nr_iterations) {
     /** Forward/backward*/
     net_loss_hybrid(context, &loss, 0);
 
-    PINF("Iter=%u, Loss %.2f", iteration, loss);
+    PINF("Iter=%u, Loss(worker 1) %.2f", iteration, loss);
     forward_backward_in_ms += get_elapsed_ms(t_start, get_clocktime());
 
     /** All reduce gradient*/
     t_start = get_clocktime();
 
     // concurrent_allreduce_gradient(my_info);
+    allreduce_hybrid(context);
     //
     allreduce_in_ms += get_elapsed_ms(t_start, get_clocktime());
 
