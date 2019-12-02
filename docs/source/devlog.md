@@ -1,3 +1,6 @@
+## [19-12-01]
+#### notes
+1. all reduce now can be cooperated into blob itself
 ## [19-11-20]
 #### Plan
 1. thread model so that each layer could have different parallelsim.

@@ -95,6 +95,16 @@ void *resnet_main(int batch_size, int nr_threads, int nr_iterations) {
   context->reg_losses = (double*) mem_zalloc(sizeof(double)*nr_threads);
   context->classify_losses = (double*) mem_zalloc(sizeof(double)*nr_threads);
   context->topo = &topology;
+  context->lr = 0.01;
+
+  pthread_mutex_t mutex;
+  pthread_mutex_init(&mutex, NULL);
+  context->ptr_mutex = &mutex;
+
+  /* Used for all-reduce*/
+  pthread_barrier_t barrier;
+  pthread_barrier_init(&barrier, NULL, nr_threads);
+  context->ptr_barrier = &barrier;
 
   double loss = 0;
   /*
@@ -125,7 +135,7 @@ void *resnet_main(int batch_size, int nr_threads, int nr_iterations) {
 #ifdef ENABLE_SOLVER
     t_start = get_clocktime();
 
-    net_update_weights(&(model), 0.01);
+    net_update_weights_hybrid(context);
 
     gradientupdate_in_ms += get_elapsed_ms(t_start, get_clocktime());
 #endif

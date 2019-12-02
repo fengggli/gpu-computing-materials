@@ -520,7 +520,6 @@ double net_forward(net_t *this_net) {
   return reg_loss;
 }
 
-
 static void _do_concurrent_backward(concurrent_context *context, size_t i){
   net_t *this_net = context->net;
   for (auto iter_layer = this_net->layers.rbegin();
@@ -543,6 +542,7 @@ void net_backward(net_t *this_net) {
   _do_concurrent_backward(&context, 0);
 }
 
+/**Legacy sgd for single-thread*/
 void net_update_weights(net_t *this_net, double learning_rate) {
   for (auto iter_layer = this_net->layers.begin();
        iter_layer != this_net->layers.end(); ++iter_layer) {
@@ -559,6 +559,42 @@ void net_update_weights(net_t *this_net, double learning_rate) {
                              learning_rate, 0.9);
     }
   }
+}
+
+/* Reduce*/
+static void _do_concurrent_update_weights(concurrent_context *context,size_t i){
+  net_t *this_net = context->net;
+  double learning_rate = context->lr;
+  for (auto iter_layer = this_net->layers.begin();
+       iter_layer != this_net->layers.end(); ++iter_layer) {
+    layer_t *layer = *iter_layer;
+
+    if (layer->layer_type == LAYER_TYPE_DATA) continue;
+    for (auto param = layer->learnables.begin();
+         param != layer->learnables.end(); ++param) {
+      PDBG("updating %s...", (*param)->name.c_str());
+      AWNN_CHECK_EQ((*param)->learnable, 1);
+      // sgd
+      // sgd_update(p_param, learning_rate);
+      do_sgd_update_momentum((*param)->data[i], (*param)->diff[i], (*param)->velocity[i],
+                             learning_rate, 0.9);
+    }
+  }
+}
+
+void net_update_weights_hybrid( concurrent_context *context) {
+  tensor_t x;
+  net_t *this_net = context->net;
+  topo_config_t *topo = context->topo;
+
+  int nr_parts = topo ? topo->nr_threads : 1;
+
+  // readdata
+  pthreadpool_parallelize_1d(topo->threadpool,
+      (pthreadpool_task_1d_t) _do_concurrent_update_weights,
+      context,
+      nr_parts,
+      PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
 }
 
 void net_loss(net_t *net, tensor_t x, label_t const *labels, T *ptr_loss,

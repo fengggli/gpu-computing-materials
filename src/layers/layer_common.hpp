@@ -233,9 +233,15 @@ struct concurrent_context{
   topo_config_t *topo;
   double * reg_losses;
   double * classify_losses;
+  double lr; /** learning rate*/
+
+  pthread_mutex_t *ptr_mutex;
+  pthread_barrier_t *ptr_barrier;
 };
 
 void net_update_weights(net_t *net, double learning_rate);
+
+void net_update_weights_hybrid( concurrent_context *context);
 
 /** Single-thread network (legacy)*/
 void net_loss(net_t *net, tensor_t x, label_t const *labels, T *ptr_loss, int verbose=0);
