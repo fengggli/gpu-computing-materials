@@ -41,7 +41,13 @@ struct Blob {
   // uint id_param;
   std::string name;
 
+
+  data_layout_t layout;
+  dim_t global_dim;
+
   topo_config_t *topo;
+
+  // Those are a list of (split/replicated) tensors
   tensor_t *data;
   tensor_t *diff;
 
@@ -71,8 +77,9 @@ struct Blob {
 
   /** Blob with data layout*/
   Blob(std::string blobname, int learnable, uint shape[4], data_layout_t layout = DATA_REPLICATED , topo_config_t *topo = NULL)
-      : topo(topo), learnable(learnable){
+      : layout(layout), topo(topo), learnable(learnable){
     name = blobname;
+    global_dim = make_dim_from_arr(4, shape);
     int nr_parts = topo ? topo->nr_threads : 1;
     if(layout == DATA_REPLICATED){
       data = new tensor_t[nr_parts];

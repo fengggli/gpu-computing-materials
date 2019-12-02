@@ -108,8 +108,8 @@ void layer_pool_setup(layer_t *this_layer, layer_pool_config_t *layer_config,
   else{
     this_layer->layer_in = bottom_layer->layer_out;
 
-    uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
-    uint in_channels = this_layer->layer_in->data[0].dim.dims[1];
+    uint nr_imgs = this_layer->layer_in->global_dim.dims[0];
+    uint in_channels = this_layer->layer_in->global_dim.dims[1];
 
     /*Calculate output shape*/
     uint out_shape[] = {nr_imgs, in_channels, 1, 1};
@@ -168,9 +168,9 @@ void layer_conv2d_setup(layer_t *this_layer,
 
     this_layer->layer_in = bottom_layer->layer_out;
 
-    uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
-    uint in_channels = this_layer->layer_in->data[0].dim.dims[1];
-    uint in_height = this_layer->layer_in->data[0].dim.dims[2];
+    uint nr_imgs = this_layer->layer_in->global_dim.dims[0];
+    uint in_channels = this_layer->layer_in->global_dim.dims[1];
+    uint in_height = this_layer->layer_in->global_dim.dims[2];
 
     /* Allocate weight*/
     uint w_shape[] = {layer_config->out_channels, in_channels,
@@ -251,9 +251,9 @@ void layer_fc_setup(layer_t *this_layer, layer_fc_config_t *layer_config,
   }
   else{
     /** Alloate weight and bias*/
-    uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
+    uint nr_imgs = this_layer->layer_in->global_dim.dims[0];
     uint nr_in_flat_dim =
-        tensor_get_capacity(this_layer->layer_in->data[0]) / nr_imgs;
+        dim_get_capacity(this_layer->layer_in->global_dim) / nr_imgs;
     uint w_shape[] = {nr_in_flat_dim, layer_config->nr_classes, 0, 0};
     Blob *weight_blob = new Blob(this_layer->name + ".weight", 1, w_shape, DATA_REPLICATED, this_layer->topo);
     this_layer->learnables.push_back(weight_blob);
@@ -365,9 +365,9 @@ void layer_resblock_setup(layer_t *this_layer,
     this_layer->layer_in = bottom_layer->layer_out;
 
     /*Allocate weight*/
-    uint nr_imgs = this_layer->layer_in->data[0].dim.dims[0];
-    uint in_channels = this_layer->layer_in->data[0].dim.dims[1];
-    uint in_height = this_layer->layer_in->data[0].dim.dims[2];
+    uint nr_imgs = this_layer->layer_in->global_dim.dims[0];
+    uint in_channels = this_layer->layer_in->global_dim.dims[1];
+    uint in_height = this_layer->layer_in->global_dim.dims[2];
 
     /* Allocate weight for first conv layer*/
     uint out_channels = in_channels;
