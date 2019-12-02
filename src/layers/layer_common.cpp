@@ -357,7 +357,7 @@ void layer_resblock_setup(layer_t *this_layer,
   this_layer->name = layer_config->name;
 
   if(this_layer->paral_config != PARAL_TYPE_DATA){
-    PERR("paral type %d not supported in FC layer", this_layer->paral_config);
+    PERR("paral type %d not supported in resblocklayer", this_layer->paral_config);
     exit(-1);
   }
   else{
@@ -382,7 +382,7 @@ void layer_resblock_setup(layer_t *this_layer,
 
     uint conv1_out_shape[] = {nr_imgs, out_channels, out_height, out_height};
     Blob *conv1_out_blob =
-        new Blob(this_layer->name + ".conv1.out", 1, conv1_out_shape, DATA_REPLICATED, this_layer->topo);
+        new Blob(this_layer->name + ".conv1.out", 1, conv1_out_shape, DATA_PARTITIONED_N, this_layer->topo);
     this_layer->temp_blobs.push_back(conv1_out_blob);
 
     /* Allocate weight for second conv layer*/

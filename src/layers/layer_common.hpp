@@ -75,7 +75,9 @@ struct Blob {
   */
 
 
-  /** Blob with data layout*/
+  /** Blob with data layout
+   * @param shape global dimenson for tensor
+   **/
   Blob(std::string blobname, int learnable, uint shape[4], data_layout_t layout = DATA_REPLICATED , topo_config_t *topo = NULL)
       : layout(layout), topo(topo), learnable(learnable){
     name = blobname;
