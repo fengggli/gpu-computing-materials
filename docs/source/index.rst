@@ -27,6 +27,12 @@ Some of the contents of this documentation can be found in cs231n class website.
 
 .. toctree::
    :maxdepth: 2
+   :caption: utilss:
+
+   data_utils.rst
+
+.. toctree::
+   :maxdepth: 2
    :caption: Changelog 
 
    changelog

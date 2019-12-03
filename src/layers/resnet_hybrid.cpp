@@ -12,10 +12,6 @@ extern layer_resblock_config_t resblock_config;
 extern layer_pool_config_t pool_config;
 extern layer_fc_config_t fc_config;
 
-
-
-
-
 void resnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config_t *topo) {
   paral_config_t paral_config = PARAL_TYPE_DATA; // all layers using data parallelism
   /*Conv layer*/

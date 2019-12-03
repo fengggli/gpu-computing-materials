@@ -100,7 +100,9 @@ struct Blob {
     }
 
     if(layout == DATA_PARTITIONED_N){
-      uint part_shape[4] = {shape[0]/ (nr_parts), shape[1], shape[2], shape[3]};
+      uint max_imgs_per_thread = (shape[0] + nr_parts - 1) / nr_parts;
+
+      uint part_shape[4] = {max_imgs_per_thread, shape[1], shape[2], shape[3]};
       data = new tensor_t[nr_parts];
       diff = new tensor_t[nr_parts];
       velocity = new tensor_t[nr_parts];
