@@ -56,7 +56,7 @@ void vggnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config
 
   /*FC layer*/
   fc1_config.name = "fc1";
-  fc1_config.nr_classes = 10;
+  fc1_config.nr_classes = 1024;
   fc1_config.reg = reg;
   fc1_config.activation = ACTIVATION_NONE;
 
@@ -65,7 +65,7 @@ void vggnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config
 
   /*FC layer*/
   fc2_config.name = "fc2";
-  fc2_config.nr_classes = 10;
+  fc2_config.nr_classes = 256;
   fc2_config.reg = reg;
   fc2_config.activation = ACTIVATION_NONE;
 

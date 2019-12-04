@@ -154,7 +154,6 @@ TEST_F(LayerTest, ResBlock) {
     EXPECT_NEAR(loss, 335.9764923, 1e-3);
 
     // Check with numerical gradient
-#ifndef AWNN_USE_FLT32
   // Check with numerical gradient
   uint y_shape[] = {1};
   tensor_t dy = tensor_make_ones(y_shape, dim_of_shape(y_shape));
@@ -163,8 +162,8 @@ TEST_F(LayerTest, ResBlock) {
   // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
   for (auto this_layer : net.layers) {
     for (auto learnable : this_layer->learnables) {
-      tensor_t param = learnable->data;
-      tensor_t dparam = learnable->diff;
+      tensor_t param = learnable->data[0];
+      tensor_t dparam = learnable->diff[0];
       tensor_t dparam_ref = tensor_make_alike(param);
       PINF("checking gradient of %s", learnable->name.c_str());
 
@@ -181,7 +180,6 @@ TEST_F(LayerTest, ResBlock) {
     }
   }
   tensor_destroy(&dy);
-#endif
 
   resnet_teardown(&net);
   tensor_destroy(&x);
