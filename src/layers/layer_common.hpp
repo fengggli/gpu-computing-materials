@@ -298,6 +298,7 @@ void *resnet_thread_entry(void *threadinfo);
 
 /** Version 2*/
 void *resnet_main(int batch_size, int nr_thrreads, int nr_iterations);
+void *vggnet_main(int batch_size, int nr_thrreads, int nr_iterations);
 
 
 #ifdef __cplusplus

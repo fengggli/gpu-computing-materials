@@ -3,6 +3,7 @@ add_library(awnn_layers
   resnet.cpp
 
   resnet_hybrid.cpp
+  vggnet.cpp
   parallel.cpp
   )
 

@@ -27,15 +27,26 @@ int main(int argc, char *argv[]) {
   // uint train_sz = 4000;
   int batch_sz = 128;
 
-  if(argc != 4){
-    PERR("format: cmd batch_size nr_worker_threads nr_iterations");
+  if(argc != 5){
+    PERR("format: cmd modelname batch_size nr_worker_threads nr_iterations\n");
+    PERR("        modelname: resnet/vggnet\n");
     return -1;
   }
+  std::string modelname = argv[1];
 
-  batch_sz = atoi(argv[1]);
-  int nr_threads = atoi(argv[2]);
-  int nr_iterations = atoi(argv[3]);
+  batch_sz = atoi(argv[2]);
+  int nr_threads = atoi(argv[3]);
+  int nr_iterations = atoi(argv[4]);
 
-  resnet_main(batch_sz, nr_threads, nr_iterations);
+
+  if(modelname == "resnet"){
+    resnet_main(batch_sz, nr_threads, nr_iterations);
+  }
+  else if(modelname == "vggnet"){
+    vggnet_main(batch_sz, nr_threads, nr_iterations);
+  }
+  else{
+    PERR("modelname(%s) not supported", modelname.c_str());
+  }
 }
 
