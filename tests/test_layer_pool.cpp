@@ -41,6 +41,45 @@ TEST_F(LayerGlobalAvgPoolTest, Construct) {
   make_empty_lcache(&cache);
 }
 
+// max pool
+TEST_F(LayerGlobalAvgPoolTest, MaxPoolForward) {
+  uint kernel_size = 2;
+  uint const shape_x[] = {6, 2, 4, 4};  
+  uint const shape_y[] = {6, 2, 2, 2}; 
+  tensor_t x = tensor_make_linspace(0.0, 0.192, shape_x, dim_of_shape(shape_x));
+  tensor_t y = tensor_make(shape_y, dim_of_shape(shape_y));
+
+  tensor_dump(x);
+
+  do_max_pool_forward(x, y, kernel_size);
+
+  tensor_dump(y);
+
+  // input for backward
+  tensor_t dy = tensor_make_linspace(-0.1, 0.5, shape_y,
+                                     dim_of_shape(shape_y));  // some fake data
+
+  // output for backward
+  tensor_t dx = tensor_make_alike(x);
+
+  do_max_pool_backward(
+      dx, dy, kernel_size, x, y);  // backward needs to call lcache_free_all(cache);
+
+  /* II. Numerical check */
+  // variable
+  tensor_t dx_ref = tensor_make_alike(x);
+
+  // evaluate gradient of x
+  eval_numerical_gradient(
+      [](tensor_t const in, tensor_t out) {
+        do_max_pool_forward(in,  out, 2);
+      },
+      x, dy, dx_ref);
+  EXPECT_LT(tensor_rel_error(dx_ref, dx), 3e-3);
+  PINF("gradient check of x... is ok");
+}
+
+
 // channel_mean
 TEST_F(LayerGlobalAvgPoolTest, channel_mean) {
   uint channel_capacity = x.dim.dims[2] * x.dim.dims[3];  // each chanel

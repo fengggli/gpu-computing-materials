@@ -37,6 +37,12 @@ typedef enum {
   DATA_PARTITIONED_N = 2, // partition in N in NCHW dimension
 } data_layout_t;
 
+typedef enum {
+  POOL_GLOBAL_AVG = 1,
+  POOL_MAX = 2, 
+} pool_type_t;
+
+
 struct Blob {
   // uint id_param;
   std::string name;
@@ -145,6 +151,11 @@ struct layer_relu_config_t {
 
 struct layer_pool_config_t {
   std::string name;
+
+  pool_type_t type;
+
+  // Those are not used if its a global pool, assume using same stride
+  uint kernel_size = 2;
 };
 
 struct layer_fc_config_t {

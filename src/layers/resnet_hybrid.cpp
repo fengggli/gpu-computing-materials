@@ -47,6 +47,7 @@ void resnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config
 
   /*pool layer*/
   pool_config.name = "pool";
+  pool_config.type = POOL_GLOBAL_AVG;
 
   layer_t *pool_layer =
       layer_setup(LAYER_TYPE_POOL, &pool_config, resblock_layer, topo, paral_config);

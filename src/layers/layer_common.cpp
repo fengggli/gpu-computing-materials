@@ -86,13 +86,32 @@ void layer_relu_setup(layer_t *this_layer, layer_relu_config_t *layer_config,
 // global averge pool layer
 double layer_pool_forward(tensor_t x, tape_t &tape, tensor_t y,
                           void *layer_config, int id) {
-  do_global_pool_forward(x, y);
+  
+  layer_pool_config_t *config = (layer_pool_config_t *)(layer_config);
+
+  if(config->type == POOL_GLOBAL_AVG){
+    do_global_pool_forward(x, y);
+  }
+  else{
+    do_max_pool_forward(x, y, config->kernel_size);
+  }
   return 0;
 }
 
 void layer_pool_backward(tensor_t dx, tape_t &tape, tensor_t dy,
                          void *layer_config, int id) {
-  do_global_pool_backward(dx, dy);
+  
+  layer_pool_config_t *config = (layer_pool_config_t *)(layer_config);
+
+  tensor_t x = tape["in"]->data[id];
+  tensor_t y = tape["out"]->data[id];
+
+  if(config->type == POOL_GLOBAL_AVG){
+    do_global_pool_backward(dx, dy);
+  }
+  else{
+    do_max_pool_backward(dx, dy, config->kernel_size, x, y);
+  }
 }
 
 void layer_pool_setup(layer_t *this_layer, layer_pool_config_t *layer_config,
@@ -112,10 +131,20 @@ void layer_pool_setup(layer_t *this_layer, layer_pool_config_t *layer_config,
 
     uint nr_imgs = this_layer->layer_in->global_dim.dims[0];
     uint in_channels = this_layer->layer_in->global_dim.dims[1];
+    uint in_height = this_layer->layer_in->global_dim.dims[2];
 
     /*Calculate output shape*/
-    uint out_shape[] = {nr_imgs, in_channels, 1, 1};
+    uint out_size;
+    if (layer_config->type == POOL_GLOBAL_AVG)
+      out_size = 1;
+    else
+      out_size = in_height/layer_config->kernel_size;
+
+    uint out_shape[] = {nr_imgs, in_channels, out_size, out_size};
     this_layer->layer_out = new Blob(this_layer->name + ".out", 0, out_shape, DATA_PARTITIONED_N, this_layer->topo);
+
+    this_layer->tape.insert({"in", this_layer->layer_in});    // save x
+    this_layer->tape.insert({"out", this_layer->layer_out});    // save x
   }
 }
 
