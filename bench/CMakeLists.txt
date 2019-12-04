@@ -12,10 +12,9 @@ add_executable(bench-net-resnet bench_net_resnet.cpp)
 target_link_libraries(bench-net-resnet awnn_layers ${AWNN_LIBS} gtest )
 add_test(bench-net-resnet bench-net-resnet)
 
-add_executable(bench-resnet-hybrid bench_resnet_hybrid.cpp)
-target_link_libraries(bench-resnet-hybrid awnn_layers ${AWNN_LIBS} gtest )
-add_test(bench-resnet-hybrid bench-resnet-hybrid)
-
+add_executable(bench-net-hybrid bench_net_hybrid.cpp)
+target_link_libraries(bench-net-hybrid awnn_layers ${AWNN_LIBS} gtest )
+add_test(bench-net-hybrid bench-net-hybrid)
 
 if(USE_MKL)
 add_executable(bench-conv bench_conv.cpp)

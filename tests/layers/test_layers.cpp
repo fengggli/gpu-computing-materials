@@ -72,8 +72,8 @@ TEST_F(LayerTest, FCNetWithCheck) {
   // this will iterate fc0.weight, fc0.bias, fc1.weight, fc1.bias
   for (auto this_layer : net.layers) {
     for (auto learnable : this_layer->learnables) {
-      tensor_t param = learnable->data;
-      tensor_t dparam = learnable->diff;
+      tensor_t param = learnable->data[0];
+      tensor_t dparam = learnable->diff[0];
       tensor_t dparam_ref = tensor_make_alike(param);
       net_t *p_net = &net;
       eval_numerical_gradient(
