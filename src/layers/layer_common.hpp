@@ -41,7 +41,6 @@ struct Blob {
   // uint id_param;
   std::string name;
 
-
   data_layout_t layout;
   dim_t global_dim;
 

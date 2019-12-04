@@ -1,6 +1,7 @@
 ## [19-12-01]
 #### notes
 1. all reduce now can be cooperated into blob itself
+2. numa-revisited: try resnet with specific allocated memory, and compare the performance.
 ### TODO
 * Use one blob function to copy initialize weights (same function can be used in all-reduce)
 ## [19-11-20]

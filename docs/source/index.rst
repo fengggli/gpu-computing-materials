@@ -13,7 +13,7 @@ Some of the contents of this documentation can be found in cs231n class website.
    :maxdepth: 2
    :caption: Tensor
 
-   tensor
+   blob
    memory
    cuda
    mkl
@@ -27,7 +27,7 @@ Some of the contents of this documentation can be found in cs231n class website.
 
 .. toctree::
    :maxdepth: 2
-   :caption: utilss:
+   :caption: utils:
 
    data_utils.rst
 
