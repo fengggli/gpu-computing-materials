@@ -105,11 +105,12 @@ void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info) {
             local_model->layers[idx_layer]->learnables[idx_param];
         PDBG("averaging %s...", (param_local)->name.c_str());
 
-        T *pelem;
         uint ii;
         tensor_t dparam = (param_local)->diff[0];
-        tensor_for_each_entry(pelem, ii, dparam) {
-          (*pelem) /= (worker_info->nr_threads);
+
+        uint capacity = tensor_get_capacity(dparam);
+        for(ii = 0;  ii < capacity; ii++){
+          dparam.data[ii] /= (worker_info->nr_threads);
         }
       }
     }

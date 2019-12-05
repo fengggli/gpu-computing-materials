@@ -88,6 +88,7 @@ struct Blob {
     name = blobname;
     global_dim = make_dim_from_arr(4, shape);
     int nr_parts = topo ? topo->nr_threads : 1;
+    PINF("Allocate tensor name(%s), shape(%u, %u, %u, %u), type(%d) ,parts(%d)", blobname.c_str(), shape[0],shape[1], shape[2], shape[3], layout ,nr_parts);
     if(layout == DATA_REPLICATED){
       data = new tensor_t[nr_parts];
       diff = new tensor_t[nr_parts];

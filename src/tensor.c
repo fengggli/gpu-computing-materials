@@ -106,7 +106,8 @@ void dim_dump(dim_t dim) {
 
 T tensor_get_sum(tensor_t t) {
   T ret = 0;
-  for (uint i = 0; i < tensor_get_capacity(t); i++) {
+  uint capacity = dim_get_capacity(t.dim);
+  for (uint i = 0; i < capacity; i++) {
     ret += t.data[i];
   }
   return ret;

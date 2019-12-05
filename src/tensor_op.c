@@ -188,7 +188,8 @@ status_t tensor_elemwise_op_inplace(tensor_t to, tensor_t from, tensor_op_t op){
 
 T tensor_sum_of_square(tensor_t const t) {
   T ret = 0;
-  for (uint i = 0; i < tensor_get_capacity(t); i++) {
+  uint capacity = tensor_get_capacity(t);
+  for (uint i = 0; i < capacity; i++) {
     ret += (t.data[i]) * (t.data[i]);
   }
   return ret;

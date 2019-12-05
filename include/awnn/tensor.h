@@ -179,11 +179,6 @@ static inline void _div(T *to, T *from, uint len) {
   }
 }
 
-// Iterate tensor elems
-// declare  T *pelem and uint i before use
-#define tensor_for_each_entry(pdata, i, t) \
-  for (i = 0, (pdata) = (t).data; i < tensor_get_capacity(t); i++, pdata++)
-
 /*
  * Device support
  */
