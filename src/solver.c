@@ -27,15 +27,10 @@ void do_sgd_update_momentum(tensor_t param, tensor_t dparam, tensor_t velocity,
   uint capacity = tensor_get_capacity(dparam);
 
   for(uint i = 0;  i < capacity; i++){
-    dparam.data[i] *= learning_rate;
+    velocity.data[i] = velocity.data[i]* momentum - learning_rate*dparam.data[i];
+    param.data[i] += velocity.data[i];
   }
-  for(uint i = 0;  i < capacity; i++){
-    velocity.data[i] *= momentum;
-  }
-
-  tensor_elemwise_op_inplace(velocity, dparam, TENSOR_OP_SUB);
-
-  tensor_elemwise_op_inplace(param, velocity, TENSOR_OP_ADD);
+  
   PDBG("updating %s complete.", p_param->name);
 }
 
