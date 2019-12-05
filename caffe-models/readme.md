@@ -4,7 +4,7 @@ Follow original dataset instruction
     ./data/cifar10/get_cifar10.sh
     ./examples/cifar10/create_cifar10.sh
 
-Run with
+Run with (in intel caffe root)
 ```
 OPM_NUM_THREADS=12 build/tools/caffe time -model models/resnet_simple/resnet_cifar.prototxt -iterations 10
 ```

@@ -58,7 +58,7 @@ void vggnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config
   fc1_config.name = "fc1";
   fc1_config.nr_classes = 1024;
   fc1_config.reg = reg;
-  fc1_config.activation = ACTIVATION_NONE;
+  fc1_config.activation = ACTIVATION_RELU;
 
   layer_t *fc1_layer = layer_setup(LAYER_TYPE_FC, &fc1_config, pool_layer, topo, paral_config);
   net_add_layer(net, fc1_layer);
@@ -67,7 +67,7 @@ void vggnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config
   fc2_config.name = "fc2";
   fc2_config.nr_classes = 256;
   fc2_config.reg = reg;
-  fc2_config.activation = ACTIVATION_NONE;
+  fc2_config.activation = ACTIVATION_RELU;
 
   layer_t *fc2_layer = layer_setup(LAYER_TYPE_FC, &fc2_config, fc1_layer, topo, paral_config);
   net_add_layer(net, fc2_layer);
