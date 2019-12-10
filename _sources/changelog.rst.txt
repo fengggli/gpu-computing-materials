@@ -13,6 +13,50 @@ Changelog
 Current
 =======
 
+:Date: 2019-11-25
+
+Working on
+-----------
+
+1. Try to improve vggnet's expensive all-reduce and gradient updates
+2. Evaluation on different CPU-only machines.
+3. Initial experiments on topology-aware apis with GPUs
+
+TODO List
+----------
+
+* Performance evaluation on different model/data paralellism setup.
+* imagenet + resnet50(with batchnorm) (even node-local batchnorm is fine)
+* Optimize data loading
+* Use fine-grained lock to reduce contention.
+* Theoretical model.
+
+=========
+Previous
+=========
+
+0.5.0
+========
+
+:Date: 2019-12-10
+
+Added
+------
+
+1. New architecture apis:
+
+   * thread pool support, all the layers will use the same topology, with different parallelism type for various layers.
+   * Extended Blob definition, now each blob has a "layout_t"(e.g. DATA_REPLICATED or DATA_PARTITIONED), they can be inferred from the parrelization type of each layer. Also ech Blob dim
+2. Add simplified vggnet, improved some legacy code for better elemwised operations, but allreduce and gradient update is till very expensive.
+   * a benchmark for resnet/vggnet using new architecture-aware apis.
+3. Flexflow paper(https://fengggli.github.io/ResearchDocs/topics/hybridparal/index.html#beyond-data-and-model-parallelism-for-deep-neural-networks) from  Alex Aiken's group(whose previous work includes Sequoia and Legion), architecture topology is considered for GPU clusters.
+4. Channel and Filter parallelism (https://fengggli.github.io/ResearchDocs/journal/Fall19/Week13.html#channel-and-filter-parallelism)
+5. Also save corresponding caffe models in this repo.
+
+
+0.4.14
+========
+
 :Date: 2019-11-04
 
 Added
@@ -35,24 +79,6 @@ Added
 
 * Different types of optimizations(coarse-grained, fine-grained, layer-wise, end-to-end) are discussed here (https://fengggli.github.io/ResearchDocs/journal/Fall19/Week10.html#coarse-grain-fine-grain-and-layer-wise)
 
-
-Working on
------------
-
-1. Original communication optimal algorithm only considers forward pass of a direct convolution operation. It gives guidelines how to decide on best blocking size/ loop orders in a direction convolution, for different input settings(e.g. input image size, filter sizes, stride size, etc).
-2. How to extend it to other components in a neural-net?
-3. How to decide the balance of data/model parallelism.
-
-
-TODO List
-----------
-
-* Use fine-grained lock to reduce contention.
-* Theoretical model.
-
-=========
-Previous
-=========
 
 0.4.13
 ========
