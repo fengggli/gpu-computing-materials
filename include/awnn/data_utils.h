@@ -17,11 +17,11 @@ typedef struct {
   label_t *label;
 } dataset_t;
 
-struct reader_local_info{
+struct reader_local_info {
   uint cur_train_batch;
   // int cur_test_batch;
   tensor_t cur_x;
-  label_t * cur_label;
+  label_t *cur_label;
 };
 
 typedef struct {

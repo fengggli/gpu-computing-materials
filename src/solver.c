@@ -13,7 +13,7 @@ void sgd_update(param_t *p_param, T learning_rate) {
   AWNN_CHECK_GT(learning_rate, 0);
 
   uint capacity = tensor_get_capacity(dparam);
-  for(uint i = 0;  i < capacity; i++){
+  for (uint i = 0; i < capacity; i++) {
     dparam.data[i] *= learning_rate;
   }
   tensor_elemwise_op_inplace(param, dparam, TENSOR_OP_SUB);
@@ -26,11 +26,12 @@ void do_sgd_update_momentum(tensor_t param, tensor_t dparam, tensor_t velocity,
 
   uint capacity = tensor_get_capacity(dparam);
 
-  for(uint i = 0;  i < capacity; i++){
-    velocity.data[i] = velocity.data[i]* momentum - learning_rate*dparam.data[i];
+  for (uint i = 0; i < capacity; i++) {
+    velocity.data[i] =
+        velocity.data[i] * momentum - learning_rate * dparam.data[i];
     param.data[i] += velocity.data[i];
   }
-  
+
   PDBG("updating %s complete.", p_param->name);
 }
 

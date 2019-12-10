@@ -1,10 +1,10 @@
-// see issue #61 
+// see issue #61
 
+#include "awnn/memory.h"
 #include "awnn/tensor.h"
 #include "layers/layer_common.hpp"
 #include "utils/debug.h"
 #include "utils/weight_init.h"
-#include "awnn/memory.h"
 #define ENABLE_SOLVER
 
 // TODO: i had use global varaibles otherwise dimension info will be lost
@@ -18,8 +18,10 @@ layer_fc_config_t fc3_config;
 
 void vggnet_teardown(net_t *net) { net_teardown(net); }
 
-void vggnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config_t *topo) {
-  paral_config_t paral_config = PARAL_TYPE_DATA; // all layers using data parallelism
+void vggnet_setup_hybrid(net_t *net, uint input_shape[], double reg,
+                         topo_config_t *topo) {
+  paral_config_t paral_config =
+      PARAL_TYPE_DATA;  // all layers using data parallelism
   /*Conv layer*/
   net->dataconfig.name = "data";
 
@@ -28,8 +30,8 @@ void vggnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config
   net->dataconfig.dim.dims[2] = input_shape[2];
   net->dataconfig.dim.dims[3] = input_shape[3];
 
-  layer_t *data_layer =
-      layer_setup(LAYER_TYPE_DATA, &(net->dataconfig), nullptr, topo, paral_config);
+  layer_t *data_layer = layer_setup(LAYER_TYPE_DATA, &(net->dataconfig),
+                                    nullptr, topo, paral_config);
   net_add_layer(net, data_layer);
 
   /*Conv layer->1, 64, 32, 32*/
@@ -39,20 +41,17 @@ void vggnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config
   conv_config.reg = reg;
   conv_config.activation = ACTIVATION_RELU;
 
-  layer_t *conv_layer =
-      layer_setup(LAYER_TYPE_CONV2D, &conv_config, data_layer, topo, paral_config);
+  layer_t *conv_layer = layer_setup(LAYER_TYPE_CONV2D, &conv_config, data_layer,
+                                    topo, paral_config);
   net_add_layer(net, conv_layer);
-
 
   pool_config.name = "pool";
   pool_config.type = POOL_MAX;
   pool_config.kernel_size = 2;
 
-
-  layer_t *pool_layer =
-      layer_setup(LAYER_TYPE_POOL, &pool_config, conv_layer, topo, paral_config);
+  layer_t *pool_layer = layer_setup(LAYER_TYPE_POOL, &pool_config, conv_layer,
+                                    topo, paral_config);
   net_add_layer(net, pool_layer);
-
 
   /*FC layer*/
   fc1_config.name = "fc1";
@@ -60,7 +59,8 @@ void vggnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config
   fc1_config.reg = reg;
   fc1_config.activation = ACTIVATION_RELU;
 
-  layer_t *fc1_layer = layer_setup(LAYER_TYPE_FC, &fc1_config, pool_layer, topo, paral_config);
+  layer_t *fc1_layer =
+      layer_setup(LAYER_TYPE_FC, &fc1_config, pool_layer, topo, paral_config);
   net_add_layer(net, fc1_layer);
 
   /*FC layer*/
@@ -69,9 +69,9 @@ void vggnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config
   fc2_config.reg = reg;
   fc2_config.activation = ACTIVATION_RELU;
 
-  layer_t *fc2_layer = layer_setup(LAYER_TYPE_FC, &fc2_config, fc1_layer, topo, paral_config);
+  layer_t *fc2_layer =
+      layer_setup(LAYER_TYPE_FC, &fc2_config, fc1_layer, topo, paral_config);
   net_add_layer(net, fc2_layer);
-
 
   /*FC layer*/
   fc3_config.name = "fc3";
@@ -79,12 +79,12 @@ void vggnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config
   fc3_config.reg = reg;
   fc3_config.activation = ACTIVATION_NONE;
 
-  layer_t *fc3_layer = layer_setup(LAYER_TYPE_FC, &fc3_config, fc2_layer, topo, paral_config);
+  layer_t *fc3_layer =
+      layer_setup(LAYER_TYPE_FC, &fc3_config, fc2_layer, topo, paral_config);
   net_add_layer(net, fc3_layer);
 }
 
 void *vggnet_main(int batch_size, int nr_threads, int nr_iterations) {
-
   net_t model;
 
   topo_config_t topology(nr_threads);
@@ -104,17 +104,19 @@ void *vggnet_main(int batch_size, int nr_threads, int nr_iterations) {
 
   /* Data loader*/
   data_loader_t loader;
-  status_t ret = cifar_open_batched(&loader, CIFAR_PATH, batch_size, nr_threads);
+  status_t ret =
+      cifar_open_batched(&loader, CIFAR_PATH, batch_size, nr_threads);
   uint train_sz = 4000;
   uint val_sz = 1000;
   AWNN_CHECK_EQ(S_OK, ret);
   AWNN_CHECK_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
-  struct concurrent_context *context = (struct concurrent_context *)mem_zalloc(sizeof(struct concurrent_context));
+  struct concurrent_context *context = (struct concurrent_context *)mem_zalloc(
+      sizeof(struct concurrent_context));
   context->loader = &loader;
   context->net = &model;
-  context->reg_losses = (double*) mem_zalloc(sizeof(double)*nr_threads);
-  context->classify_losses = (double*) mem_zalloc(sizeof(double)*nr_threads);
+  context->reg_losses = (double *)mem_zalloc(sizeof(double) * nr_threads);
+  context->classify_losses = (double *)mem_zalloc(sizeof(double) * nr_threads);
   context->topo = &topology;
   context->lr = 0.01;
 
@@ -153,7 +155,7 @@ void *vggnet_main(int batch_size, int nr_threads, int nr_iterations) {
     //
     allreduce_in_ms += get_elapsed_ms(t_start, get_clocktime());
 
-      /** Update gradient*/
+    /** Update gradient*/
 #ifdef ENABLE_SOLVER
     t_start = get_clocktime();
 

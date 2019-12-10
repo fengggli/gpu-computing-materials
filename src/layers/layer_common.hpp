@@ -13,8 +13,8 @@
 #include <string>
 #include <vector>
 #include "awnn/tensor.h"
-#include "utils/data_cifar.h"
 #include "parallel.hpp"
+#include "utils/data_cifar.h"
 
 typedef enum {
   LAYER_TYPE_DATA,
@@ -34,14 +34,13 @@ typedef enum {
 
 typedef enum {
   DATA_REPLICATED = 1,
-  DATA_PARTITIONED_N = 2, // partition in N in NCHW dimension
+  DATA_PARTITIONED_N = 2,  // partition in N in NCHW dimension
 } data_layout_t;
 
 typedef enum {
   POOL_GLOBAL_AVG = 1,
-  POOL_MAX = 2, 
+  POOL_MAX = 2,
 } pool_type_t;
-
 
 struct Blob {
   // uint id_param;
@@ -74,38 +73,42 @@ struct Blob {
     if (learnable) {
       *velocity = tensor_make_alike(*data);
     } else {
-      *velocity = tensor_make_placeholder(data->dim.dims, tensor_get_ndims(*data));
+      *velocity = tensor_make_placeholder(data->dim.dims,
+  tensor_get_ndims(*data));
     }
   }
   */
 
-
   /** Blob with data layout
    * @param shape global dimenson for tensor
    **/
-  Blob(std::string blobname, int learnable, uint shape[4], data_layout_t layout = DATA_REPLICATED , topo_config_t *topo = NULL)
-      : layout(layout), topo(topo), learnable(learnable){
+  Blob(std::string blobname, int learnable, uint shape[4],
+       data_layout_t layout = DATA_REPLICATED, topo_config_t *topo = NULL)
+      : layout(layout), topo(topo), learnable(learnable) {
     name = blobname;
     global_dim = make_dim_from_arr(4, shape);
     int nr_parts = topo ? topo->nr_threads : 1;
-    PINF("Allocate tensor name(%s), shape(%u, %u, %u, %u), type(%d) ,parts(%d)", blobname.c_str(), shape[0],shape[1], shape[2], shape[3], layout ,nr_parts);
-    if(layout == DATA_REPLICATED){
+    PINF("Allocate tensor name(%s), shape(%u, %u, %u, %u), type(%d) ,parts(%d)",
+         blobname.c_str(), shape[0], shape[1], shape[2], shape[3], layout,
+         nr_parts);
+    if (layout == DATA_REPLICATED) {
       data = new tensor_t[nr_parts];
       diff = new tensor_t[nr_parts];
       velocity = new tensor_t[nr_parts];
 
-      for(int i = 0 ; i < nr_parts; i++){
+      for (int i = 0; i < nr_parts; i++) {
         data[i] = tensor_make(shape, 4);
         diff[i] = tensor_make_alike(*data);
         if (learnable) {
           velocity[i] = tensor_make_alike(*data);
         } else {
-          velocity[i] = tensor_make_placeholder(data->dim.dims, tensor_get_ndims(*data));
+          velocity[i] =
+              tensor_make_placeholder(data->dim.dims, tensor_get_ndims(*data));
         }
       }
     }
 
-    if(layout == DATA_PARTITIONED_N){
+    if (layout == DATA_PARTITIONED_N) {
       uint max_imgs_per_thread = (shape[0] + nr_parts - 1) / nr_parts;
 
       uint part_shape[4] = {max_imgs_per_thread, shape[1], shape[2], shape[3]};
@@ -113,13 +116,14 @@ struct Blob {
       diff = new tensor_t[nr_parts];
       velocity = new tensor_t[nr_parts];
 
-      for(int i = 0 ; i < nr_parts; i++){
+      for (int i = 0; i < nr_parts; i++) {
         data[i] = tensor_make(part_shape, 4);
         diff[i] = tensor_make_alike(*data);
         if (learnable) {
           velocity[i] = tensor_make_alike(*data);
         } else {
-          velocity[i] = tensor_make_placeholder(data->dim.dims, tensor_get_ndims(*data));
+          velocity[i] =
+              tensor_make_placeholder(data->dim.dims, tensor_get_ndims(*data));
         }
       }
     }
@@ -128,16 +132,16 @@ struct Blob {
   ~Blob() {
     int nr_parts = topo ? topo->nr_threads : 1;
     PDBG("now destroy tensor %s, at %p", name.c_str(), data.data);
-    for(int i =0; i < nr_parts; i++){
+    for (int i = 0; i < nr_parts; i++) {
       tensor_destroy(&data[i]);
       tensor_destroy(&diff[i]);
       if (learnable) {
         tensor_destroy(&velocity[i]);
       }
     }
-    delete []data;
-    delete []diff;
-    delete []velocity;
+    delete[] data;
+    delete[] diff;
+    delete[] velocity;
   }
 };
 
@@ -196,9 +200,9 @@ typedef struct {
   layer_type_t layer_type = LAYER_TYPE_UNDEFINED;
   std::string name;
 
-  paral_config_t paral_config; // parallel policy
-  topo_config_t *topo; // parallel policy
-  void *config; // layer-specific
+  paral_config_t paral_config;  // parallel policy
+  topo_config_t *topo;          // parallel policy
+  void *config;                 // layer-specific
 
   Blob *layer_in;
   Blob *layer_out;
@@ -209,14 +213,17 @@ typedef struct {
   std::vector<Blob *> temp_blobs; /*Used for to store ouputs of a sublayer*/
 
   /* I need id to index in "cache")*/
-  double (*forward)(tensor_t x, tape_t &tape, tensor_t y, void *layer_config, int id);
-  void (*backward)(tensor_t dx, tape_t &tape, tensor_t dy, void *layer_config, int id);
+  double (*forward)(tensor_t x, tape_t &tape, tensor_t y, void *layer_config,
+                    int id);
+  void (*backward)(tensor_t dx, tape_t &tape, tensor_t dy, void *layer_config,
+                   int id);
 
 } layer_t;
 
 /** Initialize this layer with machine topology and parallel policy*/
 layer_t *layer_setup(layer_type_t type, void *layer_config,
-                     layer_t *bottom_layer, topo_config_t *topo = NULL,  paral_config_t paral_config = PARAL_TYPE_DATA);
+                     layer_t *bottom_layer, topo_config_t *topo = NULL,
+                     paral_config_t paral_config = PARAL_TYPE_DATA);
 
 /** Destroy this layer*/
 void layer_teardown(layer_t *this_layer);
@@ -240,35 +247,34 @@ double net_forward(net_t *net);
 void net_backward(net_t *net);
 
 /* info shared by all wokers*/
-struct concurrent_context{
+struct concurrent_context {
   data_loader_t *loader;
   net_t *net;
   topo_config_t *topo;
-  double * reg_losses;
-  double * classify_losses;
+  double *reg_losses;
+  double *classify_losses;
   double lr; /** learning rate*/
 
   pthread_mutex_t *ptr_mutex;
   pthread_barrier_t *ptr_barrier;
 };
 
-
-void allreduce_hybrid( concurrent_context *context);
+void allreduce_hybrid(concurrent_context *context);
 
 void net_update_weights(net_t *net, double learning_rate);
 
-void net_update_weights_hybrid( concurrent_context *context);
+void net_update_weights_hybrid(concurrent_context *context);
 
 /** Single-thread network (legacy)*/
-void net_loss(net_t *net, tensor_t x, label_t const *labels, T *ptr_loss, int verbose=0);
+void net_loss(net_t *net, tensor_t x, label_t const *labels, T *ptr_loss,
+              int verbose = 0);
 
 /*void net_loss_hybrid(net_t *net, data_loader_t* data_loader, double *ptr_loss,
               topo_config_t *topo = NULL, int verbose = 0);
               */
 
 void net_loss_hybrid(concurrent_context *context, double *ptr_loss,
-              int verbose = 0);
-
+                     int verbose = 0);
 
 /* Resnet related*/
 void resnet_setup(net_t *net, uint input_shape[], double reg);
@@ -300,7 +306,6 @@ void *resnet_thread_entry(void *threadinfo);
 /** Version 2*/
 void *resnet_main(int batch_size, int nr_thrreads, int nr_iterations);
 void *vggnet_main(int batch_size, int nr_thrreads, int nr_iterations);
-
 
 #ifdef __cplusplus
 extern "C" {

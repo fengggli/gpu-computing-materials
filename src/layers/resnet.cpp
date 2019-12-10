@@ -85,8 +85,8 @@ void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info) {
         // sgd
         // sgd_update(p_param, learning_rate);
         pthread_mutex_lock(worker_info->ptr_mutex);
-        tensor_elemwise_op_inplace((param_global)->diff[0], (param_local)->diff[0],
-                                   TENSOR_OP_ADD);
+        tensor_elemwise_op_inplace((param_global)->diff[0],
+                                   (param_local)->diff[0], TENSOR_OP_ADD);
         pthread_mutex_unlock(worker_info->ptr_mutex);
       }
     }
@@ -109,7 +109,7 @@ void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info) {
         tensor_t dparam = (param_local)->diff[0];
 
         uint capacity = tensor_get_capacity(dparam);
-        for(ii = 0;  ii < capacity; ii++){
+        for (ii = 0; ii < capacity; ii++) {
           dparam.data[ii] /= (worker_info->nr_threads);
         }
       }
@@ -143,14 +143,14 @@ void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info) {
 void *resnet_thread_entry(void *threadinfo) {
   struct resnet_thread_info *my_info =
       (struct resnet_thread_info *)(threadinfo);
-  struct reader_local_info * reader_info = my_info->data_loader->readers_info + my_info->id;
-  tensor_t *x_thread_local  = &(reader_info->cur_x);
+  struct reader_local_info *reader_info =
+      my_info->data_loader->readers_info + my_info->id;
+  tensor_t *x_thread_local = &(reader_info->cur_x);
   label_t **labels_thread_local = &(reader_info->cur_label);
 
   /* Split batch data to all thread*/
   uint cur_batch = 0;
-  uint cnt_read = get_train_batch_mt(
-      my_info->data_loader, (uint)my_info->id);
+  uint cnt_read = get_train_batch_mt(my_info->data_loader, (uint)my_info->id);
 
   /* Network config*/
   uint in_shape[] = {cnt_read, 3, 32, 32};
@@ -179,7 +179,8 @@ void *resnet_thread_entry(void *threadinfo) {
     };
 
     /** Forward/backward*/
-    net_loss(&(my_info->model), *x_thread_local, *labels_thread_local, &loss, 0);
+    net_loss(&(my_info->model), *x_thread_local, *labels_thread_local, &loss,
+             0);
     if (my_info->id == 0) {
       PINF("worker%d, Iter=%u, Loss %.2f", my_info->id, iteration, loss);
       forward_backward_in_ms += get_elapsed_ms(t_start, get_clocktime());

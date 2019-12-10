@@ -37,7 +37,8 @@ int main(int argc, char *argv[]) {
 
   /* Data loader*/
   data_loader_t loader;
-  status_t ret = cifar_open_batched(&loader, CIFAR_PATH, batch_sz, nr_worker_threads);
+  status_t ret =
+      cifar_open_batched(&loader, CIFAR_PATH, batch_sz, nr_worker_threads);
   uint val_sz = 1000;
   EXPECT_EQ(S_OK, ret);
   EXPECT_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));

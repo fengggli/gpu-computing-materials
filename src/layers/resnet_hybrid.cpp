@@ -1,8 +1,8 @@
+#include "awnn/memory.h"
 #include "awnn/tensor.h"
 #include "layers/layer_common.hpp"
 #include "utils/debug.h"
 #include "utils/weight_init.h"
-#include "awnn/memory.h"
 #define ENABLE_SOLVER
 
 // TODO: i had use global varaibles otherwise dimension info will be lost
@@ -12,8 +12,10 @@ extern layer_resblock_config_t resblock_config;
 extern layer_pool_config_t pool_config;
 extern layer_fc_config_t fc_config;
 
-void resnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config_t *topo) {
-  paral_config_t paral_config = PARAL_TYPE_DATA; // all layers using data parallelism
+void resnet_setup_hybrid(net_t *net, uint input_shape[], double reg,
+                         topo_config_t *topo) {
+  paral_config_t paral_config =
+      PARAL_TYPE_DATA;  // all layers using data parallelism
   /*Conv layer*/
   net->dataconfig.name = "data";
 
@@ -22,8 +24,8 @@ void resnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config
   net->dataconfig.dim.dims[2] = input_shape[2];
   net->dataconfig.dim.dims[3] = input_shape[3];
 
-  layer_t *data_layer =
-      layer_setup(LAYER_TYPE_DATA, &(net->dataconfig), nullptr, topo, paral_config);
+  layer_t *data_layer = layer_setup(LAYER_TYPE_DATA, &(net->dataconfig),
+                                    nullptr, topo, paral_config);
   net_add_layer(net, data_layer);
 
   /*Conv layer*/
@@ -33,24 +35,24 @@ void resnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config
   conv_config.reg = reg;
   conv_config.activation = ACTIVATION_RELU;
 
-  layer_t *conv_layer =
-      layer_setup(LAYER_TYPE_CONV2D, &conv_config, data_layer, topo, paral_config);
+  layer_t *conv_layer = layer_setup(LAYER_TYPE_CONV2D, &conv_config, data_layer,
+                                    topo, paral_config);
   net_add_layer(net, conv_layer);
 
   /*First residual block*/
   resblock_config.name = "resblock";
   resblock_config.reg = reg;
 
-  layer_t *resblock_layer =
-      layer_setup(LAYER_TYPE_RESBLOCK, &resblock_config, conv_layer, topo, paral_config);
+  layer_t *resblock_layer = layer_setup(LAYER_TYPE_RESBLOCK, &resblock_config,
+                                        conv_layer, topo, paral_config);
   net_add_layer(net, resblock_layer);
 
   /*pool layer*/
   pool_config.name = "pool";
   pool_config.type = POOL_GLOBAL_AVG;
 
-  layer_t *pool_layer =
-      layer_setup(LAYER_TYPE_POOL, &pool_config, resblock_layer, topo, paral_config);
+  layer_t *pool_layer = layer_setup(LAYER_TYPE_POOL, &pool_config,
+                                    resblock_layer, topo, paral_config);
   net_add_layer(net, pool_layer);
 
   /*FC layer*/
@@ -59,12 +61,12 @@ void resnet_setup_hybrid(net_t *net, uint input_shape[], double reg, topo_config
   fc_config.reg = reg;
   fc_config.activation = ACTIVATION_NONE;
 
-  layer_t *fc_layer = layer_setup(LAYER_TYPE_FC, &fc_config, pool_layer, topo, paral_config);
+  layer_t *fc_layer =
+      layer_setup(LAYER_TYPE_FC, &fc_config, pool_layer, topo, paral_config);
   net_add_layer(net, fc_layer);
 }
 
 void *resnet_main(int batch_size, int nr_threads, int nr_iterations) {
-
   net_t model;
 
   topo_config_t topology(nr_threads);
@@ -84,17 +86,19 @@ void *resnet_main(int batch_size, int nr_threads, int nr_iterations) {
 
   /* Data loader*/
   data_loader_t loader;
-  status_t ret = cifar_open_batched(&loader, CIFAR_PATH, batch_size, nr_threads);
+  status_t ret =
+      cifar_open_batched(&loader, CIFAR_PATH, batch_size, nr_threads);
   uint train_sz = 4000;
   uint val_sz = 1000;
   AWNN_CHECK_EQ(S_OK, ret);
   AWNN_CHECK_EQ(S_OK, cifar_split_train(&loader, train_sz, val_sz));
 
-  struct concurrent_context *context = (struct concurrent_context *)mem_zalloc(sizeof(struct concurrent_context));
+  struct concurrent_context *context = (struct concurrent_context *)mem_zalloc(
+      sizeof(struct concurrent_context));
   context->loader = &loader;
   context->net = &model;
-  context->reg_losses = (double*) mem_zalloc(sizeof(double)*nr_threads);
-  context->classify_losses = (double*) mem_zalloc(sizeof(double)*nr_threads);
+  context->reg_losses = (double *)mem_zalloc(sizeof(double) * nr_threads);
+  context->classify_losses = (double *)mem_zalloc(sizeof(double) * nr_threads);
   context->topo = &topology;
   context->lr = 0.01;
 
@@ -133,7 +137,7 @@ void *resnet_main(int batch_size, int nr_threads, int nr_iterations) {
     //
     allreduce_in_ms += get_elapsed_ms(t_start, get_clocktime());
 
-      /** Update gradient*/
+    /** Update gradient*/
 #ifdef ENABLE_SOLVER
     t_start = get_clocktime();
 
@@ -162,4 +166,3 @@ void *resnet_main(int batch_size, int nr_threads, int nr_iterations) {
 
   return NULL;
 }
-

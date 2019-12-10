@@ -198,13 +198,12 @@ T tensor_sum_of_square(tensor_t const t) {
 status_t tensor_copy(tensor_t out, tensor_t in){
   uint i;
   uint capacity = dim_get_capacity(out.dim);
-  if( S_OK == dim_is_capable(out.dim, in.dim)){
+  if (S_OK == dim_is_capable(out.dim, in.dim)) {
     for(i = 0; i < capacity; i++){
       out.data[i] = in.data[i];
     }
     return S_OK;
-  }
-  else{
+  } else {
     PERR("[tensor copy]: wrong dims ");
     print_trace();
     return S_BAD_DIM;
