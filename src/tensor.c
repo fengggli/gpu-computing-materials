@@ -76,6 +76,17 @@ status_t dim_is_same(dim_t dim1, dim_t dim2) {
   return S_OK;
 }
 
+status_t dim_is_capable(dim_t dim1, dim_t dim2) {
+  uint i;
+  if (dim1.dims[0] < dim2.dims[0]) return S_BAD_DIM;
+  for (i = 1; i < MAX_DIM; i++) {
+    if (dim1.dims[i] != dim2.dims[i]) {
+      return S_BAD_DIM;
+    }
+  }
+  return S_OK;
+}
+
 void dim_dump(dim_t dim) {
   int i;
   PSTR("Dimension Dump: [");
@@ -95,7 +106,8 @@ void dim_dump(dim_t dim) {
 
 T tensor_get_sum(tensor_t t) {
   T ret = 0;
-  for (uint i = 0; i < tensor_get_capacity(t); i++) {
+  uint capacity = dim_get_capacity(t.dim);
+  for (uint i = 0; i < capacity; i++) {
     ret += t.data[i];
   }
   return ret;

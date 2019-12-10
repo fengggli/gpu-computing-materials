@@ -19,6 +19,11 @@ extern "C" {
 
 // Open data from files
 status_t cifar_open(data_loader_t *loader, const char *input_folder);
+
+// Open with preset batch_size and tensor/label, nr_threads
+// Called by each thread
+status_t cifar_open_batched(data_loader_t *loader, const char *input_folder,
+                            int batch_sz, int nr_threads);
 status_t cifar_close(data_loader_t *loader);
 
 // Split  trainset to train/val
@@ -34,9 +39,7 @@ uint get_train_batch(data_loader_t const *loader, tensor_t *x, label_t **label,
 
 /** feed batch of train data to multiple threads. 
  * @return nr images per worker thread*/
-uint get_train_batch_mt(data_loader_t const *loader, tensor_t *x,
-                        label_t **label, uint batch_id, uint batch_sz,
-                        uint thread_id, uint nr_threads);
+uint get_train_batch_mt(data_loader_t *loader, uint thread_id);
 
 /*
  * Get a val data

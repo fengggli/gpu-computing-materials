@@ -48,6 +48,8 @@ static inline dim_t make_dim_from_arr(uint ndims, uint all_dims[]) {
 uint dim_get_capacity(dim_t dim);
 uint dim_get_ndims(dim_t dim);
 status_t dim_is_same(dim_t, dim_t);
+status_t dim_is_capable(dim_t to,
+                        dim_t from);  // first dimension can be expanded
 void dim_dump(dim_t dim);
 
 enum {
@@ -177,11 +179,6 @@ static inline void _div(T *to, T *from, uint len) {
     if (from[i] != 0) to[i] /= from[i];
   }
 }
-
-// Iterate tensor elems
-// declare  T *pelem and uint i before use
-#define tensor_for_each_entry(pdata, i, t) \
-  for (i = 0, (pdata) = (t).data; i < tensor_get_capacity(t); i++, pdata++)
 
 /*
  * Device support

@@ -36,6 +36,9 @@ endif ()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
+# for -O3
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -DNDEBUG")
+
 if(USE_CLANG)
   set(CMAKE_C_COMPILER "clang")
   set(CMAKE_CXX_COMPILER "clang++")
@@ -215,6 +218,9 @@ add_library(awnn_utils
   utils/data_cifar.cpp
   utils/weight_init.cpp
   utils/debug.cpp)
+
+add_subdirectory(extern/pthreadpool)
+include_directories(extern/pthreadpool/include)
 
 set(AWNN_LIBS "awnn_core" "awnn_utils" dl)
 

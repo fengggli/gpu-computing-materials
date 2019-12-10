@@ -85,8 +85,8 @@ void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info) {
         // sgd
         // sgd_update(p_param, learning_rate);
         pthread_mutex_lock(worker_info->ptr_mutex);
-        tensor_elemwise_op_inplace((param_global)->diff, (param_local)->diff,
-                                   TENSOR_OP_ADD);
+        tensor_elemwise_op_inplace((param_global)->diff[0],
+                                   (param_local)->diff[0], TENSOR_OP_ADD);
         pthread_mutex_unlock(worker_info->ptr_mutex);
       }
     }
@@ -105,11 +105,12 @@ void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info) {
             local_model->layers[idx_layer]->learnables[idx_param];
         PDBG("averaging %s...", (param_local)->name.c_str());
 
-        T *pelem;
         uint ii;
-        tensor_t dparam = (param_local)->diff;
-        tensor_for_each_entry(pelem, ii, dparam) {
-          (*pelem) /= (worker_info->nr_threads);
+        tensor_t dparam = (param_local)->diff[0];
+
+        uint capacity = tensor_get_capacity(dparam);
+        for (ii = 0; ii < capacity; ii++) {
+          dparam.data[ii] /= (worker_info->nr_threads);
         }
       }
     }
@@ -131,7 +132,7 @@ void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info) {
 
         PDBG("Duplicating %s...", (param_local)->name.c_str());
         AWNN_CHECK_EQ((param_local)->learnable, 1);
-        tensor_copy((param_local)->diff, (param_global)->diff);
+        tensor_copy((param_local)->diff[0], (param_global)->diff[0]);
       }
     }
   }
@@ -142,14 +143,14 @@ void concurrent_allreduce_gradient(resnet_thread_info_t *worker_info) {
 void *resnet_thread_entry(void *threadinfo) {
   struct resnet_thread_info *my_info =
       (struct resnet_thread_info *)(threadinfo);
-  tensor_t x_thread_local;
-  label_t *labels_thread_local;
+  struct reader_local_info *reader_info =
+      my_info->data_loader->readers_info + my_info->id;
+  tensor_t *x_thread_local = &(reader_info->cur_x);
+  label_t **labels_thread_local = &(reader_info->cur_label);
 
   /* Split batch data to all thread*/
   uint cur_batch = 0;
-  uint cnt_read = get_train_batch_mt(
-      my_info->data_loader, &x_thread_local, &labels_thread_local, cur_batch,
-      my_info->batch_sz, (uint)my_info->id, (uint)my_info->nr_threads);
+  uint cnt_read = get_train_batch_mt(my_info->data_loader, (uint)my_info->id);
 
   /* Network config*/
   uint in_shape[] = {cnt_read, 3, 32, 32};
@@ -178,7 +179,8 @@ void *resnet_thread_entry(void *threadinfo) {
     };
 
     /** Forward/backward*/
-    net_loss(&(my_info->model), x_thread_local, labels_thread_local, &loss, 0);
+    net_loss(&(my_info->model), *x_thread_local, *labels_thread_local, &loss,
+             0);
     if (my_info->id == 0) {
       PINF("worker%d, Iter=%u, Loss %.2f", my_info->id, iteration, loss);
       forward_backward_in_ms += get_elapsed_ms(t_start, get_clocktime());

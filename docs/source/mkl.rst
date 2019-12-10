@@ -7,4 +7,3 @@ MKL notes
 2. build with cmake -DUSE_MKL=on ..
 
 see https://fengggli.github.io/ResearchDocs/tools/intel-tools.html
-

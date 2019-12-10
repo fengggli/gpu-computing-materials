@@ -188,7 +188,8 @@ status_t tensor_elemwise_op_inplace(tensor_t to, tensor_t from, tensor_op_t op){
 
 T tensor_sum_of_square(tensor_t const t) {
   T ret = 0;
-  for (uint i = 0; i < tensor_get_capacity(t); i++) {
+  uint capacity = tensor_get_capacity(t);
+  for (uint i = 0; i < capacity; i++) {
     ret += (t.data[i]) * (t.data[i]);
   }
   return ret;
@@ -197,13 +198,12 @@ T tensor_sum_of_square(tensor_t const t) {
 status_t tensor_copy(tensor_t out, tensor_t in){
   uint i;
   uint capacity = dim_get_capacity(out.dim);
-  if( S_OK == dim_is_same(out.dim, in.dim)){
+  if (S_OK == dim_is_capable(out.dim, in.dim)) {
     for(i = 0; i < capacity; i++){
       out.data[i] = in.data[i];
     }
     return S_OK;
-  }
-  else{
+  } else {
     PERR("[tensor copy]: wrong dims ");
     print_trace();
     return S_BAD_DIM;
