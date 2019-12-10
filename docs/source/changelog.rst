@@ -15,27 +15,44 @@ Current
 
 :Date: 2019-11-25
 
-Added
--------
-
-1. Flexflow paper(https://fengggli.github.io/ResearchDocs/topics/hybridparal/index.html#beyond-data-and-model-parallelism-for-deep-neural-networks) from  Alex Aiken's group(whose previous work includes Sequoia and Legion), architecture topology is considered for GPU clusters.
-2. Channel and Filter parallelism (https://fengggli.github.io/ResearchDocs/journal/Fall19/Week13.html#channel-and-filter-parallelism)
-
 Working on
 -----------
 
-1. Reorganize code thread model, so that different layers could have different parallelism.
-2. Performance evaluation on different model/data paralellism setup.
+1. Try to improve vggnet's expensive all-reduce and gradient updates
+2. Evaluation on different CPU-only machines.
+3. Initial experiments on topology-aware apis with GPUs
 
 TODO List
 ----------
 
+* Performance evaluation on different model/data paralellism setup.
+* imagenet + resnet50(with batchnorm) (even node-local batchnorm is fine)
+* Optimize data loading
 * Use fine-grained lock to reduce contention.
 * Theoretical model.
 
 =========
 Previous
 =========
+
+0.5.0
+========
+
+:Date: 2019-12-10
+
+Added
+------
+
+1. New architecture apis:
+
+   * thread pool support, all the layers will use the same topology, with different parallelism type for various layers.
+   * Extended Blob definition, now each blob has a "layout_t"(e.g. DATA_REPLICATED or DATA_PARTITIONED), they can be inferred from the parrelization type of each layer. Also ech Blob dim
+2. Add simplified vggnet, improved some legacy code for better elemwised operations, but allreduce and gradient update is till very expensive.
+   * a benchmark for resnet/vggnet using new architecture-aware apis.
+3. Flexflow paper(https://fengggli.github.io/ResearchDocs/topics/hybridparal/index.html#beyond-data-and-model-parallelism-for-deep-neural-networks) from  Alex Aiken's group(whose previous work includes Sequoia and Legion), architecture topology is considered for GPU clusters.
+4. Channel and Filter parallelism (https://fengggli.github.io/ResearchDocs/journal/Fall19/Week13.html#channel-and-filter-parallelism)
+5. Also save corresponding caffe models in this repo.
+
 
 0.4.14
 ========
