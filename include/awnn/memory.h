@@ -29,7 +29,7 @@ long GET_TOTAL_TENSOR_ALLOC_DEVICE();
 long GET_TOTAL_TENSOR_DEALLOC_DEVICE();
 
 static inline void* mem_alloc(size_t size) {
-  void* ret = malloc(size);
+  void* ret = aligned_alloc(32, size);
   if (!ret) {
     PERR("Allocation failed\n");
     print_trace();

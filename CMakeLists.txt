@@ -94,6 +94,10 @@ if(USE_MKL)
     set(MKL_COMPILE_OPTIONS "-m64  -I${MKL_ROOT}/include")
     if(USE_AVX512)
       set(MKL_COMPILE_OPTIONS "-march=skylake-avx512 ${MKL_COMPILE_OPTIONS}")
+    else()
+      #set(MKL_COMPILE_OPTIONS "-march=native -fopt-info-vec ${MKL_COMPILE_OPTIONS}")
+      set(MKL_COMPILE_OPTIONS "-march=native ${MKL_COMPILE_OPTIONS}")
+
     endif()
 
     set(MKL_IOMP_LINK_OPTIONS " -L${MKL_LIB_PATH} -Wl,-rpath,${MKL_LIB_PATH},--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl")

@@ -1,5 +1,6 @@
 #include "awnn/layer.h"
 #include "awnn/net.h"
+#include <immintrin.h>
 void lcache_push(lcache_t *cache, tensor_t t) {
   cache->all_tensors[cache->count++] = t;
 }
@@ -37,11 +38,26 @@ void lcache_dump_stat(lcache_t *cache) {
 }
 
 // Update the gradient of a parameter if regulizer term exists
-inline void update_regulizer_gradient(tensor_t x, tensor_t dx, T reg) {
+void update_regulizer_gradient(tensor_t x, tensor_t dx, T reg) {
   size_t capacity = tensor_get_capacity(x);
   AWNN_CHECK_EQ(capacity, tensor_get_capacity(dx));
 
+#if 0
+  AWNN_CHECK_EQ(capacity%8, 0);
+  __m256 _old,_new, _reg, _x, _tmp; 
+  _reg = _mm256_set_ps(reg, reg, reg, reg, reg, reg, reg, reg);
+  for (size_t i = 0; i < capacity; i += 8) {
+    // dx.data[i] += reg * (x.data[i]);
+    _old = _mm256_load_ps(dx.data + i);
+    _x = _mm256_load_ps(x.data + i);
+    _tmp = _mm256_mul_ps(_reg, _x);
+    _x = _mm256_add_ps(_old, _tmp);
+    _mm256_store_ps(dx.data+i, _x);
+  }
+
+#else
   for (size_t i = 0; i < capacity; i++) {
     dx.data[i] += reg * (x.data[i]);
   }
+#endif
 }
