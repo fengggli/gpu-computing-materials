@@ -8,7 +8,7 @@
 #include "awnn/layer_conv.h"
 #include "awnn/net_resnet.h"
 #include "awnn/solver.h"
-#include "layers/layer_common.hpp"
+#include "awnn/layer_common.hpp"
 #include "utils/data_cifar.h"
 #include "utils/debug.h"
 #include "utils/weight_init.h"

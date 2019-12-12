@@ -263,7 +263,7 @@ if(USE_CUDA)
   set(AWNN_DEVICE_LIBS "awnndevicelib")
 endif(USE_CUDA)
 
-add_subdirectory(src/layers)
+add_subdirectory(src/awnn)
 
 # nnpack and gtest
 add_subdirectory(extern)

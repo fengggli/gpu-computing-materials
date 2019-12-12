@@ -246,6 +246,10 @@ double net_forward(net_t *net);
 /** Backward*/
 void net_backward(net_t *net);
 
+typedef enum{
+  ALLREDUCE_BARRIER = 1,
+  ALLREDUCE_TREE_WITH_UPDATE = 2
+} allreduce_type_t;
 /* info shared by all wokers*/
 struct concurrent_context {
   data_loader_t *loader;
@@ -254,6 +258,7 @@ struct concurrent_context {
   double *reg_losses;
   double *classify_losses;
   double lr; /** learning rate*/
+  allreduce_type_t allreduce_type;
 
   pthread_mutex_t *ptr_mutex;
   pthread_barrier_t *ptr_barrier;

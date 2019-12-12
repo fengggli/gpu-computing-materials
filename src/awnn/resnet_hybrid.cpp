@@ -1,8 +1,6 @@
-// see issue #61
-
 #include "awnn/memory.h"
 #include "awnn/tensor.h"
-#include "layers/layer_common.hpp"
+#include "layer_common.hpp"
 #include "utils/debug.h"
 #include "utils/weight_init.h"
 #define ENABLE_SOLVER
@@ -12,13 +10,9 @@
 extern layer_conv2d_config_t conv_config;
 extern layer_resblock_config_t resblock_config;
 extern layer_pool_config_t pool_config;
-layer_fc_config_t fc1_config;
-layer_fc_config_t fc2_config;
-layer_fc_config_t fc3_config;
+extern layer_fc_config_t fc_config;
 
-void vggnet_teardown(net_t *net) { net_teardown(net); }
-
-void vggnet_setup_hybrid(net_t *net, uint input_shape[], double reg,
+void resnet_setup_hybrid(net_t *net, uint input_shape[], double reg,
                          topo_config_t *topo) {
   paral_config_t paral_config =
       PARAL_TYPE_DATA;  // all layers using data parallelism
@@ -34,9 +28,9 @@ void vggnet_setup_hybrid(net_t *net, uint input_shape[], double reg,
                                     nullptr, topo, paral_config);
   net_add_layer(net, data_layer);
 
-  /*Conv layer->1, 64, 32, 32*/
+  /*Conv layer*/
   conv_config.name = "conv2d";
-  conv_config.out_channels = 64;
+  conv_config.out_channels = 16;
   conv_config.kernel_size = 3;
   conv_config.reg = reg;
   conv_config.activation = ACTIVATION_RELU;
@@ -45,46 +39,34 @@ void vggnet_setup_hybrid(net_t *net, uint input_shape[], double reg,
                                     topo, paral_config);
   net_add_layer(net, conv_layer);
 
-  pool_config.name = "pool";
-  pool_config.type = POOL_MAX;
-  pool_config.kernel_size = 2;
+  /*First residual block*/
+  resblock_config.name = "resblock";
+  resblock_config.reg = reg;
 
-  layer_t *pool_layer = layer_setup(LAYER_TYPE_POOL, &pool_config, conv_layer,
-                                    topo, paral_config);
+  layer_t *resblock_layer = layer_setup(LAYER_TYPE_RESBLOCK, &resblock_config,
+                                        conv_layer, topo, paral_config);
+  net_add_layer(net, resblock_layer);
+
+  /*pool layer*/
+  pool_config.name = "pool";
+  pool_config.type = POOL_GLOBAL_AVG;
+
+  layer_t *pool_layer = layer_setup(LAYER_TYPE_POOL, &pool_config,
+                                    resblock_layer, topo, paral_config);
   net_add_layer(net, pool_layer);
 
   /*FC layer*/
-  fc1_config.name = "fc1";
-  fc1_config.nr_classes = 1024;
-  fc1_config.reg = reg;
-  fc1_config.activation = ACTIVATION_RELU;
+  fc_config.name = "fc";
+  fc_config.nr_classes = 10;
+  fc_config.reg = reg;
+  fc_config.activation = ACTIVATION_NONE;
 
-  layer_t *fc1_layer =
-      layer_setup(LAYER_TYPE_FC, &fc1_config, pool_layer, topo, paral_config);
-  net_add_layer(net, fc1_layer);
-
-  /*FC layer*/
-  fc2_config.name = "fc2";
-  fc2_config.nr_classes = 256;
-  fc2_config.reg = reg;
-  fc2_config.activation = ACTIVATION_RELU;
-
-  layer_t *fc2_layer =
-      layer_setup(LAYER_TYPE_FC, &fc2_config, fc1_layer, topo, paral_config);
-  net_add_layer(net, fc2_layer);
-
-  /*FC layer*/
-  fc3_config.name = "fc3";
-  fc3_config.nr_classes = 10;
-  fc3_config.reg = reg;
-  fc3_config.activation = ACTIVATION_NONE;
-
-  layer_t *fc3_layer =
-      layer_setup(LAYER_TYPE_FC, &fc3_config, fc2_layer, topo, paral_config);
-  net_add_layer(net, fc3_layer);
+  layer_t *fc_layer =
+      layer_setup(LAYER_TYPE_FC, &fc_config, pool_layer, topo, paral_config);
+  net_add_layer(net, fc_layer);
 }
 
-void *vggnet_main(int batch_size, int nr_threads, int nr_iterations) {
+void *resnet_main(int batch_size, int nr_threads, int nr_iterations) {
   net_t model;
 
   topo_config_t topology(nr_threads);
@@ -100,7 +82,7 @@ void *vggnet_main(int batch_size, int nr_threads, int nr_iterations) {
   uint in_shape[] = {(uint)batch_size, 3, 32, 32};
   T reg = 0.001;
 
-  vggnet_setup_hybrid(&(model), in_shape, reg, &topology);
+  resnet_setup_hybrid(&(model), in_shape, reg, &topology);
 
   /* Data loader*/
   data_loader_t loader;
@@ -119,6 +101,7 @@ void *vggnet_main(int batch_size, int nr_threads, int nr_iterations) {
   context->classify_losses = (double *)mem_zalloc(sizeof(double) * nr_threads);
   context->topo = &topology;
   context->lr = 0.01;
+  context->allreduce_type = ALLREDUCE_BARRIER;
 
   pthread_mutex_t mutex;
   pthread_mutex_init(&mutex, NULL);
@@ -131,7 +114,7 @@ void *vggnet_main(int batch_size, int nr_threads, int nr_iterations) {
 
   double loss = 0;
   /*
-  vggnet_loss(&(my_info->model), x_thread_local, labels_thread_local, &loss);
+  resnet_loss(&(my_info->model), x_thread_local, labels_thread_local, &loss);
   PINF("Using convolution method %d", get_conv_method());
   */
   clocktime_t t_start;
@@ -174,7 +157,7 @@ void *vggnet_main(int batch_size, int nr_threads, int nr_iterations) {
       time_per_iter, forward_backward_in_ms / nr_iterations,
       allreduce_in_ms / nr_iterations, gradientupdate_in_ms / nr_iterations);
 
-  vggnet_teardown(&model);
+  resnet_teardown(&model);
 
   cifar_close(&loader);
 

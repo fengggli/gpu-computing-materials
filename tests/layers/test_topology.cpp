@@ -1,7 +1,7 @@
 #include "awnn/tensor.h"
 #include "gtest/gtest.h"
-#include "layers/layer_common.hpp"
-#include "layers/parallel.hpp"
+#include "awnn/layer_common.hpp"
+#include "awnn/parallel.hpp"
 #include "test_util.h"
 #include "utils/weight_init.h"
 

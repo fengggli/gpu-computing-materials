@@ -1,5 +1,5 @@
 #include "awnn/tensor.h"
-#include "layers/layer_common.hpp"
+#include "layer_common.hpp"
 #include "utils/debug.h"
 #include "utils/weight_init.h"
 #define ENABLE_SOLVER

@@ -658,9 +658,18 @@ void allreduce_hybrid(concurrent_context *context) {
   int nr_parts = topo ? topo->nr_threads : 1;
 
   // readdata
+  if(context->allreduce_type == ALLREDUCE_BARRIER){
   pthreadpool_parallelize_1d(
       topo->threadpool, (pthreadpool_task_1d_t)_do_allreduce, context, nr_parts,
       PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
+  }
+  else if(context->allreduce_type == ALLREDUCE_TREE_WITH_UPDATE){
+    PERR("not implemented");
+
+  }
+  else{
+    PERR("REDUCE type %d not implemented", context->allreduce_type);
+  }
 }
 
 /**Legacy sgd for single-thread*/
@@ -687,20 +696,29 @@ static void _do_concurrent_update_weights(concurrent_context *context,
                                           size_t i) {
   net_t *this_net = context->net;
   double learning_rate = context->lr;
-  for (auto iter_layer = this_net->layers.begin();
-       iter_layer != this_net->layers.end(); ++iter_layer) {
-    layer_t *layer = *iter_layer;
 
-    if (layer->layer_type == LAYER_TYPE_DATA) continue;
-    for (auto param = layer->learnables.begin();
-         param != layer->learnables.end(); ++param) {
-      PDBG("updating %s...", (*param)->name.c_str());
-      AWNN_CHECK_EQ((*param)->learnable, 1);
-      // sgd
-      // sgd_update(p_param, learning_rate);
-      do_sgd_update_momentum((*param)->data[i], (*param)->diff[i],
-                             (*param)->velocity[i], learning_rate, 0.9);
+  if(context->allreduce_type == ALLREDUCE_BARRIER){
+    for (auto iter_layer = this_net->layers.begin();
+         iter_layer != this_net->layers.end(); ++iter_layer) {
+      layer_t *layer = *iter_layer;
+
+      if (layer->layer_type == LAYER_TYPE_DATA) continue;
+      for (auto param = layer->learnables.begin();
+           param != layer->learnables.end(); ++param) {
+        PDBG("updating %s...", (*param)->name.c_str());
+        AWNN_CHECK_EQ((*param)->learnable, 1);
+        // sgd
+        // sgd_update(p_param, learning_rate);
+        do_sgd_update_momentum((*param)->data[i], (*param)->diff[i],
+                               (*param)->velocity[i], learning_rate, 0.9);
+      }
     }
+  }
+  else if(context->allreduce_type == ALLREDUCE_TREE_WITH_UPDATE){
+    PWRN("skip updates weight");
+  }
+  else{
+    PERR("REDUCE type %d not implemented", context->allreduce_type);
   }
 }
 
