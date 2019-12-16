@@ -703,19 +703,21 @@ void _do_step_reduce(concurrent_context *context, size_t id){
       size_t to_idx = id;
       PDBG("[worker %u]: reduce %u <- %u", id, to_idx, from_idx);
 
-      /*
-      for (size_t idx_layer = 0; idx_layer < this_net->layers.size();
-           idx_layer++) {
-        size_t nr_learnables_this_layer =
-            this_net->layers[idx_layer]->learnables.size();
-        for (size_t idx_param = 0; idx_param < nr_learnables_this_layer;
-             idx_param++) {
-            Blob *paramblob =
-              this_net->layers[idx_layer]->learnables[idx_param];
-              */
+      for (auto iter_layer = this_net->layers.begin();
+           iter_layer != this_net->layers.end(); ++iter_layer) {
+        layer_t *layer = *iter_layer;
+
+        if (layer->layer_type == LAYER_TYPE_DATA) continue;
+        for (auto param = layer->learnables.begin();
+             param != layer->learnables.end(); ++param) {
+          PDBG("reducing %s...", (*param)->name.c_str());
+          AWNN_CHECK_EQ((*param)->learnable, 1);
+          tensor_elemwise_op_inplace((*param)->diff[to_idx],
+                                   (*param)->diff[from_idx], TENSOR_OP_ADD);
+        }
+      }
 
     }
-
     pthread_barrier_wait(context->ptr_barrier);
   }
 }
@@ -732,7 +734,21 @@ void _do_step_bcast(concurrent_context *context, size_t id){
       size_t from_idx = id;
       size_t to_idx = id+s;
       PDBG("[worker %u]: copy        %u <- %u", id, to_idx, from_idx);
+
+      for (auto iter_layer = this_net->layers.begin();
+           iter_layer != this_net->layers.end(); ++iter_layer) {
+        layer_t *layer = *iter_layer;
+
+        if (layer->layer_type == LAYER_TYPE_DATA) continue;
+        for (auto param = layer->learnables.begin();
+             param != layer->learnables.end(); ++param) {
+          PDBG("reducing %s...", (*param)->name.c_str());
+          AWNN_CHECK_EQ((*param)->learnable, 1);
+          tensor_copy( (*param)->data[to_idx], (*param)->data[from_idx]);
+        }
+      }
     }
+
     pthread_barrier_wait(context->ptr_barrier);
   }
 }
