@@ -9,6 +9,8 @@
 #include "utils/weight_init.h"
 #define DO_AVERAGE
 
+#define IsPowerOf2(n) (((n)&(n-1)) == 0)
+
 /** I only need those layers:
  * 1. conv, relu, and conv_relu
  * 2. last fc_layer,
@@ -650,12 +652,93 @@ static void _do_allreduce(concurrent_context *context, size_t id) {
   pthread_barrier_wait(context->ptr_barrier);
 }
 
+#if 0
+void _do_reducegradient(concurrent_context *context, size_t id) {
+  // Accumulate all gradients from worker to main
+  net_t *local_model = context->net;
+  if (id != 0) {
+    for (size_t idx_layer = 0; idx_layer < local_model->layers.size();
+         idx_layer++) {
+      size_t nr_learnables_this_layer =
+          local_model->layers[idx_layer]->learnables.size();
+      for (size_t idx_param = 0; idx_param < nr_learnables_this_layer;
+           idx_param++) {
+        Blob *param_local =
+            local_model->layers[idx_layer]->learnables[idx_param];
+
+        PDBG("updating %s...", param_local->name.c_str());
+        AWNN_CHECK_EQ(param_local->learnable, 1);
+        // sgd
+        // sgd_update(p_param, learning_rate);
+        pthread_mutex_lock(context->ptr_mutex);
+        tensor_elemwise_op_inplace((param_local)->diff[0],
+                                   (param_local)->diff[id], TENSOR_OP_ADD);
+        pthread_mutex_unlock(context->ptr_mutex);
+      }
+    }
+  }
+}
+#endif
+
+// recursively tree-based reduce
+void _do_step_reduce(concurrent_context *context, size_t id){
+  net_t *this_net = context->net;
+  topo_config_t *topo = context->topo;
+
+  int nr_parts = topo ? topo->nr_threads : 1;
+
+  for(int s = 1; s< nr_parts; s*=2){
+    if(id %(2*s) == 0){
+      size_t from_idx = id + s;
+      size_t to_idx = id;
+      PINF("[worker %u]: reduce %u <- %u", id, to_idx, from_idx);
+
+      /*
+      for (size_t idx_layer = 0; idx_layer < this_net->layers.size();
+           idx_layer++) {
+        size_t nr_learnables_this_layer =
+            this_net->layers[idx_layer]->learnables.size();
+        for (size_t idx_param = 0; idx_param < nr_learnables_this_layer;
+             idx_param++) {
+            Blob *paramblob =
+              this_net->layers[idx_layer]->learnables[idx_param];
+              */
+
+    }
+
+    pthread_barrier_wait(context->ptr_barrier);
+  }
+}
+
+
+void _do_step_bcast(concurrent_context *context, size_t id){
+  net_t *this_net = context->net;
+  topo_config_t *topo = context->topo;
+
+  int nr_parts = topo ? topo->nr_threads : 1;
+
+  for(int s = nr_parts/2; s >0 ; s/=2){
+    if(id %(2*s) == 0){
+      size_t from_idx = id;
+      size_t to_idx = id+s;
+      PINF("[worker %u]: copy        %u <- %u", id, to_idx, from_idx);
+    }
+    pthread_barrier_wait(context->ptr_barrier);
+  }
+}
+
+
 void allreduce_hybrid(concurrent_context *context) {
   tensor_t x;
   net_t *this_net = context->net;
   topo_config_t *topo = context->topo;
 
   int nr_parts = topo ? topo->nr_threads : 1;
+  if(!IsPowerOf2(nr_parts)){
+    PERR("need special handling for %d workers", nr_parts);
+    exit(-1);
+  }
+  double learning_rate = context->lr;
 
   // readdata
   if(context->allreduce_type == ALLREDUCE_BARRIER){
@@ -664,7 +747,36 @@ void allreduce_hybrid(concurrent_context *context) {
       PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
   }
   else if(context->allreduce_type == ALLREDUCE_TREE_WITH_UPDATE){
-    PERR("not implemented");
+    // reduce(add) to root
+    // See https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf
+      
+    pthreadpool_parallelize_1d(
+        topo->threadpool, (pthreadpool_task_1d_t)_do_step_reduce, context, nr_parts,
+        PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
+
+          // PINF("reduce gradient for %s", paramblob->name.c_str());
+
+    // average + update
+    for (size_t idx_layer = 0; idx_layer < this_net->layers.size();
+         idx_layer++) {
+      size_t nr_learnables_this_layer =
+          this_net->layers[idx_layer]->learnables.size();
+      for (size_t idx_param = 0; idx_param < nr_learnables_this_layer;
+           idx_param++) {
+        Blob *paramblob =
+            this_net->layers[idx_layer]->learnables[idx_param];
+        PDBG("updating %s...", (paramblob)->name.c_str());
+        do_sgd_update_momentum(paramblob->data[0], paramblob->diff[0],
+                             paramblob->velocity[0], learning_rate/nr_parts, 0.9);
+
+      }
+    }
+
+    // broadcast updated weight
+
+    pthreadpool_parallelize_1d(
+        topo->threadpool, (pthreadpool_task_1d_t)_do_step_bcast, context, nr_parts,
+        PTHREADPOOL_FLAG_DISABLE_DENORMALS /* flags */);
 
   }
   else{
@@ -715,7 +827,7 @@ static void _do_concurrent_update_weights(concurrent_context *context,
     }
   }
   else if(context->allreduce_type == ALLREDUCE_TREE_WITH_UPDATE){
-    PWRN("skip updates weight");
+    // PWRN("skip updates weight");
   }
   else{
     PERR("REDUCE type %d not implemented", context->allreduce_type);

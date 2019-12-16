@@ -250,6 +250,7 @@ typedef enum{
   ALLREDUCE_BARRIER = 1,
   ALLREDUCE_TREE_WITH_UPDATE = 2
 } allreduce_type_t;
+
 /* info shared by all wokers*/
 struct concurrent_context {
   data_loader_t *loader;

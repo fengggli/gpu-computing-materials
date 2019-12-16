@@ -119,7 +119,7 @@ void *vggnet_main(int batch_size, int nr_threads, int nr_iterations) {
   context->classify_losses = (double *)mem_zalloc(sizeof(double) * nr_threads);
   context->topo = &topology;
   context->lr = 0.01;
-  context->allreduce_type = ALLREDUCE_BARRIER;
+  context->allreduce_type = ALLREDUCE_TREE_WITH_UPDATE;
 
   pthread_mutex_t mutex;
   pthread_mutex_init(&mutex, NULL);
