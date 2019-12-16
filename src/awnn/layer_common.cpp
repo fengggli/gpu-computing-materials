@@ -10,6 +10,16 @@
 #define DO_AVERAGE
 
 #define IsPowerOf2(n) (((n)&(n-1)) == 0)
+uint Power2RoundUp(uint v){
+  v--;
+  v |= v >> 1;
+  v |= v >> 2;
+  v |= v >> 4;
+  v |= v >> 8;
+  v |= v >> 16;
+  v++;
+  return v;
+}
 
 /** I only need those layers:
  * 1. conv, relu, and conv_relu
@@ -687,11 +697,11 @@ void _do_step_reduce(concurrent_context *context, size_t id){
 
   int nr_parts = topo ? topo->nr_threads : 1;
 
-  for(int s = 1; s< nr_parts; s*=2){
-    if(id %(2*s) == 0){
+  for(int s = 1; s< nr_parts ; s*=2){
+    if(id %(2*s) == 0 && id + s < nr_parts){
       size_t from_idx = id + s;
       size_t to_idx = id;
-      PINF("[worker %u]: reduce %u <- %u", id, to_idx, from_idx);
+      PDBG("[worker %u]: reduce %u <- %u", id, to_idx, from_idx);
 
       /*
       for (size_t idx_layer = 0; idx_layer < this_net->layers.size();
@@ -717,11 +727,11 @@ void _do_step_bcast(concurrent_context *context, size_t id){
 
   int nr_parts = topo ? topo->nr_threads : 1;
 
-  for(int s = nr_parts/2; s >0 ; s/=2){
-    if(id %(2*s) == 0){
+  for(int s = Power2RoundUp(nr_parts)/2; s >0 ; s/=2){
+    if(id %(2*s) == 0 && id+ s< nr_parts){
       size_t from_idx = id;
       size_t to_idx = id+s;
-      PINF("[worker %u]: copy        %u <- %u", id, to_idx, from_idx);
+      PDBG("[worker %u]: copy        %u <- %u", id, to_idx, from_idx);
     }
     pthread_barrier_wait(context->ptr_barrier);
   }
@@ -734,10 +744,12 @@ void allreduce_hybrid(concurrent_context *context) {
   topo_config_t *topo = context->topo;
 
   int nr_parts = topo ? topo->nr_threads : 1;
+  /*
   if(!IsPowerOf2(nr_parts)){
     PERR("need special handling for %d workers", nr_parts);
     exit(-1);
   }
+  */
   double learning_rate = context->lr;
 
   // readdata
