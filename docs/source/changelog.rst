@@ -13,14 +13,32 @@ Changelog
 Current
 =======
 
-:Date: 2019-11-25
+:Date: 2019-12-26
 
-Working on
+working on
 -----------
 
-1. Try to improve vggnet's expensive all-reduce and gradient updates
+* Improved vggnet's expensive all-reduce and gradient updates
+* Find usecases to demonstrate the benifits of the toplogy-awareness of mixture of different parallelisms, (with LSTM)
+
+
+Todo
+-----------
+
 2. Evaluation on different CPU-only machines.
-3. Initial experiments on topology-aware apis with GPUs
+3. Experiments on topology-aware apis with GPUs and CPU+GPU setup
+
+
+0.5.1
+=======
+
+:Date: 2019-11-25
+
+added
+-----------
+
+* Try to improve vggnet's expensive all-reduce and gradient updates
+* Initial experiments on topology-aware apis with GPUs
 
 TODO List
 ----------
@@ -31,9 +49,6 @@ TODO List
 * Use fine-grained lock to reduce contention.
 * Theoretical model.
 
-=========
-Previous
-=========
 
 0.5.0
 ========
