@@ -44,3 +44,4 @@ deploy:
     branch:
       - master  # updates from this branch will trigger deploy
       - feng
+      - hybridparallel
