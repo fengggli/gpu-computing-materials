@@ -42,7 +42,7 @@ void update_regulizer_gradient(tensor_t x, tensor_t dx, T reg) {
   size_t capacity = tensor_get_capacity(x);
   AWNN_CHECK_EQ(capacity, tensor_get_capacity(dx));
 
-#if 1
+#if !defined(IS_CI_BUILD)
   AWNN_CHECK_EQ(capacity%8, 0);
   __m256 _old,_new, _reg, _x, _tmp; 
   _reg = _mm256_set_ps(reg, reg, reg, reg, reg, reg, reg, reg);
