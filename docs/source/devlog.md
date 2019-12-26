@@ -1,3 +1,10 @@
+## [19-12-23]
+#### perf tunning
+1. fill tensor, use memory directly
+2. for weight matrix, memory pool directly.
+  - managed memory for weight, aligned with network architecture.
+  - managed memory layout for out.
+
 ## [19-12-01]
 #### notes
 1. all reduce now can be cooperated into blob itself

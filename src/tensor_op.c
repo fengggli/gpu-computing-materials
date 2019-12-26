@@ -199,9 +199,13 @@ status_t tensor_copy(tensor_t out, tensor_t in){
   uint i;
   uint capacity = dim_get_capacity(out.dim);
   if (S_OK == dim_is_capable(out.dim, in.dim)) {
+#if 1
+    memcpy(out.data, in.data, capacity*sizeof(T));
+# else
     for(i = 0; i < capacity; i++){
       out.data[i] = in.data[i];
     }
+#endif
     return S_OK;
   } else {
     PERR("[tensor copy]: wrong dims ");

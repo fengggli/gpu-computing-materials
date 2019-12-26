@@ -716,8 +716,8 @@ void _do_step_reduce(concurrent_context *context, size_t id){
                                    (*param)->diff[from_idx], TENSOR_OP_ADD);
         }
       }
-
     }
+    // expensive
     pthread_barrier_wait(context->ptr_barrier);
   }
 }
@@ -749,6 +749,7 @@ void _do_step_bcast(concurrent_context *context, size_t id){
       }
     }
 
+    // expensive
     pthread_barrier_wait(context->ptr_barrier);
   }
 }
