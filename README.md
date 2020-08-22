@@ -1,4 +1,10 @@
-# GPU-computing-materials
+# Archtecture-aware Neural Networks
+
+A simple deep learning framework that optimizes task scheduling and memory usuage on different CPU/GPU architectures.
+
+- I started as a research project trying to explore optimization on task scheduling and memory usuage with DNN workloads on different architecutures.
+- The issues pages (some of those marked as "closed") contain partial preliminary results and interesting performance patterns.
+- A classmate in GPU computing classes added GPU support too.
 
 | branch | build status |
 |--------|--------------|
