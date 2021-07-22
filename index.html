@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Documentation of gpu-computing-spring19 project &mdash; gpu-computing19-awnn  documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -36,7 +39,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Blob allocation" href="blob.html" /> 
+    <link rel="next" title="Tensor and its operations" href="tensor.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -50,7 +53,7 @@
           
 
           
-            <a href="#" class="icon icon-home" alt="Documentation Home"> gpu-computing19-awnn
+            <a href="#" class="icon icon-home"> gpu-computing19-awnn
           
 
           
@@ -83,7 +86,7 @@
             
               <p class="caption"><span class="caption-text">Tensor</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="blob.html">Blob allocation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensor.html">Tensor and its operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="memory.html">Memory management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cuda.html">CUDA Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mkl.html">MKL notes</a></li>
@@ -92,10 +95,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="layers/pool.html">Pooling Layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="layers/conv.html">Convolution Layer</a></li>
-</ul>
-<p class="caption"><span class="caption-text">utils:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="data_utils.html">Data loading</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Changelog</span></p>
 <ul>
@@ -141,6 +140,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -152,7 +153,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -172,7 +173,7 @@
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">Tensor</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="blob.html">Blob allocation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensor.html">Tensor and its operations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="memory.html">Memory management</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="memory.html#allocation">Allocation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="memory.html#access">Access</a></li>
@@ -194,12 +195,6 @@
 </ul>
 </div>
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">utils:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="data_utils.html">Data loading</a></li>
-</ul>
-</div>
-<div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">Changelog</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a><ul>
@@ -207,21 +202,20 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html#previous">Previous</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id2">0.5.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id3">0.4.14</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id5">0.4.13</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id7">0.4.12</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id9">0.4.11</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id11">0.4.10</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id13">0.4.9</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id15">0.4.8</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id16">0.4.7</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id17">0.4.6</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id19">0.4.5</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id21">0.4.4</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id23">0.4.3</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id25">0.4.2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changelog.html#id27">&lt; 0.4.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#id2">0.4.14</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#id4">0.4.13</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#id6">0.4.12</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#id8">0.4.11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#id10">0.4.10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#id12">0.4.9</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#id14">0.4.8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#id15">0.4.7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#id16">0.4.6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#id18">0.4.5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#id20">0.4.4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#id22">0.4.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#id24">0.4.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#id26">&lt; 0.4.1</a></li>
 </ul>
 </li>
 </ul>
@@ -233,35 +227,28 @@
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="blob.html" class="btn btn-neutral float-right" title="Blob allocation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
+        <a href="tensor.html" class="btn btn-neutral float-right" title="Tensor and its operations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Feng Li, Christerpher Goebel,Yuankun Fu
+        &#169; Copyright 2019, Feng Li, Christerpher Goebel,Yuankun Fu.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
